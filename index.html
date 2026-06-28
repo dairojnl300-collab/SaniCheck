@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaneamientoApp · ECODESA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #0a1f14;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #1B4332;
+      border-radius: 20px;
+      padding: 48px 32px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+    .icon { font-size: 64px; margin-bottom: 16px; }
+    h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.02em; }
+    .by { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 24px; letter-spacing: 0.06em; text-transform: uppercase; }
+    p { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.6; margin-bottom: 32px; }
+    .cta {
+      display: block;
+      background: #52B788;
+      color: #fff;
+      text-decoration: none;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      transition: background 0.15s;
+    }
+    .cta:hover { background: #2D6A4F; }
+    .normas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+    .norma-pill {
+      background: rgba(82,183,136,0.15);
+      color: #52B788;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(82,183,136,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">🌿</div>
+    <h1>SaneamientoApp</h1>
+    <div class="by">ECODESA · Ecología Desarrollo e Ingeniería S.A.S</div>
+    <p>
+      Inspección PSB en el celular. Genera el acta con normativa colombiana real,
+      registra hallazgos y cumple con la Secretaría de Salud.
+    </p>
+    <a href="app/index.html" class="cta">Abrir la Aplicación →</a>
+    <div class="normas">
+      <span class="norma-pill">Ley 9/1979</span>
+      <span class="norma-pill">Dec. 3075/1997</span>
+      <span class="norma-pill">Res. 2674/2013</span>
+      <span class="norma-pill">Dec. 1575/2007</span>
+    </div>
+  </div>
+</body>
+</html>

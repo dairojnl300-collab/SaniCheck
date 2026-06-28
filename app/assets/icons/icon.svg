@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#1B4332"/>
+  <!-- Leaf shape -->
+  <path d="M256 80 C180 140, 100 200, 130 310 C160 390, 240 420, 256 430 C272 420, 352 390, 382 310 C412 200, 332 140, 256 80Z" fill="#52B788"/>
+  <!-- Stem -->
+  <rect x="248" y="340" width="16" height="80" rx="8" fill="#2D6A4F"/>
+  <!-- PHVA text -->
+  <text x="256" y="280" font-family="Arial,sans-serif" font-size="60" font-weight="900" fill="#1B4332" text-anchor="middle">PSB</text>
+</svg>

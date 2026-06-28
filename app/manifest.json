@@ -1,0 +1,28 @@
+{
+  "name": "SaneamientoApp · ECODESA",
+  "short_name": "SaneamientoApp",
+  "description": "Inspección PSB móvil con normativa colombiana — ECODESA Ing. S.A.S",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1B4332",
+  "theme_color": "#1B4332",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities", "health"],
+  "shortcuts": [
+    {
+      "name": "Nueva Inspección",
+      "short_name": "Nueva",
+      "description": "Iniciar inspección PSB",
+      "url": "./index.html"
+    }
+  ]
+}
