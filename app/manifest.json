@@ -12,9 +12,9 @@
   "id": "sanicheck-ecodesa-psb",
   "icons": [
     {
-      "src": "assets/icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "assets/icons/favicon.png",
+      "sizes": "32x32",
+      "type": "image/png",
       "purpose": "any"
     },
     {
