@@ -95,7 +95,7 @@ const Planificar = (() => {
     inspeccion.inspeccion.fecha = fecha;
 
     Store.upsertInspeccion(inspeccion);
-    Store.setUI({ aspectoIdx: 0 });
+    Store.setUI({ programaIdx: 0, aspectoIdx: 0 });
     Router.toast('✓ Establecimiento guardado');
     Router.go('hacer');
   }

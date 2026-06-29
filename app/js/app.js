@@ -50,7 +50,7 @@
 
   window._abrirInsp = function(id) {
     Store.set({ currentId: id });
-    Store.setUI({ aspectoIdx: 0 });
+    Store.setUI({ programaIdx: 0, aspectoIdx: 0 });
     Router.go('hacer');
   };
 
