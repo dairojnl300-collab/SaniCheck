@@ -1,14 +1,20 @@
 // Service Worker — SaneamientoApp ECODESA — Offline-first
 
-const CACHE = 'saneamiento-v1';
+const CACHE = 'saneamiento-v3';
 const ASSETS = [
   './index.html',
   './css/brand.css',
   './js/logic/psb-data.js',
+  './js/logic/observaciones.js',
+  './js/logic/scores.js',
+  './js/logic/hallazgos.js',
+  './js/logic/fotos.js',
   './js/store.js',
   './js/router.js',
   './js/phva/planificar.js',
   './js/phva/hacer.js',
+  './js/phva/verificar.js',
+  './js/phva/actuar.js',
   './js/app.js',
   './manifest.json',
 ];

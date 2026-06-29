@@ -28,7 +28,9 @@ const Router = (() => {
     if (fn) {
       area.innerHTML = fn(p);
       try { if (currentScreen === 'planificar') Planificar.attach(); } catch(e) {}
-      try { if (currentScreen === 'hacer') Hacer.attach(); } catch(e) {}
+      try { if (currentScreen === 'hacer')      Hacer.attach();      } catch(e) {}
+      try { if (currentScreen === 'verificar')  Verificar.attach();  } catch(e) {}
+      try { if (currentScreen === 'actuar')     Actuar.attach();     } catch(e) {}
     } else {
       area.innerHTML = _comingSoon(currentScreen);
     }

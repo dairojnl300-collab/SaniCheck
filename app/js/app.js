@@ -3,9 +3,11 @@
 (function () {
   'use strict';
 
-  Router.register('home', renderHome);
+  Router.register('home',       renderHome);
   Router.register('planificar', Planificar.render);
-  Router.register('hacer', Hacer.render);
+  Router.register('hacer',      Hacer.render);
+  Router.register('verificar',  Verificar.render);
+  Router.register('actuar',     Actuar.render);
 
   function renderHome() {
     const { inspecciones } = Store.get();
