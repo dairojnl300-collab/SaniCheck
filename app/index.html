@@ -6,11 +6,11 @@
   <meta name="theme-color" content="#1B4332">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="SaneamientoApp">
+  <meta name="apple-mobile-web-app-title" content="SaniCheck">
   <meta name="description" content="Inspección PSB móvil con normativa colombiana — ECODESA">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="assets/icons/icon.svg">
-  <title>SaneamientoApp · ECODESA</title>
+  <title>SaniCheck · ECODESA</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,6 +34,29 @@
     .spl-fill { height: 100%; background: #52B788; animation: spl-load 0.9s ease forwards; }
     @keyframes spl-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
     @keyframes spl-load { from{width:0} to{width:100%} }
+
+    /* Banner instalación PWA */
+    #pwa-banner {
+      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: #1B4332; color: #fff;
+      padding: 12px 16px; border-radius: 14px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.35); z-index: 9990;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; max-width: 360px; width: calc(100% - 32px);
+      animation: slide-up 0.3s ease;
+    }
+    @keyframes slide-up { from{transform:translateX(-50%) translateY(20px);opacity:0}
+      to{transform:translateX(-50%) translateY(0);opacity:1} }
+    #pwa-banner .pwa-text { flex: 1; font-weight: 500; line-height: 1.3; }
+    #pwa-banner .pwa-install {
+      background: #52B788; color: #fff; border: none;
+      border-radius: 8px; padding: 7px 14px;
+      font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    }
+    #pwa-banner .pwa-close {
+      background: none; border: none; color: rgba(255,255,255,0.5);
+      font-size: 20px; cursor: pointer; padding: 0 2px; line-height: 1;
+    }
   </style>
 </head>
 <body>
@@ -41,49 +64,40 @@
   <!-- Splash screen -->
   <div id="splash">
     <div class="spl-icon">🌿</div>
-    <div class="spl-title">SaneamientoApp</div>
+    <div class="spl-title">SaniCheck</div>
     <div class="spl-sub">ECODESA · Ing. S.A.S</div>
     <div class="spl-bar"><div class="spl-fill"></div></div>
   </div>
 
   <!-- App shell -->
   <div id="app">
-
-    <!-- PHVA Topbar — siempre visible -->
     <header class="phva-topbar">
       <div class="phva-logo">
         <span>🌿</span>
-        <span>SaneamientoApp · ECODESA</span>
+        <span>SaniCheck · ECODESA</span>
       </div>
       <nav class="phva-steps">
         <button class="phva-step" data-fase="P" onclick="Router.go('planificar')" title="Planificar">
-          <span class="step-label">P</span>
-          <span class="step-name">PLANIF.</span>
+          <span class="step-label">P</span><span class="step-name">PLANIF.</span>
         </button>
         <div class="phva-sep">›</div>
         <button class="phva-step" data-fase="H" onclick="Router.go('hacer')" title="Hacer">
-          <span class="step-label">H</span>
-          <span class="step-name">HACER</span>
+          <span class="step-label">H</span><span class="step-name">HACER</span>
         </button>
         <div class="phva-sep">›</div>
         <button class="phva-step" data-fase="V" onclick="Router.go('verificar')" title="Verificar">
-          <span class="step-label">V</span>
-          <span class="step-name">VERIF.</span>
+          <span class="step-label">V</span><span class="step-name">VERIF.</span>
         </button>
         <div class="phva-sep">›</div>
         <button class="phva-step" data-fase="A" onclick="Router.go('actuar')" title="Actuar">
-          <span class="step-label">A</span>
-          <span class="step-name">ACTUAR</span>
+          <span class="step-label">A</span><span class="step-name">ACTUAR</span>
         </button>
       </nav>
     </header>
-
-    <!-- Área de pantallas -->
     <main id="screen-area"></main>
-
   </div>
 
-  <!-- Scripts en orden de dependencia -->
+  <!-- Scripts -->
   <script src="js/logic/psb-data.js"></script>
   <script src="js/store.js"></script>
   <script src="js/router.js"></script>
@@ -91,6 +105,7 @@
   <script src="js/logic/scores.js"></script>
   <script src="js/logic/hallazgos.js"></script>
   <script src="js/logic/fotos.js"></script>
+  <script src="js/licencias.js"></script>
   <script src="js/phva/planificar.js"></script>
   <script src="js/phva/hacer.js"></script>
   <script src="js/phva/verificar.js"></script>
@@ -98,11 +113,53 @@
   <script src="js/app.js"></script>
 
   <script>
-    window.addEventListener('load', function() {
-      setTimeout(function() {
+    // Splash
+    window.addEventListener('load', function () {
+      setTimeout(function () {
         var s = document.getElementById('splash');
         if (s) s.classList.add('hidden');
       }, 950);
+    });
+
+    // PWA install prompt
+    var _pwaPrompt = null;
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      _pwaPrompt = e;
+      // Mostrar banner 4 segundos después de cargar (solo si no está instalada)
+      setTimeout(function () {
+        if (!window.matchMedia('(display-mode: standalone)').matches) {
+          _mostrarBannerPWA();
+        }
+      }, 4000);
+    });
+
+    function _mostrarBannerPWA() {
+      if (document.getElementById('pwa-banner')) return;
+      var b = document.createElement('div');
+      b.id = 'pwa-banner';
+      b.innerHTML =
+        '<span style="font-size:24px;">🌿</span>' +
+        '<span class="pwa-text">Instala SaniCheck para usar sin conexión</span>' +
+        '<button class="pwa-install" onclick="_instalarPWA()">Instalar</button>' +
+        '<button class="pwa-close" onclick="this.parentElement.remove()">×</button>';
+      document.body.appendChild(b);
+    }
+
+    window._instalarPWA = async function () {
+      if (!_pwaPrompt) return;
+      _pwaPrompt.prompt();
+      var result = await _pwaPrompt.userChoice;
+      if (result.outcome === 'accepted') {
+        var b = document.getElementById('pwa-banner');
+        if (b) b.remove();
+      }
+      _pwaPrompt = null;
+    };
+
+    window.addEventListener('appinstalled', function () {
+      var b = document.getElementById('pwa-banner');
+      if (b) b.remove();
     });
   </script>
 

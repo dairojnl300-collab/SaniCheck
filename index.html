@@ -3,81 +3,500 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SaneamientoApp · ECODESA</title>
+  <meta name="theme-color" content="#1B4332">
+  <meta name="description" content="SaniCheck — Inspecciones PSB desde el celular. Normativa colombiana real. ECODESA Ing. S.A.S">
+  <title>SaniCheck · Inspecciones PSB móviles — ECODESA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand:    #1B4332;
+      --brand2:   #2D6A4F;
+      --accent:   #52B788;
+      --accent2:  #40916C;
+      --gold:     #FFB700;
+      --ink:      #1C1F23;
+      --ink2:     #374151;
+      --ink3:     #6B7280;
+      --surface:  #F0FDF4;
+      --white:    #FFFFFF;
+      --border:   #E5E7EB;
+      --radius:   14px;
+      --shadow:   0 4px 24px rgba(0,0,0,0.10);
+    }
+    html { scroll-behavior: smooth; }
     body {
       font-family: 'Inter', system-ui, sans-serif;
-      background: #0a1f14;
-      color: #fff;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
+      background: var(--white);
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
-    .card {
-      background: #1B4332;
-      border-radius: 20px;
-      padding: 48px 32px;
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+
+    /* ── NAV ── */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(27,67,50,0.97);
+      backdrop-filter: blur(12px);
+      padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px; border-bottom: 1px solid rgba(255,255,255,0.08);
     }
-    .icon { font-size: 64px; margin-bottom: 16px; }
-    h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.02em; }
-    .by { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 24px; letter-spacing: 0.06em; text-transform: uppercase; }
-    p { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.6; margin-bottom: 32px; }
-    .cta {
-      display: block;
-      background: #52B788;
-      color: #fff;
-      text-decoration: none;
-      padding: 16px 32px;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      transition: background 0.15s;
+    .nav-logo { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 800; font-size: 16px; text-decoration: none; }
+    .nav-logo span:first-child { font-size: 22px; }
+    .nav-cta { background: var(--accent); color: #fff; padding: 8px 20px; border-radius: 8px;
+      font-size: 13px; font-weight: 700; text-decoration: none; transition: background .15s; }
+    .nav-cta:hover { background: var(--accent2); }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(160deg, var(--brand) 0%, var(--brand2) 60%, #1a5c3a 100%);
+      color: #fff; padding: 80px 24px 100px;
+      text-align: center; position: relative; overflow: hidden;
     }
-    .cta:hover { background: #2D6A4F; }
-    .normas {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      justify-content: center;
-      margin-top: 24px;
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 600'%3E%3Ccircle cx='200' cy='100' r='300' fill='rgba(82,183,136,0.06)'/%3E%3Ccircle cx='700' cy='500' r='250' fill='rgba(82,183,136,0.04)'/%3E%3C/svg%3E") no-repeat center/cover;
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block; background: rgba(82,183,136,0.2); color: var(--accent);
+      border: 1px solid rgba(82,183,136,0.35); border-radius: 20px;
+      padding: 5px 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+      text-transform: uppercase; margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(28px, 6vw, 52px); font-weight: 900;
+      letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 20px;
+    }
+    .hero h1 em { color: var(--accent); font-style: normal; }
+    .hero-sub {
+      font-size: clamp(15px, 2.5vw, 19px); color: rgba(255,255,255,0.8);
+      max-width: 560px; margin: 0 auto 36px; line-height: 1.6;
+    }
+    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-hero-primary {
+      background: var(--accent); color: #fff; padding: 14px 32px;
+      border-radius: 10px; font-size: 16px; font-weight: 700;
+      text-decoration: none; transition: all .15s;
+      box-shadow: 0 4px 20px rgba(82,183,136,0.4);
+    }
+    .btn-hero-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+    .btn-hero-secondary {
+      background: rgba(255,255,255,0.1); color: #fff;
+      border: 1px solid rgba(255,255,255,0.25); padding: 14px 32px;
+      border-radius: 10px; font-size: 16px; font-weight: 600;
+      text-decoration: none; transition: background .15s;
+    }
+    .btn-hero-secondary:hover { background: rgba(255,255,255,0.18); }
+    .hero-normas {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+      margin-top: 40px;
     }
     .norma-pill {
-      background: rgba(82,183,136,0.15);
-      color: #52B788;
-      font-size: 10px;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 20px;
-      border: 1px solid rgba(82,183,136,0.3);
+      background: rgba(82,183,136,0.12); color: var(--accent);
+      border: 1px solid rgba(82,183,136,0.3); border-radius: 20px;
+      padding: 4px 12px; font-size: 11px; font-weight: 600;
+    }
+
+    /* ── FLOW ── */
+    .section { padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
+    .section-title {
+      font-size: clamp(22px, 4vw, 34px); font-weight: 900; letter-spacing: -0.02em;
+      color: var(--ink); margin-bottom: 8px;
+    }
+    .section-sub { font-size: 16px; color: var(--ink3); margin-bottom: 48px; }
+
+    .phva-flow {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;
+    }
+    .phva-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px 24px;
+      position: relative; overflow: hidden;
+    }
+    .phva-card::before {
+      content: ''; position: absolute; top: 0; left: 0;
+      width: 4px; height: 100%; background: var(--accent);
+    }
+    .phva-letter {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: var(--brand); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 900; margin-bottom: 14px;
+    }
+    .phva-card h3 { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+    .phva-card p { font-size: 13px; color: var(--ink3); line-height: 1.5; }
+    .phva-icon { font-size: 28px; margin-bottom: 10px; }
+
+    /* ── FEATURES ── */
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;
+    }
+    .feature {
+      padding: 24px; border: 1px solid var(--border);
+      border-radius: var(--radius); transition: box-shadow .2s;
+    }
+    .feature:hover { box-shadow: var(--shadow); }
+    .feature-icon { font-size: 32px; margin-bottom: 12px; }
+    .feature h4 { font-size: 15px; font-weight: 800; margin-bottom: 6px; }
+    .feature p { font-size: 13px; color: var(--ink3); }
+
+    /* ── PRICING ── */
+    .pricing-section { background: var(--surface); padding: 80px 24px; }
+    .pricing-inner { max-width: 1000px; margin: 0 auto; }
+    .pricing-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;
+      margin-top: 48px;
+    }
+    .plan {
+      background: var(--white); border: 2px solid var(--border);
+      border-radius: 18px; padding: 32px 28px;
+      display: flex; flex-direction: column; gap: 0;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .plan:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
+    .plan.featured {
+      border-color: var(--accent); position: relative;
+      box-shadow: 0 8px 40px rgba(82,183,136,0.2);
+    }
+    .plan-badge {
+      position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+      background: var(--accent); color: #fff;
+      padding: 4px 16px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; white-space: nowrap;
+    }
+    .plan-icon { font-size: 36px; margin-bottom: 12px; }
+    .plan-name { font-size: 18px; font-weight: 900; color: var(--brand); margin-bottom: 4px; }
+    .plan-target { font-size: 12px; color: var(--ink3); margin-bottom: 20px; }
+    .plan-price { margin-bottom: 6px; }
+    .plan-price-num {
+      font-size: 36px; font-weight: 900; color: var(--ink); letter-spacing: -0.03em;
+    }
+    .plan-price-cur { font-size: 16px; font-weight: 700; color: var(--ink3); }
+    .plan-price-period { font-size: 12px; color: var(--ink3); }
+    .plan-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    .plan-features li { font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
+    .plan-features li::before { content: '✓'; color: var(--accent); font-weight: 900; flex-shrink: 0; margin-top: 1px; }
+    .plan-btn {
+      display: block; text-align: center; margin-top: 24px;
+      background: var(--brand); color: #fff; padding: 13px 24px;
+      border-radius: 10px; font-size: 14px; font-weight: 700;
+      text-decoration: none; transition: background .15s;
+    }
+    .plan.featured .plan-btn { background: var(--accent); }
+    .plan-btn:hover { opacity: 0.9; }
+    .plan-wompi-note {
+      font-size: 10px; color: var(--ink3); text-align: center; margin-top: 8px;
+    }
+
+    /* Demo banner */
+    .demo-banner {
+      max-width: 600px; margin: 40px auto 0;
+      background: var(--brand); color: #fff;
+      border-radius: 14px; padding: 24px 28px;
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    }
+    .demo-banner-icon { font-size: 36px; }
+    .demo-banner-text { flex: 1; min-width: 200px; }
+    .demo-banner-text h4 { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+    .demo-banner-text p { font-size: 13px; color: rgba(255,255,255,0.75); }
+    .demo-code {
+      background: rgba(82,183,136,0.2); border: 1px solid rgba(82,183,136,0.4);
+      color: var(--accent); padding: 8px 16px; border-radius: 8px;
+      font-size: 18px; font-weight: 900; letter-spacing: 0.08em;
+      font-family: monospace;
+    }
+
+    /* ── NORMATIVA ── */
+    .normas-section { padding: 64px 24px; max-width: 900px; margin: 0 auto; }
+    .normas-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-top: 32px;
+    }
+    .norma-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 18px;
+    }
+    .norma-card-title { font-size: 13px; font-weight: 800; color: var(--brand); margin-bottom: 4px; }
+    .norma-card-desc { font-size: 12px; color: var(--ink3); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--brand); color: rgba(255,255,255,0.7);
+      padding: 40px 24px; text-align: center;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer .footer-logo { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+    footer p { font-size: 12px; line-height: 1.8; }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .hero { padding: 60px 20px 80px; }
+      .section { padding: 60px 20px; }
+      .pricing-section { padding: 60px 20px; }
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="icon">🌿</div>
-    <h1>SaneamientoApp</h1>
-    <div class="by">ECODESA · Ecología Desarrollo e Ingeniería S.A.S</div>
-    <p>
-      Inspección PSB en el celular. Genera el acta con normativa colombiana real,
-      registra hallazgos y cumple con la Secretaría de Salud.
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="#" class="nav-logo"><span>🌿</span><span>SaniCheck</span></a>
+    <a href="app/index.html" class="nav-cta">Abrir App →</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">🏥 Herramienta PSB para inspectores</div>
+    <h1>Inspecciona tu PSB<br><em>desde el celular</em></h1>
+    <p class="hero-sub">
+      Genera actas de inspección con normativa colombiana real, registra hallazgos
+      con plazos automáticos y comparte el PDF al instante.
     </p>
-    <a href="app/index.html" class="cta">Abrir la Aplicación →</a>
-    <div class="normas">
+    <div class="hero-btns">
+      <a href="app/index.html" class="btn-hero-primary">🚀 Probar Gratis</a>
+      <a href="#precios" class="btn-hero-secondary">Ver Planes</a>
+    </div>
+    <div class="hero-normas">
       <span class="norma-pill">Ley 9/1979</span>
       <span class="norma-pill">Dec. 3075/1997</span>
       <span class="norma-pill">Res. 2674/2013</span>
       <span class="norma-pill">Dec. 1575/2007</span>
+      <span class="norma-pill">Res. 2115/2007</span>
+      <span class="norma-pill">Res. 2184/2019</span>
     </div>
-  </div>
+  </section>
+
+  <!-- FLUJO PHVA -->
+  <section class="section">
+    <div class="section-title">El flujo PHVA en tu mano</div>
+    <div class="section-sub">4 pasos simples para una inspección profesional completa</div>
+    <div class="phva-flow">
+      <div class="phva-card">
+        <div class="phva-icon">📋</div>
+        <div class="phva-letter">P</div>
+        <h3>Planificar</h3>
+        <p>Registra el establecimiento: nombre, NIT, dirección, tipo, inspector y fecha.</p>
+      </div>
+      <div class="phva-card">
+        <div class="phva-icon">✅</div>
+        <div class="phva-letter">H</div>
+        <h3>Hacer</h3>
+        <p>Evalúa los 5 programas PSB: INFRA, PLD, PCIP, Residuos y Agua. Califica B/R/D cada aspecto.</p>
+      </div>
+      <div class="phva-card">
+        <div class="phva-icon">📊</div>
+        <div class="phva-letter">V</div>
+        <h3>Verificar</h3>
+        <p>Dashboard con score circular, radar de cumplimiento y hallazgos críticos priorizados.</p>
+      </div>
+      <div class="phva-card">
+        <div class="phva-icon">📄</div>
+        <div class="phva-letter">A</div>
+        <h3>Actuar</h3>
+        <p>Acta PSB numerada automáticamente con plan de acciones, firmas y normativa aplicable.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section style="background: var(--surface); padding: 80px 0;">
+    <div class="section" style="padding-top: 0; padding-bottom: 0;">
+      <div class="section-title">Todo lo que necesitas para una inspección PSB</div>
+      <div class="section-sub">Diseñado para inspectores de ECODESA — sin papel, sin Excel</div>
+      <div class="features-grid">
+        <div class="feature">
+          <div class="feature-icon">📸</div>
+          <h4>Fotos desde la cámara</h4>
+          <p>Captura evidencia fotográfica directamente desde la app. Se incluyen en el acta PDF.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📱</div>
+          <h4>100% offline</h4>
+          <p>PWA instalable en Android e iOS. Funciona sin internet — los datos se guardan localmente.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">⚡</div>
+          <h4>Hallazgos automáticos</h4>
+          <p>Plazos calculados según criticidad: Inmediato (≤48h), 7 días o 30 días calendarios.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📈</div>
+          <h4>Radar de cumplimiento</h4>
+          <p>Gráfico SVG con los 5 programas PSB y comparación histórica entre inspecciones.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🔢</div>
+          <h4>Actas numeradas</h4>
+          <p>Numeración automática PSB-YYYY-NNN. Descarga como PDF o comparte por WhatsApp.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">⚖️</div>
+          <h4>Normativa colombiana real</h4>
+          <p>Cada aspecto cita el artículo exacto: Ley 9/1979, Dec. 3075, Res. 2674 y más.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRECIOS -->
+  <section class="pricing-section" id="precios">
+    <div class="pricing-inner">
+      <div style="text-align:center;">
+        <div class="section-title">Planes y precios</div>
+        <div class="section-sub">Pago único — sin suscripción mensual</div>
+      </div>
+      <div class="pricing-grid">
+
+        <!-- Plan Inspector -->
+        <div class="plan">
+          <div class="plan-icon">👤</div>
+          <div class="plan-name">Inspector Solo</div>
+          <div class="plan-target">Para un inspector independiente</div>
+          <div class="plan-price">
+            <span class="plan-price-cur">COP&nbsp;</span>
+            <span class="plan-price-num">89.000</span>
+            <div class="plan-price-period">pago único · 1 usuario</div>
+          </div>
+          <hr class="plan-divider">
+          <ul class="plan-features">
+            <li>Hasta 20 establecimientos</li>
+            <li>5 programas PSB completos</li>
+            <li>Actas PDF ilimitadas</li>
+            <li>Fotos por aspecto</li>
+            <li>Funciona offline (PWA)</li>
+            <li>Soporte por WhatsApp</li>
+          </ul>
+          <a href="https://checkout.wompi.co/p/?public-key=pub_prod_REEMPLAZAR&currency=COP&amount-in-cents=8900000&reference=SANICHECK-INSPECTOR-SOLO"
+            class="plan-btn" target="_blank" rel="noopener">
+            Comprar ahora →
+          </a>
+          <div class="plan-wompi-note">Pago seguro con Wompi · Tarjeta, PSE, Nequi</div>
+        </div>
+
+        <!-- Plan Empresa (Destacado) -->
+        <div class="plan featured">
+          <div class="plan-badge">⭐ MÁS POPULAR</div>
+          <div class="plan-icon">🏢</div>
+          <div class="plan-name">Empresa</div>
+          <div class="plan-target">Para equipos de inspección</div>
+          <div class="plan-price">
+            <span class="plan-price-cur">COP&nbsp;</span>
+            <span class="plan-price-num">189.000</span>
+            <div class="plan-price-period">pago único · hasta 5 usuarios</div>
+          </div>
+          <hr class="plan-divider">
+          <ul class="plan-features">
+            <li>Establecimientos ilimitados</li>
+            <li>5 usuarios simultáneos</li>
+            <li>Actas con logo de empresa</li>
+            <li>Historial y comparativas</li>
+            <li>Exportar a Excel</li>
+            <li>Fotos de alta resolución</li>
+            <li>Soporte prioritario</li>
+          </ul>
+          <a href="https://checkout.wompi.co/p/?public-key=pub_prod_REEMPLAZAR&currency=COP&amount-in-cents=18900000&reference=SANICHECK-EMPRESA"
+            class="plan-btn" target="_blank" rel="noopener">
+            Comprar ahora →
+          </a>
+          <div class="plan-wompi-note">Pago seguro con Wompi · Tarjeta, PSE, Nequi</div>
+        </div>
+
+        <!-- Plan Consultor -->
+        <div class="plan">
+          <div class="plan-icon">🎓</div>
+          <div class="plan-name">Consultor</div>
+          <div class="plan-target">Para consultores y firmas</div>
+          <div class="plan-price">
+            <span class="plan-price-cur">COP&nbsp;</span>
+            <span class="plan-price-num">250.000</span>
+            <div class="plan-price-period">pago único · usuarios ilimitados</div>
+          </div>
+          <hr class="plan-divider">
+          <ul class="plan-features">
+            <li>Todo lo de Empresa</li>
+            <li>Usuarios ilimitados</li>
+            <li>Marca blanca (tu logo)</li>
+            <li>Códigos de licencia propios</li>
+            <li>Integración con API INVIMA</li>
+            <li>Acceso a código fuente</li>
+            <li>Soporte dedicado ECODESA</li>
+          </ul>
+          <a href="https://checkout.wompi.co/p/?public-key=pub_prod_REEMPLAZAR&currency=COP&amount-in-cents=25000000&reference=SANICHECK-CONSULTOR"
+            class="plan-btn" target="_blank" rel="noopener">
+            Contactar →
+          </a>
+          <div class="plan-wompi-note">Pago seguro con Wompi · Tarjeta, PSE, Nequi</div>
+        </div>
+
+      </div>
+
+      <!-- Demo Banner -->
+      <div class="demo-banner">
+        <div class="demo-banner-icon">🎁</div>
+        <div class="demo-banner-text">
+          <h4>Prueba gratis — sin tarjeta</h4>
+          <p>Usa el código DEMO2026 en la app para inspeccionar 1 establecimiento gratis.</p>
+        </div>
+        <div>
+          <div class="demo-code">DEMO2026</div>
+          <div style="text-align:center;margin-top:8px;">
+            <a href="app/index.html" style="color:var(--accent);font-size:12px;font-weight:700;text-decoration:none;">
+              Abrir app →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NORMATIVA -->
+  <section class="normas-section">
+    <div class="section-title" style="text-align:center;">Normativa colombiana incluida</div>
+    <div class="section-sub" style="text-align:center;">Cada aspecto PSB tiene la norma exacta que lo respalda</div>
+    <div class="normas-grid">
+      <div class="norma-card">
+        <div class="norma-card-title">Ley 9 / 1979</div>
+        <div class="norma-card-desc">Código sanitario nacional — bases de saneamiento básico</div>
+      </div>
+      <div class="norma-card">
+        <div class="norma-card-title">Decreto 3075 / 1997</div>
+        <div class="norma-card-desc">Buenas prácticas de manufactura en alimentos</div>
+      </div>
+      <div class="norma-card">
+        <div class="norma-card-title">Resolución 2674 / 2013</div>
+        <div class="norma-card-desc">Requisitos sanitarios en establecimientos de alimentos</div>
+      </div>
+      <div class="norma-card">
+        <div class="norma-card-title">Decreto 1575 / 2007</div>
+        <div class="norma-card-desc">Sistema de calidad del agua para consumo humano</div>
+      </div>
+      <div class="norma-card">
+        <div class="norma-card-title">Resolución 2115 / 2007</div>
+        <div class="norma-card-desc">Características, instrumentos de análisis del agua</div>
+      </div>
+      <div class="norma-card">
+        <div class="norma-card-title">Resolución 2184 / 2019</div>
+        <div class="norma-card-desc">Uso racional de bolsas plásticas — residuos sólidos</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">🌿 ECODESA</div>
+    <p>
+      Ecología Desarrollo e Ingeniería S.A.S<br>
+      <a href="mailto:ecodesaingenieria@outlook.es">ecodesaingenieria@outlook.es</a> ·
+      <a href="https://wa.me/573013653273">WhatsApp 301 365 3273</a><br>
+      <br>
+      SaniCheck © 2026 · Todos los derechos reservados<br>
+      <a href="app/index.html">Abrir Aplicación</a>
+    </p>
+  </footer>
+
 </body>
 </html>
