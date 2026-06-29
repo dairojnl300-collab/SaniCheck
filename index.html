@@ -5,238 +5,401 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#1B4332">
   <meta name="description" content="SaniCheck — Inspecciones PSB desde el celular. Normativa colombiana real. ECODESA Ing. S.A.S">
-  <title>SaniCheck · Inspecciones PSB móviles — ECODESA</title>
+  <title>SaniCheck · Herramienta PSB para Profesionales — ECODESA</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
       --brand:    #1B4332;
       --brand2:   #2D6A4F;
       --accent:   #52B788;
       --accent2:  #40916C;
-      --gold:     #FFB700;
-      --ink:      #1C1F23;
+      --warn:     #F57C00;
+      --ink:      #111827;
       --ink2:     #374151;
       --ink3:     #6B7280;
       --surface:  #F0FDF4;
+      --surface2: #D1FAE5;
       --white:    #FFFFFF;
       --border:   #E5E7EB;
       --radius:   14px;
       --shadow:   0 4px 24px rgba(0,0,0,0.10);
     }
+
     html { scroll-behavior: smooth; }
+
     body {
       font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 400;
       background: var(--white);
       color: var(--ink);
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
     }
 
+    h1, h2, h3, .section-title, .plan-name, .nav-logo-text {
+      font-family: 'Poppins', system-ui, sans-serif;
+      font-weight: 600;
+    }
+
+    /* ── SVG ICON HELPERS ── */
+    .icon-wrap {
+      width: 48px; height: 48px;
+      background: var(--surface); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 14px; flex-shrink: 0;
+    }
+    .icon-wrap svg { width: 24px; height: 24px; }
+    .icon-wrap-sm { width: 38px; height: 38px; border-radius: 10px; margin-bottom: 12px; }
+    .icon-wrap-sm svg { width: 20px; height: 20px; }
+    .plan-icon-wrap {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: var(--surface); display: flex;
+      align-items: center; justify-content: center; margin-bottom: 16px;
+    }
+    .plan-icon-wrap svg { width: 26px; height: 26px; }
+
     /* ── NAV ── */
     .nav {
       position: sticky; top: 0; z-index: 100;
       background: rgba(27,67,50,0.97);
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(14px);
       padding: 0 24px;
       display: flex; align-items: center; justify-content: space-between;
-      height: 60px; border-bottom: 1px solid rgba(255,255,255,0.08);
+      height: 60px; border-bottom: 1px solid rgba(255,255,255,0.07);
     }
-    .nav-logo { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 800; font-size: 16px; text-decoration: none; }
-    .nav-logo span:first-child { font-size: 22px; }
-    .nav-cta { background: var(--accent); color: #fff; padding: 8px 20px; border-radius: 8px;
-      font-size: 13px; font-weight: 700; text-decoration: none; transition: background .15s; }
+    .nav-logo {
+      display: flex; align-items: center; gap: 8px;
+      color: #fff; text-decoration: none;
+    }
+    .nav-logo svg { width: 22px; height: 22px; }
+    .nav-logo-text { font-size: 16px; color: #fff; }
+    .nav-cta {
+      background: var(--accent); color: #fff;
+      padding: 8px 20px; border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      text-decoration: none; transition: background .15s;
+    }
     .nav-cta:hover { background: var(--accent2); }
 
     /* ── HERO ── */
     .hero {
-      background: linear-gradient(160deg, var(--brand) 0%, var(--brand2) 60%, #1a5c3a 100%);
-      color: #fff; padding: 80px 24px 100px;
-      text-align: center; position: relative; overflow: hidden;
+      background: linear-gradient(155deg, #0e2d1f 0%, var(--brand) 40%, var(--brand2) 100%);
+      color: #fff; padding: 72px 32px 80px;
+      position: relative; overflow: hidden;
     }
     .hero::before {
-      content: ''; position: absolute; inset: 0;
-      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 600'%3E%3Ccircle cx='200' cy='100' r='300' fill='rgba(82,183,136,0.06)'/%3E%3Ccircle cx='700' cy='500' r='250' fill='rgba(82,183,136,0.04)'/%3E%3C/svg%3E") no-repeat center/cover;
-      pointer-events: none;
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(circle at 15% 25%, rgba(82,183,136,0.08) 0%, transparent 55%),
+        radial-gradient(circle at 85% 75%, rgba(82,183,136,0.05) 0%, transparent 50%);
+    }
+    .hero-inner {
+      max-width: 1080px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 280px;
+      gap: 56px; align-items: center;
+      position: relative; z-index: 1;
     }
     .hero-badge {
-      display: inline-block; background: rgba(82,183,136,0.2); color: var(--accent);
-      border: 1px solid rgba(82,183,136,0.35); border-radius: 20px;
-      padding: 5px 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
-      text-transform: uppercase; margin-bottom: 20px;
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(82,183,136,0.15); color: var(--accent);
+      border: 1px solid rgba(82,183,136,0.3); border-radius: 24px;
+      padding: 5px 14px; font-size: 12px; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 20px;
     }
+    .hero-badge svg { width: 14px; height: 14px; }
     .hero h1 {
-      font-size: clamp(28px, 6vw, 52px); font-weight: 900;
-      letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 20px;
+      font-size: clamp(32px, 4.5vw, 52px);
+      line-height: 1.12; letter-spacing: -0.02em;
+      margin-bottom: 16px; color: #fff;
     }
     .hero h1 em { color: var(--accent); font-style: normal; }
+    .hero-social {
+      font-size: 13px; color: var(--accent);
+      margin-bottom: 18px; display: flex; align-items: center; gap: 6px;
+    }
+    .hero-social svg { width: 14px; height: 14px; flex-shrink: 0; }
     .hero-sub {
-      font-size: clamp(15px, 2.5vw, 19px); color: rgba(255,255,255,0.8);
-      max-width: 560px; margin: 0 auto 36px; line-height: 1.6;
+      font-size: 17px; color: rgba(255,255,255,0.82);
+      max-width: 520px; margin-bottom: 32px; line-height: 1.7;
     }
-    .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-    .btn-hero-primary {
-      background: var(--accent); color: #fff; padding: 14px 32px;
-      border-radius: 10px; font-size: 16px; font-weight: 700;
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 36px; }
+    .btn-primary {
+      background: var(--accent); color: #fff;
+      padding: 14px 28px; border-radius: 10px;
+      font-size: 15px; font-weight: 600;
       text-decoration: none; transition: all .15s;
-      box-shadow: 0 4px 20px rgba(82,183,136,0.4);
+      box-shadow: 0 4px 20px rgba(82,183,136,0.35);
     }
-    .btn-hero-primary:hover { background: var(--accent2); transform: translateY(-1px); }
-    .btn-hero-secondary {
-      background: rgba(255,255,255,0.1); color: #fff;
-      border: 1px solid rgba(255,255,255,0.25); padding: 14px 32px;
-      border-radius: 10px; font-size: 16px; font-weight: 600;
+    .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+    .btn-outline-white {
+      background: rgba(255,255,255,0.08); color: #fff;
+      border: 1px solid rgba(255,255,255,0.22);
+      padding: 14px 28px; border-radius: 10px;
+      font-size: 15px; font-weight: 600;
       text-decoration: none; transition: background .15s;
     }
-    .btn-hero-secondary:hover { background: rgba(255,255,255,0.18); }
+    .btn-outline-white:hover { background: rgba(255,255,255,0.15); }
     .hero-normas {
-      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
-      margin-top: 40px;
+      display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px;
     }
     .norma-pill {
-      background: rgba(82,183,136,0.12); color: var(--accent);
-      border: 1px solid rgba(82,183,136,0.3); border-radius: 20px;
-      padding: 4px 12px; font-size: 11px; font-weight: 600;
+      background: rgba(82,183,136,0.10); color: var(--accent);
+      border: 1px solid rgba(82,183,136,0.25); border-radius: 20px;
+      padding: 4px 11px; font-size: 11px; font-weight: 600;
+    }
+    .hero-seal {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(240,253,244,0.08); border: 1px solid rgba(209,250,229,0.25);
+      border-radius: 8px; padding: 9px 16px;
+      font-size: 12px; color: rgba(255,255,255,0.75); font-weight: 500;
+    }
+    .hero-seal svg { width: 15px; height: 15px; color: var(--accent); flex-shrink: 0; }
+
+    /* ── PHONE MOCKUP ── */
+    .phone-wrap {
+      display: flex; justify-content: center; align-items: center;
+    }
+    .phone-shell {
+      width: 240px; min-height: 420px;
+      background: #0a0f0a;
+      border-radius: 34px; padding: 10px;
+      box-shadow:
+        0 40px 80px rgba(0,0,0,0.55),
+        0 0 0 1px rgba(255,255,255,0.06),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+      position: relative;
+    }
+    .phone-notch {
+      width: 72px; height: 6px;
+      background: #0a0f0a; border-radius: 3px;
+      position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+      z-index: 2;
+    }
+    .phone-screen {
+      background: #fff; border-radius: 26px;
+      min-height: 400px; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .phone-topbar {
+      background: var(--brand); padding: 14px 12px 9px;
+      flex-shrink: 0;
+    }
+    .phone-topbar-title {
+      font-size: 10px; font-weight: 700; color: #fff;
+      letter-spacing: 0.06em; display: flex; align-items: center; gap: 5px;
+    }
+    .phone-topbar-steps {
+      display: flex; gap: 6px; margin-top: 7px;
+    }
+    .phone-step {
+      font-size: 8px; font-weight: 700; padding: 2px 7px;
+      border-radius: 10px; color: rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.07);
+    }
+    .phone-step.active {
+      background: var(--accent); color: #fff;
+    }
+    .phone-content { padding: 12px; flex: 1; }
+    .phone-score-circle {
+      display: flex; justify-content: center; margin-bottom: 10px;
+    }
+    .phone-bars { display: flex; flex-direction: column; gap: 5px; }
+    .phone-bar-row { }
+    .phone-bar-label {
+      display: flex; justify-content: space-between;
+      font-size: 8.5px; font-weight: 600; margin-bottom: 2px;
+    }
+    .phone-bar-track {
+      height: 4px; border-radius: 2px;
+    }
+    .phone-bar-fill { height: 100%; border-radius: 2px; }
+    .phone-cta-btn {
+      margin-top: 10px; background: var(--brand); border-radius: 7px;
+      padding: 7px; text-align: center;
+      font-size: 8.5px; font-weight: 700; color: #fff;
+      letter-spacing: 0.04em;
     }
 
-    /* ── FLOW ── */
+    /* ── SECTIONS ── */
     .section { padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
     .section-title {
-      font-size: clamp(22px, 4vw, 34px); font-weight: 900; letter-spacing: -0.02em;
-      color: var(--ink); margin-bottom: 8px;
+      font-size: clamp(22px, 3.5vw, 34px);
+      letter-spacing: -0.02em; color: var(--ink); margin-bottom: 8px;
     }
-    .section-sub { font-size: 16px; color: var(--ink3); margin-bottom: 48px; }
+    .section-sub {
+      font-size: 16px; color: var(--ink3); margin-bottom: 48px; line-height: 1.6;
+    }
 
+    /* ── PHVA FLOW ── */
     .phva-flow {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 20px;
     }
     .phva-card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 28px 24px;
+      border-radius: var(--radius); padding: 26px 22px;
       position: relative; overflow: hidden;
     }
     .phva-card::before {
       content: ''; position: absolute; top: 0; left: 0;
       width: 4px; height: 100%; background: var(--accent);
     }
-    .phva-letter {
-      width: 42px; height: 42px; border-radius: 50%;
-      background: var(--brand); color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; font-weight: 900; margin-bottom: 14px;
+    .phva-card-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
     }
-    .phva-card h3 { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
-    .phva-card p { font-size: 13px; color: var(--ink3); line-height: 1.5; }
-    .phva-icon { font-size: 28px; margin-bottom: 10px; }
+    .phva-letter {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--brand); color: #fff; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-family: 'Poppins', sans-serif; font-weight: 700;
+    }
+    .phva-card h3 { font-size: 15px; margin: 0; }
+    .phva-card p { font-size: 13px; color: var(--ink3); line-height: 1.55; }
 
     /* ── FEATURES ── */
     .features-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px;
     }
     .feature {
       padding: 24px; border: 1px solid var(--border);
-      border-radius: var(--radius); transition: box-shadow .2s;
+      border-radius: var(--radius); transition: box-shadow .2s, transform .2s;
     }
-    .feature:hover { box-shadow: var(--shadow); }
-    .feature-icon { font-size: 32px; margin-bottom: 12px; }
-    .feature h4 { font-size: 15px; font-weight: 800; margin-bottom: 6px; }
-    .feature p { font-size: 13px; color: var(--ink3); }
+    .feature:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+    .feature h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; font-family: 'Poppins', sans-serif; }
+    .feature p { font-size: 13px; color: var(--ink3); line-height: 1.55; }
 
     /* ── PRICING ── */
     .pricing-section { background: var(--surface); padding: 80px 24px; }
     .pricing-inner { max-width: 1000px; margin: 0 auto; }
     .pricing-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px;
       margin-top: 48px;
     }
     .plan {
       background: var(--white); border: 2px solid var(--border);
-      border-radius: 18px; padding: 32px 28px;
-      display: flex; flex-direction: column; gap: 0;
+      border-radius: 18px; padding: 32px 26px;
+      display: flex; flex-direction: column;
       transition: transform .2s, box-shadow .2s;
     }
-    .plan:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.12); }
+    .plan:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.10); }
     .plan.featured {
       border-color: var(--accent); position: relative;
-      box-shadow: 0 8px 40px rgba(82,183,136,0.2);
+      box-shadow: 0 8px 40px rgba(82,183,136,0.18);
     }
     .plan-badge {
       position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
       background: var(--accent); color: #fff;
       padding: 4px 16px; border-radius: 20px;
       font-size: 11px; font-weight: 700; white-space: nowrap;
+      display: flex; align-items: center; gap: 5px;
     }
-    .plan-icon { font-size: 36px; margin-bottom: 12px; }
-    .plan-name { font-size: 18px; font-weight: 900; color: var(--brand); margin-bottom: 4px; }
-    .plan-target { font-size: 12px; color: var(--ink3); margin-bottom: 20px; }
-    .plan-price { margin-bottom: 6px; }
-    .plan-price-num {
-      font-size: 36px; font-weight: 900; color: var(--ink); letter-spacing: -0.03em;
-    }
-    .plan-price-cur { font-size: 16px; font-weight: 700; color: var(--ink3); }
+    .plan-badge svg { width: 11px; height: 11px; }
+    .plan-name { font-size: 18px; color: var(--brand); margin-bottom: 3px; }
+    .plan-target { font-size: 12px; color: var(--ink3); margin-bottom: 18px; }
+    .plan-price { margin-bottom: 4px; }
+    .plan-price-num { font-size: 36px; font-weight: 900; color: var(--ink); letter-spacing: -0.03em; font-family: 'Poppins', sans-serif; }
+    .plan-price-cur { font-size: 15px; font-weight: 600; color: var(--ink3); }
     .plan-price-period { font-size: 12px; color: var(--ink3); }
-    .plan-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 10px; flex: 1; }
-    .plan-features li { font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
-    .plan-features li::before { content: '✓'; color: var(--accent); font-weight: 900; flex-shrink: 0; margin-top: 1px; }
+    .plan-urgency { font-size: 12px; color: var(--warn); font-weight: 500; margin-top: 5px; }
+    .plan-divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+    .plan-features li {
+      font-size: 13px; display: flex; align-items: flex-start; gap: 8px;
+    }
+    .plan-features li svg {
+      width: 14px; height: 14px; flex-shrink: 0; margin-top: 2px;
+      stroke: var(--accent); stroke-width: 2.5;
+    }
     .plan-btn {
-      display: block; text-align: center; margin-top: 24px;
-      background: var(--brand); color: #fff; padding: 13px 24px;
-      border-radius: 10px; font-size: 14px; font-weight: 700;
+      display: block; text-align: center; margin-top: 22px;
+      background: var(--brand); color: #fff; padding: 13px 20px;
+      border-radius: 10px; font-size: 14px; font-weight: 600;
       text-decoration: none; transition: background .15s;
     }
     .plan.featured .plan-btn { background: var(--accent); }
-    .plan-btn:hover { opacity: 0.9; }
+    .plan-btn:hover { opacity: 0.88; }
     .plan-wompi-note {
       font-size: 10px; color: var(--ink3); text-align: center; margin-top: 8px;
+      display: flex; align-items: center; justify-content: center; gap: 4px;
     }
+    .plan-wompi-note svg { width: 11px; height: 11px; stroke: var(--ink3); }
 
-    /* Demo banner */
+    /* Demo Banner */
     .demo-banner {
-      max-width: 600px; margin: 40px auto 0;
+      max-width: 620px; margin: 44px auto 0;
       background: var(--brand); color: #fff;
-      border-radius: 14px; padding: 24px 28px;
-      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      border-radius: 16px; padding: 24px 28px;
+      display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
     }
-    .demo-banner-icon { font-size: 36px; }
-    .demo-banner-text { flex: 1; min-width: 200px; }
-    .demo-banner-text h4 { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
-    .demo-banner-text p { font-size: 13px; color: rgba(255,255,255,0.75); }
+    .demo-banner-icon {
+      width: 44px; height: 44px; background: rgba(82,183,136,0.2);
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .demo-banner-icon svg { width: 22px; height: 22px; stroke: var(--accent); }
+    .demo-banner-text { flex: 1; min-width: 180px; }
+    .demo-banner-text h4 { font-size: 15px; margin-bottom: 4px; font-family: 'Poppins', sans-serif; }
+    .demo-banner-text p { font-size: 13px; color: rgba(255,255,255,0.72); }
     .demo-code {
-      background: rgba(82,183,136,0.2); border: 1px solid rgba(82,183,136,0.4);
-      color: var(--accent); padding: 8px 16px; border-radius: 8px;
-      font-size: 18px; font-weight: 900; letter-spacing: 0.08em;
-      font-family: monospace;
+      background: rgba(82,183,136,0.15); border: 1px solid rgba(82,183,136,0.35);
+      color: var(--accent); padding: 8px 18px; border-radius: 8px;
+      font-size: 18px; font-weight: 700; letter-spacing: 0.08em;
+      font-family: 'JetBrains Mono', monospace;
     }
 
     /* ── NORMATIVA ── */
-    .normas-section { padding: 64px 24px; max-width: 900px; margin: 0 auto; }
+    .normas-section { padding: 72px 24px; max-width: 960px; margin: 0 auto; }
     .normas-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px; margin-top: 32px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px; margin-top: 32px;
     }
     .norma-card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 10px; padding: 16px 18px;
+      display: flex; gap: 10px; align-items: flex-start;
     }
-    .norma-card-title { font-size: 13px; font-weight: 800; color: var(--brand); margin-bottom: 4px; }
-    .norma-card-desc { font-size: 12px; color: var(--ink3); }
+    .norma-card svg { width: 16px; height: 16px; stroke: var(--brand2); flex-shrink: 0; margin-top: 1px; }
+    .norma-card-title { font-size: 13px; font-weight: 600; color: var(--brand); margin-bottom: 3px; font-family: 'Poppins', sans-serif; }
+    .norma-card-desc { font-size: 11px; color: var(--ink3); line-height: 1.4; }
 
     /* ── FOOTER ── */
     footer {
-      background: var(--brand); color: rgba(255,255,255,0.7);
-      padding: 40px 24px; text-align: center;
+      background: var(--brand); color: rgba(255,255,255,0.65);
+      padding: 48px 24px; text-align: center;
     }
+    .footer-logo {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 6px;
+      font-family: 'Poppins', sans-serif;
+    }
+    .footer-logo svg { width: 22px; height: 22px; }
+    .footer-tagline { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 20px; }
+    footer p { font-size: 12px; line-height: 2.0; }
     footer a { color: var(--accent); text-decoration: none; }
-    footer .footer-logo { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 8px; }
-    footer p { font-size: 12px; line-height: 1.8; }
+    footer a:hover { text-decoration: underline; }
+    .footer-divider { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 18px auto; max-width: 320px; }
+    .footer-legal { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 12px; }
 
-    /* Responsive */
+    /* ── RESPONSIVE ── */
+    @media (max-width: 860px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 36px; text-align: center; }
+      .hero-social { justify-content: center; }
+      .hero-btns { justify-content: center; }
+      .hero-normas { justify-content: center; }
+      .phone-wrap { margin-top: 8px; }
+      .hero-sub { margin-left: auto; margin-right: auto; }
+    }
     @media (max-width: 600px) {
-      .hero { padding: 60px 20px 80px; }
+      .hero { padding: 52px 20px 64px; }
       .section { padding: 60px 20px; }
       .pricing-section { padding: 60px 20px; }
+      .normas-section { padding: 52px 20px; }
+      .phone-shell { width: 200px; }
     }
   </style>
 </head>
@@ -244,58 +407,212 @@
 
   <!-- NAV -->
   <nav class="nav">
-    <a href="#" class="nav-logo"><span>🌿</span><span>SaniCheck</span></a>
-    <a href="app/index.html" class="nav-cta">Abrir App →</a>
+    <a href="#" class="nav-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#52B788" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2C6 8 4 13 7 18c2 3 5 4 5 4s3-1 5-4c3-5 1-10-5-16z"/>
+        <line x1="12" y1="14" x2="12" y2="22"/>
+      </svg>
+      <span class="nav-logo-text">SaniCheck</span>
+    </a>
+    <a href="app/index.html" class="nav-cta">Abrir SaniCheck →</a>
   </nav>
 
   <!-- HERO -->
   <section class="hero">
-    <div class="hero-badge">🏥 Herramienta PSB para inspectores</div>
-    <h1>Inspecciona tu PSB<br><em>desde el celular</em></h1>
-    <p class="hero-sub">
-      Genera actas de inspección con normativa colombiana real, registra hallazgos
-      con plazos automáticos y comparte el PDF al instante.
-    </p>
-    <div class="hero-btns">
-      <a href="app/index.html" class="btn-hero-primary">🚀 Probar Gratis</a>
-      <a href="#precios" class="btn-hero-secondary">Ver Planes</a>
-    </div>
-    <div class="hero-normas">
-      <span class="norma-pill">Ley 9/1979</span>
-      <span class="norma-pill">Dec. 3075/1997</span>
-      <span class="norma-pill">Res. 2674/2013</span>
-      <span class="norma-pill">Dec. 1575/2007</span>
-      <span class="norma-pill">Res. 2115/2007</span>
-      <span class="norma-pill">Res. 2184/2019</span>
+    <div class="hero-inner">
+
+      <!-- Texto -->
+      <div class="hero-text">
+        <div class="hero-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <polyline points="9 12 11 14 15 10"/>
+          </svg>
+          Herramienta PSB para profesionales
+        </div>
+
+        <h1>Inspecciona tu PSB<br><em>desde el celular</em></h1>
+
+        <p class="hero-social">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Usado por profesionales PSB en Cartagena · Barranquilla · Bogotá
+        </p>
+
+        <p class="hero-sub">
+          Genera actas con normativa colombiana real, registra hallazgos
+          con plazos automáticos y comparte el PDF al instante.
+        </p>
+
+        <div class="hero-btns">
+          <a href="app/index.html" class="btn-primary">Hacer mi primera inspección PSB gratis</a>
+          <a href="#precios" class="btn-outline-white">Ver Planes</a>
+        </div>
+
+        <div class="hero-normas">
+          <span class="norma-pill">Ley 9/1979</span>
+          <span class="norma-pill">Dec. 3075/1997</span>
+          <span class="norma-pill">Res. 2674/2013</span>
+          <span class="norma-pill">Dec. 1575/2007</span>
+          <span class="norma-pill">Res. 2115/2007</span>
+          <span class="norma-pill">Res. 2184/2019</span>
+        </div>
+
+        <div class="hero-seal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="6"/>
+            <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+          </svg>
+          🌿 ECODESA · Empresa certificada · Contrato LP-CARDIQUE-006-2025
+        </div>
+      </div>
+
+      <!-- Mockup celular -->
+      <div class="phone-wrap">
+        <div class="phone-shell">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="phone-topbar">
+              <div class="phone-topbar-title">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#52B788" stroke-width="2.5" stroke-linecap="round"><path d="M12 2C6 8 4 13 7 18c2 3 5 4 5 4s3-1 5-4c3-5 1-10-5-16z"/><line x1="12" y1="14" x2="12" y2="22"/></svg>
+                SaniCheck · PSB
+              </div>
+              <div class="phone-topbar-steps">
+                <span class="phone-step">P</span>
+                <span class="phone-step">H</span>
+                <span class="phone-step active">V</span>
+                <span class="phone-step">A</span>
+              </div>
+            </div>
+            <div class="phone-content">
+              <div class="phone-score-circle">
+                <svg width="82" height="82" viewBox="0 0 82 82">
+                  <circle cx="41" cy="41" r="32" fill="none" stroke="#E5E7EB" stroke-width="8"/>
+                  <circle cx="41" cy="41" r="32" fill="none" stroke="#2E7D32" stroke-width="8"
+                    stroke-linecap="round"
+                    stroke-dasharray="152 49"
+                    transform="rotate(-90 41 41)"/>
+                  <text x="41" y="38" text-anchor="middle" font-family="Poppins,sans-serif" font-size="17" font-weight="700" fill="#2E7D32">78%</text>
+                  <text x="41" y="51" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="#6B7280">Cumplimiento</text>
+                </svg>
+              </div>
+              <div class="phone-bars">
+                <div class="phone-bar-row">
+                  <div class="phone-bar-label">
+                    <span style="color:#374151;">INFRA</span>
+                    <span style="color:#D32F2F;">D · 50%</span>
+                  </div>
+                  <div class="phone-bar-track" style="background:#FECACA;">
+                    <div class="phone-bar-fill" style="width:50%;background:#D32F2F;"></div>
+                  </div>
+                </div>
+                <div class="phone-bar-row">
+                  <div class="phone-bar-label">
+                    <span style="color:#374151;">PLD</span>
+                    <span style="color:#F57C00;">R · 70%</span>
+                  </div>
+                  <div class="phone-bar-track" style="background:#FEF3C7;">
+                    <div class="phone-bar-fill" style="width:70%;background:#F57C00;"></div>
+                  </div>
+                </div>
+                <div class="phone-bar-row">
+                  <div class="phone-bar-label">
+                    <span style="color:#374151;">PCIP</span>
+                    <span style="color:#2E7D32;">B · 100%</span>
+                  </div>
+                  <div class="phone-bar-track" style="background:#DCFCE7;">
+                    <div class="phone-bar-fill" style="width:100%;background:#2E7D32;"></div>
+                  </div>
+                </div>
+                <div class="phone-bar-row">
+                  <div class="phone-bar-label">
+                    <span style="color:#374151;">RS</span>
+                    <span style="color:#F57C00;">R · 65%</span>
+                  </div>
+                  <div class="phone-bar-track" style="background:#FEF3C7;">
+                    <div class="phone-bar-fill" style="width:65%;background:#F57C00;"></div>
+                  </div>
+                </div>
+                <div class="phone-bar-row">
+                  <div class="phone-bar-label">
+                    <span style="color:#374151;">AGUA</span>
+                    <span style="color:#2E7D32;">B · 90%</span>
+                  </div>
+                  <div class="phone-bar-track" style="background:#DCFCE7;">
+                    <div class="phone-bar-fill" style="width:90%;background:#2E7D32;"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="phone-cta-btn">GENERAR ACTA PSB</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </section>
 
   <!-- FLUJO PHVA -->
   <section class="section">
     <div class="section-title">El flujo PHVA en tu mano</div>
-    <div class="section-sub">4 pasos simples para una inspección profesional completa</div>
+    <div class="section-sub">4 pasos simples para una inspección PSB completa y profesional</div>
     <div class="phva-flow">
       <div class="phva-card">
-        <div class="phva-icon">📋</div>
-        <div class="phva-letter">P</div>
+        <div class="phva-card-header">
+          <div class="icon-wrap icon-wrap-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="8" y="2" width="8" height="4" rx="1"/>
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+              <line x1="12" y1="11" x2="12" y2="17"/>
+              <line x1="9" y1="14" x2="15" y2="14"/>
+            </svg>
+          </div>
+          <div class="phva-letter">P</div>
+        </div>
         <h3>Planificar</h3>
-        <p>Registra el establecimiento: nombre, NIT, dirección, tipo, inspector y fecha.</p>
+        <p>Registra el establecimiento: nombre, NIT, dirección, tipo, responsable sanitario y fecha.</p>
       </div>
       <div class="phva-card">
-        <div class="phva-icon">✅</div>
-        <div class="phva-letter">H</div>
+        <div class="phva-card-header">
+          <div class="icon-wrap icon-wrap-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+          </div>
+          <div class="phva-letter">H</div>
+        </div>
         <h3>Hacer</h3>
         <p>Evalúa los 5 programas PSB: INFRA, PLD, PCIP, Residuos y Agua. Califica B/R/D cada aspecto.</p>
       </div>
       <div class="phva-card">
-        <div class="phva-icon">📊</div>
-        <div class="phva-letter">V</div>
+        <div class="phva-card-header">
+          <div class="icon-wrap icon-wrap-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+              <line x1="2" y1="20" x2="22" y2="20"/>
+            </svg>
+          </div>
+          <div class="phva-letter">V</div>
+        </div>
         <h3>Verificar</h3>
-        <p>Dashboard con score circular, radar de cumplimiento y hallazgos críticos priorizados.</p>
+        <p>Dashboard con score circular, radar de cumplimiento PSB y hallazgos críticos priorizados.</p>
       </div>
       <div class="phva-card">
-        <div class="phva-icon">📄</div>
-        <div class="phva-letter">A</div>
+        <div class="phva-card-header">
+          <div class="icon-wrap icon-wrap-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </div>
+          <div class="phva-letter">A</div>
+        </div>
         <h3>Actuar</h3>
         <p>Acta PSB numerada automáticamente con plan de acciones, firmas y normativa aplicable.</p>
       </div>
@@ -304,37 +621,68 @@
 
   <!-- FEATURES -->
   <section style="background: var(--surface); padding: 80px 0;">
-    <div class="section" style="padding-top: 0; padding-bottom: 0;">
-      <div class="section-title">Todo lo que necesitas para una inspección PSB</div>
-      <div class="section-sub">Diseñado para inspectores de ECODESA — sin papel, sin Excel</div>
+    <div class="section" style="padding-top:0;padding-bottom:0;">
+      <div class="section-title">Todo lo que necesita un profesional PSB</div>
+      <div class="section-sub">Diseñado para equipos de ECODESA — sin papel, sin Excel, sin conexión</div>
       <div class="features-grid">
         <div class="feature">
-          <div class="feature-icon">📸</div>
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </div>
           <h4>Fotos desde la cámara</h4>
-          <p>Captura evidencia fotográfica directamente desde la app. Se incluyen en el acta PDF.</p>
+          <p>Captura evidencia fotográfica directamente desde la app. Se incluyen automáticamente en el acta PDF.</p>
         </div>
         <div class="feature">
-          <div class="feature-icon">📱</div>
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+              <line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+          </div>
           <h4>100% offline</h4>
-          <p>PWA instalable en Android e iOS. Funciona sin internet — los datos se guardan localmente.</p>
+          <p>PWA instalable en Android e iOS. Funciona sin internet — los datos se guardan de forma local y segura.</p>
         </div>
         <div class="feature">
-          <div class="feature-icon">⚡</div>
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
           <h4>Hallazgos automáticos</h4>
-          <p>Plazos calculados según criticidad: Inmediato (≤48h), 7 días o 30 días calendarios.</p>
+          <p>Plazos calculados según criticidad: Inmediato (≤48h), 7 días o 30 días calendarios según normativa.</p>
         </div>
         <div class="feature">
-          <div class="feature-icon">📈</div>
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+              <polyline points="17 6 23 6 23 12"/>
+            </svg>
+          </div>
           <h4>Radar de cumplimiento</h4>
-          <p>Gráfico SVG con los 5 programas PSB y comparación histórica entre inspecciones.</p>
+          <p>Gráfico pentagonal SVG con los 5 programas PSB y comparación histórica entre visitas.</p>
         </div>
         <div class="feature">
-          <div class="feature-icon">🔢</div>
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="9" x2="20" y2="9"/>
+              <line x1="4" y1="15" x2="20" y2="15"/>
+              <line x1="10" y1="3" x2="8" y2="21"/>
+              <line x1="16" y1="3" x2="14" y2="21"/>
+            </svg>
+          </div>
           <h4>Actas numeradas</h4>
-          <p>Numeración automática PSB-YYYY-NNN. Descarga como PDF o comparte por WhatsApp.</p>
+          <p>Numeración automática PSB-YYYY-NNN. Descarga como PDF o comparte por WhatsApp en segundos.</p>
         </div>
         <div class="feature">
-          <div class="feature-icon">⚖️</div>
+          <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <polyline points="9 12 11 14 15 10"/>
+            </svg>
+          </div>
           <h4>Normativa colombiana real</h4>
           <p>Cada aspecto cita el artículo exacto: Ley 9/1979, Dec. 3075, Res. 2674 y más.</p>
         </div>
@@ -347,42 +695,83 @@
     <div class="pricing-inner">
       <div style="text-align:center;">
         <div class="section-title">Planes y precios</div>
-        <div class="section-sub">Pago único — sin suscripción mensual</div>
+        <div class="section-sub">Pago único · Sin suscripción mensual · Acceso de por vida</div>
       </div>
       <div class="pricing-grid">
 
-        <!-- Plan Inspector -->
+        <!-- Plan Profesional -->
         <div class="plan">
-          <div class="plan-icon">👤</div>
-          <div class="plan-name">Inspector Solo</div>
-          <div class="plan-target">Para un inspector independiente</div>
+          <div class="plan-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="plan-name">Profesional</div>
+          <div class="plan-target">Para profesionales independientes</div>
           <div class="plan-price">
             <span class="plan-price-cur">COP&nbsp;</span>
             <span class="plan-price-num">89.000</span>
             <div class="plan-price-period">pago único · 1 usuario</div>
           </div>
+          <div class="plan-urgency">
+            ⏱ Precio de lanzamiento — sube a $120.000 el 31 de julio
+          </div>
           <hr class="plan-divider">
           <ul class="plan-features">
-            <li>Hasta 20 establecimientos</li>
-            <li>5 programas PSB completos</li>
-            <li>Actas PDF ilimitadas</li>
-            <li>Fotos por aspecto</li>
-            <li>Funciona offline (PWA)</li>
-            <li>Soporte por WhatsApp</li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Hasta 20 establecimientos
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              5 programas PSB completos
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Actas PDF ilimitadas
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Fotos por aspecto
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Funciona offline (PWA)
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Soporte por WhatsApp
+            </li>
           </ul>
-          <a href="https://checkout.wompi.co/p/?public-key=pub_prod_REEMPLAZAR&currency=COP&amount-in-cents=8900000&reference=SANICHECK-INSPECTOR-SOLO"
+          <!-- PENDIENTE: reemplazar con clave pública Wompi real -->
+          <a href="https://checkout.wompi.co/p/?public-key=pub_prod_REEMPLAZAR&currency=COP&amount-in-cents=8900000&reference=SANICHECK-PROFESIONAL"
             class="plan-btn" target="_blank" rel="noopener">
             Comprar ahora →
           </a>
-          <div class="plan-wompi-note">Pago seguro con Wompi · Tarjeta, PSE, Nequi</div>
+          <div class="plan-wompi-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Pago seguro · Wompi · Tarjeta, PSE, Nequi
+          </div>
         </div>
 
         <!-- Plan Empresa (Destacado) -->
         <div class="plan featured">
-          <div class="plan-badge">⭐ MÁS POPULAR</div>
-          <div class="plan-icon">🏢</div>
+          <div class="plan-badge">
+            <svg viewBox="0 0 24 24" fill="#fff" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            MÁS POPULAR
+          </div>
+          <div class="plan-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="9" width="18" height="13" rx="1"/>
+              <path d="M3 9l9-6 9 6"/>
+              <line x1="9" y1="22" x2="9" y2="14"/>
+              <line x1="15" y1="22" x2="15" y2="14"/>
+              <line x1="9" y1="14" x2="15" y2="14"/>
+            </svg>
+          </div>
           <div class="plan-name">Empresa</div>
-          <div class="plan-target">Para equipos de inspección</div>
+          <div class="plan-target">Para equipos de saneamiento</div>
           <div class="plan-price">
             <span class="plan-price-cur">COP&nbsp;</span>
             <span class="plan-price-num">189.000</span>
@@ -390,26 +779,52 @@
           </div>
           <hr class="plan-divider">
           <ul class="plan-features">
-            <li>Establecimientos ilimitados</li>
-            <li>5 usuarios simultáneos</li>
-            <li>Actas con logo de empresa</li>
-            <li>Historial y comparativas</li>
-            <li>Exportar a Excel</li>
-            <li>Fotos de alta resolución</li>
-            <li>Soporte prioritario</li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Establecimientos ilimitados
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              5 usuarios simultáneos
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Actas con logo de empresa
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Historial y comparativas
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Fotos de alta resolución
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Soporte prioritario ECODESA
+            </li>
           </ul>
+          <!-- PENDIENTE: reemplazar con clave pública Wompi real -->
           <a href="https://checkout.wompi.co/p/?public-key=pub_prod_REEMPLAZAR&currency=COP&amount-in-cents=18900000&reference=SANICHECK-EMPRESA"
             class="plan-btn" target="_blank" rel="noopener">
             Comprar ahora →
           </a>
-          <div class="plan-wompi-note">Pago seguro con Wompi · Tarjeta, PSE, Nequi</div>
+          <div class="plan-wompi-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Pago seguro · Wompi · Tarjeta, PSE, Nequi
+          </div>
         </div>
 
         <!-- Plan Consultor -->
         <div class="plan">
-          <div class="plan-icon">🎓</div>
+          <div class="plan-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+          </div>
           <div class="plan-name">Consultor</div>
-          <div class="plan-target">Para consultores y firmas</div>
+          <div class="plan-target">Para consultores y firmas de saneamiento</div>
           <div class="plan-price">
             <span class="plan-price-cur">COP&nbsp;</span>
             <span class="plan-price-num">250.000</span>
@@ -417,35 +832,64 @@
           </div>
           <hr class="plan-divider">
           <ul class="plan-features">
-            <li>Todo lo de Empresa</li>
-            <li>Usuarios ilimitados</li>
-            <li>Marca blanca (tu logo)</li>
-            <li>Códigos de licencia propios</li>
-            <li>Integración con API INVIMA</li>
-            <li>Acceso a código fuente</li>
-            <li>Soporte dedicado ECODESA</li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Todo lo del plan Empresa
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Usuarios ilimitados
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Marca blanca (tu logo)
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Códigos de licencia propios
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Acceso a código fuente
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Soporte dedicado ECODESA
+            </li>
           </ul>
+          <!-- PENDIENTE: reemplazar con clave pública Wompi real -->
           <a href="https://checkout.wompi.co/p/?public-key=pub_prod_REEMPLAZAR&currency=COP&amount-in-cents=25000000&reference=SANICHECK-CONSULTOR"
             class="plan-btn" target="_blank" rel="noopener">
             Contactar →
           </a>
-          <div class="plan-wompi-note">Pago seguro con Wompi · Tarjeta, PSE, Nequi</div>
+          <div class="plan-wompi-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Pago seguro · Wompi · Tarjeta, PSE, Nequi
+          </div>
         </div>
 
       </div>
 
       <!-- Demo Banner -->
       <div class="demo-banner">
-        <div class="demo-banner-icon">🎁</div>
+        <div class="demo-banner-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 12 20 22 4 22 4 12"/>
+            <rect x="2" y="7" width="20" height="5"/>
+            <line x1="12" y1="22" x2="12" y2="7"/>
+            <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+            <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+          </svg>
+        </div>
         <div class="demo-banner-text">
           <h4>Prueba gratis — sin tarjeta</h4>
-          <p>Usa el código DEMO2026 en la app para inspeccionar 1 establecimiento gratis.</p>
+          <p>Usa el código en la app para realizar tu primera inspección PSB gratis.</p>
         </div>
         <div>
           <div class="demo-code">DEMO2026</div>
           <div style="text-align:center;margin-top:8px;">
-            <a href="app/index.html" style="color:var(--accent);font-size:12px;font-weight:700;text-decoration:none;">
-              Abrir app →
+            <a href="app/index.html" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none;">
+              Abrir SaniCheck →
             </a>
           </div>
         </div>
@@ -459,43 +903,84 @@
     <div class="section-sub" style="text-align:center;">Cada aspecto PSB tiene la norma exacta que lo respalda</div>
     <div class="normas-grid">
       <div class="norma-card">
-        <div class="norma-card-title">Ley 9 / 1979</div>
-        <div class="norma-card-desc">Código sanitario nacional — bases de saneamiento básico</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <div>
+          <div class="norma-card-title">Ley 9 / 1979</div>
+          <div class="norma-card-desc">Código sanitario nacional — bases del saneamiento básico</div>
+        </div>
       </div>
       <div class="norma-card">
-        <div class="norma-card-title">Decreto 3075 / 1997</div>
-        <div class="norma-card-desc">Buenas prácticas de manufactura en alimentos</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <div>
+          <div class="norma-card-title">Decreto 3075 / 1997</div>
+          <div class="norma-card-desc">Buenas prácticas de manufactura en alimentos</div>
+        </div>
       </div>
       <div class="norma-card">
-        <div class="norma-card-title">Resolución 2674 / 2013</div>
-        <div class="norma-card-desc">Requisitos sanitarios en establecimientos de alimentos</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <div>
+          <div class="norma-card-title">Resolución 2674 / 2013</div>
+          <div class="norma-card-desc">Requisitos sanitarios en establecimientos de alimentos</div>
+        </div>
       </div>
       <div class="norma-card">
-        <div class="norma-card-title">Decreto 1575 / 2007</div>
-        <div class="norma-card-desc">Sistema de calidad del agua para consumo humano</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <div>
+          <div class="norma-card-title">Decreto 1575 / 2007</div>
+          <div class="norma-card-desc">Sistema de calidad del agua para consumo humano</div>
+        </div>
       </div>
       <div class="norma-card">
-        <div class="norma-card-title">Resolución 2115 / 2007</div>
-        <div class="norma-card-desc">Características, instrumentos de análisis del agua</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <div>
+          <div class="norma-card-title">Resolución 2115 / 2007</div>
+          <div class="norma-card-desc">Características e instrumentos de análisis del agua</div>
+        </div>
       </div>
       <div class="norma-card">
-        <div class="norma-card-title">Resolución 2184 / 2019</div>
-        <div class="norma-card-desc">Uso racional de bolsas plásticas — residuos sólidos</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <div>
+          <div class="norma-card-title">Resolución 2184 / 2019</div>
+          <div class="norma-card-desc">Uso racional de bolsas plásticas — residuos sólidos</div>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- FOOTER -->
   <footer>
-    <div class="footer-logo">🌿 ECODESA</div>
+    <div class="footer-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#52B788" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2C6 8 4 13 7 18c2 3 5 4 5 4s3-1 5-4c3-5 1-10-5-16z"/>
+        <line x1="12" y1="14" x2="12" y2="22"/>
+      </svg>
+      ECODESA
+    </div>
+    <div class="footer-tagline">SaniCheck es un producto de ECODESA Ecología Desarrollo e Ingeniería S.A.S</div>
     <p>
-      Ecología Desarrollo e Ingeniería S.A.S<br>
-      <a href="mailto:ecodesaingenieria@outlook.es">ecodesaingenieria@outlook.es</a> ·
-      <a href="https://wa.me/573013653273">WhatsApp 301 365 3273</a><br>
-      <br>
-      SaniCheck © 2026 · Todos los derechos reservados<br>
-      <a href="app/index.html">Abrir Aplicación</a>
+      <a href="mailto:ecodesaingenieria@outlook.es">ecodesaingenieria@outlook.es</a>
+      &nbsp;·&nbsp;
+      <a href="https://wa.me/573013653273">WhatsApp 301 365 3273</a>
     </p>
+    <hr class="footer-divider">
+    <p>
+      <a href="app/index.html" style="color:#fff;font-weight:600;">Abrir SaniCheck →</a>
+    </p>
+    <div class="footer-legal">
+      © 2026 · Todos los derechos reservados · Registrado ante DNDA Colombia 2026
+    </div>
   </footer>
 
 </body>
