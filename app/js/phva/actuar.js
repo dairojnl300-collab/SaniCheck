@@ -385,7 +385,7 @@ const Actuar = (() => {
   function _renderFirmas(inspeccion) {
     const e = inspeccion.establecimiento;
     const cols = [
-      ['Elaboró',  inspeccion.inspeccion.inspector,            'Profesional ECODESA'],
+      ['Elaboró',  inspeccion.inspeccion.inspector,            'Profesional'],
       ['Revisó',   e.responsable_sanitario || '________________', 'Responsable Sanitario'],
       ['Aprobó',   '________________',                           'Representante Legal'],
     ];
