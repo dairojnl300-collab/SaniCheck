@@ -26,6 +26,7 @@ const Hacer = (() => {
     const { inspeccion, programa, programaIdx, aspectoIdx, aspecto } = s;
 
     return `
+      <img src="assets/icons/isotipo-transparente.png" class="watermark-bg" alt="">
       <div class="checklist-header">
         ${_renderTopBar(inspeccion)}
         ${_renderProgramTabs(inspeccion.programas, programaIdx)}

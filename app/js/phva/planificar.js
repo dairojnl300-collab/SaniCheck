@@ -4,6 +4,7 @@ const Planificar = (() => {
 
   function render() {
     return `
+      <img src="assets/icons/isotipo-transparente.png" class="watermark-bg" alt="">
       <div class="screen-header">
         <div class="screen-fase-badge badge-P">📋 PLANIFICAR</div>
         <div class="screen-title">Nuevo Establecimiento</div>

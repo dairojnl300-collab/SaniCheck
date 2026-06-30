@@ -28,6 +28,8 @@ const Actuar = (() => {
         }
       </style>
 
+      <img src="assets/icons/isotipo-transparente.png" class="watermark-bg" alt="">
+
       <div class="acta-actions" style="padding:var(--sp-md);display:flex;
         flex-direction:column;gap:var(--sp-sm);background:var(--color-white);
         border-bottom:1px solid var(--color-border);position:sticky;top:0;z-index:10;">
@@ -49,6 +51,7 @@ const Actuar = (() => {
       </div>
 
       <div id="acta-doc" style="background:#fff;padding:20px 20px 40px;">
+        <img src="assets/icons/isotipo-transparente.png" class="watermark-print" alt="">
         ${_renderHeader(inspeccion)}
         ${_renderDatosEstablecimiento(inspeccion)}
         ${_renderResumenCumplimiento(inspeccion)}

@@ -15,6 +15,7 @@ const Verificar = (() => {
     const historico = _getHistorico(inspeccion);
 
     return `
+      <img src="assets/icons/isotipo-transparente.png" class="watermark-bg" alt="">
       <div style="padding:var(--sp-md);">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-md);">
           <div class="screen-fase-badge badge-V">📊 VERIFICAR</div>
