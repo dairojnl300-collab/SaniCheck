@@ -175,6 +175,9 @@ const Actuar = (() => {
             }).join('')}
           </tbody>
         </table>
+        <div style="font-size:9px;color:#9CA3AF;margin-top:6px;font-style:italic;">
+          * Score ponderado por criticidad normativa: Agua/PLD peso 3 (alto) · Plagas/Residuos peso 2 (medio) · Infraestructura peso 1 (bajo). Aspectos N/A excluidos del cálculo.
+        </div>
       </div>`;
   }
 

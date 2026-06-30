@@ -1,6 +1,9 @@
 // PSB Data — 5 programas, 30 aspectos normativos colombianos
 // Fuente: Ley 9/1979 · Dec. 3075/1997 · Res. 2674/2013 · Dec. 1575/2007
 
+// Peso por criticidad normativa — cada aspecto hereda el peso de su programa
+const PSB_PESOS = { agua: 3, pld: 3, pcip: 2, residuos: 2, infra: 1 };
+
 function getPSBPrograms() {
   return [
     {

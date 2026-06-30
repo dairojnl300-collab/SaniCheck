@@ -1,8 +1,7 @@
-// scores.js — Cálculo ponderado de cumplimiento PSB (5 programas)
+// scores.js — Score ponderado por ítem: Σ(peso_programa × valor) / Σ(peso_programa) × 100
+// N/A excluido de numerador y denominador. Pesos definidos en PSB_PESOS (psb-data.js).
 
 const Scores = (() => {
-  // Ponderación normativa colombiana (suma = 100)
-  const PESOS = { infra: 25, pld: 20, pcip: 25, residuos: 15, agua: 15 };
   const VALORES = { B: 1, R: 0.5, D: 0 };
 
   function calcularPrograma(programa) {
@@ -25,19 +24,19 @@ const Scores = (() => {
   }
 
   function calcular(inspeccion) {
-    let sumaPonderada = 0;
-    let pesoAcumulado = 0;
+    let numerador = 0, denominador = 0;
 
     inspeccion.programas.forEach(prog => {
-      const r = calcularPrograma(prog);
-      if (r.evaluados > 0) {
-        const peso = PESOS[prog.id] || 20;
-        sumaPonderada += (r.pct / 100) * peso;
-        pesoAcumulado += peso;
-      }
+      const peso = PSB_PESOS[prog.id] || 1;
+      prog.aspectos.forEach(asp => {
+        if (asp.evaluacion && asp.evaluacion !== 'NA') {
+          numerador   += peso * VALORES[asp.evaluacion];
+          denominador += peso;
+        }
+      });
     });
 
-    const pct = pesoAcumulado > 0 ? Math.round((sumaPonderada / pesoAcumulado) * 100) : 0;
+    const pct = denominador > 0 ? Math.round((numerador / denominador) * 100) : 0;
 
     const todos  = inspeccion.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion && a.evaluacion !== 'NA'));
     const todosNA = inspeccion.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion === 'NA'));
@@ -66,5 +65,5 @@ const Scores = (() => {
     return 'var(--color-deficiente)';
   }
 
-  return { calcular, calcularPrograma, getColor, PESOS };
+  return { calcular, calcularPrograma, getColor };
 })();
