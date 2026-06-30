@@ -66,8 +66,8 @@ const Actuar = (() => {
         padding-bottom:14px;margin-bottom:14px;">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <img src="assets/icons/isotipo-transparente.png" alt="SaniCheck"
-              style="height:56px;width:auto;flex-shrink:0;">
+            <img src="assets/icons/logotipo-sanicheck.png" alt="SaniCheck"
+              style="height:48px;width:auto;flex-shrink:0;">
             <div>
               <div style="font-size:18px;font-weight:900;color:#1B4332;letter-spacing:-0.02em;line-height:1.1;">
                 SaniCheck</div>
