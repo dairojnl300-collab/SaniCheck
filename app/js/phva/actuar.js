@@ -11,39 +11,50 @@ const Actuar = (() => {
       Store.upsertInspeccion(inspeccion);
     }
 
-    return `
-      <style>
-        .acta-logo { height: 48px; width: auto; flex-shrink: 0; }
-        @media print {
-          .phva-topbar, .acta-actions, #app-toast { display: none !important; }
-          #app { max-width: 100% !important; box-shadow: none !important; }
-          #screen-area { overflow: visible !important; }
-          body { background: #fff !important; }
-          @page { size: A4; margin: 1.5cm; }
-          .acta-seccion { page-break-inside: avoid; break-inside: avoid; }
-          .acta-firmas  { break-inside: avoid; -webkit-column-break-inside: avoid;
-                          page-break-inside: avoid; }
-          * { -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important; }
-          /* Marca de agua: fixed repite en cada página; z-index alto + baja opacidad = encima pero legible */
-          .watermark-print {
-            display: block !important;
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            width: 60% !important;
-            max-width: 380px !important;
-            opacity: 0.08 !important;
-            z-index: 100 !important;
-            pointer-events: none !important;
-          }
+    // Inyectar CSS en <head> para que el motor PDF de Chrome lo aplique con seguridad.
+    // Un <style> dentro de <main> puede ser ignorado por el renderizador de impresión.
+    let ps = document.getElementById('acta-print-style');
+    if (!ps) {
+      ps = document.createElement('style');
+      ps.id = 'acta-print-style';
+      document.head.appendChild(ps);
+    }
+    ps.textContent = `
+      .acta-logo { height: 48px; width: auto; flex-shrink: 0; }
+      @media print {
+        .phva-topbar, .acta-actions, #app-toast { display: none !important; }
+        #app { max-width: 100% !important; box-shadow: none !important; }
+        #screen-area { overflow: visible !important; }
+        body { background: #fff !important; }
+        @page { size: A4; margin: 1.5cm; }
+        .acta-seccion { page-break-inside: avoid; break-inside: avoid; }
+        .acta-firmas  { break-inside: avoid; -webkit-column-break-inside: avoid;
+                        page-break-inside: avoid; }
+        * { -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important; }
+        .watermark-print {
+          display: block !important;
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          width: 60% !important;
+          max-width: 380px !important;
+          height: auto !important;
+          margin: auto !important;
+          transform: none !important;
+          opacity: 0.08 !important;
+          z-index: 100 !important;
+          pointer-events: none !important;
         }
-      </style>
+      }
+    `;
 
+    return `
       <!-- Watermark pantalla (centrada, grande) -->
       <img src="assets/icons/isotipo-transparente.png" class="watermark-bg" alt="">
-      <!-- Watermark PDF: fuera de #acta-doc para evitar stacking context, fixed = repite por página -->
+      <!-- Watermark PDF: fuera de #acta-doc, CSS en <head> garantiza aplicación en PDF -->
       <img src="assets/icons/isotipo-transparente.png" class="watermark-print" alt="">
 
       <div class="acta-actions" style="padding:var(--sp-md);display:flex;
