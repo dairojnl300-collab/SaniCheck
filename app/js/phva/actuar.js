@@ -33,19 +33,18 @@ const Actuar = (() => {
                         page-break-inside: avoid; }
         * { -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important; }
-        #acta-doc {
-          background-image: url('assets/icons/isotipo-transparente.png') !important;
-          background-repeat: no-repeat !important;
-          background-position: center center !important;
-          background-size: 50% auto !important;
-          background-attachment: scroll !important;
-        }
+        .wm-wrap    { position: relative !important; }
+        .wm-content { position: relative !important; z-index: 1 !important; }
         .wm-section {
           display: block !important;
-          width: 50% !important;
-          max-width: 300px !important;
-          margin: 8px auto !important;
+          position: absolute !important;
+          top: 50% !important;
+          left: 50% !important;
+          transform: translate(-50%, -50%) !important;
+          width: 65% !important;
+          max-width: 340px !important;
           opacity: 0.08 !important;
+          z-index: 0 !important;
           pointer-events: none !important;
         }
       }
@@ -75,21 +74,36 @@ const Actuar = (() => {
         </div>
       </div>
 
-      <div id="acta-doc" style="background:#fff;padding:20px 20px 40px;position:relative;z-index:1;">
+      <div id="acta-doc" style="background:#fff;padding:20px 20px 40px;">
         ${_renderHeader(inspeccion)}
         ${_renderDatosEstablecimiento(inspeccion)}
-        <img src="assets/icons/isotipo-transparente.png" class="wm-section" alt="">
-        ${_renderResumenCumplimiento(inspeccion)}
-        ${_renderMetodologia()}
-        <img src="assets/icons/isotipo-transparente.png" class="wm-section" alt="">
-        ${_renderHallazgos(inspeccion)}
-        ${_renderNoAplicables(inspeccion)}
-        ${_renderPlanAcciones(inspeccion)}
-        ${_renderObservacionesPorPrograma(inspeccion)}
-        ${_renderFotografias(inspeccion)}
-        <img src="assets/icons/isotipo-transparente.png" class="wm-section" alt="">
-        ${_renderFirmas(inspeccion)}
-        ${_renderFooter()}
+
+        <div class="wm-wrap">
+          <img src="assets/icons/isotipo-transparente.png" class="wm-section" alt="">
+          <div class="wm-content">
+            ${_renderResumenCumplimiento(inspeccion)}
+            ${_renderMetodologia()}
+          </div>
+        </div>
+
+        <div class="wm-wrap">
+          <img src="assets/icons/isotipo-transparente.png" class="wm-section" alt="">
+          <div class="wm-content">
+            ${_renderHallazgos(inspeccion)}
+            ${_renderNoAplicables(inspeccion)}
+            ${_renderPlanAcciones(inspeccion)}
+            ${_renderObservacionesPorPrograma(inspeccion)}
+            ${_renderFotografias(inspeccion)}
+          </div>
+        </div>
+
+        <div class="wm-wrap">
+          <img src="assets/icons/isotipo-transparente.png" class="wm-section" alt="">
+          <div class="wm-content">
+            ${_renderFirmas(inspeccion)}
+            ${_renderFooter()}
+          </div>
+        </div>
       </div>`;
   }
 
