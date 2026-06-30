@@ -39,9 +39,9 @@ const Planificar = (() => {
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label" for="inp-responsable">Responsable sanitario</label>
+          <label class="form-label" for="inp-responsable">Administrador / Responsable PSB</label>
           <input class="form-input" type="text" id="inp-responsable"
-            placeholder="Nombre del responsable sanitario">
+            placeholder="Nombre del administrador / responsable PSB">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-telefono">Teléfono de contacto</label>
