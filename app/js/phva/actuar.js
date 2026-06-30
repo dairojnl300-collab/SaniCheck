@@ -21,6 +21,7 @@ const Actuar = (() => {
     }
     ps.textContent = `
       .acta-logo { height: 48px; width: auto; flex-shrink: 0; }
+      .wm-section { display: none; }
       @media print {
         .phva-topbar, .acta-actions, #app-toast { display: none !important; }
         #app { max-width: 100% !important; box-shadow: none !important; }
@@ -32,20 +33,19 @@ const Actuar = (() => {
                         page-break-inside: avoid; }
         * { -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important; }
-        .watermark-print {
+        #acta-doc {
+          background-image: url('assets/icons/isotipo-transparente.png') !important;
+          background-repeat: no-repeat !important;
+          background-position: center center !important;
+          background-size: 50% auto !important;
+          background-attachment: scroll !important;
+        }
+        .wm-section {
           display: block !important;
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          right: 0 !important;
-          bottom: 0 !important;
-          width: 60% !important;
-          max-width: 380px !important;
-          height: auto !important;
-          margin: auto !important;
-          transform: none !important;
+          width: 50% !important;
+          max-width: 300px !important;
+          margin: 8px auto !important;
           opacity: 0.08 !important;
-          z-index: 100 !important;
           pointer-events: none !important;
         }
       }
@@ -54,8 +54,6 @@ const Actuar = (() => {
     return `
       <!-- Watermark pantalla (centrada, grande) -->
       <img src="assets/icons/isotipo-transparente.png" class="watermark-bg" alt="">
-      <!-- Watermark PDF: fuera de #acta-doc, CSS en <head> garantiza aplicación en PDF -->
-      <img src="assets/icons/isotipo-transparente.png" class="watermark-print" alt="">
 
       <div class="acta-actions" style="padding:var(--sp-md);display:flex;
         flex-direction:column;gap:var(--sp-sm);background:var(--color-white);
@@ -80,13 +78,16 @@ const Actuar = (() => {
       <div id="acta-doc" style="background:#fff;padding:20px 20px 40px;position:relative;z-index:1;">
         ${_renderHeader(inspeccion)}
         ${_renderDatosEstablecimiento(inspeccion)}
+        <img src="assets/icons/isotipo-transparente.png" class="wm-section" alt="">
         ${_renderResumenCumplimiento(inspeccion)}
         ${_renderMetodologia()}
+        <img src="assets/icons/isotipo-transparente.png" class="wm-section" alt="">
         ${_renderHallazgos(inspeccion)}
         ${_renderNoAplicables(inspeccion)}
         ${_renderPlanAcciones(inspeccion)}
         ${_renderObservacionesPorPrograma(inspeccion)}
         ${_renderFotografias(inspeccion)}
+        <img src="assets/icons/isotipo-transparente.png" class="wm-section" alt="">
         ${_renderFirmas(inspeccion)}
         ${_renderFooter()}
       </div>`;
