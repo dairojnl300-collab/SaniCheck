@@ -29,8 +29,12 @@ const Observaciones = (() => {
     },
   };
 
-  function getObs(programaId, valor) {
+  function getObs(programaId, valor, aspecto) {
     if (valor === 'NA') return 'No aplica a este establecimiento';
+    if (aspecto && aspecto._custom) {
+      const estado = valor === 'B' ? 'Bueno' : valor === 'R' ? 'Regular' : 'Deficiente';
+      return `${aspecto.texto}: estado ${estado}. ${aspecto.norma || 'Sin norma especificada'}`;
+    }
     return (OBS[programaId] && OBS[programaId][valor]) || '';
   }
 

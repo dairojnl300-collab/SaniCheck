@@ -49,7 +49,7 @@ const Planificar = (() => {
             placeholder="Ej: 300 123 4567" inputmode="tel">
         </div>
         <div class="form-group">
-          <label class="form-label" for="inp-inspector">Inspector ECODESA *</label>
+          <label class="form-label" for="inp-inspector">Profesional ECODESA *</label>
           <input class="form-input" type="text" id="inp-inspector"
             value="Ing. Ambiental ECODESA" required>
         </div>
@@ -95,9 +95,9 @@ const Planificar = (() => {
     inspeccion.inspeccion.fecha = fecha;
 
     Store.upsertInspeccion(inspeccion);
-    Store.setUI({ aspectoIdx: 0 });
+    Store.setUI({ aspectoIdx: 0, programaIdx: 0 });
     Router.toast('✓ Establecimiento guardado');
-    Router.go('hacer');
+    Router.go('personalizar');
   }
 
   function _hoy() {

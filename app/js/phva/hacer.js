@@ -198,7 +198,7 @@ const Hacer = (() => {
       aspecto.plazo          = null;
     } else {
       if (!aspecto.obs_editada) {
-        aspecto.obs = Observaciones.getObs(programa.id, valor);
+        aspecto.obs = Observaciones.getObs(programa.id, valor, aspecto);
       }
       aspecto.hallazgo_critico = valor === 'D' && programa.peso_critico;
       aspecto.plazo = Hallazgos.calcularPlazo(programa, valor);

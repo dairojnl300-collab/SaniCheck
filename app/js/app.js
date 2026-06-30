@@ -3,12 +3,13 @@
 (function () {
   'use strict';
 
-  Router.register('licencia',   renderLicencia);
-  Router.register('home',       renderHome);
-  Router.register('planificar', Planificar.render);
-  Router.register('hacer',      Hacer.render);
-  Router.register('verificar',  Verificar.render);
-  Router.register('actuar',     Actuar.render);
+  Router.register('licencia',     renderLicencia);
+  Router.register('home',         renderHome);
+  Router.register('planificar',   Planificar.render);
+  Router.register('personalizar', Personalizar.render);
+  Router.register('hacer',        Hacer.render);
+  Router.register('verificar',    Verificar.render);
+  Router.register('actuar',       Actuar.render);
 
   /* ── Pantalla de activación ──────────────────────── */
   function renderLicencia() {
