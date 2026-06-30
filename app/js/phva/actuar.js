@@ -13,6 +13,7 @@ const Actuar = (() => {
 
     return `
       <style>
+        .acta-logo { height: 48px; width: auto; flex-shrink: 0; }
         @media print {
           .phva-topbar, .acta-actions, #app-toast { display: none !important; }
           #app { max-width: 100% !important; box-shadow: none !important; }
@@ -66,8 +67,7 @@ const Actuar = (() => {
         padding-bottom:14px;margin-bottom:14px;">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <img src="assets/icons/logotipo-sanicheck.png" alt="SaniCheck"
-              style="height:48px;width:auto;flex-shrink:0;">
+            <img src="assets/icons/logotipo-sanicheck.png" alt="SaniCheck" class="acta-logo">
             <div>
               <div style="font-size:18px;font-weight:900;color:#1B4332;letter-spacing:-0.02em;line-height:1.1;">
                 SaniCheck</div>

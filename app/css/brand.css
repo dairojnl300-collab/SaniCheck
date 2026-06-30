@@ -96,6 +96,8 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: 0.01em;
 }
 
+.phva-logo img { height: 32px; width: auto; }
+
 .phva-steps {
   display: flex;
   align-items: center;
