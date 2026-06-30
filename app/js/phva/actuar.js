@@ -103,7 +103,7 @@ const Actuar = (() => {
       ['NIT / CC', e.nit],
       ['Dirección', e.direccion],
       ['Tipo', e.tipo],
-      ['Responsable Sanitario', e.responsable_sanitario || '—'],
+      ['Administrador / Responsable PSB', e.responsable_sanitario || '—'],
       ['Profesional', i.inspector],
       ['Fecha de Inspección', i.fecha],
       ['N° Acta', inspeccion.numero_acta],
@@ -386,7 +386,7 @@ const Actuar = (() => {
     const e = inspeccion.establecimiento;
     const cols = [
       ['Elaboró',  inspeccion.inspeccion.inspector,            'Profesional'],
-      ['Revisó',   e.responsable_sanitario || '________________', 'Responsable Sanitario'],
+      ['Revisó',   e.responsable_sanitario || '________________', 'Administrador / Responsable PSB'],
       ['Aprobó',   '________________',                           'Representante Legal'],
     ];
     return `
