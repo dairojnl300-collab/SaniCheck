@@ -49,7 +49,7 @@ const Planificar = (() => {
             placeholder="Ej: 300 123 4567" inputmode="tel">
         </div>
         <div class="form-group">
-          <label class="form-label" for="inp-inspector">Profesional ECODESA *</label>
+          <label class="form-label" for="inp-inspector">Profesional *</label>
           <input class="form-input" type="text" id="inp-inspector"
             value="Ing. Ambiental ECODESA" required>
         </div>
