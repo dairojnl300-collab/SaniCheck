@@ -1,6 +1,6 @@
 // Service Worker — SaniCheck v4 — Offline-first
 
-const CACHE = 'sanicheck-v7';
+const CACHE = 'sanicheck-v8';
 const ASSETS = [
   './index.html',
   './css/brand.css',

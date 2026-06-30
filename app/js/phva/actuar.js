@@ -307,7 +307,7 @@ const Actuar = (() => {
               return `
                 <tr style="border-bottom:1px solid #E5E7EB;background:${idx%2===0?'#fff':'#F9FAFB'};">
                   <td style="padding:6px 8px;font-weight:600;">${_esc(prog)}</td>
-                  <td style="padding:6px 8px;">${ACCIONES[prog]||'Implementar correcciones según normativa vigente.'}</td>
+                  <td style="padding:6px 8px;text-align:justify;hyphens:auto;">${ACCIONES[prog]||'Implementar correcciones según normativa vigente.'}</td>
                   <td style="padding:6px 8px;text-align:center;font-weight:700;color:${c};
                     white-space:nowrap;">${plazo}</td>
                 </tr>`;
