@@ -52,6 +52,7 @@ const Actuar = (() => {
         ${_renderHeader(inspeccion)}
         ${_renderDatosEstablecimiento(inspeccion)}
         ${_renderResumenCumplimiento(inspeccion)}
+        ${_renderMetodologia()}
         ${_renderHallazgos(inspeccion)}
         ${_renderNoAplicables(inspeccion)}
         ${_renderPlanAcciones(inspeccion)}
@@ -176,8 +177,32 @@ const Actuar = (() => {
             }).join('')}
           </tbody>
         </table>
-        <div style="font-size:9px;color:#9CA3AF;margin-top:6px;font-style:italic;">
-          * Score ponderado por criticidad normativa: Agua/PLD peso 3 (alto) · Plagas/Residuos peso 2 (medio) · Infraestructura peso 1 (bajo). Aspectos N/A excluidos del cálculo.
+      </div>`;
+  }
+
+  /* ── Metodología de evaluación ─────────────────── */
+  function _renderMetodologia() {
+    return `
+      <div style="margin-bottom:14px;padding:10px 12px;background:#F8FAFC;
+        border-radius:8px;border:1px solid #E2E8F0;
+        break-inside:avoid;page-break-inside:avoid;">
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <span style="font-size:14px;flex-shrink:0;margin-top:1px;">ℹ️</span>
+          <div style="font-size:9px;color:#374151;line-height:1.5;">
+            <strong style="font-size:9.5px;color:#1B4332;display:block;margin-bottom:3px;">
+              METODOLOGÍA DE EVALUACIÓN
+            </strong>
+            El porcentaje de cumplimiento se calcula ponderando cada programa según su criticidad
+            sanitaria, no como promedio simple de ítems.
+            <strong>Agua Potable y Limpieza/Desinfección</strong> tienen peso alto (3) por su
+            relación directa con riesgo de salud (Dec. 1575/2007, Res. 2674/2013).
+            <strong>Control de Plagas y Residuos Sólidos</strong> tienen peso medio (2).
+            <strong>Infraestructura Física</strong> tiene peso bajo (1) por ser de naturaleza
+            estructural, no inmediata. Los aspectos marcados <em>No Aplica</em> se excluyen del
+            cálculo. El estado general
+            (<strong>Bueno ≥80% / Regular 50–79% / Deficiente &lt;50%</strong>)
+            refleja este mismo porcentaje ponderado.
+          </div>
         </div>
       </div>`;
   }
