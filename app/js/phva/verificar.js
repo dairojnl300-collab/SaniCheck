@@ -44,9 +44,8 @@ const Verificar = (() => {
   /* ── Score circular ────────────────────────────── */
   function _renderScoreCircular(score, estadoGeneral) {
     const pct   = score.pct_cumplimiento || 0;
-    const color = pct >= 70 ? '#2E7D32' : pct >= 40 ? '#F57C00' : '#D32F2F';
-    // Chip reflects regulatory estado: D if ANY aspect is D (normativa colombiana)
-    const cls   = estadoGeneral || (pct >= 70 ? 'B' : pct >= 40 ? 'R' : 'D');
+    const color = Scores.getColor(pct);
+    const cls   = Scores.getEstado(pct);
     const label = cls === 'B' ? 'BUENO' : cls === 'R' ? 'REGULAR' : 'DEFICIENTE';
 
     const R = 54, C = 2 * Math.PI * R;
@@ -162,11 +161,8 @@ const Verificar = (() => {
           Cumplimiento por Programa</div>
         ${programas.map(p => {
           const sc  = Scores.calcularPrograma(p);
-          const est = p.estado_general;
-          const clr = est==='B' ? 'var(--color-bueno)'
-                    : est==='R' ? 'var(--color-regular)'
-                    : est==='D' ? 'var(--color-deficiente)'
-                    :             'var(--color-muted)';
+          const est = sc.evaluados ? Scores.getEstado(sc.pct) : null;
+          const clr = sc.evaluados ? Scores.getColor(sc.pct) : 'var(--color-muted)';
           const plazo = est ? PLAZOS[est] : '';
           return `
             <div style="margin-bottom:var(--sp-md);">

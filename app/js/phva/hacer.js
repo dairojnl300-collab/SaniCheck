@@ -205,10 +205,8 @@ const Hacer = (() => {
     }
 
     const activos = programa.aspectos.filter(a => a.evaluacion && a.evaluacion !== 'NA');
-    if (activos.some(a => a.evaluacion === 'D'))      programa.estado_general = 'D';
-    else if (activos.some(a => a.evaluacion === 'R')) programa.estado_general = 'R';
-    else if (activos.length)                          programa.estado_general = 'B';
-    else                                              programa.estado_general = null;
+    const scProg  = Scores.calcularPrograma(programa);
+    programa.estado_general = activos.length ? Scores.getEstado(scProg.pct) : null;
 
     Hallazgos.actualizar(inspeccion);
     Scores.calcular(inspeccion);

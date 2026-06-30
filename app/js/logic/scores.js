@@ -38,14 +38,8 @@ const Scores = (() => {
 
     const pct = denominador > 0 ? Math.round((numerador / denominador) * 100) : 0;
 
-    const todos  = inspeccion.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion && a.evaluacion !== 'NA'));
+    const todos   = inspeccion.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion && a.evaluacion !== 'NA'));
     const todosNA = inspeccion.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion === 'NA'));
-    let estado = null;
-    if (todos.length) {
-      if (todos.some(a => a.evaluacion === 'D'))      estado = 'D';
-      else if (todos.some(a => a.evaluacion === 'R')) estado = 'R';
-      else                                             estado = 'B';
-    }
 
     inspeccion.score = {
       B:                todos.filter(a => a.evaluacion === 'B').length,
@@ -55,8 +49,15 @@ const Scores = (() => {
       total:            todos.length,
       pct_cumplimiento: pct,
     };
-    inspeccion.estado_general = estado;
+    inspeccion.estado_general = todos.length ? getEstado(pct) : null;
     return inspeccion.score;
+  }
+
+  // Única fuente de verdad para umbral de estado: mismos cortes para texto y color.
+  function getEstado(pct) {
+    if (pct >= 80) return 'B';
+    if (pct >= 50) return 'R';
+    return 'D';
   }
 
   function getColor(pct) {
@@ -65,5 +66,5 @@ const Scores = (() => {
     return 'var(--color-deficiente)';
   }
 
-  return { calcular, calcularPrograma, getColor };
+  return { calcular, calcularPrograma, getEstado, getColor };
 })();

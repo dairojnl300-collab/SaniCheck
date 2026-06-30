@@ -122,11 +122,11 @@ const Actuar = (() => {
 
   /* ── Resumen de cumplimiento ───────────────────── */
   function _renderResumenCumplimiento(inspeccion) {
-    const score = inspeccion.score || {};
-    const pct   = score.pct_cumplimiento || 0;
-    const estado = inspeccion.estado_general;
-    const color = pct >= 70 ? '#2E7D32' : pct >= 40 ? '#F57C00' : '#D32F2F';
-    const LABEL = { B:'BUENO', R:'REGULAR', D:'DEFICIENTE' };
+    const score  = inspeccion.score || {};
+    const pct    = score.pct_cumplimiento || 0;
+    const estado = Scores.getEstado(pct);
+    const color  = _colorPct(pct);
+    const LABEL  = { B:'BUENO', R:'REGULAR', D:'DEFICIENTE' };
 
     return `
       <div class="acta-seccion" style="margin-bottom:14px;">
@@ -158,8 +158,8 @@ const Actuar = (() => {
           <tbody>
             ${inspeccion.programas.map((p, idx) => {
               const sc  = Scores.calcularPrograma(p);
-              const est = p.estado_general;
-              const c   = est==='B'?'#2E7D32':est==='R'?'#F57C00':est==='D'?'#D32F2F':'#6B7280';
+              const est = sc.evaluados ? Scores.getEstado(sc.pct) : null;
+              const c   = sc.evaluados ? _colorPct(sc.pct) : '#6B7280';
               return `
                 <tr style="border-bottom:1px solid #E5E7EB;background:${idx%2===0?'#fff':'#F9FAFB'};">
                   <td style="padding:6px 8px;font-weight:600;">${_esc(p.nombre)}</td>
@@ -169,7 +169,7 @@ const Actuar = (() => {
                   <td style="padding:6px 8px;text-align:center;">
                     ${est
                       ? `<span style="background:${c};color:#fff;padding:2px 8px;
-                          border-radius:999px;font-size:10px;font-weight:700;">${est}</span>`
+                          border-radius:999px;font-size:10px;font-weight:700;">${LABEL[est]}</span>`
                       : '—'}</td>
                 </tr>`;
             }).join('')}
@@ -432,6 +432,12 @@ const Actuar = (() => {
       <button class="btn btn-primary mt-md" style="width:auto;padding:12px 24px"
         onclick="Router.go('planificar')">Ir a Planificar</button>
     </div>`;
+  }
+
+  // Hex colors para PDF (CSS vars no resuelven en contexto print/blob).
+  // Mismos umbrales que Scores.getColor/getEstado: 80/50.
+  function _colorPct(pct) {
+    return pct >= 80 ? '#2E7D32' : pct >= 50 ? '#F57C00' : '#D32F2F';
   }
 
   function _esc(s) {
