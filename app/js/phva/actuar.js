@@ -25,10 +25,26 @@ const Actuar = (() => {
                           page-break-inside: avoid; }
           * { -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important; }
+          /* Marca de agua: fixed repite en cada página; z-index alto + baja opacidad = encima pero legible */
+          .watermark-print {
+            display: block !important;
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            width: 60% !important;
+            max-width: 380px !important;
+            opacity: 0.08 !important;
+            z-index: 100 !important;
+            pointer-events: none !important;
+          }
         }
       </style>
 
+      <!-- Watermark pantalla (centrada, grande) -->
       <img src="assets/icons/isotipo-transparente.png" class="watermark-bg" alt="">
+      <!-- Watermark PDF: fuera de #acta-doc para evitar stacking context, fixed = repite por página -->
+      <img src="assets/icons/isotipo-transparente.png" class="watermark-print" alt="">
 
       <div class="acta-actions" style="padding:var(--sp-md);display:flex;
         flex-direction:column;gap:var(--sp-sm);background:var(--color-white);
@@ -50,8 +66,7 @@ const Actuar = (() => {
         </div>
       </div>
 
-      <div id="acta-doc" style="background:#fff;padding:20px 20px 40px;">
-        <img src="assets/icons/isotipo-transparente.png" class="watermark-print" alt="">
+      <div id="acta-doc" style="background:#fff;padding:20px 20px 40px;position:relative;z-index:1;">
         ${_renderHeader(inspeccion)}
         ${_renderDatosEstablecimiento(inspeccion)}
         ${_renderResumenCumplimiento(inspeccion)}
