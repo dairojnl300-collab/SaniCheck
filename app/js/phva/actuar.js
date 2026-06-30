@@ -20,8 +20,9 @@ const Actuar = (() => {
           #screen-area { overflow: visible !important; }
           body { background: #fff !important; }
           @page { size: A4; margin: 1.5cm; }
-          .acta-seccion { page-break-inside: avoid; }
-          .acta-firmas  { page-break-before: always; }
+          .acta-seccion { page-break-inside: avoid; break-inside: avoid; }
+          .acta-firmas  { break-inside: avoid; -webkit-column-break-inside: avoid;
+                          page-break-inside: avoid; }
           * { -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important; }
         }
@@ -359,14 +360,14 @@ const Actuar = (() => {
   function _renderFirmas(inspeccion) {
     const e = inspeccion.establecimiento;
     const cols = [
-      ['Elaboró',  inspeccion.inspeccion.inspector,            'Inspector ECODESA'],
+      ['Elaboró',  inspeccion.inspeccion.inspector,            'Profesional ECODESA'],
       ['Revisó',   e.responsable_sanitario || '________________', 'Responsable Sanitario'],
       ['Aprobó',   '________________',                           'Representante Legal'],
     ];
     return `
-      <div class="acta-firmas" style="margin-top:40px;margin-bottom:14px;">
+      <div class="acta-firmas" style="margin-top:16px;margin-bottom:14px;">
         ${_secTitle('Firmas', '#1B4332')}
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px;">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:24px;">
           ${cols.map(([rol, nombre, cargo]) => `
             <div style="text-align:center;">
               <div style="border-top:1.5px solid #111827;padding-top:8px;">
