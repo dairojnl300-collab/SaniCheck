@@ -52,6 +52,7 @@ const Actuar = (() => {
         ${_renderDatosEstablecimiento(inspeccion)}
         ${_renderResumenCumplimiento(inspeccion)}
         ${_renderHallazgos(inspeccion)}
+        ${_renderNoAplicables(inspeccion)}
         ${_renderPlanAcciones(inspeccion)}
         ${_renderObservacionesPorPrograma(inspeccion)}
         ${_renderFotografias(inspeccion)}
@@ -205,6 +206,33 @@ const Actuar = (() => {
               </div>
             </div>
           </div>`).join('')}
+      </div>`;
+  }
+
+  /* ── Aspectos No Aplicables ───────────────────── */
+  function _renderNoAplicables(inspeccion) {
+    const na = [];
+    inspeccion.programas.forEach(prog => {
+      prog.aspectos.forEach(asp => {
+        if (asp.evaluacion === 'NA') {
+          na.push({ programa: prog.nombre, texto: asp.texto, norma: asp.norma });
+        }
+      });
+    });
+    if (!na.length) return '';
+    return `
+      <div class="acta-seccion" style="margin-bottom:14px;">
+        ${_secTitle(`No Aplicables (${na.length})`, '#6B7280')}
+        <div style="border:1px solid #E5E7EB;border-radius:6px;overflow:hidden;">
+          ${na.map((n, idx) => `
+            <div style="padding:6px 10px;font-size:10px;
+              background:${idx % 2 === 0 ? '#fff' : '#F9FAFB'};
+              border-bottom:${idx < na.length - 1 ? '1px solid #F3F4F6' : 'none'};">
+              <span style="color:#6B7280;font-weight:600;">${idx + 1}. </span>
+              <span style="color:#374151;">${_esc(n.texto)}</span>
+              <span style="color:#9CA3AF;"> · ${_esc(n.programa)}</span>
+            </div>`).join('')}
+        </div>
       </div>`;
   }
 

@@ -112,15 +112,20 @@ const Hacer = (() => {
       <div class="norma-badge">📋 ${aspecto.norma}</div>
 
       <div class="eval-group">
-        ${['B', 'R', 'D'].map(v => `
+        ${['B', 'R', 'D', 'NA'].map(v => `
           <button class="eval-btn eval-btn-${v}${aspecto.evaluacion === v ? ' selected' : ''}"
             onclick="Hacer.evaluar('${v}')">
-            <span class="eval-letter">${v}</span>
-            <span class="eval-word">${v === 'B' ? 'BUENO' : v === 'R' ? 'REGULAR' : 'DEFIC.'}</span>
+            <span class="eval-letter">${v === 'NA' ? 'N/A' : v}</span>
+            <span class="eval-word">${v === 'B' ? 'BUENO' : v === 'R' ? 'REGULAR' : v === 'D' ? 'DEFIC.' : 'NO APLICA'}</span>
           </button>`).join('')}
       </div>
 
-      ${aspecto.evaluacion ? `
+      ${aspecto.evaluacion === 'NA' ? `
+        <div style="padding:14px;background:#F3F4F6;border-radius:var(--radius-md);
+          text-align:center;color:#6B7280;font-size:13px;border:1px solid #E5E7EB;">
+          ℹ️ No aplica a este establecimiento
+        </div>
+      ` : aspecto.evaluacion ? `
         <div class="obs-label">Observación</div>
         <textarea class="obs-area" id="obs-area" rows="3"
           onchange="Hacer.guardarObs(this.value)"
@@ -147,15 +152,15 @@ const Hacer = (() => {
         <div style="padding:20px;background:var(--color-surface);border-radius:var(--radius-md);
           text-align:center;color:var(--color-ink3);font-size:13px;
           border:1px dashed var(--color-border);">
-          Seleccione B / R / D para registrar la calificación
+          Seleccione B / R / D / N·A para registrar la calificación
         </div>`}`;
   }
 
   function _renderResumen(programa) {
     const ev = programa.aspectos.filter(a => a.evaluacion);
     if (!ev.length) return '';
-    const c = { B: 0, R: 0, D: 0 };
-    ev.forEach(a => c[a.evaluacion]++);
+    const c = { B: 0, R: 0, D: 0, NA: 0 };
+    ev.forEach(a => { if (c[a.evaluacion] !== undefined) c[a.evaluacion]++; });
     const score = Scores.calcularPrograma(programa);
     return `
       <div style="margin-top:var(--sp-md);padding:var(--sp-md);background:var(--color-surface);
@@ -166,15 +171,14 @@ const Hacer = (() => {
           <div style="font-size:16px;font-weight:900;color:${Scores.getColor(score.pct)}">
             ${score.pct}%</div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-          ${['B', 'R', 'D'].map(v => `
-            <div style="text-align:center;padding:8px;border-radius:6px;
-              background:${v === 'B' ? 'var(--color-bueno-bg)' : v === 'R' ? 'var(--color-regular-bg)' : 'var(--color-deficiente-bg)'}">
-              <div style="font-size:22px;font-weight:900;
-                color:${v === 'B' ? 'var(--color-bueno)' : v === 'R' ? 'var(--color-regular)' : 'var(--color-deficiente)'}">
-                ${c[v]}</div>
-              <div style="font-size:9px;color:var(--color-ink3);">
-                ${v === 'B' ? 'BUENO' : v === 'R' ? 'REGULAR' : 'DEFIC.'}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
+          ${[['B','BUENO','var(--color-bueno-bg)','var(--color-bueno)'],
+             ['R','REGULAR','var(--color-regular-bg)','var(--color-regular)'],
+             ['D','DEFIC.','var(--color-deficiente-bg)','var(--color-deficiente)'],
+             ['NA','N/A','#F3F4F6','#6B7280']].map(([v, label, bg, color]) => `
+            <div style="text-align:center;padding:8px;border-radius:6px;background:${bg}">
+              <div style="font-size:22px;font-weight:900;color:${color}">${c[v]}</div>
+              <div style="font-size:9px;color:var(--color-ink3);">${label}</div>
             </div>`).join('')}
         </div>
       </div>`;
@@ -187,17 +191,24 @@ const Hacer = (() => {
     const aspecto = programa.aspectos[aspectoIdx];
 
     aspecto.evaluacion = valor;
-    if (!aspecto.obs_editada) {
-      aspecto.obs = Observaciones.getObs(programa.id, valor);
+    if (valor === 'NA') {
+      aspecto.obs            = 'No aplica a este establecimiento';
+      aspecto.obs_editada    = false;
+      aspecto.hallazgo_critico = false;
+      aspecto.plazo          = null;
+    } else {
+      if (!aspecto.obs_editada) {
+        aspecto.obs = Observaciones.getObs(programa.id, valor);
+      }
+      aspecto.hallazgo_critico = valor === 'D' && programa.peso_critico;
+      aspecto.plazo = Hallazgos.calcularPlazo(programa, valor);
     }
-    aspecto.hallazgo_critico = valor === 'D' && programa.peso_critico;
-    aspecto.plazo = Hallazgos.calcularPlazo(programa, valor);
 
-    const evaluados = programa.aspectos.filter(a => a.evaluacion);
-    if (evaluados.some(a => a.evaluacion === 'D'))      programa.estado_general = 'D';
-    else if (evaluados.some(a => a.evaluacion === 'R')) programa.estado_general = 'R';
-    else if (evaluados.length)                          programa.estado_general = 'B';
-    else                                                programa.estado_general = null;
+    const activos = programa.aspectos.filter(a => a.evaluacion && a.evaluacion !== 'NA');
+    if (activos.some(a => a.evaluacion === 'D'))      programa.estado_general = 'D';
+    else if (activos.some(a => a.evaluacion === 'R')) programa.estado_general = 'R';
+    else if (activos.length)                          programa.estado_general = 'B';
+    else                                              programa.estado_general = null;
 
     Hallazgos.actualizar(inspeccion);
     Scores.calcular(inspeccion);

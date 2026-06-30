@@ -7,9 +7,10 @@ const Scores = (() => {
 
   function calcularPrograma(programa) {
     const aspectos  = programa.aspectos;
-    const evaluados = aspectos.filter(a => a.evaluacion);
+    const na        = aspectos.filter(a => a.evaluacion === 'NA').length;
+    const evaluados = aspectos.filter(a => a.evaluacion && a.evaluacion !== 'NA');
     if (!evaluados.length) {
-      return { pct: 0, evaluados: 0, total: aspectos.length, B: 0, R: 0, D: 0 };
+      return { pct: 0, evaluados: 0, total: aspectos.length, na, B: 0, R: 0, D: 0 };
     }
     const c = { B: 0, R: 0, D: 0 };
     let suma = 0;
@@ -18,6 +19,7 @@ const Scores = (() => {
       pct:      Math.round((suma / evaluados.length) * 100),
       evaluados: evaluados.length,
       total:    aspectos.length,
+      na,
       ...c,
     };
   }
@@ -37,7 +39,8 @@ const Scores = (() => {
 
     const pct = pesoAcumulado > 0 ? Math.round((sumaPonderada / pesoAcumulado) * 100) : 0;
 
-    const todos = inspeccion.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion));
+    const todos  = inspeccion.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion && a.evaluacion !== 'NA'));
+    const todosNA = inspeccion.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion === 'NA'));
     let estado = null;
     if (todos.length) {
       if (todos.some(a => a.evaluacion === 'D'))      estado = 'D';
@@ -49,6 +52,7 @@ const Scores = (() => {
       B:                todos.filter(a => a.evaluacion === 'B').length,
       R:                todos.filter(a => a.evaluacion === 'R').length,
       D:                todos.filter(a => a.evaluacion === 'D').length,
+      NA:               todosNA.length,
       total:            todos.length,
       pct_cumplimiento: pct,
     };

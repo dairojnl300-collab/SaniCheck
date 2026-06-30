@@ -30,6 +30,7 @@ const Observaciones = (() => {
   };
 
   function getObs(programaId, valor) {
+    if (valor === 'NA') return 'No aplica a este establecimiento';
     return (OBS[programaId] && OBS[programaId][valor]) || '';
   }
 
