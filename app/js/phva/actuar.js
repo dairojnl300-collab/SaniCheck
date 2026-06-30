@@ -188,7 +188,7 @@ const Actuar = (() => {
         break-inside:avoid;page-break-inside:avoid;">
         <div style="display:flex;gap:8px;align-items:flex-start;">
           <span style="font-size:14px;flex-shrink:0;margin-top:1px;">ℹ️</span>
-          <div style="font-size:9px;color:#374151;line-height:1.5;">
+          <div style="font-size:9px;color:#374151;line-height:1.5;text-align:justify;hyphens:auto;">
             <strong style="font-size:9.5px;color:#1B4332;display:block;margin-bottom:3px;">
               METODOLOGÍA DE EVALUACIÓN
             </strong>
@@ -340,7 +340,7 @@ const Actuar = (() => {
                     <div>
                       <div style="color:#111827;">${_esc(a.texto)}</div>
                       ${a.obs
-                        ? `<div style="color:#6B7280;font-size:10px;margin-top:1px;">${_esc(a.obs)}</div>`
+                        ? `<div style="color:#6B7280;font-size:10px;margin-top:1px;text-align:justify;hyphens:auto;">${_esc(a.obs)}</div>`
                         : ''}
                     </div>
                   </div>`;
@@ -409,7 +409,7 @@ const Actuar = (() => {
   function _renderFooter() {
     return `
       <div style="border-top:1.5px solid #1B4332;padding-top:10px;text-align:center;margin-top:16px;">
-        <div style="font-size:9px;color:#6B7280;line-height:1.7;">
+        <div style="font-size:9px;color:#6B7280;line-height:1.7;text-align:justify;">
           Normativa aplicada: Ley 9/1979 (Código Sanitario) · Decreto 3075/1997 (BPM) ·
           Resolución 2674/2013 · Decreto 1575/2007 (Agua) · Resolución 2115/2007 ·
           Resolución 2184/2019 (Residuos)
