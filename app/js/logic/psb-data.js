@@ -95,7 +95,7 @@ function crearInspeccion(establecimiento, inspector) {
     fase_phva: 'P',
     establecimiento: { ...establecimiento },
     inspeccion: {
-      inspector: inspector || 'Ing. Ambiental ECODESA',
+      inspector: inspector || 'Ing. Ambiental',
       fecha: new Date().toISOString().split('T')[0],
       hora_inicio: new Date().toTimeString().slice(0, 5),
       hora_fin: null,

@@ -104,7 +104,7 @@ const Actuar = (() => {
       ['Dirección', e.direccion],
       ['Tipo', e.tipo],
       ['Responsable Sanitario', e.responsable_sanitario || '—'],
-      ['Inspector ECODESA', i.inspector],
+      ['Profesional', i.inspector],
       ['Fecha de Inspección', i.fecha],
       ['N° Acta', inspeccion.numero_acta],
     ];
