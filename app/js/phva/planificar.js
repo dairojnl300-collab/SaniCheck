@@ -51,7 +51,7 @@ const Planificar = (() => {
         <div class="form-group">
           <label class="form-label" for="inp-inspector">Profesional *</label>
           <input class="form-input" type="text" id="inp-inspector"
-            value="Ing. Ambiental ECODESA" required>
+            value="Ing. Ambiental" required>
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-fecha">Fecha de inspección</label>
@@ -88,7 +88,7 @@ const Planificar = (() => {
       responsable_sanitario: val('inp-responsable'),
       telefono: val('inp-telefono'),
     };
-    const inspector = val('inp-inspector') || 'Ing. Ambiental ECODESA';
+    const inspector = val('inp-inspector') || 'Ing. Ambiental';
     const fecha     = val('inp-fecha') || _hoy();
 
     const inspeccion = crearInspeccion(establecimiento, inspector);
