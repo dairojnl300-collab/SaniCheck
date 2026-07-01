@@ -1,24 +1,32 @@
-// Service Worker — SaniCheck v4 — Offline-first
+// Service Worker — SaniCheck v2 — Offline-first completo
 
-const CACHE = 'sanicheck-v8';
+const CACHE = 'sanicheck-v2';
 const ASSETS = [
   './index.html',
-  './css/brand.css',
   './manifest.json',
+  './css/brand.css',
+  './js/store.js',
+  './js/router.js',
+  './js/licencias.js',
+  './js/app.js',
   './js/logic/psb-data.js',
+  './js/logic/checklist-config.js',
   './js/logic/observaciones.js',
   './js/logic/scores.js',
   './js/logic/hallazgos.js',
   './js/logic/fotos.js',
-  './js/store.js',
-  './js/router.js',
-  './js/licencias.js',
   './js/phva/planificar.js',
+  './js/phva/personalizar.js',
   './js/phva/hacer.js',
   './js/phva/verificar.js',
   './js/phva/actuar.js',
-  './js/app.js',
+  './assets/vendor/chart.umd.min.js',
+  './assets/icons/favicon.png',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png',
   './assets/icons/icon.svg',
+  './assets/icons/logotipo-sanicheck.png',
+  './assets/icons/isotipo-transparente.png',
 ];
 
 self.addEventListener('install', e => {
@@ -42,6 +50,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
+
   // Google Fonts — network-first con fallback silencioso
   if (url.hostname.includes('fonts.g')) {
     e.respondWith(
@@ -49,6 +58,16 @@ self.addEventListener('fetch', e => {
     );
     return;
   }
+
+  // Navegación (HTML) — network-first con fallback al shell cacheado
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
+  // Resto de assets — cache-first
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;

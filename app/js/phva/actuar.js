@@ -86,7 +86,7 @@ const Actuar = (() => {
 
     if (typeof Chart === 'undefined') {
       const s = document.createElement('script');
-      s.src = 'js/chart.umd.min.js';
+      s.src = 'assets/vendor/chart.umd.min.js';
       s.onload = () => _initCharts(inspeccion);
       document.head.appendChild(s);
     } else {
@@ -802,17 +802,29 @@ const Actuar = (() => {
       .map(p => ({ nombre: _shortName(p.nombre), ...Scores.calcularPrograma(p) }))
       .filter(p => p.evaluados > 0)
       .sort((a, b) => b.pct - a.pct);
-    const html = _buildActaHTML(inspeccion, base, sorted);
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
+    // La ventana emergente (about:blank) no queda bajo control del Service Worker,
+    // así que Chart.js se incrusta inline en vez de cargarse con <script src> para que
+    // funcione sin conexión.
+    const chartJsPromise = sorted.length
+      ? fetch('assets/vendor/chart.umd.min.js').then(r => r.ok ? r.text() : '').catch(() => '')
+      : Promise.resolve('');
+    chartJsPromise.then(chartJs => {
+      const html = _buildActaHTML(inspeccion, base, sorted, chartJs);
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+    });
   }
 
-  function _buildActaHTML(inspeccion, base, sorted) {
+  function _buildActaHTML(inspeccion, base, sorted, chartJs) {
     const D = JSON.stringify(sorted.map(p => ({ nombre: p.nombre, pct: p.pct })));
 
+    const chartLib = chartJs
+      ? `<script>${chartJs.replace(/<\/script/gi, '<\\/script')}</script>`
+      : `<script src="/app/assets/vendor/chart.umd.min.js"></script>`;
+
     const chartScript = sorted.length ? `
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+${chartLib}
 <script>
 window.addEventListener('load', function() {
   setTimeout(function() {
