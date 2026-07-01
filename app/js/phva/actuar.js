@@ -21,16 +21,12 @@ const Actuar = (() => {
       document.head.appendChild(ps);
     }
     ps.textContent = `
-      .acta-logo { height: 48px; width: auto; flex-shrink: 0; }
-      #acta-print-header { display: none; }
       @media print {
         .phva-topbar, .acta-actions, #app-toast { display: none !important; }
         #app { max-width: 100% !important; box-shadow: none !important; }
         #screen-area { overflow: visible !important; }
         body { background: #fff !important; orphans: 4; widows: 4; }
         @page { margin: 1.5cm; }
-        #acta-header-screen { display: none !important; }
-        #acta-print-header  { display: flex !important; }
         .acta-seccion    { page-break-inside: avoid; break-inside: avoid; }
         .acta-card       { page-break-inside: avoid; break-inside: avoid; }
         .acta-hallazgo   { page-break-inside: avoid; break-inside: avoid; }
@@ -64,7 +60,6 @@ const Actuar = (() => {
 
       <div id="acta-doc" style="background:#fff;padding:20px 20px 40px;">
         ${_renderPrintHeader(inspeccion)}
-        ${_renderHeader(inspeccion)}
         ${_renderDatosEstablecimiento(inspeccion)}
         ${_renderResumenCumplimiento(inspeccion)}
         ${_renderGraficasPorPrograma(inspeccion)}
@@ -237,37 +232,6 @@ const Actuar = (() => {
           <div style="font-weight:800;font-size:11px;color:${C.verde};">ACTA DE INSPECCIÓN PSB</div>
           <div style="font-size:9px;color:#6B7280;">N° <strong>${_esc(inspeccion.numero_acta)}</strong></div>
           <div style="font-size:9px;color:#6B7280;">${inspeccion.inspeccion.fecha}</div>
-        </div>
-      </div>`;
-  }
-
-  /* ── Header ECODESA (pantalla) ───────────────────── */
-  function _renderHeader(inspeccion) {
-    return `
-      <div id="acta-header-screen" class="acta-seccion" style="border-bottom:2.5px solid ${C.verde};
-        padding-bottom:14px;margin-bottom:14px;">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <img src="assets/icons/logotipo-sanicheck.png" alt="SaniCheck" class="acta-logo">
-            <div>
-              <div style="font-size:18px;font-weight:900;color:${C.verde};letter-spacing:-0.02em;line-height:1.1;">
-                SaniCheck</div>
-              <div style="font-size:9px;font-weight:700;color:#2D6A4F;letter-spacing:0.04em;margin-top:1px;">
-                by ECODESA</div>
-              <div style="font-size:8px;color:#6B7280;margin-top:3px;">
-                Ecología Desarrollo e Ingeniería S.A.S</div>
-              <div style="font-size:8px;color:#6B7280;">
-                ecodesaingenieria@outlook.es · WhatsApp 301 365 3273</div>
-            </div>
-          </div>
-          <div style="text-align:right;flex-shrink:0;">
-            <div style="font-size:14px;font-weight:800;color:${C.verde};">
-              ACTA DE INSPECCIÓN PSB</div>
-            <div style="font-size:11px;color:#6B7280;margin-top:2px;">
-              N° <strong>${_esc(inspeccion.numero_acta)}</strong></div>
-            <div style="font-size:11px;color:#6B7280;">
-              Fecha: ${inspeccion.inspeccion.fecha}</div>
-          </div>
         </div>
       </div>`;
   }
