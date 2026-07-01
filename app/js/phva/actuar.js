@@ -119,39 +119,8 @@ const Actuar = (() => {
     _initHistoricoCharts(inspeccion);
   }
 
-  /* ── Tortas por programa ── */
-  function _initPieCharts(inspeccion) {
-    inspeccion.programas.forEach(prog => {
-      const canvas = document.getElementById('chart-pie-' + prog.id);
-      if (!canvas) return;
-      const sc = Scores.calcularPrograma(prog);
-      if (!sc.evaluados) return;
-
-      const chart = new Chart(canvas, {
-        type: 'pie',
-        data: {
-          labels: ['Bueno', 'Regular', 'Deficiente', 'N/A'],
-          datasets: [{
-            data: [sc.B, sc.R, sc.D, sc.na],
-            backgroundColor: [C.acento, C.naranja, C.rojo, C.gris + 'AA'],
-            borderColor: '#fff',
-            borderWidth: 2,
-          }]
-        },
-        options: {
-          responsive: false,
-          animation: { duration: 0 },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: { label: ctx => `${ctx.label}: ${ctx.raw}` }
-            }
-          }
-        }
-      });
-      _charts.push(chart);
-    });
-  }
+  /* ── Tortas eliminadas — reemplazadas por KPI cards ── */
+  function _initPieCharts() {}
 
   /* ── Barras horizontales comparativo ── */
   function _initComparativoChart(inspeccion) {
@@ -446,39 +415,48 @@ const Actuar = (() => {
       </div>`;
   }
 
-  /* ── Gráficas torta por programa ─────────────────── */
+  /* ── KPI cards Power BI por programa (sin tortas) ── */
   function _renderGraficasPorPrograma(inspeccion) {
-    const LABEL = { B:'Bueno', R:'Regular', D:'Deficiente' };
+    const ESTADO_LABEL = { B:'BUENO', R:'REGULAR', D:'DEFICIENTE' };
+    const PESO_LABEL   = { 1:'Bajo (1)', 2:'Medio (2)', 3:'Alto (3)' };
 
     const cards = inspeccion.programas.map(prog => {
-      const sc = Scores.calcularPrograma(prog);
+      const sc   = Scores.calcularPrograma(prog);
       if (!sc.evaluados) return '';
 
       const color = _colorPct(sc.pct);
       const est   = Scores.getEstado(sc.pct);
+      const peso  = (typeof PSB_PESOS !== 'undefined' ? PSB_PESOS[prog.id] : null) || 1;
+
       return `
-        <div class="acta-card" style="border:1px solid #E5E7EB;border-radius:8px;
-          padding:10px;break-inside:avoid;page-break-inside:avoid;
-          display:flex;gap:10px;align-items:center;">
-          <canvas id="chart-pie-${prog.id}" width="90" height="90"
-            style="flex-shrink:0;"></canvas>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:10px;font-weight:700;color:${C.verde};margin-bottom:3px;
-              white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
-              title="${_esc(prog.nombre)}">${_esc(prog.nombre)}</div>
-            <div style="font-size:22px;font-weight:900;color:${color};line-height:1.1;">
-              ${sc.pct}%</div>
-            <div style="font-size:9px;color:#6B7280;margin-bottom:5px;">
-              ${sc.evaluados}/${sc.total} eval.${sc.na > 0 ? ` · ${sc.na} N/A` : ''}</div>
-            <div style="display:flex;flex-wrap:wrap;gap:3px;">
-              ${[['B', sc.B, C.acento], ['R', sc.R, C.naranja], ['D', sc.D, C.rojo]]
-                .filter(([,n]) => n > 0)
-                .map(([k,n,c]) =>
-                  `<span style="background:${c};color:#fff;padding:2px 5px;
-                    border-radius:4px;font-size:8px;font-weight:700;">${n} ${LABEL[k]}</span>`
-                ).join('')}
-            </div>
+        <div class="acta-card" style="
+          border:1px solid #E5E7EB;border-left:3px solid ${color};
+          border-radius:8px;padding:10px 12px;background:#fff;
+          break-inside:avoid;page-break-inside:avoid;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;
+            gap:6px;margin-bottom:6px;">
+            <div style="font-size:10px;font-weight:700;color:${C.verde};line-height:1.3;
+              flex:1;min-width:0;">${_esc(prog.nombre)}</div>
+            <span style="background:${color};color:#fff;padding:2px 7px;border-radius:999px;
+              font-size:8px;font-weight:800;white-space:nowrap;flex-shrink:0;">
+              ${ESTADO_LABEL[est]}</span>
           </div>
+          <div style="font-size:28px;font-weight:900;color:${color};line-height:1;
+            margin-bottom:5px;">${sc.pct}%</div>
+          <div style="height:4px;background:#E5E7EB;border-radius:2px;margin-bottom:8px;">
+            <div style="height:4px;width:${sc.pct}%;background:${color};border-radius:2px;"></div>
+          </div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;">
+            <span style="background:${C.acento}22;color:${C.acento};border:1px solid ${C.acento}44;
+              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">B:${sc.B}</span>
+            <span style="background:${C.naranja}22;color:${C.naranja};border:1px solid ${C.naranja}44;
+              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">R:${sc.R}</span>
+            <span style="background:${C.rojo}22;color:${C.rojo};border:1px solid ${C.rojo}44;
+              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">D:${sc.D}</span>
+            <span style="background:${C.gris}22;color:${C.gris};border:1px solid ${C.gris}44;
+              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">N/A:${sc.na}</span>
+          </div>
+          <div style="font-size:8.5px;color:#9CA3AF;">Peso: ${PESO_LABEL[peso]}</div>
         </div>`;
     }).filter(Boolean);
 
