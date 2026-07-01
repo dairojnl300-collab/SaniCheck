@@ -140,51 +140,88 @@ const Actuar = (() => {
 
     if (!sorted.length) return;
 
-    const pctInsidePlugin = {
-      id: 'pctInside',
+    const _chartColor = pct => pct >= 80 ? '#1B4332' : pct >= 50 ? '#F57C00' : '#A32D2D';
+
+    const pctLabelPlugin = {
+      id: 'pctLabel',
       afterDatasetsDraw(chart) {
         const ctx = chart.ctx;
         const meta = chart.getDatasetMeta(0);
         meta.data.forEach((bar, j) => {
           const val = sorted[j]?.pct;
-          if (!val) return;
-          const barW = bar.x - bar.base;
-          if (barW < 30) return;
+          if (val === undefined) return;
           ctx.save();
-          ctx.fillStyle = '#fff';
-          ctx.font = 'bold 10px sans-serif';
+          ctx.font = 'bold 12px sans-serif';
           ctx.textBaseline = 'middle';
-          ctx.textAlign = 'right';
-          ctx.fillText(val + '%', bar.x - 6, bar.y);
+          if (val >= 15) {
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'right';
+            ctx.fillText(val + '%', bar.x - 6, bar.y);
+          } else {
+            ctx.fillStyle = _chartColor(val);
+            ctx.textAlign = 'left';
+            ctx.fillText(val + '%', bar.x + 4, bar.y);
+          }
           ctx.restore();
         });
       }
     };
 
+    const metaLinePlugin = {
+      id: 'metaLine',
+      afterDraw(chart) {
+        const { ctx, scales: { x, y } } = chart;
+        const xPos = x.getPixelForValue(80);
+        ctx.save();
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = '#888780';
+        ctx.lineWidth = 1.5;
+        ctx.moveTo(xPos, y.top);
+        ctx.lineTo(xPos, y.bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#888780';
+        ctx.font = '9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Meta 80%', xPos, y.top - 6);
+        ctx.restore();
+      }
+    };
+
     const chart = new Chart(canvas, {
       type: 'bar',
-      plugins: [pctInsidePlugin],
+      plugins: [pctLabelPlugin, metaLinePlugin],
       data: {
         labels: sorted.map(p => p.nombre),
         datasets: [{
           data: sorted.map(p => p.pct),
-          backgroundColor: sorted.map(p => _colorPct(p.pct) + 'DD'),
-          borderColor:     sorted.map(p => _colorPct(p.pct)),
-          borderWidth: 1,
-          borderRadius: 4,
+          backgroundColor: sorted.map(p => _chartColor(p.pct)),
+          borderWidth: 0,
+          borderRadius: 3,
         }]
       },
       options: {
         indexAxis: 'y',
         responsive: false,
         animation: { duration: 0 },
+        layout: { padding: { top: 16 } },
         plugins: {
           legend: { display: false },
           tooltip: { enabled: false }
         },
         scales: {
-          x: { min: 0, max: 100, ticks: { display: false }, grid: { display: false }, border: { display: false } },
-          y: { ticks: { font: { size: 10 }, color: C.verde }, grid: { display: false }, border: { display: false } }
+          x: {
+            min: 0, max: 100,
+            ticks: { stepSize: 20, font: { size: 9 }, color: '#888780', callback: v => v + '%' },
+            grid: { color: '#eee' },
+            border: { display: false }
+          },
+          y: {
+            ticks: { font: { size: 10 }, color: C.verde },
+            grid: { display: false },
+            border: { display: false }
+          }
         }
       }
     });
@@ -192,117 +229,7 @@ const Actuar = (() => {
   }
 
   /* ── Gráficas históricas ── */
-  function _initHistoricoCharts(inspeccion) {
-    const historial = _getHistorial(inspeccion);
-    if (historial.length < 2) return;
-
-    const prev = historial[historial.length - 2];
-
-    /* Barras agrupadas: anterior vs actual por programa */
-    const canvasBar = document.getElementById('chart-historico-bar');
-    if (canvasBar) {
-      const prevData = inspeccion.programas.map(p => {
-        const pp = (prev.programas || []).find(x => x.id === p.id);
-        return pp ? Scores.calcularPrograma(pp).pct : 0;
-      });
-      const currData = inspeccion.programas.map(p => Scores.calcularPrograma(p).pct);
-
-      const chart = new Chart(canvasBar, {
-        type: 'bar',
-        data: {
-          labels: inspeccion.programas.map(p => _shortName(p.nombre)),
-          datasets: [
-            {
-              label: 'Anterior · ' + prev.inspeccion.fecha,
-              data: prevData,
-              backgroundColor: C.gris + '99',
-              borderColor: C.gris,
-              borderWidth: 1,
-              borderRadius: 3,
-            },
-            {
-              label: 'Actual · ' + inspeccion.inspeccion.fecha,
-              data: currData,
-              backgroundColor: C.acento + 'BB',
-              borderColor: C.acento,
-              borderWidth: 1,
-              borderRadius: 3,
-            }
-          ]
-        },
-        options: {
-          responsive: false,
-          animation: { duration: 0 },
-          plugins: {
-            legend: {
-              display: true,
-              position: 'top',
-              labels: { font: { size: 9 }, color: C.verde, boxWidth: 12, padding: 8 }
-            },
-            tooltip: { enabled: false }
-          },
-          scales: {
-            y: {
-              min: 0, max: 100,
-              ticks: { font: { size: 9 }, color: '#555', callback: v => v + '%' },
-              grid: { color: '#eee' }
-            },
-            x: {
-              ticks: { font: { size: 9 }, color: '#555' },
-              grid: { display: false }
-            }
-          }
-        }
-      });
-      _charts.push(chart);
-    }
-
-    /* Línea de tendencia histórica */
-    const canvasTrend = document.getElementById('chart-historico-trend');
-    if (canvasTrend && historial.length >= 2) {
-      const trendData = historial.map(h => h.score?.pct_cumplimiento || 0);
-      const trendLabels = historial.map(h => h.inspeccion?.fecha || '—');
-
-      const chart = new Chart(canvasTrend, {
-        type: 'line',
-        data: {
-          labels: trendLabels,
-          datasets: [{
-            label: 'Cumplimiento general',
-            data: trendData,
-            borderColor: C.verde,
-            borderWidth: 2,
-            borderDash: [6, 4],
-            pointBackgroundColor: C.acento,
-            pointBorderColor: C.verde,
-            pointRadius: 5,
-            tension: 0.3,
-            fill: false,
-          }]
-        },
-        options: {
-          responsive: false,
-          animation: { duration: 0 },
-          plugins: {
-            legend: { display: false },
-            tooltip: { enabled: false }
-          },
-          scales: {
-            y: {
-              min: 0, max: 100,
-              ticks: { font: { size: 9 }, callback: v => v + '%' },
-              grid: { color: '#eee' }
-            },
-            x: {
-              ticks: { font: { size: 9 } },
-              grid: { display: false }
-            }
-          }
-        }
-      });
-      _charts.push(chart);
-    }
-  }
+  function _initHistoricoCharts() {}
 
   /* ── Header ECODESA ──────────────────────────────── */
   function _renderHeader(inspeccion) {
@@ -506,8 +433,6 @@ const Actuar = (() => {
         </tr>`;
     }).join('');
 
-    const barH = Math.max(sorted.length * 34 + 44, 80);
-
     return `
       <div class="acta-seccion" style="margin-bottom:14px;">
         ${_secTitle('Ranking de Programas', C.verde)}
@@ -523,8 +448,8 @@ const Actuar = (() => {
           <tbody>${rows}</tbody>
         </table>
         <div class="acta-chart-wrap" style="break-inside:avoid;page-break-inside:avoid;">
-          <canvas id="chart-comparativo" width="520" height="${barH}"
-            style="max-width:100%;display:block;"></canvas>
+          <canvas id="chart-comparativo" width="520" height="220"
+            style="max-width:100%;display:block;-webkit-print-color-adjust:exact;"></canvas>
         </div>
       </div>`;
   }
@@ -589,20 +514,6 @@ const Actuar = (() => {
         </div>
 
         ${badges ? `<div style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:2px;">${badges}</div>` : ''}
-
-        <div class="acta-chart-wrap" style="break-inside:avoid;page-break-inside:avoid;margin-bottom:8px;">
-          <div style="font-size:9px;color:${C.gris};font-weight:600;margin-bottom:4px;text-transform:uppercase;">
-            Comparación por programa</div>
-          <canvas id="chart-historico-bar" width="520" height="160"
-            style="max-width:100%;display:block;"></canvas>
-        </div>
-
-        <div class="acta-chart-wrap" style="break-inside:avoid;page-break-inside:avoid;">
-          <div style="font-size:9px;color:${C.gris};font-weight:600;margin-bottom:4px;text-transform:uppercase;">
-            Tendencia histórica · ${historial.length} inspecciones</div>
-          <canvas id="chart-historico-trend" width="520" height="90"
-            style="max-width:100%;display:block;"></canvas>
-        </div>
       </div>`;
   }
 
