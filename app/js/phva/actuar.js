@@ -28,16 +28,22 @@ const Actuar = (() => {
         #app { max-width: 100% !important; box-shadow: none !important; }
         #screen-area { overflow: visible !important; }
         body { background: #fff !important; orphans: 4; widows: 4; }
-        @page { size: A4; margin: 1.5cm; }
-        .acta-seccion    { page-break-inside: avoid; break-inside: avoid; }
-        .acta-card       { page-break-inside: avoid; break-inside: avoid; }
-        .acta-hallazgo   { page-break-inside: avoid; break-inside: avoid; }
-        .acta-chart-wrap { page-break-inside: avoid; break-inside: avoid; }
+        @page { margin: 1.5cm; }
+        .acta-seccion    { page-break-inside: avoid; break-inside: avoid;
+                           position: relative; z-index: 1; }
+        .acta-card       { page-break-inside: avoid; break-inside: avoid;
+                           position: relative; z-index: 1; }
+        .acta-hallazgo   { page-break-inside: avoid; break-inside: avoid;
+                           position: relative; z-index: 1; }
+        .acta-chart-wrap { page-break-inside: avoid; break-inside: avoid;
+                           position: relative; z-index: 1; }
         .acta-firmas     { page-break-inside: avoid; break-inside: avoid;
-                           -webkit-column-break-inside: avoid; }
+                           -webkit-column-break-inside: avoid;
+                           position: relative; z-index: 1; }
+        table            { position: relative; z-index: 1; }
         * { -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important; }
-        #acta-doc  { position: relative !important; }
+        #acta-doc   { position: relative !important; }
         .wm-content { position: relative !important; z-index: 1 !important; }
         .wm-root {
           display: block !important;
@@ -784,7 +790,7 @@ const Actuar = (() => {
     if (!fotos.length) return '';
 
     return `
-      <div class="acta-seccion" style="margin-bottom:14px;page-break-before:always;">
+      <div class="acta-seccion" style="margin-bottom:14px;">
         ${_secTitle('Registro Fotográfico', C.verde)}
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
           ${fotos.map(f => `
@@ -812,7 +818,7 @@ const Actuar = (() => {
       ['Aprobó',   '________________',                           'Representante Legal'],
     ];
     return `
-      <div class="acta-firmas" style="margin-top:16px;margin-bottom:14px;">
+      <div class="acta-firmas" style="margin-bottom:14px;">
         ${_secTitle('Firmas', C.verde)}
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:24px;">
           ${cols.map(([rol, nombre, cargo]) => `
