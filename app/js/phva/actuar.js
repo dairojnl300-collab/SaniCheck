@@ -50,7 +50,7 @@ const Actuar = (() => {
           📄 ${_esc(inspeccion.numero_acta)} · ${_esc(inspeccion.establecimiento.nombre)}</div>
         <div style="display:flex;gap:var(--sp-sm);">
           <button class="btn btn-primary" style="flex:1;min-height:44px;"
-            onclick="window.print()">📄 DESCARGAR PDF</button>
+            onclick="Actuar.abrirPDF()">📄 DESCARGAR PDF</button>
           <button class="btn btn-accent" style="flex:1;min-height:44px;"
             onclick="Actuar.compartir()">📤 COMPARTIR</button>
         </div>
@@ -416,6 +416,10 @@ const Actuar = (() => {
 
   /* ── Ranking comparativo con barras horizontales ── */
   function _renderResumenComparativo(inspeccion) {
+    return _renderRankingTabla(inspeccion) + _renderGraficoComparativo(inspeccion);
+  }
+
+  function _renderRankingTabla(inspeccion) {
     const RANK = ['🥇','🥈','🥉'];
     const ESTADO_LABEL = { B:'BUENO', R:'REGULAR', D:'DEFICIENTE' };
 
@@ -446,7 +450,7 @@ const Actuar = (() => {
     return `
       <div class="acta-seccion" style="margin-bottom:14px;">
         ${_secTitle('Ranking de Programas', C.verde)}
-        <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px;">
+        <table style="width:100%;border-collapse:collapse;font-size:11px;">
           <thead>
             <tr style="background:${C.verde};color:#fff;">
               <th style="padding:6px 8px;text-align:center;width:32px;">#</th>
@@ -457,6 +461,15 @@ const Actuar = (() => {
           </thead>
           <tbody>${rows}</tbody>
         </table>
+      </div>`;
+  }
+
+  function _renderGraficoComparativo(inspeccion) {
+    const hayDatos = inspeccion.programas.some(p => Scores.calcularPrograma(p).evaluados > 0);
+    if (!hayDatos) return '';
+    return `
+      <div class="acta-seccion" style="margin-bottom:14px;">
+        ${_secTitle('Gráfico Comparativo', C.verde)}
         <div id="chart-comparativo-wrap" class="acta-chart-wrap"
           style="display:none;break-inside:avoid;page-break-inside:avoid;">
           <canvas id="chart-comparativo" width="520" height="220"
@@ -814,6 +827,140 @@ const Actuar = (() => {
     return `PSB-${year}-${String(n).padStart(3, '0')}`;
   }
 
+  /* ── Abrir ventana HTML dedicada para PDF (regla iOS: window.open('','_blank') + document.write) ── */
+  function abrirPDF() {
+    const inspeccion = Store.getCurrentInspeccion();
+    if (!inspeccion) { Router.toast('Sin inspección activa'); return; }
+    const win = window.open('', '_blank');
+    if (!win) { Router.toast('Permite ventanas emergentes para generar el acta'); return; }
+    const base = location.origin + location.pathname.replace(/\/[^\/]*$/, '/');
+    const sorted = [...inspeccion.programas]
+      .map(p => ({ nombre: _shortName(p.nombre), ...Scores.calcularPrograma(p) }))
+      .filter(p => p.evaluados > 0)
+      .sort((a, b) => b.pct - a.pct);
+    const html = _buildActaHTML(inspeccion, base, sorted);
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  }
+
+  function _buildActaHTML(inspeccion, base, sorted) {
+    const D = JSON.stringify(sorted.map(p => ({ nombre: p.nombre, pct: p.pct })));
+
+    const chartScript = sorted.length ? `
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    var d = ${D};
+    var wrap = document.getElementById('chart-comparativo-wrap');
+    var canvas = document.getElementById('chart-comparativo');
+    if (!wrap) return;
+    function fallo() { wrap.style.height = '0'; wrap.style.overflow = 'hidden'; }
+    if (!d.length || !canvas || typeof Chart === 'undefined') { fallo(); return; }
+    wrap.style.display = 'block';
+    function cc(p) { return p >= 80 ? '#1B4332' : p >= 50 ? '#F57C00' : '#A32D2D'; }
+    try {
+    new Chart(canvas, {
+      type: 'bar',
+      plugins: [{
+        id: 'pl',
+        afterDatasetsDraw: function(ch) {
+          var ctx = ch.ctx, m = ch.getDatasetMeta(0);
+          m.data.forEach(function(bar, j) {
+            var v = d[j] && d[j].pct;
+            if (v === undefined) return;
+            ctx.save(); ctx.font = 'bold 12px sans-serif'; ctx.textBaseline = 'middle';
+            if (v >= 15) { ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.fillText(v + '%', bar.x - 6, bar.y); }
+            else { ctx.fillStyle = cc(v); ctx.textAlign = 'left'; ctx.fillText(v + '%', bar.x + 4, bar.y); }
+            ctx.restore();
+          });
+        }
+      }, {
+        id: 'ml',
+        afterDraw: function(ch) {
+          var x = ch.scales.x, y = ch.scales.y, ctx = ch.ctx, xp = x.getPixelForValue(80);
+          ctx.save(); ctx.beginPath(); ctx.setLineDash([4, 4]); ctx.strokeStyle = '#888780';
+          ctx.lineWidth = 1.5; ctx.moveTo(xp, y.top); ctx.lineTo(xp, y.bottom); ctx.stroke();
+          ctx.setLineDash([]); ctx.fillStyle = '#888780'; ctx.font = '9px sans-serif';
+          ctx.textAlign = 'center'; ctx.fillText('Meta 80%', xp, y.top - 6); ctx.restore();
+        }
+      }],
+      data: {
+        labels: d.map(function(p) { return p.nombre; }),
+        datasets: [{ data: d.map(function(p) { return p.pct; }),
+          backgroundColor: d.map(function(p) { return cc(p.pct); }),
+          borderWidth: 0, borderRadius: 3 }]
+      },
+      options: {
+        indexAxis: 'y', responsive: false, animation: { duration: 0 },
+        layout: { padding: { top: 16 } },
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        scales: {
+          x: { min: 0, max: 100, ticks: { stepSize: 20, font: { size: 9 }, color: '#888780',
+              callback: function(v) { return v + '%'; } },
+            grid: { color: '#eee' }, border: { display: false } },
+          y: { ticks: { font: { size: 10 }, color: '#1B4332' },
+            grid: { display: false }, border: { display: false } }
+        }
+      }
+    });
+    } catch (e) { fallo(); }
+  }, 500);
+});
+</script>` : '';
+
+    return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Acta ${_esc(inspeccion.numero_acta)} — ${_esc(inspeccion.establecimiento.nombre)}</title>
+  <base href="${base}">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 11px; color: #111827; background: #fff; }
+    .acta-wrap { max-width: 800px; margin: 0 auto; padding: 16px; }
+    .acta-seccion, .acta-card, .acta-hallazgo, .acta-chart-wrap, .acta-firmas {
+      page-break-inside: avoid; break-inside: avoid; }
+    table { border-collapse: collapse; width: 100%; }
+    .btn-save {
+      display: block; width: 100%; padding: 12px; margin-bottom: 16px;
+      background: #1B4332; color: #fff; border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 700; cursor: pointer; font-family: Arial, sans-serif;
+      letter-spacing: 0.02em; }
+    .btn-save:hover { background: #2D6A4F; }
+    @media print {
+      .btn-save { display: none !important; }
+      @page { margin: 1.5cm; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+  </style>
+  ${chartScript}
+</head>
+<body>
+<div class="acta-wrap">
+  <button class="btn-save" onclick="window.print()">&#128190; Guardar como PDF</button>
+  ${_renderPrintHeader(inspeccion)}
+  ${_renderDatosEstablecimiento(inspeccion)}
+  ${_renderResumenCumplimiento(inspeccion)}
+  ${_renderGraficasPorPrograma(inspeccion)}
+  ${_renderGraficoComparativo(inspeccion)}
+  ${_renderRankingTabla(inspeccion)}
+  ${_renderComparacionHistorica(inspeccion)}
+  ${_renderMetodologia()}
+  ${_renderHallazgos(inspeccion)}
+  ${_renderNoAplicables(inspeccion)}
+  ${_renderObservacionesPorPrograma(inspeccion)}
+  ${_renderFotografias(inspeccion)}
+  ${_renderPlanAcciones(inspeccion)}
+  ${_renderFirmas(inspeccion)}
+  ${_renderFooter()}
+</div>
+</body>
+</html>`;
+  }
+
   function compartir() {
     const insp = Store.getCurrentInspeccion();
     if (!insp) return;
@@ -846,5 +993,5 @@ const Actuar = (() => {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  return { render, attach, compartir };
+  return { render, attach, compartir, abrirPDF };
 })();
