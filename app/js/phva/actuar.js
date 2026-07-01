@@ -22,13 +22,28 @@ const Actuar = (() => {
     }
     ps.textContent = `
       .acta-logo { height: 48px; width: auto; flex-shrink: 0; }
-      .wm-root   { display: none; }
+      #acta-print-header { display: none; }
       @media print {
         .phva-topbar, .acta-actions, #app-toast { display: none !important; }
         #app { max-width: 100% !important; box-shadow: none !important; }
         #screen-area { overflow: visible !important; }
         body { background: #fff !important; orphans: 4; widows: 4; }
         @page { margin: 1.5cm; }
+        #acta-header-screen { display: none !important; }
+        #acta-print-header {
+          display: flex !important;
+          position: fixed !important;
+          top: 0 !important; left: 0 !important; right: 0 !important;
+          z-index: 100 !important;
+          background: #fff !important;
+          border-bottom: 2px solid #1B4332 !important;
+          padding: 8px 16px !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        #acta-doc { margin-top: 80px !important; }
         .acta-seccion    { page-break-inside: avoid; break-inside: avoid;
                            position: relative; z-index: 1; }
         .acta-card       { page-break-inside: avoid; break-inside: avoid;
@@ -43,23 +58,10 @@ const Actuar = (() => {
         table            { position: relative; z-index: 1; }
         * { -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important; }
-        #acta-doc   { position: relative !important; }
-        .wm-content { position: relative !important; z-index: 1 !important; }
-        .wm-root {
-          display: block !important;
-          position: absolute !important;
-          top: 50% !important; left: 50% !important;
-          transform: translate(-50%, -50%) !important;
-          width: 55% !important; max-width: 320px !important;
-          opacity: 0.08 !important; z-index: 0 !important;
-          pointer-events: none !important;
-        }
       }
     `;
 
     return `
-      <img src="assets/icons/isotipo-transparente.png" class="watermark-bg" alt="">
-
       <div class="acta-actions" style="padding:var(--sp-md);display:flex;
         flex-direction:column;gap:var(--sp-sm);background:var(--color-white);
         border-bottom:1px solid var(--color-border);position:sticky;top:0;z-index:10;">
@@ -81,23 +83,21 @@ const Actuar = (() => {
       </div>
 
       <div id="acta-doc" style="background:#fff;padding:20px 20px 40px;">
-        <img src="assets/icons/isotipo-transparente.png" class="wm-root" alt="">
-        <div class="wm-content">
-          ${_renderHeader(inspeccion)}
-          ${_renderDatosEstablecimiento(inspeccion)}
-          ${_renderResumenCumplimiento(inspeccion)}
-          ${_renderGraficasPorPrograma(inspeccion)}
-          ${_renderResumenComparativo(inspeccion)}
-          ${_renderComparacionHistorica(inspeccion)}
-          ${_renderMetodologia()}
-          ${_renderHallazgos(inspeccion)}
-          ${_renderNoAplicables(inspeccion)}
-          ${_renderPlanAcciones(inspeccion)}
-          ${_renderObservacionesPorPrograma(inspeccion)}
-          ${_renderFotografias(inspeccion)}
-          ${_renderFirmas(inspeccion)}
-          ${_renderFooter()}
-        </div>
+        ${_renderPrintHeader(inspeccion)}
+        ${_renderHeader(inspeccion)}
+        ${_renderDatosEstablecimiento(inspeccion)}
+        ${_renderResumenCumplimiento(inspeccion)}
+        ${_renderGraficasPorPrograma(inspeccion)}
+        ${_renderResumenComparativo(inspeccion)}
+        ${_renderComparacionHistorica(inspeccion)}
+        ${_renderMetodologia()}
+        ${_renderHallazgos(inspeccion)}
+        ${_renderNoAplicables(inspeccion)}
+        ${_renderPlanAcciones(inspeccion)}
+        ${_renderObservacionesPorPrograma(inspeccion)}
+        ${_renderFotografias(inspeccion)}
+        ${_renderFirmas(inspeccion)}
+        ${_renderFooter()}
       </div>`;
   }
 
@@ -237,10 +237,32 @@ const Actuar = (() => {
   /* ── Gráficas históricas ── */
   function _initHistoricoCharts() {}
 
-  /* ── Header ECODESA ──────────────────────────────── */
+  /* ── Header fijo en cada página PDF ─────────────── */
+  function _renderPrintHeader(inspeccion) {
+    return `
+      <div id="acta-print-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <img src="assets/icons/logotipo-sanicheck.png" alt="SaniCheck"
+            style="height:32px;width:auto;flex-shrink:0;">
+          <div style="font-size:9px;line-height:1.4;">
+            <div style="font-weight:800;color:${C.verde};">SaniCheck</div>
+            <div style="font-weight:700;color:#2D6A4F;">by ECODESA</div>
+            <div style="color:#6B7280;">Ecología Desarrollo e Ingeniería S.A.S</div>
+            <div style="color:#6B7280;">ecodesaingenieria@outlook.es · WhatsApp 301 365 3273</div>
+          </div>
+        </div>
+        <div style="text-align:right;font-size:9px;">
+          <div style="font-weight:800;color:${C.verde};">ACTA DE INSPECCIÓN PSB</div>
+          <div style="color:#6B7280;">N° <strong>${_esc(inspeccion.numero_acta)}</strong></div>
+          <div style="color:#6B7280;">${inspeccion.inspeccion.fecha}</div>
+        </div>
+      </div>`;
+  }
+
+  /* ── Header ECODESA (pantalla) ───────────────────── */
   function _renderHeader(inspeccion) {
     return `
-      <div class="acta-seccion" style="border-bottom:2.5px solid ${C.verde};
+      <div id="acta-header-screen" class="acta-seccion" style="border-bottom:2.5px solid ${C.verde};
         padding-bottom:14px;margin-bottom:14px;">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
           <div style="display:flex;align-items:center;gap:10px;">
