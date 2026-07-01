@@ -28,7 +28,7 @@ const Actuar = (() => {
         #app { max-width: 100% !important; box-shadow: none !important; }
         #screen-area { overflow: visible !important; }
         body { background: #fff !important; orphans: 4; widows: 4; }
-        @page { margin: 1.5cm; }
+        @page { margin: 1.5cm 1.5cm 2cm; }
         #acta-header-screen { display: none !important; }
         #acta-print-header {
           display: flex !important;
