@@ -28,34 +28,14 @@ const Actuar = (() => {
         #app { max-width: 100% !important; box-shadow: none !important; }
         #screen-area { overflow: visible !important; }
         body { background: #fff !important; orphans: 4; widows: 4; }
-        @page { margin: 1.5cm 1.5cm 2cm; }
+        @page { margin: 1.5cm; }
         #acta-header-screen { display: none !important; }
-        #acta-print-header {
-          display: flex !important;
-          position: fixed !important;
-          top: 0 !important; left: 0 !important; right: 0 !important;
-          z-index: 100 !important;
-          background: #fff !important;
-          border-bottom: 2px solid #1B4332 !important;
-          padding: 8px 16px !important;
-          align-items: center !important;
-          justify-content: space-between !important;
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
-        #acta-doc { margin-top: 80px !important; }
-        .acta-seccion    { page-break-inside: avoid; break-inside: avoid;
-                           position: relative; z-index: 1; }
-        .acta-card       { page-break-inside: avoid; break-inside: avoid;
-                           position: relative; z-index: 1; }
-        .acta-hallazgo   { page-break-inside: avoid; break-inside: avoid;
-                           position: relative; z-index: 1; }
-        .acta-chart-wrap { page-break-inside: avoid; break-inside: avoid;
-                           position: relative; z-index: 1; }
-        .acta-firmas     { page-break-inside: avoid; break-inside: avoid;
-                           -webkit-column-break-inside: avoid;
-                           position: relative; z-index: 1; }
-        table            { position: relative; z-index: 1; }
+        #acta-print-header  { display: flex !important; }
+        .acta-seccion    { page-break-inside: avoid; break-inside: avoid; }
+        .acta-card       { page-break-inside: avoid; break-inside: avoid; }
+        .acta-hallazgo   { page-break-inside: avoid; break-inside: avoid; }
+        .acta-chart-wrap { page-break-inside: avoid; break-inside: avoid; }
+        .acta-firmas     { page-break-inside: avoid; break-inside: avoid; }
         * { -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important; }
       }
@@ -237,24 +217,26 @@ const Actuar = (() => {
   /* ── Gráficas históricas ── */
   function _initHistoricoCharts() {}
 
-  /* ── Header fijo en cada página PDF ─────────────── */
+  /* ── Header de acta (flujo normal, no fijo) ─────── */
   function _renderPrintHeader(inspeccion) {
     return `
-      <div id="acta-print-header">
+      <div id="acta-print-header" style="display:flex;justify-content:space-between;
+        align-items:center;padding:8px 16px;
+        border-bottom:2px solid ${C.verde};margin-bottom:16px;background:#fff;">
         <div style="display:flex;align-items:center;gap:8px;">
           <img src="assets/icons/logotipo-sanicheck.png" alt="SaniCheck"
             style="height:32px;width:auto;flex-shrink:0;">
-          <div style="font-size:9px;line-height:1.4;">
-            <div style="font-weight:800;color:${C.verde};">SaniCheck</div>
-            <div style="font-weight:700;color:#2D6A4F;">by ECODESA</div>
-            <div style="color:#6B7280;">Ecología Desarrollo e Ingeniería S.A.S</div>
-            <div style="color:#6B7280;">ecodesaingenieria@outlook.es · WhatsApp 301 365 3273</div>
+          <div style="line-height:1.5;">
+            <div style="font-weight:800;font-size:11px;color:${C.verde};">SaniCheck</div>
+            <div style="font-size:8px;color:${C.acento};">by ECODESA</div>
+            <div style="font-size:8px;color:${C.gris};">Ecología Desarrollo e Ingeniería S.A.S</div>
+            <div style="font-size:8px;color:${C.gris};">ecodesaingenieria@outlook.es · WhatsApp 301 365 3273</div>
           </div>
         </div>
-        <div style="text-align:right;font-size:9px;">
-          <div style="font-weight:800;color:${C.verde};">ACTA DE INSPECCIÓN PSB</div>
-          <div style="color:#6B7280;">N° <strong>${_esc(inspeccion.numero_acta)}</strong></div>
-          <div style="color:#6B7280;">${inspeccion.inspeccion.fecha}</div>
+        <div style="text-align:right;">
+          <div style="font-weight:800;font-size:11px;color:${C.verde};">ACTA DE INSPECCIÓN PSB</div>
+          <div style="font-size:9px;color:#6B7280;">N° <strong>${_esc(inspeccion.numero_acta)}</strong></div>
+          <div style="font-size:9px;color:#6B7280;">${inspeccion.inspeccion.fecha}</div>
         </div>
       </div>`;
   }
