@@ -138,7 +138,11 @@ const Actuar = (() => {
       .filter(p => p.evaluados > 0)
       .sort((a, b) => b.pct - a.pct);
 
-    if (!sorted.length) return;
+    if (!sorted.length) {
+      const wrap = document.getElementById('chart-comparativo-wrap');
+      if (wrap) { wrap.style.height = '0'; wrap.style.overflow = 'hidden'; }
+      return;
+    }
 
     const _chartColor = pct => pct >= 80 ? '#1B4332' : pct >= 50 ? '#F57C00' : '#A32D2D';
 
@@ -226,6 +230,8 @@ const Actuar = (() => {
       }
     });
     _charts.push(chart);
+    const wrap = document.getElementById('chart-comparativo-wrap');
+    if (wrap) wrap.style.display = 'block';
   }
 
   /* ── Gráficas históricas ── */
@@ -447,7 +453,8 @@ const Actuar = (() => {
           </thead>
           <tbody>${rows}</tbody>
         </table>
-        <div class="acta-chart-wrap" style="break-inside:avoid;page-break-inside:avoid;">
+        <div id="chart-comparativo-wrap" class="acta-chart-wrap"
+          style="display:none;break-inside:avoid;page-break-inside:avoid;">
           <canvas id="chart-comparativo" width="520" height="220"
             style="max-width:100%;display:block;-webkit-print-color-adjust:exact;"></canvas>
         </div>
@@ -671,14 +678,17 @@ const Actuar = (() => {
                 ${_esc(p.nombre)}</div>
               ${ev.map(a => {
                 const c = a.evaluacion==='B'?'#2E7D32':a.evaluacion==='R'?'#F57C00':'#D32F2F';
+                const autoObs = (typeof Observaciones !== 'undefined')
+                  ? Observaciones.getObs(p.id, a.evaluacion, a) : '';
+                const obsTexto = (a.obs_editada && a.obs) ? a.obs : (a.obs || autoObs);
                 return `
                   <div style="display:flex;gap:8px;padding:4px 0;
                     border-bottom:1px dotted #E5E7EB;font-size:11px;">
                     <span style="font-weight:800;color:${c};flex-shrink:0;">[${a.evaluacion}]</span>
                     <div>
                       <div style="color:#111827;">${_esc(a.texto)}</div>
-                      ${a.obs
-                        ? `<div style="color:#6B7280;font-size:10px;margin-top:1px;text-align:justify;hyphens:auto;">${_esc(a.obs)}</div>`
+                      ${obsTexto
+                        ? `<div style="color:#6B7280;font-size:10px;margin-top:1px;text-align:justify;hyphens:auto;">${_esc(obsTexto)}</div>`
                         : ''}
                     </div>
                   </div>`;
