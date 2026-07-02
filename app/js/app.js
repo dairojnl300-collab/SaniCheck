@@ -69,11 +69,36 @@
   };
 
   /* ── Home ────────────────────────────────────────── */
+  const FASE_ICONS = {
+    P: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/><path d="M8 4h8a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M6 6h-.5A1.5 1.5 0 0 0 4 7.5v12A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18.5 6H18"/><path d="M9 12h6M9 16h6"/></svg>',
+    H: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5l1.5 1.5l2.5-2.5"/><path d="M3.5 12.5l1.5 1.5l2.5-2.5"/><path d="M3.5 19.5l1.5 1.5l2.5-2.5"/><path d="M11 6h9M11 13h9M11 20h9"/></svg>',
+    V: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7"/><path d="M4 20h16"/></svg>',
+    A: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9.5 15l1.5 1.5l3-3.5"/></svg>',
+  };
+  const FASE_META = {
+    P: { fase: 'Fase 1', label: 'Planificar', screen: 'planificar' },
+    H: { fase: 'Fase 2', label: 'Hacer',      screen: 'hacer' },
+    V: { fase: 'Fase 3', label: 'Verificar',  screen: 'verificar' },
+    A: { fase: 'Fase 4', label: 'Actuar',     screen: 'actuar' },
+  };
+  const ESTADO_COLOR = { B: 'var(--color-bueno)', R: 'var(--color-regular)', D: 'var(--color-deficiente)' };
+
   function renderHome() {
     const { inspecciones } = Store.get();
     const esDemo    = Licencias.esDemo();
     const limiteMax = Licencias.maxEstab();
     const topeFull  = esDemo && inspecciones.length >= limiteMax;
+
+    const phvaGrid = `<div class="phva-grid">${['P', 'H', 'V', 'A'].map(k => {
+      const m = FASE_META[k];
+      return `<div class="phva-tile phva-tile-${k}" onclick="Router.go('${m.screen}')">
+        <div class="phva-tile-icon">${FASE_ICONS[k]}</div>
+        <div class="phva-tile-text">
+          <span class="phva-tile-fase">${m.fase}</span>
+          <span class="phva-tile-label">${m.label}</span>
+        </div>
+      </div>`;
+    }).join('')}</div>`;
 
     const lista = inspecciones.length === 0
       ? `<div class="empty-state">
@@ -82,9 +107,12 @@
              Crea la primera con el botón de arriba.</div>
          </div>`
       : inspecciones.map(ins => {
-          const ev  = ins.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion));
-          const est = ins.estado_general;
-          return `<div class="inspeccion-card" onclick="_abrirInsp('${ins.id}')">
+          const ev    = ins.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion));
+          const total = ins.programas.flatMap(p => p.aspectos).length;
+          const pct   = total ? Math.round((ev.length / total) * 100) : 0;
+          const est   = ins.estado_general;
+          const barColor = ESTADO_COLOR[est] || 'var(--color-border)';
+          return `<div class="inspeccion-card" style="border-left-color:${barColor}" onclick="_abrirInsp('${ins.id}')">
             <div class="inspeccion-card-header">
               <div class="inspeccion-card-nombre">${_esc(ins.establecimiento.nombre)}</div>
               <div class="inspeccion-card-fecha">${ins.inspeccion.fecha}</div>
@@ -95,6 +123,9 @@
               ${est
                 ? `<span class="estado-chip estado-${est}">${{B:'BUENO',R:'REGULAR',D:'DEFICIENTE'}[est]}</span>`
                 : `<span style="font-size:10px;color:var(--color-ink3)">En progreso</span>`}
+            </div>
+            <div class="inspeccion-card-progress">
+              <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
             </div>
           </div>`;
         }).join('');
@@ -107,17 +138,19 @@
       </div>
       <div class="home-content">
         ${esDemo ? `
-          <div style="background:#FFF3E0;border:1px solid #FFB300;border-radius:10px;
+          <div style="background:rgba(245,158,11,0.12);border:0.5px solid #F59E0B;border-radius:10px;
             padding:10px 14px;margin-bottom:var(--sp-md);font-size:12px;
-            color:#E65100;display:flex;align-items:center;gap:8px;">
+            color:#FBBF24;display:flex;align-items:center;gap:8px;">
             <span>⚡</span>
             <span>Versión Demo · máx. ${limiteMax} establecimiento.
-              <a href="../../index.html" style="color:#E65100;font-weight:700;">Actualizar →</a></span>
+              <a href="../../index.html" style="color:#FBBF24;font-weight:700;">Actualizar →</a></span>
           </div>` : ''}
         <button class="home-nueva-btn" onclick="_nuevaInspeccion()"
           ${topeFull ? 'style="opacity:0.5;cursor:not-allowed;"' : ''}>
           + Nueva Inspección PSB
         </button>
+        <div class="home-section-title">Fases del proceso</div>
+        ${phvaGrid}
         <div class="home-section-title">Inspecciones</div>
         ${lista}
         <div style="height:32px;"></div>

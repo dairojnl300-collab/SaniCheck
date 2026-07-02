@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#1B4332">
+  <meta name="theme-color" content="#0F172A">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="SaniCheck">
@@ -15,13 +15,13 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/brand.css">
 
   <style>
     #splash {
       position: fixed; inset: 0;
-      background: #1B4332;
+      background: #0F172A;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       gap: 16px; z-index: 9999;
@@ -29,19 +29,19 @@
     }
     #splash.hidden { opacity: 0; pointer-events: none; }
     .spl-icon { font-size: 64px; animation: spl-pulse 1.4s ease-in-out infinite; }
-    .spl-title { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -0.02em; }
-    .spl-sub { font-size: 11px; color: rgba(255,255,255,0.55); letter-spacing: 0.08em; text-transform: uppercase; }
-    .spl-bar { width: 48px; height: 3px; background: rgba(255,255,255,0.2); border-radius: 2px; overflow: hidden; }
-    .spl-fill { height: 100%; background: #52B788; animation: spl-load 0.9s ease forwards; }
+    .spl-title { font-family: 'Poppins', sans-serif; font-size: 26px; font-weight: 800; color: #F1F5F9; letter-spacing: -0.02em; }
+    .spl-sub { font-size: 11px; color: rgba(241,245,249,0.5); letter-spacing: 0.08em; text-transform: uppercase; }
+    .spl-bar { width: 48px; height: 3px; background: rgba(241,245,249,0.15); border-radius: 2px; overflow: hidden; }
+    .spl-fill { height: 100%; background: #10B981; animation: spl-load 0.9s ease forwards; }
     @keyframes spl-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
     @keyframes spl-load { from{width:0} to{width:100%} }
 
     /* Banner instalación PWA */
     #pwa-banner {
-      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-      background: #1B4332; color: #fff;
+      position: fixed; bottom: calc(68px + env(safe-area-inset-bottom, 0px) + 12px); left: 50%; transform: translateX(-50%);
+      background: #1E293B; color: #F1F5F9; border: 0.5px solid #374151;
       padding: 12px 16px; border-radius: 14px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.35); z-index: 9990;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.45); z-index: 9990;
       display: flex; align-items: center; gap: 10px;
       font-size: 13px; max-width: 360px; width: calc(100% - 32px);
       animation: slide-up 0.3s ease;
@@ -50,12 +50,12 @@
       to{transform:translateX(-50%) translateY(0);opacity:1} }
     #pwa-banner .pwa-text { flex: 1; font-weight: 500; line-height: 1.3; }
     #pwa-banner .pwa-install {
-      background: #52B788; color: #fff; border: none;
+      background: #10B981; color: #fff; border: none;
       border-radius: 8px; padding: 7px 14px;
       font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
     }
     #pwa-banner .pwa-close {
-      background: none; border: none; color: rgba(255,255,255,0.5);
+      background: none; border: none; color: rgba(241,245,249,0.5);
       font-size: 20px; cursor: pointer; padding: 0 2px; line-height: 1;
     }
   </style>
@@ -75,28 +75,51 @@
   <div id="app">
     <header class="phva-topbar">
       <div class="phva-logo">
-        <img src="assets/icons/logotipo-sanicheck.png" alt="SaniCheck">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3l7 3v6c0 5-3.5 8-7 9c-3.5-1-7-4-7-9V6l7-3z"/>
+          <path d="M9.2 12.2l1.9 1.9l3.7-4.3"/>
+        </svg>
         <span class="phva-logo-text">SaniCheck</span>
       </div>
-      <nav class="phva-steps">
-        <button class="phva-step" data-fase="P" onclick="Router.go('planificar')" title="Planificar">
-          <span class="step-label">P</span><span class="step-name">PLANIF.</span>
-        </button>
-        <div class="phva-sep">›</div>
-        <button class="phva-step" data-fase="H" onclick="Router.go('hacer')" title="Hacer">
-          <span class="step-label">H</span><span class="step-name">HACER</span>
-        </button>
-        <div class="phva-sep">›</div>
-        <button class="phva-step" data-fase="V" onclick="Router.go('verificar')" title="Verificar">
-          <span class="step-label">V</span><span class="step-name">VERIF.</span>
-        </button>
-        <div class="phva-sep">›</div>
-        <button class="phva-step" data-fase="A" onclick="Router.go('actuar')" title="Actuar">
-          <span class="step-label">A</span><span class="step-name">ACTUAR</span>
-        </button>
-      </nav>
     </header>
     <main id="screen-area"></main>
+    <nav class="tab-bar">
+      <div class="phva-steps">
+        <button class="phva-step" data-fase="P" onclick="Router.go('planificar')" title="Planificar">
+          <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
+            <path d="M8 4h8a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/>
+            <path d="M6 6h-.5A1.5 1.5 0 0 0 4 7.5v12A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18.5 6H18"/>
+            <path d="M9 12h6M9 16h6"/>
+          </svg>
+          <span class="step-name">Planificar</span>
+        </button>
+        <button class="phva-step" data-fase="H" onclick="Router.go('hacer')" title="Hacer">
+          <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3.5 5.5l1.5 1.5l2.5-2.5"/>
+            <path d="M3.5 12.5l1.5 1.5l2.5-2.5"/>
+            <path d="M3.5 19.5l1.5 1.5l2.5-2.5"/>
+            <path d="M11 6h9M11 13h9M11 20h9"/>
+          </svg>
+          <span class="step-name">Hacer</span>
+        </button>
+        <button class="phva-step" data-fase="V" onclick="Router.go('verificar')" title="Verificar">
+          <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20V10M10 20V4M16 20v-7"/>
+            <path d="M4 20h16"/>
+          </svg>
+          <span class="step-name">Verificar</span>
+        </button>
+        <button class="phva-step" data-fase="A" onclick="Router.go('actuar')" title="Actuar">
+          <svg class="step-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/>
+            <path d="M14 3v5h5"/>
+            <path d="M9.5 15l1.5 1.5l3-3.5"/>
+          </svg>
+          <span class="step-name">Actuar</span>
+        </button>
+      </div>
+    </nav>
   </div>
 
   <!-- Scripts -->
