@@ -1,6 +1,18 @@
 // verificar.js — Pantalla VERIFICAR: dashboard de resultados PSB (Semana 3)
 
 const Verificar = (() => {
+  const PROG_ICONS = {
+    infra:    { color: '#1E40AF', light: '#93C5FD', svg: '<path d="M4 21V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v16"/><path d="M13 10h5a1 1 0 0 1 1 1v10"/><path d="M2 21h20"/><path d="M7 8h1M10 8h1M7 12h1M10 12h1M7 16h1M10 16h1"/>' },
+    pld:      { color: '#0891B2', light: '#67E8F9', svg: '<path d="M12 3c-3.2 4-6 7.6-6 10.6a6 6 0 0 0 12 0C18 10.6 15.2 7 12 3z"/>' },
+    pcip:     { color: '#D97706', light: '#FCD34D', svg: '<ellipse cx="12" cy="14" rx="4.5" ry="6"/><path d="M12 8v12"/><path d="M9 5.5 7.5 4M15 5.5 16.5 4"/><circle cx="12" cy="6" r="1.5"/>' },
+    residuos: { color: '#059669', light: '#6EE7B7', svg: '<path d="M4 12a8 8 0 0 1 14.5-4.5M20 12a8 8 0 0 1-14.5 4.5"/><path d="M17 4v4h-4"/><path d="M7 20v-4h4"/>' },
+    agua:     { color: '#0284C7', light: '#7DD3FC', svg: '<path d="M3 17c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/><path d="M3 12c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/>' },
+  };
+  function _progIcon(id, size) {
+    const p = PROG_ICONS[id] || PROG_ICONS.infra;
+    size = size || 20;
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${p.color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;flex-shrink:0;">${p.svg}</svg>`;
+  }
 
   function render() {
     const inspeccion = Store.getCurrentInspeccion();
@@ -150,7 +162,6 @@ const Verificar = (() => {
 
   /* ── Barras por programa ───────────────────────── */
   function _renderBarras(programas) {
-    const ICONS  = { infra:'🏗️', pld:'🧹', pcip:'🐛', residuos:'♻️', agua:'💧' };
     const PLAZOS = { B:'', R:'30 días', D:'Inmediato' };
 
     return `
@@ -165,11 +176,13 @@ const Verificar = (() => {
           const est = sc.evaluados ? Scores.getEstado(sc.pct) : null;
           const clr = sc.evaluados ? Scores.getColor(sc.pct) : 'var(--color-muted)';
           const plazo = est ? PLAZOS[est] : '';
+          const pi = PROG_ICONS[p.id] || PROG_ICONS.infra;
           return `
-            <div style="margin-bottom:var(--sp-md);">
+            <div style="margin-bottom:var(--sp-sm);padding:10px 12px;border-radius:8px;
+              background:var(--color-surface);border-left:4px solid ${pi.color};">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
                 <div style="display:flex;align-items:center;gap:6px;">
-                  <span style="font-size:14px;">${ICONS[p.id]||'📋'}</span>
+                  ${_progIcon(p.id, 20)}
                   <span style="font-size:12px;font-weight:600;color:var(--color-ink2);">
                     ${p.nombre}</span>
                 </div>
@@ -180,9 +193,10 @@ const Verificar = (() => {
                     : '<span style="font-size:10px;color:var(--color-muted)">—</span>'}
                 </div>
               </div>
-              <div style="height:8px;background:#E5E7EB;border-radius:var(--radius-full);overflow:hidden;">
-                <div style="height:100%;width:${sc.pct||2}%;background:${clr};
-                  border-radius:var(--radius-full);"></div>
+              <div style="height:8px;background:var(--color-border);border-radius:8px;overflow:hidden;">
+                <div style="height:100%;width:${sc.pct||2}%;
+                  background:linear-gradient(90deg, ${pi.light} 0%, ${pi.color} 100%);
+                  border-radius:8px;"></div>
               </div>
               <div style="display:flex;justify-content:space-between;margin-top:3px;">
                 <span style="font-size:10px;color:var(--color-ink3);">${sc.evaluados}/${sc.total} aspectos</span>

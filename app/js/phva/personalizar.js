@@ -1,7 +1,18 @@
 // personalizar.js — Paso entre PLANIFICAR y HACER: checklist editable por establecimiento
 
 const Personalizar = (() => {
-  const ICONS = { infra: '🏗️', pld: '🧹', pcip: '🐛', residuos: '♻️', agua: '💧' };
+  const PROG_ICONS = {
+    infra:    { color: '#1E40AF', svg: '<path d="M4 21V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v16"/><path d="M13 10h5a1 1 0 0 1 1 1v10"/><path d="M2 21h20"/><path d="M7 8h1M10 8h1M7 12h1M10 12h1M7 16h1M10 16h1"/>' },
+    pld:      { color: '#0891B2', svg: '<path d="M12 3c-3.2 4-6 7.6-6 10.6a6 6 0 0 0 12 0C18 10.6 15.2 7 12 3z"/>' },
+    pcip:     { color: '#D97706', svg: '<ellipse cx="12" cy="14" rx="4.5" ry="6"/><path d="M12 8v12"/><path d="M9 5.5 7.5 4M15 5.5 16.5 4"/><circle cx="12" cy="6" r="1.5"/>' },
+    residuos: { color: '#059669', svg: '<path d="M4 12a8 8 0 0 1 14.5-4.5M20 12a8 8 0 0 1-14.5 4.5"/><path d="M17 4v4h-4"/><path d="M7 20v-4h4"/>' },
+    agua:     { color: '#0284C7', svg: '<path d="M3 17c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/><path d="M3 12c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/>' },
+  };
+  function _progIcon(id, size) {
+    const p = PROG_ICONS[id] || PROG_ICONS.infra;
+    size = size || 20;
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;flex-shrink:0;">${p.svg}</svg>`;
+  }
 
   // Estado de sesión (se inicializa en render() desde localStorage)
   let _disabled = new Set();
@@ -64,8 +75,8 @@ const Personalizar = (() => {
         border:1px solid var(--color-border);overflow:hidden;">
         <div style="background:var(--color-primary);color:#fff;padding:8px 12px;
           display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:12px;font-weight:700;">
-            ${ICONS[prog.id] || '📋'} ${prog.nombre}
+          <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;">
+            ${_progIcon(prog.id, 18)} ${prog.nombre}
           </span>
           <span style="font-size:10px;opacity:0.8;">${activos} activos</span>
         </div>
@@ -120,11 +131,11 @@ const Personalizar = (() => {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
           <select class="form-select" id="cust-programa" style="font-size:13px;">
             <option value="">Programa *</option>
-            <option value="infra">🏗️ Infraestructura</option>
-            <option value="pld">🧹 Limpieza/Desinf.</option>
-            <option value="pcip">🐛 Control Plagas</option>
-            <option value="residuos">♻️ Residuos</option>
-            <option value="agua">💧 Agua Potable</option>
+            <option value="infra">Infraestructura</option>
+            <option value="pld">Limpieza/Desinf.</option>
+            <option value="pcip">Control Plagas</option>
+            <option value="residuos">Residuos</option>
+            <option value="agua">Agua Potable</option>
           </select>
           <input class="form-input" id="cust-norma" type="text"
             placeholder="Norma (opcional)" style="font-size:13px;">

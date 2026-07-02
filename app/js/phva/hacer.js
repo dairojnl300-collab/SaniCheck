@@ -1,6 +1,18 @@
 // hacer.js — Pantalla HACER: checklist 5 programas PSB (Semana 2)
 
 const Hacer = (() => {
+  const PROG_ICONS = {
+    infra:    { color: '#1E40AF', svg: '<path d="M4 21V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v16"/><path d="M13 10h5a1 1 0 0 1 1 1v10"/><path d="M2 21h20"/><path d="M7 8h1M10 8h1M7 12h1M10 12h1M7 16h1M10 16h1"/>' },
+    pld:      { color: '#0891B2', svg: '<path d="M12 3c-3.2 4-6 7.6-6 10.6a6 6 0 0 0 12 0C18 10.6 15.2 7 12 3z"/>' },
+    pcip:     { color: '#D97706', svg: '<ellipse cx="12" cy="14" rx="4.5" ry="6"/><path d="M12 8v12"/><path d="M9 5.5 7.5 4M15 5.5 16.5 4"/><circle cx="12" cy="6" r="1.5"/>' },
+    residuos: { color: '#059669', svg: '<path d="M4 12a8 8 0 0 1 14.5-4.5M20 12a8 8 0 0 1-14.5 4.5"/><path d="M17 4v4h-4"/><path d="M7 20v-4h4"/>' },
+    agua:     { color: '#0284C7', svg: '<path d="M3 17c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/><path d="M3 12c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/>' },
+  };
+  function _progIcon(id, size, strokeOverride) {
+    const p = PROG_ICONS[id] || PROG_ICONS.infra;
+    size = size || 20;
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${strokeOverride || p.color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;flex-shrink:0;">${p.svg}</svg>`;
+  }
 
   function _state() {
     const inspeccion = Store.getCurrentInspeccion();
@@ -66,7 +78,6 @@ const Hacer = (() => {
   }
 
   function _renderProgramTabs(programas, activeIdx) {
-    const ICONS = { infra: '🏗️', pld: '🧹', pcip: '🐛', residuos: '♻️', agua: '💧' };
     return `
       <div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;
         scrollbar-width:none;-ms-overflow-style:none;">
@@ -78,12 +89,12 @@ const Hacer = (() => {
                          : 'transparent';
           return `
             <button onclick="Hacer.seleccionarPrograma(${i})"
-              style="flex:0 0 auto;padding:6px 10px;border-radius:20px;cursor:pointer;
+              style="flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:20px;cursor:pointer;
                 border:1.5px solid ${isActive ? 'var(--color-primary)' : 'var(--color-border)'};
                 background:${isActive ? 'var(--color-primary-bg)' : 'var(--color-surface)'};
                 font-size:11px;font-weight:${isActive ? 700 : 500};
                 color:${isActive ? 'var(--color-primary)' : 'var(--color-ink2)'};">
-              ${ICONS[p.id] || '📋'} ${p.codigo}
+              ${_progIcon(p.id, 14, isActive ? '#fff' : null)} ${p.codigo}
               <span style="color:${dotColor}">●</span>
             </button>`;
         }).join('')}
