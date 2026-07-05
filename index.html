@@ -110,14 +110,27 @@
 
     /* ── SVG ICON HELPERS ── */
     .icon-wrap {
+      --hue: var(--brand2);
       width: 48px; height: 48px;
-      background: var(--surface); border-radius: 12px;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--hue) 16%, white), color-mix(in srgb, var(--hue) 6%, white));
+      border: 1px solid color-mix(in srgb, var(--hue) 28%, transparent);
+      border-radius: 14px;
       display: flex; align-items: center; justify-content: center;
       margin-bottom: 14px; flex-shrink: 0;
+      box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--hue) 45%, transparent);
+      transition: transform 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out);
     }
-    .icon-wrap svg { width: 24px; height: 24px; }
-    .icon-wrap-sm { width: 38px; height: 38px; border-radius: 10px; margin-bottom: 12px; }
+    .icon-wrap svg { width: 24px; height: 24px; stroke: var(--hue) !important; }
+    .icon-wrap-sm { width: 38px; height: 38px; border-radius: 11px; margin-bottom: 12px; }
     .icon-wrap-sm svg { width: 20px; height: 20px; }
+    .phva-card:hover .icon-wrap,
+    .feature:hover .icon-wrap {
+      transform: scale(1.08) rotate(-4deg);
+      box-shadow: 0 10px 22px -8px color-mix(in srgb, var(--hue) 55%, transparent);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .phva-card:hover .icon-wrap, .feature:hover .icon-wrap { transform: none; }
+    }
     .plan-icon-wrap {
       width: 52px; height: 52px; border-radius: 14px;
       background: var(--surface); display: flex;
@@ -637,7 +650,7 @@
     <div class="phva-flow">
       <div class="phva-card" data-reveal>
         <div class="phva-card-header">
-          <div class="icon-wrap icon-wrap-sm">
+          <div class="icon-wrap icon-wrap-sm" style="--hue:#0E86C8">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <rect x="8" y="2" width="8" height="4" rx="1"/>
               <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
@@ -652,7 +665,7 @@
       </div>
       <div class="phva-card" data-reveal>
         <div class="phva-card-header">
-          <div class="icon-wrap icon-wrap-sm">
+          <div class="icon-wrap icon-wrap-sm" style="--hue:#0C8A5F">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <path d="M9 11l3 3L22 4"/>
               <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
@@ -665,7 +678,7 @@
       </div>
       <div class="phva-card" data-reveal>
         <div class="phva-card-header">
-          <div class="icon-wrap icon-wrap-sm">
+          <div class="icon-wrap icon-wrap-sm" style="--hue:#DF8A00">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="20" x2="18" y2="10"/>
               <line x1="12" y1="20" x2="12" y2="4"/>
@@ -680,7 +693,7 @@
       </div>
       <div class="phva-card" data-reveal>
         <div class="phva-card-header">
-          <div class="icon-wrap icon-wrap-sm">
+          <div class="icon-wrap icon-wrap-sm" style="--hue:#E0523C">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14 2 14 8 20 8"/>
@@ -703,7 +716,7 @@
       <div class="section-sub">Diseñado para equipos de ECODESA — sin papel, sin Excel, sin conexión</div>
       <div class="features-grid">
         <div class="feature" data-reveal>
-          <div class="icon-wrap">
+          <div class="icon-wrap" style="--hue:#0C8A5F">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
               <circle cx="12" cy="13" r="4"/>
@@ -713,7 +726,7 @@
           <p>Captura evidencia fotográfica directamente desde la app. Se incluyen automáticamente en el acta PDF.</p>
         </div>
         <div class="feature" data-reveal>
-          <div class="icon-wrap">
+          <div class="icon-wrap" style="--hue:#0E86C8">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
               <line x1="12" y1="18" x2="12.01" y2="18"/>
@@ -723,7 +736,7 @@
           <p>PWA instalable en Android e iOS. Funciona sin internet — los datos se guardan de forma local y segura.</p>
         </div>
         <div class="feature" data-reveal>
-          <div class="icon-wrap">
+          <div class="icon-wrap" style="--hue:#DF8A00">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
             </svg>
@@ -732,7 +745,7 @@
           <p>Plazos calculados según criticidad: Inmediato (≤48h), 7 días o 30 días calendarios según normativa.</p>
         </div>
         <div class="feature" data-reveal>
-          <div class="icon-wrap">
+          <div class="icon-wrap" style="--hue:#35C9AC">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
               <polyline points="17 6 23 6 23 12"/>
@@ -742,7 +755,7 @@
           <p>Gráfico pentagonal SVG con los 5 programas PSB y comparación histórica entre visitas.</p>
         </div>
         <div class="feature" data-reveal>
-          <div class="icon-wrap">
+          <div class="icon-wrap" style="--hue:#E0523C">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <line x1="4" y1="9" x2="20" y2="9"/>
               <line x1="4" y1="15" x2="20" y2="15"/>
@@ -754,7 +767,7 @@
           <p>Numeración automática PSB-YYYY-NNN. Descarga como PDF o comparte por WhatsApp en segundos.</p>
         </div>
         <div class="feature" data-reveal>
-          <div class="icon-wrap">
+          <div class="icon-wrap" style="--hue:#0A7350">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               <polyline points="9 12 11 14 15 10"/>
