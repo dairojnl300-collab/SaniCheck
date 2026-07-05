@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="no-js">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +8,7 @@
   <link rel="apple-touch-icon" href="app/assets/icons/icon-192.png">
   <meta name="description" content="SaniCheck — Inspecciones PSB desde el celular. Normativa colombiana real. ECODESA Ing. S.A.S">
   <title>SaniCheck · Herramienta PSB para Profesionales — ECODESA</title>
+  <script>document.documentElement.classList.replace('no-js','js')</script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -83,6 +84,25 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    /* Reveal al hacer scroll (estilo ecodesa) */
+    html.js [data-reveal] {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out);
+      transition-delay: var(--rd, 0s);
+    }
+    html.js [data-reveal].in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) {
+      html.js [data-reveal] { opacity: 1; transform: none; transition: none; }
+    }
+
+    @keyframes sc-chipFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    .hero-seal { animation: sc-chipFloat 4.5s var(--ease-soft) infinite; }
+    @media (prefers-reduced-motion: reduce) { .hero-seal { animation: none; } }
+
+    .phone-wrap { transition: transform 0.4s var(--ease-out); }
+    .phone-wrap:hover { transform: translateY(-4px); }
+
     h1, h2, h3, .section-title, .plan-name, .nav-logo-text {
       font-family: 'Bricolage Grotesque', system-ui, sans-serif;
       font-weight: 600;
@@ -123,11 +143,13 @@
     .nav-logo-text { font-size: 16px; color: #fff; }
     .nav-cta {
       background: var(--accent); color: #fff;
-      padding: 8px 20px; border-radius: 8px;
+      padding: 8px 20px; border-radius: 999px;
       font-size: 13px; font-weight: 600;
-      text-decoration: none; transition: background .15s;
+      text-decoration: none;
+      box-shadow: 0 8px 20px -10px rgba(82,183,136,0.7);
+      transition: background 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out), transform 0.3s var(--ease-out);
     }
-    .nav-cta:hover { background: var(--accent2); }
+    .nav-cta:hover { background: var(--accent2); box-shadow: 0 12px 26px -10px rgba(82,183,136,0.8); transform: translateY(-1px); }
 
     /* ── HERO ── */
     .hero {
@@ -173,20 +195,22 @@
     .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 36px; }
     .btn-primary {
       background: var(--accent); color: #fff;
-      padding: 14px 28px; border-radius: 10px;
+      padding: 15px 30px; border-radius: 999px;
       font-size: 15px; font-weight: 600;
-      text-decoration: none; transition: all .15s;
-      box-shadow: 0 4px 20px rgba(82,183,136,0.35);
+      text-decoration: none;
+      box-shadow: 0 10px 26px -10px rgba(82,183,136,0.6);
+      transition: background 0.3s var(--ease-out), box-shadow 0.35s var(--ease-out), transform 0.3s var(--ease-out);
     }
-    .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+    .btn-primary:hover { background: var(--accent2); transform: translateY(-2px); box-shadow: 0 16px 34px -10px rgba(82,183,136,0.7); }
     .btn-outline-white {
       background: rgba(255,255,255,0.08); color: #fff;
-      border: 1px solid rgba(255,255,255,0.22);
-      padding: 14px 28px; border-radius: 10px;
+      border: 1.5px solid rgba(255,255,255,0.28);
+      padding: 15px 30px; border-radius: 999px;
       font-size: 15px; font-weight: 600;
-      text-decoration: none; transition: background .15s;
+      text-decoration: none;
+      transition: background 0.3s var(--ease-out), border-color 0.3s var(--ease-out), transform 0.3s var(--ease-out);
     }
-    .btn-outline-white:hover { background: rgba(255,255,255,0.15); }
+    .btn-outline-white:hover { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.5); transform: translateY(-2px); }
     .hero-normas {
       display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px;
     }
@@ -286,7 +310,9 @@
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 26px 22px;
       position: relative; overflow: hidden;
+      transition: transform 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out);
     }
+    .phva-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lum); }
     .phva-card::before {
       content: ''; position: absolute; top: 0; left: 0;
       width: 4px; height: 100%; background: var(--accent);
@@ -309,9 +335,10 @@
     }
     .feature {
       padding: 24px; border: 1px solid var(--border);
-      border-radius: var(--radius); transition: box-shadow .2s, transform .2s;
+      border-radius: var(--radius);
+      transition: box-shadow 0.35s var(--ease-out), transform 0.35s var(--ease-out), border-color 0.35s var(--ease-out);
     }
-    .feature:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+    .feature:hover { box-shadow: var(--shadow-lum); transform: translateY(-5px); border-color: transparent; }
     .feature h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; font-family: 'Bricolage Grotesque', sans-serif; }
     .feature p { font-size: 13px; color: var(--ink3); line-height: 1.55; }
 
@@ -365,11 +392,13 @@
     .plan-btn {
       display: block; text-align: center; margin-top: 22px;
       background: var(--brand); color: #fff; padding: 13px 20px;
-      border-radius: 10px; font-size: 14px; font-weight: 600;
-      text-decoration: none; transition: background .15s;
+      border-radius: 999px; font-size: 14px; font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 10px 22px -12px rgba(10,46,35,0.5);
+      transition: background 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out), transform 0.3s var(--ease-out);
     }
-    .plan.featured .plan-btn { background: var(--accent); }
-    .plan-btn:hover { opacity: 0.88; }
+    .plan.featured .plan-btn { background: var(--accent); box-shadow: 0 10px 24px -10px rgba(82,183,136,0.6); }
+    .plan-btn:hover { transform: translateY(-2px); filter: brightness(0.94); }
     .plan-wompi-note {
       font-size: 10px; color: var(--ink3); text-align: center; margin-top: 8px;
       display: flex; align-items: center; justify-content: center; gap: 4px;
@@ -409,7 +438,9 @@
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 10px; padding: 16px 18px;
       display: flex; gap: 10px; align-items: flex-start;
+      transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
     }
+    .norma-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lum); }
     .norma-card svg { width: 16px; height: 16px; stroke: var(--brand2); flex-shrink: 0; margin-top: 1px; }
     .norma-card-title { font-size: 13px; font-weight: 600; color: var(--brand); margin-bottom: 3px; font-family: 'Bricolage Grotesque', sans-serif; }
     .norma-card-desc { font-size: 11px; color: var(--ink3); line-height: 1.4; }
@@ -468,7 +499,7 @@
     <div class="hero-inner">
 
       <!-- Texto -->
-      <div class="hero-text">
+      <div class="hero-text" data-reveal>
         <div class="hero-badge">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -515,7 +546,7 @@
       </div>
 
       <!-- Mockup celular -->
-      <div class="phone-wrap">
+      <div class="phone-wrap" data-reveal style="--rd:0.15s">
         <div class="phone-shell">
           <div class="phone-notch"></div>
           <div class="phone-screen">
@@ -604,7 +635,7 @@
     <div class="section-title">El flujo PHVA en tu mano</div>
     <div class="section-sub">4 pasos simples para una inspección PSB completa y profesional</div>
     <div class="phva-flow">
-      <div class="phva-card">
+      <div class="phva-card" data-reveal>
         <div class="phva-card-header">
           <div class="icon-wrap icon-wrap-sm">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
@@ -619,7 +650,7 @@
         <h3>Planificar</h3>
         <p>Registra el establecimiento: nombre, NIT, dirección, tipo, responsable sanitario y fecha.</p>
       </div>
-      <div class="phva-card">
+      <div class="phva-card" data-reveal>
         <div class="phva-card-header">
           <div class="icon-wrap icon-wrap-sm">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
@@ -632,7 +663,7 @@
         <h3>Hacer</h3>
         <p>Evalúa los 5 programas PSB: INFRA, PLD, PCIP, Residuos y Agua. Califica B/R/D cada aspecto.</p>
       </div>
-      <div class="phva-card">
+      <div class="phva-card" data-reveal>
         <div class="phva-card-header">
           <div class="icon-wrap icon-wrap-sm">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
@@ -647,7 +678,7 @@
         <h3>Verificar</h3>
         <p>Dashboard con score circular, radar de cumplimiento PSB y hallazgos críticos priorizados.</p>
       </div>
-      <div class="phva-card">
+      <div class="phva-card" data-reveal>
         <div class="phva-card-header">
           <div class="icon-wrap icon-wrap-sm">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
@@ -671,7 +702,7 @@
       <div class="section-title">Todo lo que necesita un profesional PSB</div>
       <div class="section-sub">Diseñado para equipos de ECODESA — sin papel, sin Excel, sin conexión</div>
       <div class="features-grid">
-        <div class="feature">
+        <div class="feature" data-reveal>
           <div class="icon-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
@@ -681,7 +712,7 @@
           <h4>Fotos desde la cámara</h4>
           <p>Captura evidencia fotográfica directamente desde la app. Se incluyen automáticamente en el acta PDF.</p>
         </div>
-        <div class="feature">
+        <div class="feature" data-reveal>
           <div class="icon-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
@@ -691,7 +722,7 @@
           <h4>100% offline</h4>
           <p>PWA instalable en Android e iOS. Funciona sin internet — los datos se guardan de forma local y segura.</p>
         </div>
-        <div class="feature">
+        <div class="feature" data-reveal>
           <div class="icon-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
@@ -700,7 +731,7 @@
           <h4>Hallazgos automáticos</h4>
           <p>Plazos calculados según criticidad: Inmediato (≤48h), 7 días o 30 días calendarios según normativa.</p>
         </div>
-        <div class="feature">
+        <div class="feature" data-reveal>
           <div class="icon-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
@@ -710,7 +741,7 @@
           <h4>Radar de cumplimiento</h4>
           <p>Gráfico pentagonal SVG con los 5 programas PSB y comparación histórica entre visitas.</p>
         </div>
-        <div class="feature">
+        <div class="feature" data-reveal>
           <div class="icon-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <line x1="4" y1="9" x2="20" y2="9"/>
@@ -722,7 +753,7 @@
           <h4>Actas numeradas</h4>
           <p>Numeración automática PSB-YYYY-NNN. Descarga como PDF o comparte por WhatsApp en segundos.</p>
         </div>
-        <div class="feature">
+        <div class="feature" data-reveal>
           <div class="icon-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -746,7 +777,7 @@
       <div class="pricing-grid">
 
         <!-- Plan Profesional -->
-        <div class="plan">
+        <div class="plan" data-reveal>
           <div class="plan-icon-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -803,7 +834,7 @@
         </div>
 
         <!-- Plan Empresa (Destacado) -->
-        <div class="plan featured">
+        <div class="plan featured" data-reveal>
           <div class="plan-badge">
             <svg viewBox="0 0 24 24" fill="#fff" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             MÁS POPULAR
@@ -864,7 +895,7 @@
         </div>
 
         <!-- Plan Consultor -->
-        <div class="plan">
+        <div class="plan" data-reveal>
           <div class="plan-icon-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="#1B4332" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
@@ -920,7 +951,7 @@
       </div>
 
       <!-- Demo Banner -->
-      <div class="demo-banner">
+      <div class="demo-banner" data-reveal>
         <div class="demo-banner-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 12 20 22 4 22 4 12"/>
@@ -951,7 +982,7 @@
     <div class="section-title" style="text-align:center;">Normativa colombiana incluida</div>
     <div class="section-sub" style="text-align:center;">Cada aspecto PSB tiene la norma exacta que lo respalda</div>
     <div class="normas-grid">
-      <div class="norma-card">
+      <div class="norma-card" data-reveal>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
@@ -960,7 +991,7 @@
           <div class="norma-card-desc">Código sanitario nacional — bases del saneamiento básico</div>
         </div>
       </div>
-      <div class="norma-card">
+      <div class="norma-card" data-reveal>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
@@ -969,7 +1000,7 @@
           <div class="norma-card-desc">Buenas prácticas de manufactura en alimentos</div>
         </div>
       </div>
-      <div class="norma-card">
+      <div class="norma-card" data-reveal>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
@@ -978,7 +1009,7 @@
           <div class="norma-card-desc">Requisitos sanitarios en establecimientos de alimentos</div>
         </div>
       </div>
-      <div class="norma-card">
+      <div class="norma-card" data-reveal>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
@@ -987,7 +1018,7 @@
           <div class="norma-card-desc">Sistema de calidad del agua para consumo humano</div>
         </div>
       </div>
-      <div class="norma-card">
+      <div class="norma-card" data-reveal>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
@@ -996,7 +1027,7 @@
           <div class="norma-card-desc">Características e instrumentos de análisis del agua</div>
         </div>
       </div>
-      <div class="norma-card">
+      <div class="norma-card" data-reveal>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
@@ -1029,5 +1060,35 @@
     </div>
   </footer>
 
+  <script>
+    (function () {
+      var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var els = Array.prototype.slice.call(document.querySelectorAll('[data-reveal]'));
+      if (!els.length) return;
+
+      var groups = new Map();
+      els.forEach(function (el) {
+        var p = el.parentElement;
+        var i = groups.get(p) || 0;
+        groups.set(p, i + 1);
+        el.style.setProperty('--rd', Math.min(i * 0.08, 0.42) + 's');
+      });
+
+      if (reduced || !('IntersectionObserver' in window)) {
+        els.forEach(function (el) { el.classList.add('in'); });
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          e.target.classList.add('in');
+          io.unobserve(e.target);
+        });
+      }, { threshold: 0.08, rootMargin: '0px 0px -6% 0px' });
+      els.forEach(function (el) { io.observe(el); });
+
+      setTimeout(function () { els.forEach(function (el) { el.classList.add('in'); }); }, 6000);
+    })();
+  </script>
 </body>
 </html>
