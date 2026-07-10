@@ -58,6 +58,7 @@ function getPSBPrograms() {
         { id: 'pcip_004', texto: '¿Cronograma de control químico definido y ejecutado?', norma: 'Dec. 3075/1997 Anexo III', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
         { id: 'pcip_005', texto: '¿Productos plaguicidas autorizados y almacenados correctamente?', norma: 'Res. 2400/1979 MINSALUD', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
         { id: 'pcip_006', texto: '¿Sin evidencia activa de infestación (excrementos, roeduras, insectos)?', norma: 'Ley 9/1979 Art. 28', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
+        { id: 'pcip_011', texto: 'Empresa fumigadora entrega: concepto sanitario vigente + ficha técnica del producto + hoja de seguridad (HDS) + plano de ubicación de cebos', norma: 'Res. 2674/2013', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
       ],
     },
     {
@@ -73,6 +74,7 @@ function getPSBPrograms() {
         { id: 'rs_003', texto: '¿Almacenamiento temporal de residuos adecuado y señalizado?', norma: 'Dec. 4741/2005', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
         { id: 'rs_004', texto: '¿Cronograma interno de recolección definido y ejecutado?', norma: 'Ley 1259/2008', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
         { id: 'rs_005', texto: '¿Registro de generación de residuos diligenciado?', norma: 'Dec. 596/2016', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
+        { id: 'rs_006', texto: 'Trampa de grasas: limpieza y registro independiente del resto de residuos líquidos', norma: 'Res. 2674/2013', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
       ],
     },
     {
@@ -88,6 +90,7 @@ function getPSBPrograms() {
         { id: 'agua_003', texto: '¿Análisis de calidad del agua realizado en laboratorio certificado (anual)?', norma: 'Res. 2115/2007 Art. 27', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
         { id: 'agua_004', texto: '¿Parámetros in-situ registrados: cloro residual (0.3–2.0 mg/L), pH (6.5–9.0)?', norma: 'Res. 2115/2007 Art. 4-5', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
         { id: 'agua_005', texto: '¿Limpieza y desinfección del tanque realizada semestralmente con registro?', norma: 'Dec. 1575/2007 Art. 11', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
+        { id: 'agua_006', texto: 'Grifos sin fugas ni goteo; sin humedad visible en paredes, techos o pisos del punto de atención', norma: 'Res. 2674/2013', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
       ],
     },
   ];
