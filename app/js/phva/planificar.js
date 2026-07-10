@@ -47,7 +47,6 @@ const Planificar = (() => {
     { key: 'Bodega', label: 'Bodega/Almacén', normas: [
       ['Decreto 1843 de 1991', 'Almacenamiento de plaguicidas (si aplica)', 'Control de plagas'],
       ['NTC 1692', 'Almacenamiento mercancías peligrosas (si aplica)', 'Almacenamiento']] },
-    { key: 'Servicio', label: 'Servicios', normas: [] },
     { key: 'Salud', label: 'Clínica / Centro de Salud', normas: [
       ['Resolución 1164 de 2002', 'Manejo integral residuos hospitalarios', 'Residuos peligrosos'],
       ['Decreto 4741 de 2005', 'Prevención manejo residuos peligrosos (reforzado)', 'RESPEL'],
@@ -377,7 +376,6 @@ const Planificar = (() => {
             <option value="Alimentos">Restaurante / Comedor / Alimentos</option>
             <option value="Manufactura">Planta de Manufactura</option>
             <option value="Bodega">Bodega / Almacén</option>
-            <option value="Servicio">Servicios</option>
             <option value="Educativo">Institución Educativa</option>
             <option value="Salud">Clínica / Centro de Salud</option>
             <option value="Otro">Otro</option>
@@ -446,8 +444,6 @@ const Planificar = (() => {
 
   function _renderDiagnosticoBody(items) {
     return `
-      <div class="norma-badge" style="margin-bottom:var(--sp-md);">
-        📋 Res. 2674/2013 · Dec. 3075/1997 · Dec. 1575/2007 · Ley 9/1979</div>
       ${DiagnosticoInicial.ITEMS.map((def, i) => {
         const it = items[i];
         return `
