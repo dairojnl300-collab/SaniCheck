@@ -426,6 +426,11 @@ const Planificar = (() => {
           <label class="form-label" for="inp-version-doc">Versión del documento</label>
           <input class="form-input" type="text" id="inp-version-doc" value="1.0">
         </div>
+        <div class="form-group">
+          <label class="form-label" for="inp-responsable-cocina">Responsable — Personal de Cocina/Manipulación</label>
+          <input class="form-input" type="text" id="inp-responsable-cocina"
+            placeholder="Nombre de quien vela por BPM en cocina y almacenamiento">
+        </div>
 
         <div class="form-label" style="margin-top:var(--sp-md);font-weight:700;">Datos de la inspección</div>
         <div class="form-group">
@@ -525,6 +530,7 @@ const Planificar = (() => {
     const establecimiento = {
       nombre, nit, direccion, tipo,
       responsable_sanitario: val('inp-responsable'),
+      responsable_cocina: val('inp-responsable-cocina'),
       telefono: val('inp-telefono'),
       barrio: val('inp-barrio'),
       ciudad: val('inp-ciudad'),

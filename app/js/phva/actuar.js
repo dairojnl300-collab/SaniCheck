@@ -258,6 +258,7 @@ const Actuar = (() => {
       ['Fecha de vigencia', e.fecha_vigencia],
       ['Versión del documento', e.version_documento],
       ['Administrador / Responsable PSB', e.responsable_sanitario || '—'],
+      ['Responsable — Personal de Cocina/Manipulación', e.responsable_cocina || '—'],
       ['Profesional', i.inspector],
       ['Fecha de Inspección', i.fecha],
       ['N° Acta', inspeccion.numero_acta],
