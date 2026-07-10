@@ -111,6 +111,12 @@ const Planificar = (() => {
       ${_renderAccordionCard('marco', 'Marco Normativo y Legal de Referencia',
         'scale', 'var(--azure)', _marcoBadgeInfo(), _marcoOpen, _renderMarcoBody())}
 
+      <div style="margin:0 var(--sp-md);">
+        <button type="submit" form="form-planificar" class="btn btn-primary">
+          Iniciar Ciclo PHVA →
+        </button>
+      </div>
+
       <div style="height:32px"></div>`;
   }
 
@@ -436,9 +442,6 @@ const Planificar = (() => {
           <label class="form-label" for="inp-fecha">Fecha de inspección</label>
           <input class="form-input" type="date" id="inp-fecha" value="${_hoy()}" required>
         </div>
-        <button type="submit" class="btn btn-primary" style="margin-top:8px;">
-          Iniciar Ciclo PHVA →
-        </button>
       </form>`;
   }
 
