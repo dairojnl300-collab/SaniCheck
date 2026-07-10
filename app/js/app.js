@@ -172,6 +172,20 @@
     Router.go('hacer');
   };
 
+  function _showUpdateBanner(worker) {
+    if (document.getElementById('sw-update-banner')) return;
+    const el = document.createElement('div');
+    el.id = 'sw-update-banner';
+    el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;display:flex;align-items:center;' +
+      'justify-content:center;gap:12px;padding:10px 16px;background:var(--emerald-2);color:#fff;' +
+      'font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.15);';
+    el.innerHTML = 'Nueva versión disponible ' +
+      '<button id="sw-update-btn" style="background:#fff;color:var(--emerald-2);border:none;' +
+      'padding:6px 14px;border-radius:999px;font-weight:700;font-size:12px;cursor:pointer;">Actualizar ahora</button>';
+    document.body.appendChild(el);
+    document.getElementById('sw-update-btn').onclick = () => worker.postMessage('SKIP_WAITING');
+  }
+
   function _esc(s) {
     if (!s) return '';
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -180,7 +194,21 @@
   function init() {
     Store.load();
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        if (reg.waiting) _showUpdateBanner(reg.waiting);
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) _showUpdateBanner(nw);
+          });
+        });
+      }).catch(() => {});
+      let _reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (_reloading) return;
+        _reloading = true;
+        location.reload();
+      });
     }
     if (Licencias.esValida()) {
       Router.go('home');
