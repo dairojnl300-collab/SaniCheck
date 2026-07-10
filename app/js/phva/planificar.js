@@ -12,7 +12,7 @@ const Planificar = (() => {
       </div>
       <form class="form-screen" id="form-planificar" novalidate>
         <div class="form-group">
-          <label class="form-label" for="inp-nombre">Nombre del establecimiento *</label>
+          <label class="form-label" for="inp-nombre">Nombre / Razón Social *</label>
           <input class="form-input" type="text" id="inp-nombre"
             placeholder="Ej: Restaurante El Rincón Costeño" autocomplete="organization" required>
         </div>
@@ -27,6 +27,36 @@ const Planificar = (() => {
             placeholder="Ej: Cra. 10 # 20-30, Cartagena" required>
         </div>
         <div class="form-group">
+          <label class="form-label" for="inp-barrio">Barrio / Localidad</label>
+          <input class="form-input" type="text" id="inp-barrio"
+            placeholder="Ej: Bocagrande">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="inp-ciudad">Ciudad / Municipio</label>
+          <input class="form-input" type="text" id="inp-ciudad"
+            placeholder="Ej: Cartagena de Indias">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="inp-telefono">Teléfono / WhatsApp</label>
+          <input class="form-input" type="tel" id="inp-telefono"
+            placeholder="Ej: 300 123 4567" inputmode="tel">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="inp-correo">Correo electrónico</label>
+          <input class="form-input" type="email" id="inp-correo"
+            placeholder="Ej: contacto@empresa.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="inp-representante">Representante Legal</label>
+          <input class="form-input" type="text" id="inp-representante"
+            placeholder="Nombre del representante legal">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="inp-ciiu">Actividad Económica (CIIU)</label>
+          <input class="form-input" type="text" id="inp-ciiu"
+            placeholder="Ej: 5610 - Expendio a la mesa">
+        </div>
+        <div class="form-group">
           <label class="form-label" for="inp-tipo">Tipo de establecimiento *</label>
           <select class="form-select" id="inp-tipo" required>
             <option value="">Seleccionar tipo…</option>
@@ -37,17 +67,53 @@ const Planificar = (() => {
             <option value="Educativo">Institución Educativa</option>
             <option value="Salud">Clínica / Centro de Salud</option>
             <option value="Otro">Otro</option>
+            <option value="Comedor industrial">Comedor industrial</option>
+            <option value="Casino">Casino</option>
+            <option value="Catering">Catering</option>
           </select>
         </div>
+        <div class="form-group">
+          <label class="form-label" for="inp-turnos">Turnos de producción</label>
+          <input class="form-input" type="text" id="inp-turnos"
+            placeholder="Ej: Mañana y tarde">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="inp-raciones">Volumen diario de raciones servidas</label>
+          <input class="form-input" type="number" id="inp-raciones"
+            placeholder="Ej: 500" inputmode="numeric" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="inp-empresa-cliente">Empresa cliente / contratante</label>
+          <input class="form-input" type="text" id="inp-empresa-cliente"
+            placeholder="Ej: Industrias del Caribe S.A.S.">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="inp-concepto-sanitario">Concepto sanitario vigente</label>
+          <select class="form-select" id="inp-concepto-sanitario">
+            <option value="">Seleccionar…</option>
+            <option value="Sí">Sí</option>
+            <option value="No">No</option>
+            <option value="En trámite">En trámite</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="inp-fecha-elaboracion">Fecha de elaboración</label>
+          <input class="form-input" type="date" id="inp-fecha-elaboracion" value="${_hoy()}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="inp-fecha-vigencia">Fecha de vigencia</label>
+          <input class="form-input" type="date" id="inp-fecha-vigencia">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="inp-version-doc">Versión del documento</label>
+          <input class="form-input" type="text" id="inp-version-doc" value="1.0">
+        </div>
+
+        <div class="form-label" style="margin-top:var(--sp-md);font-weight:700;">Datos de la inspección</div>
         <div class="form-group">
           <label class="form-label" for="inp-responsable">Administrador / Responsable PSB</label>
           <input class="form-input" type="text" id="inp-responsable"
             placeholder="Nombre del administrador / responsable PSB">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="inp-telefono">Teléfono de contacto</label>
-          <input class="form-input" type="tel" id="inp-telefono"
-            placeholder="Ej: 300 123 4567" inputmode="tel">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-inspector">Profesional *</label>
@@ -88,6 +154,18 @@ const Planificar = (() => {
       nombre, nit, direccion, tipo,
       responsable_sanitario: val('inp-responsable'),
       telefono: val('inp-telefono'),
+      barrio: val('inp-barrio'),
+      ciudad: val('inp-ciudad'),
+      correo: val('inp-correo'),
+      representante_legal: val('inp-representante'),
+      actividad_ciiu: val('inp-ciiu'),
+      turnos_produccion: val('inp-turnos'),
+      volumen_raciones: val('inp-raciones'),
+      empresa_cliente: val('inp-empresa-cliente'),
+      concepto_sanitario: val('inp-concepto-sanitario'),
+      fecha_elaboracion: val('inp-fecha-elaboracion'),
+      fecha_vigencia: val('inp-fecha-vigencia'),
+      version_documento: val('inp-version-doc'),
     };
     const inspector = val('inp-inspector') || 'Ing. Ambiental';
     const fecha     = val('inp-fecha') || _hoy();

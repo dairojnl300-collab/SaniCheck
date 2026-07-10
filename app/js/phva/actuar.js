@@ -245,7 +245,18 @@ const Actuar = (() => {
       ['Establecimiento', e.nombre],
       ['NIT / CC', e.nit],
       ['Dirección', e.direccion],
+      ['Barrio / Localidad', e.barrio],
+      ['Ciudad / Municipio', e.ciudad],
+      ['Correo electrónico', e.correo],
+      ['Actividad Económica (CIIU)', e.actividad_ciiu],
       ['Tipo', e.tipo],
+      ['Turnos de producción', e.turnos_produccion],
+      ['Volumen diario de raciones', e.volumen_raciones],
+      ['Empresa cliente / contratante', e.empresa_cliente],
+      ['Concepto sanitario vigente', e.concepto_sanitario],
+      ['Fecha de elaboración', e.fecha_elaboracion],
+      ['Fecha de vigencia', e.fecha_vigencia],
+      ['Versión del documento', e.version_documento],
       ['Administrador / Responsable PSB', e.responsable_sanitario || '—'],
       ['Profesional', i.inspector],
       ['Fecha de Inspección', i.fecha],
@@ -718,7 +729,7 @@ const Actuar = (() => {
     const cols = [
       ['Elaboró',  inspeccion.inspeccion.inspector,            'Profesional'],
       ['Revisó',   e.responsable_sanitario || '________________', 'Administrador / Responsable PSB'],
-      ['Aprobó',   '________________',                           'Representante Legal'],
+      ['Aprobó',   e.representante_legal || '________________',   'Representante Legal'],
     ];
     return `
       <div class="acta-firmas" style="margin-bottom:14px;">
