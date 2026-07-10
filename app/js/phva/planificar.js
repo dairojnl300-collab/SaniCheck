@@ -6,11 +6,43 @@ const Planificar = (() => {
     building: '<path d="M4 21V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v16"/><path d="M13 10h5a1 1 0 0 1 1 1v10"/><path d="M2 21h20"/><path d="M7 8h1M10 8h1M7 12h1M10 12h1M7 16h1M10 16h1"/>',
     clipboardCheck: '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2l4-4"/>',
     listCheck: '<path d="M3.5 5.5l1.5 1.5l2.5 -2.5"/><path d="M3.5 11.5l1.5 1.5l2.5 -2.5"/><path d="M3.5 17.5l1.5 1.5l2.5 -2.5"/><path d="M11 6l9 0"/><path d="M11 12l9 0"/><path d="M11 18l9 0"/>',
+    scale: '<path d="M12 3v18"/><path d="M5 7l7 -4l7 4"/><path d="M5 7l-3 7a4 4 0 0 0 7 0z"/><path d="M19 7l-3 7a4 4 0 0 0 7 0z"/><path d="M7 21h10"/>',
   };
+
+  const MARCO_GENERAL = [
+    'Ley 9 de 1979', 'Decreto 1072 de 2015', 'Resolución 0312 de 2019', 'Resolución 2400 de 1979',
+    'Decreto 1575 de 2007', 'Resolución 2115 de 2007', 'Decreto 1077 de 2015 (agua/residuos)',
+    'Resolución 3956 de 2009', 'Decreto 3930 de 2010', 'Resolución 3079 de 2015', 'Resolución 1439 de 2003',
+    'Decreto 1843 de 1991', 'Resolución 754 de 2014', 'Decreto 2981 de 2013', 'Ley 1259 de 2008',
+    'Decreto 4741 de 2005', 'Ley 99 de 1993', 'Decreto 2811 de 1974',
+  ];
+  const _ALIMENTOS = ['Decreto 3075 de 1997', 'Resolución 2674 de 2013', 'NTC 5093', 'Resolución 5109 de 2005'];
+  const MARCO_TIPOS = [
+    { key: 'Alimentos', label: 'Restaurante / Comedor / Alimentos', normas: _ALIMENTOS },
+    { key: 'Casino', label: 'Casino', normas: _ALIMENTOS },
+    { key: 'Catering', label: 'Catering', normas: [..._ALIMENTOS,
+      'Decreto 3075/1997 Art. 34-36 (transporte de alimentos)', 'Resolución 2674/2013 Cap. VII (transporte)'] },
+    { key: 'Manufactura', label: 'Planta de Manufactura', normas: [
+      'Decreto 3075 de 1997 (si produce alimentos)', 'Resolución 2674 de 2013 (si aplica)',
+      'Decreto 1072 de 2015 reforzado (riesgo industrial)', 'Resolución 0312 de 2019 reforzado'] },
+    { key: 'Bodega', label: 'Bodega/Almacén', normas: [
+      'Decreto 1843 de 1991 (almacenamiento de plaguicidas si aplica)',
+      'NTC 1692 (almacenamiento mercancías peligrosas si aplica)'] },
+    { key: 'Servicio', label: 'Servicios', normas: [] },
+    { key: 'Salud', label: 'Clínica / Centro de Salud', normas: [
+      'Resolución 1164 de 2002 (residuos hospitalarios — obligatoria aquí, no opcional)',
+      'Decreto 4741 de 2005 reforzado', 'Resolución 2183 de 2004 (manual bioseguridad IPS)'] },
+    { key: 'Comedor industrial', label: 'Comedor Industrial', normas: _ALIMENTOS },
+    { key: 'Educativo', label: 'Institución Educativa', normas: [
+      'Decreto 3075/1997 y Resolución 2674/2013 (si tiene comedor/restaurante escolar)',
+      'Resolución 3803 de 2016 (lineamientos PAE)'] },
+  ];
 
   let _generalOpen    = false;
   let _diagOpen       = false;
   let _resultadosOpen = false;
+  let _marcoOpen      = false;
+  let _marcoTab       = 'general';
   let _diagItems      = null;
   let _diagEst        = null;
 
@@ -44,6 +76,10 @@ const Planificar = (() => {
           font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.04em;
           background: var(--color-border); color: var(--color-ink3); }
         .acc-header.disabled { opacity: 0.5; cursor: not-allowed; }
+        .marco-tab { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: var(--radius-full);
+          font-size: var(--text-xs); font-weight: 600; border: 1.5px solid var(--color-border); color: var(--color-ink2);
+          background: var(--color-white); cursor: pointer; white-space: nowrap; }
+        .marco-tab.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
       </style>
 
       ${_renderAccordionCard('general', 'Datos Generales del Establecimiento',
@@ -55,6 +91,9 @@ const Planificar = (() => {
       ${_renderAccordionCard('resultados', 'Resultados del Diagnóstico Inicial',
         'listCheck', 'var(--emerald)', _resultadosBadgeInfo(), _resultadosOpen, _renderResultadosBody(),
         !_resultadosData().rated.length)}
+
+      ${_renderAccordionCard('marco', 'Marco Normativo y Legal de Referencia',
+        'scale', 'var(--azure)', _marcoBadgeInfo(), _marcoOpen, _renderMarcoBody())}
 
       <div style="height:32px"></div>`;
   }
@@ -98,13 +137,53 @@ const Planificar = (() => {
     _generalOpen    = key === 'general'     ? !_generalOpen    : false;
     _diagOpen       = key === 'diagnostico' ? !_diagOpen       : false;
     _resultadosOpen = key === 'resultados'  ? !_resultadosOpen : false;
+    _marcoOpen      = key === 'marco'       ? !_marcoOpen      : false;
     _syncAccordion();
   }
 
   function _syncAccordion() {
     _setCardState('general', _generalOpen, _generalBadgeInfo());
     _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
+    _setCardState('marco', _marcoOpen, _marcoBadgeInfo());
     _syncResultados();
+  }
+
+  function marcoTab(key) {
+    _marcoTab = key;
+    const inner = document.querySelector('#acc-body-marco .acc-body-inner');
+    if (inner) inner.innerHTML = _renderMarcoBody();
+    _setCardState('marco', _marcoOpen, _marcoBadgeInfo());
+  }
+
+  function _marcoBadgeInfo() {
+    const tab = MARCO_TIPOS.find(t => t.key === _marcoTab);
+    const count = MARCO_GENERAL.length + (tab ? tab.normas.length : 0);
+    return { text: `${count} normas`, cls: 'estado-chip estado-B', style: '' };
+  }
+
+  function _renderMarcoBody() {
+    const tabs = [{ key: 'general', label: 'General' }, ...MARCO_TIPOS];
+    const activeTab = MARCO_TIPOS.find(t => t.key === _marcoTab);
+    return `
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--sp-md);">
+        ${tabs.map(t => `<span class="marco-tab${t.key === _marcoTab ? ' active' : ''}"
+          onclick="Planificar.marcoTab('${t.key}')">${_escAttr(t.label)}</span>`).join('')}
+      </div>
+      <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:var(--sp-md);font-style:italic;">
+        La normativa general aplica a todos los establecimientos. Las normas específicas se activan según el tipo seleccionado.</div>
+      <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:8px;">Normativa general</div>
+      <ul style="margin:0 0 var(--sp-md) 0;padding-left:20px;font-size:var(--text-sm);color:var(--color-ink2);line-height:1.8;">
+        ${MARCO_GENERAL.map(n => `<li>${_escAttr(n)}</li>`).join('')}
+      </ul>
+      ${activeTab ? `
+        <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:8px;">
+          Normativa específica — ${_escAttr(activeTab.label)}</div>
+        ${activeTab.normas.length ? `
+          <ul style="margin:0;padding-left:20px;font-size:var(--text-sm);color:var(--color-ink2);line-height:1.8;">
+            ${activeTab.normas.map(n => `<li>${_escAttr(n)}</li>`).join('')}
+          </ul>` : `
+          <div style="font-size:var(--text-sm);color:var(--color-ink3);">Solo aplica la normativa general — sin BPM alimentaria.</div>`}
+      ` : ''}`;
   }
 
   function _syncResultados() {
@@ -452,5 +531,5 @@ const Planificar = (() => {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico };
+  return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, marcoTab };
 })();
