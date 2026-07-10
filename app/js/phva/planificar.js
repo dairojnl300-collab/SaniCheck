@@ -7,6 +7,7 @@ const Planificar = (() => {
     clipboardCheck: '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2l4-4"/>',
     listCheck: '<path d="M3.5 5.5l1.5 1.5l2.5 -2.5"/><path d="M3.5 11.5l1.5 1.5l2.5 -2.5"/><path d="M3.5 17.5l1.5 1.5l2.5 -2.5"/><path d="M11 6l9 0"/><path d="M11 12l9 0"/><path d="M11 18l9 0"/>',
     scale: '<path d="M12 3v18"/><path d="M5 7l7 -4l7 4"/><path d="M5 7l-3 7a4 4 0 0 0 7 0z"/><path d="M19 7l-3 7a4 4 0 0 0 7 0z"/><path d="M7 21h10"/>',
+    calendarTime: '<path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4"/><path d="M14 18a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496v1.504l1 1"/>',
   };
 
   const MARCO_GENERAL = [
@@ -62,14 +63,21 @@ const Planificar = (() => {
   let _diagOpen       = false;
   let _resultadosOpen = false;
   let _marcoOpen      = false;
+  let _vencOpen       = false;
   let _marcoOpenSubs  = { general: true };
   let _diagItems      = null;
   let _diagEst        = null;
+  let _venc           = null;
+  let _vencEst        = null;
 
   function render() {
     if (!_diagItems) {
       _diagEst   = _currentEst();
       _diagItems = DiagnosticoInicial.getDiagnostico(_diagEst).items;
+    }
+    if (!_venc) {
+      _vencEst = _currentEst();
+      _venc    = Vencimientos.getVencimientos(_vencEst);
     }
 
     return `
@@ -110,6 +118,9 @@ const Planificar = (() => {
 
       ${_renderAccordionCard('marco', 'Marco Normativo y Legal de Referencia',
         'scale', 'var(--azure)', _marcoBadgeInfo(), _marcoOpen, _renderMarcoBody())}
+
+      ${_renderAccordionCard('vencimientos', 'Control de Vencimientos',
+        'calendarTime', 'var(--amber)', _vencBadgeInfo(), _vencOpen, _renderVencimientosBody())}
 
       <div style="margin:0 var(--sp-md);">
         <button type="submit" form="form-planificar" class="btn btn-primary">
@@ -156,10 +167,11 @@ const Planificar = (() => {
       Router.toast('⚠ Guarda el diagnóstico con al menos 1 ítem calificado primero');
       return;
     }
-    _generalOpen    = key === 'general'     ? !_generalOpen    : false;
-    _diagOpen       = key === 'diagnostico' ? !_diagOpen       : false;
-    _resultadosOpen = key === 'resultados'  ? !_resultadosOpen : false;
-    _marcoOpen      = key === 'marco'       ? !_marcoOpen      : false;
+    _generalOpen    = key === 'general'      ? !_generalOpen    : false;
+    _diagOpen       = key === 'diagnostico'  ? !_diagOpen       : false;
+    _resultadosOpen = key === 'resultados'   ? !_resultadosOpen : false;
+    _marcoOpen      = key === 'marco'        ? !_marcoOpen      : false;
+    _vencOpen       = key === 'vencimientos' ? !_vencOpen       : false;
     _syncAccordion();
   }
 
@@ -167,6 +179,7 @@ const Planificar = (() => {
     _setCardState('general', _generalOpen, _generalBadgeInfo());
     _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
     _setCardState('marco', _marcoOpen, _marcoBadgeInfo());
+    _setCardState('vencimientos', _vencOpen, _vencBadgeInfo());
     _syncResultados();
   }
 
@@ -325,6 +338,78 @@ const Planificar = (() => {
         </div>`;
     }).join('');
     return header + rows;
+  }
+
+  function _vencBadgeInfo() {
+    const v = _venc || Vencimientos.getVencimientos(_currentEst());
+    const estados = [
+      Vencimientos.estado(v.examen_medico_fecha, 12).estado,
+      Vencimientos.estado(v.mantenimiento_fecha, 3).estado,
+    ];
+    if (estados.every(e => e === 'sin_registrar')) return { text: 'Pendiente', cls: '', style: _pendienteStyle() };
+    if (estados.includes('vencido'))    return { text: 'Vencido', cls: 'estado-chip estado-D', style: '' };
+    if (estados.includes('por_vencer')) return { text: 'Por vencer', cls: 'estado-chip estado-R', style: '' };
+    return { text: 'Vigente', cls: 'estado-chip estado-B', style: '' };
+  }
+
+  function _vencDetalle(fecha, meses) {
+    const e = Vencimientos.estado(fecha, meses);
+    if (e.estado === 'sin_registrar') {
+      return `<div style="font-size:var(--text-xs);color:var(--color-ink3);margin-top:6px;">Sin registrar aún.</div>`;
+    }
+    const cls   = e.estado === 'vencido' ? 'estado-D' : e.estado === 'por_vencer' ? 'estado-R' : 'estado-B';
+    const label = e.estado === 'vencido' ? 'Vencido' : e.estado === 'por_vencer' ? 'Por vencer' : 'Vigente';
+    const proximoTexto = new Date(e.proximo + 'T00:00:00').toLocaleDateString('es-CO');
+    return `
+      <div style="font-size:var(--text-sm);color:var(--color-ink);margin-top:6px;">
+        Próximo vencimiento: <strong>${proximoTexto}</strong>
+      </div>
+      <span class="estado-chip ${cls}" style="margin-top:4px;">${label}</span>`;
+  }
+
+  function _renderVencimientosBody() {
+    const v = _venc || Vencimientos.getVencimientos(_currentEst());
+    return `
+      <div style="padding-bottom:var(--sp-md);margin-bottom:var(--sp-md);border-bottom:1px dashed var(--color-border);">
+        <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:6px;">
+          Examen médico del personal manipulador</div>
+        <span class="norma-badge">Resolución 2674 de 2013</span>
+        <div class="form-group" style="margin-top:8px;">
+          <label class="form-label" for="inp-venc-examen">Fecha del último examen</label>
+          <input class="form-input" type="date" id="inp-venc-examen" value="${_escAttr(v.examen_medico_fecha)}"
+            onchange="Planificar.actualizarVenc('examen_medico_fecha', this.value)">
+        </div>
+        ${_vencDetalle(v.examen_medico_fecha, 12)}
+      </div>
+      <div>
+        <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:6px;">
+          Mantenimiento preventivo equipos de frío</div>
+        <span class="norma-badge">Decreto 3075 de 1997</span>
+        <div class="form-group" style="margin-top:8px;">
+          <label class="form-label" for="inp-venc-mantenimiento">Fecha del último mantenimiento</label>
+          <input class="form-input" type="date" id="inp-venc-mantenimiento" value="${_escAttr(v.mantenimiento_fecha)}"
+            onchange="Planificar.actualizarVenc('mantenimiento_fecha', this.value)">
+        </div>
+        ${_vencDetalle(v.mantenimiento_fecha, 3)}
+      </div>
+      <button type="button" class="btn btn-primary" style="margin-top:var(--sp-md);" onclick="Planificar.guardarVencimientos()">
+        Guardar</button>`;
+  }
+
+  function actualizarVenc(campo, valor) {
+    if (!_venc) return;
+    _venc[campo] = valor;
+    const inner = document.querySelector('#acc-body-vencimientos .acc-body-inner');
+    if (inner) inner.innerHTML = _renderVencimientosBody();
+    _setCardState('vencimientos', _vencOpen, _vencBadgeInfo());
+  }
+
+  function guardarVencimientos() {
+    if (!_venc) return;
+    _vencEst = _currentEst();
+    Vencimientos.saveVencimientos(_vencEst, _venc);
+    Router.toast('✓ Vencimientos guardados');
+    _syncAccordion();
   }
 
   function _renderGeneralForm() {
@@ -570,5 +655,5 @@ const Planificar = (() => {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, marcoSub };
+  return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, marcoSub, actualizarVenc, guardarVencimientos };
 })();

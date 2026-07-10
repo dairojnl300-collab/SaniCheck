@@ -1,6 +1,6 @@
 // Service Worker — SaniCheck v2 — Offline-first completo
 
-const CACHE = 'sanicheck-v7';
+const CACHE = 'sanicheck-v8';
 const ASSETS = [
   './index.html',
   './manifest.json',
@@ -11,6 +11,7 @@ const ASSETS = [
   './js/app.js',
   './js/logic/psb-data.js',
   './js/logic/checklist-config.js',
+  './js/logic/vencimientos.js',
   './js/logic/observaciones.js',
   './js/logic/scores.js',
   './js/logic/hallazgos.js',
