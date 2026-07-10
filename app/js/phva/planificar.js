@@ -1,12 +1,23 @@
-// planificar.js — Pantalla PLANIFICAR: formulario datos establecimiento
+// planificar.js — Pantalla PLANIFICAR: acordeón Datos Generales + Diagnóstico
 
 const Planificar = (() => {
 
-  let _diagOpen  = false;
-  let _diagItems = null;
-  let _diagEst   = null;
+  const ICONS = {
+    building: '<path d="M4 21V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v16"/><path d="M13 10h5a1 1 0 0 1 1 1v10"/><path d="M2 21h20"/><path d="M7 8h1M10 8h1M7 12h1M10 12h1M7 16h1M10 16h1"/>',
+    clipboardCheck: '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2l4-4"/>',
+  };
+
+  let _generalOpen = false;
+  let _diagOpen    = false;
+  let _diagItems   = null;
+  let _diagEst     = null;
 
   function render() {
+    if (!_diagItems) {
+      _diagEst   = _currentEst();
+      _diagItems = DiagnosticoInicial.getDiagnostico(_diagEst).items;
+    }
+
     return `
       <img src="assets/icons/isotipo-transparente.png" class="watermark-bg" alt="">
       <div class="screen-header">
@@ -14,7 +25,111 @@ const Planificar = (() => {
         <div class="screen-title">Nuevo Establecimiento</div>
         <div class="screen-subtitle">Complete los datos para iniciar la inspección PSB</div>
       </div>
-      <form class="form-screen" id="form-planificar" novalidate>
+      <style>
+        .acc-card { padding: 0; overflow: hidden; margin: 0 var(--sp-md) var(--sp-md) var(--sp-md); }
+        .acc-header { display: flex; align-items: center; justify-content: space-between; gap: 8px;
+          padding: var(--sp-md); cursor: pointer; user-select: none;
+          transition: transform .15s cubic-bezier(0.16,1,0.3,1); }
+        .acc-header:active { transform: scale(0.97); }
+        .acc-chevron { flex-shrink: 0; color: var(--color-ink3);
+          transition: transform .4s cubic-bezier(0.16,1,0.3,1); }
+        .acc-header.open .acc-chevron { transform: rotate(180deg); }
+        .acc-body-wrap { max-height: 0; overflow: hidden; opacity: 0;
+          transition: max-height .4s cubic-bezier(0.16,1,0.3,1), opacity .3s ease; }
+        .acc-body-wrap.open { max-height: 4000px; opacity: 1; }
+        .acc-body-inner { padding: 0 var(--sp-md) var(--sp-md) var(--sp-md); }
+        .acc-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: var(--radius-full);
+          font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.04em;
+          background: var(--color-border); color: var(--color-ink3); }
+      </style>
+
+      ${_renderAccordionCard('general', 'Datos Generales del Establecimiento',
+        'building', 'var(--color-planificar)', _generalBadgeInfo(), _generalOpen, _renderGeneralForm())}
+
+      ${_renderAccordionCard('diagnostico', 'Perfil Sanitario Inicial (Diagnóstico)',
+        'clipboardCheck', 'var(--color-accent)', _diagBadgeInfo(), _diagOpen, _renderDiagnosticoBody(_diagItems))}
+
+      <div style="height:32px"></div>`;
+  }
+
+  function _icon(name, color) {
+    return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.6"
+      stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">${ICONS[name]}</svg>`;
+  }
+
+  function _chevron() {
+    return `<svg class="acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;
+  }
+
+  function _renderAccordionCard(key, title, iconName, iconColor, badge, isOpen, bodyHtml) {
+    return `
+      <div class="card acc-card">
+        <div class="acc-header${isOpen ? ' open' : ''}" id="acc-header-${key}" onclick="Planificar.toggle('${key}')">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+            ${_icon(iconName, iconColor)}
+            <div style="font-size:var(--text-base);font-weight:700;color:var(--color-ink);">${title}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            <span id="acc-badge-${key}" class="${badge.cls}" style="${badge.style}">${badge.text}</span>
+            ${_chevron()}
+          </div>
+        </div>
+        <div class="acc-body-wrap${isOpen ? ' open' : ''}" id="acc-body-${key}">
+          <div class="acc-body-inner">${bodyHtml}</div>
+        </div>
+      </div>`;
+  }
+
+  function toggle(key) {
+    _generalOpen = key === 'general'     ? !_generalOpen : false;
+    _diagOpen    = key === 'diagnostico' ? !_diagOpen    : false;
+    _syncAccordion();
+  }
+
+  function _syncAccordion() {
+    _setCardState('general', _generalOpen, _generalBadgeInfo());
+    _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
+  }
+
+  function _setCardState(key, isOpen, badge) {
+    document.getElementById(`acc-header-${key}`)?.classList.toggle('open', isOpen);
+    document.getElementById(`acc-body-${key}`)?.classList.toggle('open', isOpen);
+    const badgeEl = document.getElementById(`acc-badge-${key}`);
+    if (badgeEl) {
+      badgeEl.className = badge.cls;
+      badgeEl.setAttribute('style', badge.style);
+      badgeEl.textContent = badge.text;
+    }
+  }
+
+  function _pendienteStyle() {
+    return 'display:inline-flex;align-items:center;padding:3px 10px;border-radius:var(--radius-full);' +
+      'font-size:var(--text-xs);font-weight:700;letter-spacing:0.04em;background:var(--color-border);color:var(--color-ink3);';
+  }
+
+  function _generalBadgeInfo() {
+    const completo = _val('inp-nombre') && _val('inp-nit') && _val('inp-direccion') && _val('inp-tipo');
+    return completo
+      ? { text: 'Completado', cls: 'estado-chip estado-B', style: '' }
+      : { text: 'Pendiente', cls: '', style: _pendienteStyle() };
+  }
+
+  function _diagBadgeInfo() {
+    const items = _diagItems || DiagnosticoInicial.getDiagnostico(_diagEst || _currentEst()).items;
+    const completados = DiagnosticoInicial.contarCompletados(items);
+    if (completados === 13) return { text: 'Completado', cls: 'estado-chip estado-B', style: '' };
+    if (completados > 0)    return { text: `${completados} de 13 completados`, cls: 'estado-chip estado-R', style: '' };
+    return { text: 'Pendiente', cls: '', style: _pendienteStyle() };
+  }
+
+  function _currentEst() {
+    return { nombre: _val('inp-nombre'), nit: _val('inp-nit') };
+  }
+
+  function _renderGeneralForm() {
+    return `
+      <form class="form-screen" id="form-planificar" novalidate style="padding:0;">
         <div class="form-group">
           <label class="form-label" for="inp-nombre">Nombre / Razón Social *</label>
           <input class="form-input" type="text" id="inp-nombre"
@@ -131,105 +246,59 @@ const Planificar = (() => {
         <button type="submit" class="btn btn-primary" style="margin-top:8px;">
           Iniciar Ciclo PHVA →
         </button>
-      </form>
-      <div id="diagnostico-card">${_renderDiagnosticoCard()}</div>
-      <div style="height:32px"></div>`;
-  }
-
-  function _currentEst() {
-    return { nombre: _val('inp-nombre'), nit: _val('inp-nit') };
-  }
-
-  function _renderDiagnosticoCard() {
-    const est   = _diagEst || _currentEst();
-    const items = _diagItems || DiagnosticoInicial.getDiagnostico(est).items;
-    const completados = DiagnosticoInicial.contarCompletados(items);
-    const badgeText = completados === 0 ? 'Pendiente'
-                     : completados === 13 ? 'Completado'
-                     : `${completados} de 13 completados`;
-    const badgeCls = completados === 13 ? 'estado-chip estado-B'
-                    : completados > 0 ? 'estado-chip estado-R'
-                    : '';
-
-    return `
-      <div class="card" style="margin:0 var(--sp-md) var(--sp-md) var(--sp-md);">
-        <div onclick="Planificar.toggleDiagnostico()"
-          style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:8px;">
-          <div>
-            <div style="font-size:var(--text-base);font-weight:700;color:var(--color-ink);">
-              Perfil Sanitario Inicial (Diagnóstico)</div>
-            <div class="norma-badge" style="margin-top:6px;margin-bottom:0;">
-              📋 Res. 2674/2013 · Dec. 3075/1997 · Dec. 1575/2007 · Ley 9/1979</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-            <span class="${badgeCls}"
-              style="${badgeCls ? '' : 'display:inline-flex;align-items:center;padding:3px 10px;border-radius:var(--radius-full);font-size:var(--text-xs);font-weight:700;letter-spacing:0.04em;background:var(--color-border);color:var(--color-ink3);'}">${badgeText}</span>
-            <span style="font-size:12px;color:var(--color-ink3);">${_diagOpen ? '▲' : '▼'}</span>
-          </div>
-        </div>
-        ${_diagOpen ? _renderDiagnosticoBody(items) : ''}
-      </div>`;
+      </form>`;
   }
 
   function _renderDiagnosticoBody(items) {
     return `
-      <div style="margin-top:var(--sp-md);padding-top:var(--sp-md);border-top:1px solid var(--color-border);">
-        ${DiagnosticoInicial.ITEMS.map((def, i) => {
-          const it = items[i];
-          return `
-          <div style="padding-bottom:var(--sp-md);margin-bottom:var(--sp-md);border-bottom:1px dashed var(--color-border);">
-            <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:8px;">
-              ${i + 1}. ${_escAttr(def.texto)}</div>
+      <div class="norma-badge" style="margin-bottom:var(--sp-md);">
+        📋 Res. 2674/2013 · Dec. 3075/1997 · Dec. 1575/2007 · Ley 9/1979</div>
+      ${DiagnosticoInicial.ITEMS.map((def, i) => {
+        const it = items[i];
+        return `
+        <div style="padding-bottom:var(--sp-md);margin-bottom:var(--sp-md);border-bottom:1px dashed var(--color-border);">
+          <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:8px;">
+            ${i + 1}. ${_escAttr(def.texto)}</div>
 
-            <label class="form-label" for="di-cond-${def.id}">Condición encontrada</label>
-            <input class="form-input" type="text" id="di-cond-${def.id}" value="${_escAttr(it.condicion)}"
-              onchange="Planificar.actualizarDiagItem('${def.id}','condicion',this.value)" style="margin-bottom:8px;">
+          <label class="form-label" for="di-cond-${def.id}">Condición encontrada</label>
+          <input class="form-input" type="text" id="di-cond-${def.id}" value="${_escAttr(it.condicion)}"
+            onchange="Planificar.actualizarDiagItem('${def.id}','condicion',this.value)" style="margin-bottom:8px;">
 
-            <label class="form-label" for="di-calif-${def.id}">Calificación</label>
-            <select class="form-select" id="di-calif-${def.id}" style="margin-bottom:8px;"
-              onchange="Planificar.actualizarDiagItem('${def.id}','calificacion',this.value)">
-              <option value="" ${!it.calificacion ? 'selected' : ''}>Seleccionar…</option>
-              <option value="B" ${it.calificacion === 'B' ? 'selected' : ''}>Bueno</option>
-              <option value="R" ${it.calificacion === 'R' ? 'selected' : ''}>Regular</option>
-              <option value="D" ${it.calificacion === 'D' ? 'selected' : ''}>Deficiente</option>
-            </select>
+          <label class="form-label" for="di-calif-${def.id}">Calificación</label>
+          <select class="form-select" id="di-calif-${def.id}" style="margin-bottom:8px;"
+            onchange="Planificar.actualizarDiagItem('${def.id}','calificacion',this.value)">
+            <option value="" ${!it.calificacion ? 'selected' : ''}>Seleccionar…</option>
+            <option value="B" ${it.calificacion === 'B' ? 'selected' : ''}>Bueno</option>
+            <option value="R" ${it.calificacion === 'R' ? 'selected' : ''}>Regular</option>
+            <option value="D" ${it.calificacion === 'D' ? 'selected' : ''}>Deficiente</option>
+          </select>
 
-            <label class="form-label" for="di-accion-${def.id}">Acción requerida</label>
-            <input class="form-input" type="text" id="di-accion-${def.id}" value="${_escAttr(it.accion)}"
-              onchange="Planificar.actualizarDiagItem('${def.id}','accion',this.value)" style="margin-bottom:8px;">
+          <label class="form-label" for="di-accion-${def.id}">Acción requerida</label>
+          <input class="form-input" type="text" id="di-accion-${def.id}" value="${_escAttr(it.accion)}"
+            onchange="Planificar.actualizarDiagItem('${def.id}','accion',this.value)" style="margin-bottom:8px;">
 
-            <label class="form-label" for="di-prio-${def.id}">Prioridad</label>
-            <select class="form-select" id="di-prio-${def.id}"
-              onchange="Planificar.actualizarDiagItem('${def.id}','prioridad',this.value)">
-              <option value="" ${!it.prioridad ? 'selected' : ''}>Seleccionar…</option>
-              <option value="Alta" ${it.prioridad === 'Alta' ? 'selected' : ''}>Alta</option>
-              <option value="Media" ${it.prioridad === 'Media' ? 'selected' : ''}>Media</option>
-              <option value="Baja" ${it.prioridad === 'Baja' ? 'selected' : ''}>Baja</option>
-            </select>
-          </div>`;
-        }).join('')}
-        <button type="button" class="btn btn-primary" onclick="Planificar.guardarDiagnostico()">
-          Guardar diagnóstico</button>
-        <div style="margin-top:var(--sp-sm);font-size:var(--text-xs);color:var(--color-ink3);text-align:justify;">
-          Este diagnóstico debe actualizarse anualmente o tras cambios significativos en infraestructura o procesos.
-        </div>
+          <label class="form-label" for="di-prio-${def.id}">Prioridad</label>
+          <select class="form-select" id="di-prio-${def.id}"
+            onchange="Planificar.actualizarDiagItem('${def.id}','prioridad',this.value)">
+            <option value="" ${!it.prioridad ? 'selected' : ''}>Seleccionar…</option>
+            <option value="Alta" ${it.prioridad === 'Alta' ? 'selected' : ''}>Alta</option>
+            <option value="Media" ${it.prioridad === 'Media' ? 'selected' : ''}>Media</option>
+            <option value="Baja" ${it.prioridad === 'Baja' ? 'selected' : ''}>Baja</option>
+          </select>
+        </div>`;
+      }).join('')}
+      <button type="button" class="btn btn-primary" onclick="Planificar.guardarDiagnostico()">
+        Guardar diagnóstico</button>
+      <div style="margin-top:var(--sp-sm);font-size:var(--text-xs);color:var(--color-ink3);text-align:justify;">
+        Este diagnóstico debe actualizarse anualmente o tras cambios significativos en infraestructura o procesos.
       </div>`;
-  }
-
-  function toggleDiagnostico() {
-    if (!_diagOpen && !_diagItems) {
-      _diagEst   = _currentEst();
-      _diagItems = DiagnosticoInicial.getDiagnostico(_diagEst).items;
-    }
-    _diagOpen = !_diagOpen;
-    _refreshDiagCard();
   }
 
   function actualizarDiagItem(id, campo, valor) {
     if (!_diagItems) return;
     const it = _diagItems.find(x => x.id === id);
     if (it) it[campo] = valor;
-    if (campo === 'calificacion') _refreshDiagCard();
+    if (campo === 'calificacion') _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
   }
 
   function guardarDiagnostico() {
@@ -237,12 +306,7 @@ const Planificar = (() => {
     _diagEst = _currentEst();
     DiagnosticoInicial.saveDiagnostico(_diagEst, _diagItems);
     Router.toast('✓ Diagnóstico guardado');
-    _refreshDiagCard();
-  }
-
-  function _refreshDiagCard() {
-    const el = document.getElementById('diagnostico-card');
-    if (el) el.innerHTML = _renderDiagnosticoCard();
+    _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
   }
 
   function attach() {
@@ -306,5 +370,5 @@ const Planificar = (() => {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  return { render, attach, toggleDiagnostico, actualizarDiagItem, guardarDiagnostico };
+  return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico };
 })();
