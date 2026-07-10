@@ -5,12 +5,14 @@ const Planificar = (() => {
   const ICONS = {
     building: '<path d="M4 21V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v16"/><path d="M13 10h5a1 1 0 0 1 1 1v10"/><path d="M2 21h20"/><path d="M7 8h1M10 8h1M7 12h1M10 12h1M7 16h1M10 16h1"/>',
     clipboardCheck: '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2l4-4"/>',
+    listCheck: '<path d="M3.5 5.5l1.5 1.5l2.5 -2.5"/><path d="M3.5 11.5l1.5 1.5l2.5 -2.5"/><path d="M3.5 17.5l1.5 1.5l2.5 -2.5"/><path d="M11 6l9 0"/><path d="M11 12l9 0"/><path d="M11 18l9 0"/>',
   };
 
-  let _generalOpen = false;
-  let _diagOpen    = false;
-  let _diagItems   = null;
-  let _diagEst     = null;
+  let _generalOpen    = false;
+  let _diagOpen       = false;
+  let _resultadosOpen = false;
+  let _diagItems      = null;
+  let _diagEst        = null;
 
   function render() {
     if (!_diagItems) {
@@ -41,6 +43,7 @@ const Planificar = (() => {
         .acc-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: var(--radius-full);
           font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.04em;
           background: var(--color-border); color: var(--color-ink3); }
+        .acc-header.disabled { opacity: 0.5; cursor: not-allowed; }
       </style>
 
       ${_renderAccordionCard('general', 'Datos Generales del Establecimiento',
@@ -48,6 +51,10 @@ const Planificar = (() => {
 
       ${_renderAccordionCard('diagnostico', 'Perfil Sanitario Inicial (Diagnóstico)',
         'clipboardCheck', 'var(--color-accent)', _diagBadgeInfo(), _diagOpen, _renderDiagnosticoBody(_diagItems))}
+
+      ${_renderAccordionCard('resultados', 'Resultados del Diagnóstico Inicial',
+        'listCheck', 'var(--emerald)', _resultadosBadgeInfo(), _resultadosOpen, _renderResultadosBody(),
+        !_resultadosData().rated.length)}
 
       <div style="height:32px"></div>`;
   }
@@ -62,10 +69,12 @@ const Planificar = (() => {
       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;
   }
 
-  function _renderAccordionCard(key, title, iconName, iconColor, badge, isOpen, bodyHtml) {
+  function _renderAccordionCard(key, title, iconName, iconColor, badge, isOpen, bodyHtml, disabled) {
+    const openEff = isOpen && !disabled;
     return `
       <div class="card acc-card">
-        <div class="acc-header${isOpen ? ' open' : ''}" id="acc-header-${key}" onclick="Planificar.toggle('${key}')">
+        <div class="acc-header${openEff ? ' open' : ''}${disabled ? ' disabled' : ''}" id="acc-header-${key}"
+          onclick="Planificar.toggle('${key}')">
           <div style="display:flex;align-items:center;gap:10px;min-width:0;">
             ${_icon(iconName, iconColor)}
             <div style="font-size:var(--text-base);font-weight:700;color:var(--color-ink);">${title}</div>
@@ -75,21 +84,35 @@ const Planificar = (() => {
             ${_chevron()}
           </div>
         </div>
-        <div class="acc-body-wrap${isOpen ? ' open' : ''}" id="acc-body-${key}">
+        <div class="acc-body-wrap${openEff ? ' open' : ''}" id="acc-body-${key}">
           <div class="acc-body-inner">${bodyHtml}</div>
         </div>
       </div>`;
   }
 
   function toggle(key) {
-    _generalOpen = key === 'general'     ? !_generalOpen : false;
-    _diagOpen    = key === 'diagnostico' ? !_diagOpen    : false;
+    if (key === 'resultados' && !_resultadosData().rated.length) {
+      Router.toast('⚠ Guarda el diagnóstico con al menos 1 ítem calificado primero');
+      return;
+    }
+    _generalOpen    = key === 'general'     ? !_generalOpen    : false;
+    _diagOpen       = key === 'diagnostico' ? !_diagOpen       : false;
+    _resultadosOpen = key === 'resultados'  ? !_resultadosOpen : false;
     _syncAccordion();
   }
 
   function _syncAccordion() {
     _setCardState('general', _generalOpen, _generalBadgeInfo());
     _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
+    _syncResultados();
+  }
+
+  function _syncResultados() {
+    const enabled = !!_resultadosData().rated.length;
+    document.getElementById('acc-header-resultados')?.classList.toggle('disabled', !enabled);
+    _setCardState('resultados', _resultadosOpen && enabled, _resultadosBadgeInfo());
+    const inner = document.querySelector('#acc-body-resultados .acc-body-inner');
+    if (inner) inner.innerHTML = _renderResultadosBody();
   }
 
   function _setCardState(key, isOpen, badge) {
@@ -125,6 +148,65 @@ const Planificar = (() => {
 
   function _currentEst() {
     return { nombre: _val('inp-nombre'), nit: _val('inp-nit') };
+  }
+
+  function _resultadosData() {
+    const saved = DiagnosticoInicial.getDiagnostico(_currentEst()).items;
+    const rated = saved
+      .map((it, i) => ({ ...it, texto: DiagnosticoInicial.ITEMS[i].texto }))
+      .filter(it => it.calificacion);
+    const d = rated.filter(it => it.calificacion === 'D');
+    const r = rated.filter(it => it.calificacion === 'R');
+    const b = rated.filter(it => it.calificacion === 'B');
+    const prioW = { Alta: 2, Media: 1, Baja: 0 };
+    const critList = [...d, ...r].sort((x, y) => {
+      const wx = (x.calificacion === 'D' ? 10 : 0) + (prioW[x.prioridad] ?? -1);
+      const wy = (y.calificacion === 'D' ? 10 : 0) + (prioW[y.prioridad] ?? -1);
+      return wy - wx;
+    });
+    return { rated, d, r, b, critList };
+  }
+
+  function _resultadosBadgeInfo() {
+    const { rated, d, r } = _resultadosData();
+    if (!rated.length) return { text: 'Sin diagnóstico aún', cls: '', style: _pendienteStyle() };
+    if (d.length) return { text: `${d.length} crítico${d.length !== 1 ? 's' : ''}`, cls: 'estado-chip estado-D', style: '' };
+    if (r.length) return { text: `${r.length} por mejorar`, cls: 'estado-chip estado-R', style: '' };
+    return { text: 'Todo en orden', cls: 'estado-chip estado-B', style: '' };
+  }
+
+  function _renderResultadosBody() {
+    const { rated, d, r, b, critList } = _resultadosData();
+    if (!rated.length) {
+      return `<div style="font-size:var(--text-sm);color:var(--color-ink3);text-align:center;padding:var(--sp-md) 0;">
+        Aún no hay ítems calificados. Guarda el diagnóstico con al menos una calificación para ver resultados aquí.</div>`;
+    }
+    const header = `
+      <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:var(--sp-md);">
+        ${d.length} aspecto${d.length !== 1 ? 's' : ''} crítico${d.length !== 1 ? 's' : ''} ·
+        ${r.length} aspecto${r.length !== 1 ? 's' : ''} por mejorar ·
+        ${b.length} en buen estado</div>`;
+    if (!critList.length) {
+      return header + `
+        <div style="padding:16px;background:var(--color-bueno-bg);border-radius:var(--radius-md);
+          color:var(--color-bueno);font-weight:600;text-align:center;">
+          ✓ Sin hallazgos críticos — mantener buenas prácticas.</div>`;
+    }
+    const rows = critList.map(it => {
+      const cls   = it.calificacion === 'D' ? 'estado-D' : 'estado-R';
+      const label = it.calificacion === 'D' ? 'Deficiente' : 'Regular';
+      return `
+        <div style="padding:12px 0;border-bottom:1px dashed var(--color-border);">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+            <span class="estado-chip ${cls}">${label}</span>
+            ${it.prioridad ? `<span class="norma-badge" style="margin:0;">Prioridad: ${_escAttr(it.prioridad)}</span>` : ''}
+          </div>
+          <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);">${_escAttr(it.texto)}</div>
+          ${it.accion ? `<div style="font-size:var(--text-xs);color:var(--color-ink3);margin-top:4px;">
+            Acción requerida: ${_escAttr(it.accion)}</div>` : ''}
+        </div>`;
+    }).join('');
+    return header + rows;
   }
 
   function _renderGeneralForm() {
@@ -306,7 +388,7 @@ const Planificar = (() => {
     _diagEst = _currentEst();
     DiagnosticoInicial.saveDiagnostico(_diagEst, _diagItems);
     Router.toast('✓ Diagnóstico guardado');
-    _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
+    _syncAccordion();
   }
 
   function attach() {
