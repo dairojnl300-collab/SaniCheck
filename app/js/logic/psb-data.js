@@ -49,6 +49,10 @@ function getPSBPrograms() {
       peso_critico: true,
       aspectos: [
         { id: 'pcip_001', texto: '¿Medidas preventivas estructurales implementadas? (sellamiento, mallas, puertas)', norma: 'Dec. 3075/1997 Anexo III', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
+        { id: 'pcip_007', grupo: 'Hermeticidad del establecimiento', texto: 'Brecha entre puerta y piso ≤ 1 cm (o caucho/sello inferior en buen estado)', norma: 'Res. 2674/2013', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
+        { id: 'pcip_008', grupo: 'Hermeticidad del establecimiento', texto: 'Anjeos/mallas en ventanas en buen estado, sin roturas', norma: 'Res. 2674/2013', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
+        { id: 'pcip_009', grupo: 'Hermeticidad del establecimiento', texto: 'Sifones y rejillas fijos, no removibles, sin espacios de acceso', norma: 'Res. 2674/2013', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
+        { id: 'pcip_010', grupo: 'Hermeticidad del establecimiento', texto: 'Sin agujeros visibles en paredes, pisos o techos (puntos de ingreso)', norma: 'Res. 2674/2013', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
         { id: 'pcip_002', texto: '¿Registros de inspección de indicadores de plagas actualizados?', norma: 'Dec. 3075/1997 Anexo III', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
         { id: 'pcip_003', texto: '¿Contrato vigente con empresa certificada de fumigación?', norma: 'Res. 1287/1994 SS Cartagena', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
         { id: 'pcip_004', texto: '¿Cronograma de control químico definido y ejecutado?', norma: 'Dec. 3075/1997 Anexo III', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
