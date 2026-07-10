@@ -1,6 +1,6 @@
 // Service Worker — SaniCheck v2 — Offline-first completo
 
-const CACHE = 'sanicheck-v3';
+const CACHE = 'sanicheck-v4';
 const ASSETS = [
   './index.html',
   './manifest.json',
