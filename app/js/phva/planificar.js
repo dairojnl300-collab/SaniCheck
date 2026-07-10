@@ -2,6 +2,10 @@
 
 const Planificar = (() => {
 
+  let _diagOpen  = false;
+  let _diagItems = null;
+  let _diagEst   = null;
+
   function render() {
     return `
       <img src="assets/icons/isotipo-transparente.png" class="watermark-bg" alt="">
@@ -127,8 +131,118 @@ const Planificar = (() => {
         <button type="submit" class="btn btn-primary" style="margin-top:8px;">
           Iniciar Ciclo PHVA →
         </button>
-        <div style="height:32px"></div>
-      </form>`;
+      </form>
+      <div id="diagnostico-card">${_renderDiagnosticoCard()}</div>
+      <div style="height:32px"></div>`;
+  }
+
+  function _currentEst() {
+    return { nombre: _val('inp-nombre'), nit: _val('inp-nit') };
+  }
+
+  function _renderDiagnosticoCard() {
+    const est   = _diagEst || _currentEst();
+    const items = _diagItems || DiagnosticoInicial.getDiagnostico(est).items;
+    const completados = DiagnosticoInicial.contarCompletados(items);
+    const badgeText = completados === 0 ? 'Pendiente'
+                     : completados === 13 ? 'Completado'
+                     : `${completados} de 13 completados`;
+    const badgeCls = completados === 13 ? 'estado-chip estado-B'
+                    : completados > 0 ? 'estado-chip estado-R'
+                    : '';
+
+    return `
+      <div class="card" style="margin:0 var(--sp-md) var(--sp-md) var(--sp-md);">
+        <div onclick="Planificar.toggleDiagnostico()"
+          style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:8px;">
+          <div>
+            <div style="font-size:var(--text-base);font-weight:700;color:var(--color-ink);">
+              Perfil Sanitario Inicial (Diagnóstico)</div>
+            <div class="norma-badge" style="margin-top:6px;margin-bottom:0;">
+              📋 Res. 2674/2013 · Dec. 3075/1997 · Dec. 1575/2007 · Ley 9/1979</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            <span class="${badgeCls}"
+              style="${badgeCls ? '' : 'display:inline-flex;align-items:center;padding:3px 10px;border-radius:var(--radius-full);font-size:var(--text-xs);font-weight:700;letter-spacing:0.04em;background:var(--color-border);color:var(--color-ink3);'}">${badgeText}</span>
+            <span style="font-size:12px;color:var(--color-ink3);">${_diagOpen ? '▲' : '▼'}</span>
+          </div>
+        </div>
+        ${_diagOpen ? _renderDiagnosticoBody(items) : ''}
+      </div>`;
+  }
+
+  function _renderDiagnosticoBody(items) {
+    return `
+      <div style="margin-top:var(--sp-md);padding-top:var(--sp-md);border-top:1px solid var(--color-border);">
+        ${DiagnosticoInicial.ITEMS.map((def, i) => {
+          const it = items[i];
+          return `
+          <div style="padding-bottom:var(--sp-md);margin-bottom:var(--sp-md);border-bottom:1px dashed var(--color-border);">
+            <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:8px;">
+              ${i + 1}. ${_escAttr(def.texto)}</div>
+
+            <label class="form-label" for="di-cond-${def.id}">Condición encontrada</label>
+            <input class="form-input" type="text" id="di-cond-${def.id}" value="${_escAttr(it.condicion)}"
+              onchange="Planificar.actualizarDiagItem('${def.id}','condicion',this.value)" style="margin-bottom:8px;">
+
+            <label class="form-label" for="di-calif-${def.id}">Calificación</label>
+            <select class="form-select" id="di-calif-${def.id}" style="margin-bottom:8px;"
+              onchange="Planificar.actualizarDiagItem('${def.id}','calificacion',this.value)">
+              <option value="" ${!it.calificacion ? 'selected' : ''}>Seleccionar…</option>
+              <option value="B" ${it.calificacion === 'B' ? 'selected' : ''}>Bueno</option>
+              <option value="R" ${it.calificacion === 'R' ? 'selected' : ''}>Regular</option>
+              <option value="D" ${it.calificacion === 'D' ? 'selected' : ''}>Deficiente</option>
+            </select>
+
+            <label class="form-label" for="di-accion-${def.id}">Acción requerida</label>
+            <input class="form-input" type="text" id="di-accion-${def.id}" value="${_escAttr(it.accion)}"
+              onchange="Planificar.actualizarDiagItem('${def.id}','accion',this.value)" style="margin-bottom:8px;">
+
+            <label class="form-label" for="di-prio-${def.id}">Prioridad</label>
+            <select class="form-select" id="di-prio-${def.id}"
+              onchange="Planificar.actualizarDiagItem('${def.id}','prioridad',this.value)">
+              <option value="" ${!it.prioridad ? 'selected' : ''}>Seleccionar…</option>
+              <option value="Alta" ${it.prioridad === 'Alta' ? 'selected' : ''}>Alta</option>
+              <option value="Media" ${it.prioridad === 'Media' ? 'selected' : ''}>Media</option>
+              <option value="Baja" ${it.prioridad === 'Baja' ? 'selected' : ''}>Baja</option>
+            </select>
+          </div>`;
+        }).join('')}
+        <button type="button" class="btn btn-primary" onclick="Planificar.guardarDiagnostico()">
+          Guardar diagnóstico</button>
+        <div style="margin-top:var(--sp-sm);font-size:var(--text-xs);color:var(--color-ink3);text-align:justify;">
+          Este diagnóstico debe actualizarse anualmente o tras cambios significativos en infraestructura o procesos.
+        </div>
+      </div>`;
+  }
+
+  function toggleDiagnostico() {
+    if (!_diagOpen && !_diagItems) {
+      _diagEst   = _currentEst();
+      _diagItems = DiagnosticoInicial.getDiagnostico(_diagEst).items;
+    }
+    _diagOpen = !_diagOpen;
+    _refreshDiagCard();
+  }
+
+  function actualizarDiagItem(id, campo, valor) {
+    if (!_diagItems) return;
+    const it = _diagItems.find(x => x.id === id);
+    if (it) it[campo] = valor;
+    if (campo === 'calificacion') _refreshDiagCard();
+  }
+
+  function guardarDiagnostico() {
+    if (!_diagItems) return;
+    _diagEst = _currentEst();
+    DiagnosticoInicial.saveDiagnostico(_diagEst, _diagItems);
+    Router.toast('✓ Diagnóstico guardado');
+    _refreshDiagCard();
+  }
+
+  function _refreshDiagCard() {
+    const el = document.getElementById('diagnostico-card');
+    if (el) el.innerHTML = _renderDiagnosticoCard();
   }
 
   function attach() {
@@ -183,5 +297,14 @@ const Planificar = (() => {
     return new Date().toISOString().split('T')[0];
   }
 
-  return { render, attach };
+  function _val(id) {
+    return document.getElementById(id)?.value.trim() || '';
+  }
+
+  function _escAttr(s) {
+    return String(s || '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  return { render, attach, toggleDiagnostico, actualizarDiagItem, guardarDiagnostico };
 })();
