@@ -48,6 +48,12 @@ const Vencimientos = (() => {
     return out;
   }
 
+  function periodicidadTexto(meses) {
+    if (meses === 12) return 'Anual';
+    if (meses % 12 === 0) return `Cada ${meses / 12} años`;
+    return `Cada ${meses} meses`;
+  }
+
   function estado(fecha, mesesVigencia) {
     if (!fecha) return { proximo: null, estado: 'sin_registrar', dias: null };
     const proximo = new Date(fecha + 'T00:00:00');
@@ -60,5 +66,5 @@ const Vencimientos = (() => {
     return { proximo: proximo.toISOString().split('T')[0], estado: est_, dias };
   }
 
-  return { ITEMS, getVencimientos, saveVencimientos, estado };
+  return { ITEMS, getVencimientos, saveVencimientos, estado, periodicidadTexto };
 })();

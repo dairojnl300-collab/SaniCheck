@@ -370,8 +370,10 @@ const Planificar = (() => {
       const esUltima = i === Vencimientos.ITEMS.length - 1;
       return `
       <div style="${esUltima ? '' : 'padding-bottom:var(--sp-md);margin-bottom:var(--sp-md);border-bottom:1px dashed var(--color-border);'}">
-        <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:6px;">
+        <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:2px;">
           ${_escAttr(it.label)}</div>
+        <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:6px;">
+          Periodicidad: ${_escAttr(Vencimientos.periodicidadTexto(it.meses))}</div>
         <span class="norma-badge">${_escAttr(it.norma)}</span>
         <div class="form-group" style="margin-top:8px;">
           <label class="form-label" for="inp-venc-${it.id}">${_escAttr(it.campoLabel)}</label>
