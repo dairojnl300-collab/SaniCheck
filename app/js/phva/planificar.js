@@ -342,13 +342,10 @@ const Planificar = (() => {
 
   function _vencBadgeInfo() {
     const v = _venc || Vencimientos.getVencimientos(_currentEst());
-    const estados = [
-      Vencimientos.estado(v.examen_medico_fecha, 12).estado,
-      Vencimientos.estado(v.mantenimiento_fecha, 3).estado,
-    ];
-    if (estados.every(e => e === 'sin_registrar')) return { text: 'Pendiente', cls: '', style: _pendienteStyle() };
-    if (estados.includes('vencido'))    return { text: 'Vencido', cls: 'estado-chip estado-D', style: '' };
-    if (estados.includes('por_vencer')) return { text: 'Por vencer', cls: 'estado-chip estado-R', style: '' };
+    const estados = Vencimientos.ITEMS.map(it => Vencimientos.estado(v[it.id], it.meses).estado);
+    if (estados.includes('vencido'))       return { text: 'Vencido', cls: 'estado-chip estado-D', style: '' };
+    if (estados.includes('por_vencer'))    return { text: 'Por vencer', cls: 'estado-chip estado-R', style: '' };
+    if (estados.includes('sin_registrar')) return { text: 'Pendiente', cls: '', style: _pendienteStyle() };
     return { text: 'Vigente', cls: 'estado-chip estado-B', style: '' };
   }
 
@@ -369,29 +366,22 @@ const Planificar = (() => {
 
   function _renderVencimientosBody() {
     const v = _venc || Vencimientos.getVencimientos(_currentEst());
-    return `
-      <div style="padding-bottom:var(--sp-md);margin-bottom:var(--sp-md);border-bottom:1px dashed var(--color-border);">
+    const secciones = Vencimientos.ITEMS.map((it, i) => {
+      const esUltima = i === Vencimientos.ITEMS.length - 1;
+      return `
+      <div style="${esUltima ? '' : 'padding-bottom:var(--sp-md);margin-bottom:var(--sp-md);border-bottom:1px dashed var(--color-border);'}">
         <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:6px;">
-          Examen médico del personal manipulador</div>
-        <span class="norma-badge">Resolución 2674 de 2013</span>
+          ${_escAttr(it.label)}</div>
+        <span class="norma-badge">${_escAttr(it.norma)}</span>
         <div class="form-group" style="margin-top:8px;">
-          <label class="form-label" for="inp-venc-examen">Fecha del último examen</label>
-          <input class="form-input" type="date" id="inp-venc-examen" value="${_escAttr(v.examen_medico_fecha)}"
-            onchange="Planificar.actualizarVenc('examen_medico_fecha', this.value)">
+          <label class="form-label" for="inp-venc-${it.id}">${_escAttr(it.campoLabel)}</label>
+          <input class="form-input" type="date" id="inp-venc-${it.id}" value="${_escAttr(v[it.id])}"
+            onchange="Planificar.actualizarVenc('${it.id}', this.value)">
         </div>
-        ${_vencDetalle(v.examen_medico_fecha, 12)}
-      </div>
-      <div>
-        <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:6px;">
-          Mantenimiento preventivo equipos de frío</div>
-        <span class="norma-badge">Decreto 3075 de 1997</span>
-        <div class="form-group" style="margin-top:8px;">
-          <label class="form-label" for="inp-venc-mantenimiento">Fecha del último mantenimiento</label>
-          <input class="form-input" type="date" id="inp-venc-mantenimiento" value="${_escAttr(v.mantenimiento_fecha)}"
-            onchange="Planificar.actualizarVenc('mantenimiento_fecha', this.value)">
-        </div>
-        ${_vencDetalle(v.mantenimiento_fecha, 3)}
-      </div>
+        ${_vencDetalle(v[it.id], it.meses)}
+      </div>`;
+    }).join('');
+    return secciones + `
       <button type="button" class="btn btn-primary" style="margin-top:var(--sp-md);" onclick="Planificar.guardarVencimientos()">
         Guardar</button>`;
   }
