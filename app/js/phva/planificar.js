@@ -10,39 +10,60 @@ const Planificar = (() => {
   };
 
   const MARCO_GENERAL = [
-    'Ley 9 de 1979', 'Decreto 1072 de 2015', 'Resolución 0312 de 2019', 'Resolución 2400 de 1979',
-    'Decreto 1575 de 2007', 'Resolución 2115 de 2007', 'Decreto 1077 de 2015 (agua/residuos)',
-    'Resolución 3956 de 2009', 'Decreto 3930 de 2010', 'Resolución 3079 de 2015', 'Resolución 1439 de 2003',
-    'Decreto 1843 de 1991', 'Resolución 754 de 2014', 'Decreto 2981 de 2013', 'Ley 1259 de 2008',
-    'Decreto 4741 de 2005', 'Ley 99 de 1993', 'Decreto 2811 de 1974',
+    ['Ley 9 de 1979', 'Código Sanitario Nacional', 'General'],
+    ['Decreto 1072 de 2015', 'Decreto Único Reglamentario Sector Trabajo', 'SST'],
+    ['Resolución 0312 de 2019', 'Estándares mínimos SG-SST', 'SST'],
+    ['Resolución 2400 de 1979', 'Estatuto de Seguridad Industrial', 'SST'],
+    ['Decreto 1575 de 2007', 'Protección y control calidad del agua', 'Control de agua'],
+    ['Resolución 2115 de 2007', 'Características y frecuencias control calidad agua', 'Análisis de agua'],
+    ['Decreto 1077 de 2015', 'Agua potable y residuos sólidos', 'Agua/Residuos'],
+    ['Resolución 3956 de 2009', 'Norma vertimientos alcantarillado', 'Vertimientos'],
+    ['Decreto 3930 de 2010', 'Usos del agua y residuos líquidos', 'Vertimientos'],
+    ['Resolución 3079 de 2015', 'Requisitos plaguicidas uso doméstico', 'Control de plagas'],
+    ['Resolución 1439 de 2003', 'Requisitos sanitarios plaguicidas', 'Control de plagas'],
+    ['Decreto 1843 de 1991', 'Uso y manejo de plaguicidas', 'Control de plagas'],
+    ['Resolución 754 de 2014', 'Metodología PGIRS', 'Residuos sólidos'],
+    ['Decreto 2981 de 2013', 'Prestación servicio público de aseo', 'Residuos sólidos'],
+    ['Ley 1259 de 2008', 'Comparendo ambiental', 'Residuos sólidos'],
+    ['Decreto 4741 de 2005', 'Prevención manejo residuos peligrosos', 'RESPEL'],
+    ['Ley 99 de 1993', 'Sistema Nacional Ambiental', 'Ambiental general'],
+    ['Decreto 2811 de 1974', 'Código Nacional Recursos Naturales', 'Ambiental general'],
   ];
-  const _ALIMENTOS = ['Decreto 3075 de 1997', 'Resolución 2674 de 2013', 'NTC 5093', 'Resolución 5109 de 2005'];
+  const _ALIM = [
+    ['Decreto 3075 de 1997', 'Buenas Prácticas de Manufactura (BPM)', 'Alimentos'],
+    ['Resolución 2674 de 2013', 'Requisitos sanitarios fabricación/expendio alimentos', 'Alimentos'],
+    ['NTC 5093', 'Manipulación de alimentos', 'Alimentos'],
+    ['Resolución 5109 de 2005', 'Rotulado o etiquetado de alimentos', 'Alimentos'],
+  ];
   const MARCO_TIPOS = [
-    { key: 'Alimentos', label: 'Restaurante / Comedor / Alimentos', normas: _ALIMENTOS },
-    { key: 'Casino', label: 'Casino', normas: _ALIMENTOS },
-    { key: 'Catering', label: 'Catering', normas: [..._ALIMENTOS,
-      'Decreto 3075/1997 Art. 34-36 (transporte de alimentos)', 'Resolución 2674/2013 Cap. VII (transporte)'] },
+    { key: 'Alimentos', label: 'Restaurante / Comedor / Alimentos', normas: _ALIM },
+    { key: 'Casino', label: 'Casino', normas: _ALIM },
+    { key: 'Catering', label: 'Catering', normas: [..._ALIM,
+      ['Decreto 3075 de 1997 Art. 34-36', 'Transporte de alimentos preparados', 'Transporte'],
+      ['Resolución 2674 de 2013 Cap. VII', 'Condiciones de transporte de alimentos', 'Transporte']] },
     { key: 'Manufactura', label: 'Planta de Manufactura', normas: [
-      'Decreto 3075 de 1997 (si produce alimentos)', 'Resolución 2674 de 2013 (si aplica)',
-      'Decreto 1072 de 2015 reforzado (riesgo industrial)', 'Resolución 0312 de 2019 reforzado'] },
+      ['Decreto 3075 de 1997', 'BPM (si produce alimentos)', 'Alimentos'],
+      ['Resolución 2674 de 2013', 'Requisitos sanitarios (si aplica)', 'Alimentos']] },
     { key: 'Bodega', label: 'Bodega/Almacén', normas: [
-      'Decreto 1843 de 1991 (almacenamiento de plaguicidas si aplica)',
-      'NTC 1692 (almacenamiento mercancías peligrosas si aplica)'] },
+      ['Decreto 1843 de 1991', 'Almacenamiento de plaguicidas (si aplica)', 'Control de plagas'],
+      ['NTC 1692', 'Almacenamiento mercancías peligrosas (si aplica)', 'Almacenamiento']] },
     { key: 'Servicio', label: 'Servicios', normas: [] },
     { key: 'Salud', label: 'Clínica / Centro de Salud', normas: [
-      'Resolución 1164 de 2002 (residuos hospitalarios — obligatoria aquí, no opcional)',
-      'Decreto 4741 de 2005 reforzado', 'Resolución 2183 de 2004 (manual bioseguridad IPS)'] },
-    { key: 'Comedor industrial', label: 'Comedor Industrial', normas: _ALIMENTOS },
+      ['Resolución 1164 de 2002', 'Manejo integral residuos hospitalarios', 'Residuos peligrosos'],
+      ['Decreto 4741 de 2005', 'Prevención manejo residuos peligrosos (reforzado)', 'RESPEL'],
+      ['Resolución 2183 de 2004', 'Manual de bioseguridad IPS', 'Bioseguridad']] },
+    { key: 'Comedor industrial', label: 'Comedor Industrial', normas: _ALIM },
     { key: 'Educativo', label: 'Institución Educativa', normas: [
-      'Decreto 3075/1997 y Resolución 2674/2013 (si tiene comedor/restaurante escolar)',
-      'Resolución 3803 de 2016 (lineamientos PAE)'] },
+      ['Decreto 3075 de 1997', 'BPM (si tiene comedor/restaurante escolar)', 'Alimentos'],
+      ['Resolución 2674 de 2013', 'Requisitos sanitarios (si aplica)', 'Alimentos'],
+      ['Resolución 3803 de 2016', 'Lineamientos PAE (Programa Alimentación Escolar)', 'Alimentación escolar']] },
   ];
 
   let _generalOpen    = false;
   let _diagOpen       = false;
   let _resultadosOpen = false;
   let _marcoOpen      = false;
-  let _marcoTab       = 'general';
+  let _marcoOpenSubs  = { general: true };
   let _diagItems      = null;
   let _diagEst        = null;
 
@@ -76,10 +97,6 @@ const Planificar = (() => {
           font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.04em;
           background: var(--color-border); color: var(--color-ink3); }
         .acc-header.disabled { opacity: 0.5; cursor: not-allowed; }
-        .marco-tab { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: var(--radius-full);
-          font-size: var(--text-xs); font-weight: 600; border: 1.5px solid var(--color-border); color: var(--color-ink2);
-          background: var(--color-white); cursor: pointer; white-space: nowrap; }
-        .marco-tab.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
       </style>
 
       ${_renderAccordionCard('general', 'Datos Generales del Establecimiento',
@@ -148,42 +165,59 @@ const Planificar = (() => {
     _syncResultados();
   }
 
-  function marcoTab(key) {
-    _marcoTab = key;
+  function marcoSub(key) {
+    _marcoOpenSubs[key] = !_marcoOpenSubs[key];
     const inner = document.querySelector('#acc-body-marco .acc-body-inner');
     if (inner) inner.innerHTML = _renderMarcoBody();
-    _setCardState('marco', _marcoOpen, _marcoBadgeInfo());
   }
 
   function _marcoBadgeInfo() {
-    const tab = MARCO_TIPOS.find(t => t.key === _marcoTab);
-    const count = MARCO_GENERAL.length + (tab ? tab.normas.length : 0);
-    return { text: `${count} normas`, cls: 'estado-chip estado-B', style: '' };
+    return { text: '10 categorías', cls: 'estado-chip estado-B', style: '' };
+  }
+
+  function _normaTable(rows) {
+    return `
+      <table style="width:100%;border-collapse:collapse;font-size:var(--text-xs);">
+        <thead><tr style="background:var(--emerald-2);color:#fff;">
+          <th style="padding:8px;text-align:left;">Norma</th>
+          <th style="padding:8px;text-align:left;">Descripción</th>
+          <th style="padding:8px;text-align:left;">Aplicabilidad</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map((r, i) => `
+          <tr style="background:${i % 2 === 0 ? 'var(--color-white)' : 'var(--color-surface)'};">
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);font-weight:600;">${_escAttr(r[0])}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);">${_escAttr(r[1])}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${_escAttr(r[2])}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  function _renderMarcoSub(key, title, rows) {
+    const isOpen = !!_marcoOpenSubs[key];
+    const body = rows.length ? _normaTable(rows)
+      : `<div style="padding:12px;font-size:var(--text-sm);color:var(--color-ink3);">
+          Solo normativa general aplica a este tipo de establecimiento.</div>`;
+    return `
+      <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);margin-bottom:8px;overflow:hidden;">
+        <div onclick="Planificar.marcoSub('${key}')" style="display:flex;align-items:center;justify-content:space-between;
+          padding:10px 12px;cursor:pointer;background:var(--color-surface);">
+          <span style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);">${_escAttr(title)}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="transform:rotate(${isOpen ? 180 : 0}deg);transition:transform .3s cubic-bezier(0.16,1,0.3,1);color:var(--color-ink3);flex-shrink:0;">
+            <path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        ${isOpen ? `<div style="overflow-x:auto;">${body}</div>` : ''}
+      </div>`;
   }
 
   function _renderMarcoBody() {
-    const tabs = [{ key: 'general', label: 'General' }, ...MARCO_TIPOS];
-    const activeTab = MARCO_TIPOS.find(t => t.key === _marcoTab);
     return `
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--sp-md);">
-        ${tabs.map(t => `<span class="marco-tab${t.key === _marcoTab ? ' active' : ''}"
-          onclick="Planificar.marcoTab('${t.key}')">${_escAttr(t.label)}</span>`).join('')}
-      </div>
       <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:var(--sp-md);font-style:italic;">
         La normativa general aplica a todos los establecimientos. Las normas específicas se activan según el tipo seleccionado.</div>
-      <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:8px;">Normativa general</div>
-      <ul style="margin:0 0 var(--sp-md) 0;padding-left:20px;font-size:var(--text-sm);color:var(--color-ink2);line-height:1.8;">
-        ${MARCO_GENERAL.map(n => `<li>${_escAttr(n)}</li>`).join('')}
-      </ul>
-      ${activeTab ? `
-        <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:8px;">
-          Normativa específica — ${_escAttr(activeTab.label)}</div>
-        ${activeTab.normas.length ? `
-          <ul style="margin:0;padding-left:20px;font-size:var(--text-sm);color:var(--color-ink2);line-height:1.8;">
-            ${activeTab.normas.map(n => `<li>${_escAttr(n)}</li>`).join('')}
-          </ul>` : `
-          <div style="font-size:var(--text-sm);color:var(--color-ink3);">Solo aplica la normativa general — sin BPM alimentaria.</div>`}
-      ` : ''}`;
+      ${_renderMarcoSub('general', 'General (aplica a los 9 tipos)', MARCO_GENERAL)}
+      ${MARCO_TIPOS.map(t => _renderMarcoSub(t.key, t.label, t.normas)).join('')}`;
   }
 
   function _syncResultados() {
@@ -531,5 +565,5 @@ const Planificar = (() => {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, marcoTab };
+  return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, marcoSub };
 })();
