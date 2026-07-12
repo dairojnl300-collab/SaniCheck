@@ -68,6 +68,7 @@ const Planificar = (() => {
   let _vencFiltroPersonal = '';
   let _vencFiltroEquipos  = '';
   let _vencNotified       = false;
+  let _vencReqFormOpen    = false;
   let _marcoOpenSubs  = { general: true };
   let _diagItems      = null;
   let _diagEst        = null;
@@ -668,19 +669,124 @@ const Planificar = (() => {
       </div>`;
   }
 
+  function _guardarVencAuto() {
+    if (!_venc) return;
+    _vencEst = _currentEst();
+    _venc = Vencimientos.saveVencimientos(_vencEst, _venc);
+    _vencNotified = false;
+    _refreshVencBody();
+    _setCardState('vencimientos', _vencOpen, _vencBadgeInfo());
+  }
+
+  function _renderRequerimientoCard(v, tr, req) {
+    const arch = Vencimientos.getArchivo(v, req.id, tr.id);
+    const est  = Vencimientos.estadoRequerimiento(req);
+    const st   = _vencEstadoLabel(est.estado);
+    const alerta = est.estado === 'por_vencer'
+      ? `<div style="margin-top:6px;font-size:10px;color:var(--color-regular);">⚠ Vence en ${est.dias} días</div>` : '';
+    const vencCampo = req.sinVencimiento ? '' : `
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" style="font-size:10px;">Fecha vencimiento</label>
+            <input class="form-input" type="date" value="${_escAttr(req.venc || '')}"
+              onchange="Planificar.actualizarRequerimiento('${tr.id}','${req.id}','venc',this.value)">
+          </div>`;
+    const gridCols = req.sinVencimiento ? '1fr' : '1fr 1fr';
+
+    return `
+      <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:10px;background:var(--color-white);">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;
+          background:var(--emerald);color:#fff;">
+          <div style="flex:1;min-width:0;">
+            <input class="form-input" type="text" value="${_escAttr(req.nombre)}"
+              placeholder="Nombre del documento"
+              onchange="Planificar.actualizarRequerimiento('${tr.id}','${req.id}','nombre',this.value)"
+              style="margin:0;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.35);color:#fff;font-weight:700;">
+            <div style="font-size:10px;opacity:0.85;margin-top:4px;">Requerimiento adicional</div>
+          </div>
+          <span class="estado-chip ${st.cls}" style="flex-shrink:0;">${st.label}</span>
+        </div>
+        <div style="padding:12px;">
+          <div style="display:grid;grid-template-columns:${gridCols};gap:8px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" style="font-size:10px;">Fecha expedición</label>
+              <input class="form-input" type="date" value="${_escAttr(req.exp || '')}"
+                onchange="Planificar.actualizarRequerimiento('${tr.id}','${req.id}','exp',this.value)">
+            </div>
+            ${vencCampo}
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:var(--text-xs);color:var(--color-ink2);cursor:pointer;">
+            <input type="checkbox" ${req.sinVencimiento ? 'checked' : ''}
+              onchange="Planificar.actualizarRequerimiento('${tr.id}','${req.id}','sinVencimiento',this.checked)">
+            No aplica vencimiento
+          </label>
+          ${alerta}
+          <button type="button" onclick="Planificar.subirSoporteVenc('${req.id}','${tr.id}')"
+            style="margin-top:10px;width:100%;padding:10px;cursor:pointer;border:1.5px dashed var(--emerald-2);
+              border-radius:var(--radius-md);background:rgba(10,115,80,0.06);color:var(--emerald-2);font-size:12px;font-weight:600;">
+            📎 Adjuntar soporte${arch ? ' ✓' : ''}
+          </button>
+          ${_renderArchivoPreview(arch, req.id, tr.id)}
+          <button type="button" onclick="Planificar.eliminarRequerimiento('${tr.id}','${req.id}')"
+            style="margin-top:8px;width:100%;padding:8px;border:1px solid rgba(163,45,45,0.35);border-radius:var(--radius-md);
+              background:rgba(163,45,45,0.06);color:var(--color-deficiente);font-size:11px;cursor:pointer;">
+            Eliminar requerimiento
+          </button>
+        </div>
+      </div>`;
+  }
+
+  function _renderNuevoRequerimientoForm(tr) {
+    return `
+      <div id="venc-req-nuevo" style="border:2px dashed var(--emerald-2);border-radius:var(--radius-md);padding:12px;margin-bottom:10px;background:rgba(10,115,80,0.04);">
+        <div style="font-size:var(--text-xs);font-weight:700;color:var(--emerald-2);margin-bottom:10px;">Nuevo requerimiento adicional</div>
+        <div class="form-group">
+          <label class="form-label">Nombre del documento / certificado</label>
+          <input class="form-input" type="text" id="req-nombre" placeholder="Ej: Certificado manipulación de alimentos">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" style="font-size:10px;">Fecha expedición</label>
+            <input class="form-input" type="date" id="req-exp">
+          </div>
+          <div class="form-group" style="margin-bottom:0;" id="req-venc-wrap">
+            <label class="form-label" style="font-size:10px;">Fecha vencimiento</label>
+            <input class="form-input" type="date" id="req-venc">
+          </div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:var(--text-xs);color:var(--color-ink2);cursor:pointer;">
+          <input type="checkbox" id="req-sin-venc" onchange="Planificar.toggleReqSinVencNuevo(this.checked)">
+          No aplica vencimiento
+        </label>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-primary" style="flex:1;min-width:120px;padding:10px;"
+            onclick="Planificar.crearRequerimiento('${tr.id}')">Guardar requerimiento</button>
+          <button type="button" class="btn btn-outline" style="padding:10px;"
+            onclick="Planificar.cancelarRequerimiento()">Cancelar</button>
+        </div>
+      </div>`;
+  }
+
   function _vencPersonalGestion(v) {
     const tr = (v.trabajadores || [])[0];
     if (!tr) return '';
+    const reqs = tr.requerimientos || [];
     return `
       <div style="margin-top:var(--sp-md);padding-top:var(--sp-md);border-top:1px dashed var(--color-border);">
         <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);text-transform:uppercase;
-          letter-spacing:0.05em;margin-bottom:var(--sp-sm);">Registrar / editar — 4 documentos</div>
+          letter-spacing:0.05em;margin-bottom:var(--sp-sm);">Registrar / editar — documentos base</div>
         <div class="form-group">
           <label class="form-label">Nombre del trabajador</label>
           <input class="form-input" type="text" value="${_escAttr(tr.nombre)}"
             onchange="Planificar.actualizarTrabajador('${tr.id}','nombre',this.value)">
         </div>
         ${Vencimientos.allDocsPersonal().map(doc => _renderDocPersonalCard(v, tr, doc)).join('')}
+        ${reqs.length ? `
+        <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);text-transform:uppercase;
+          letter-spacing:0.05em;margin:var(--sp-md) 0 var(--sp-sm);">Requerimientos adicionales</div>
+        ${reqs.map(req => _renderRequerimientoCard(v, tr, req)).join('')}` : ''}
+        ${_vencReqFormOpen ? _renderNuevoRequerimientoForm(tr) : ''}
+        <button type="button" class="btn btn-accent" style="width:100%;padding:10px;margin-top:8px;"
+          onclick="Planificar.toggleReqForm()">+ Agregar requerimiento adicional</button>
         <button type="button" class="btn btn-outline" style="width:auto;padding:8px 14px;margin-top:8px;"
           onclick="Planificar.agregarTrabajador()">+ Agregar trabajador</button>
       </div>`;
@@ -811,6 +917,50 @@ const Planificar = (() => {
     _refreshVencBody();
   }
 
+  function toggleReqForm() {
+    _vencReqFormOpen = !_vencReqFormOpen;
+    _refreshVencBody();
+  }
+
+  function cancelarRequerimiento() {
+    _vencReqFormOpen = false;
+    _refreshVencBody();
+  }
+
+  function toggleReqSinVencNuevo(checked) {
+    const wrap = document.getElementById('req-venc-wrap');
+    const inp  = document.getElementById('req-venc');
+    if (wrap) wrap.style.display = checked ? 'none' : '';
+    if (inp && checked) inp.value = '';
+  }
+
+  function crearRequerimiento(trId) {
+    if (!_venc) return;
+    const nombre = (document.getElementById('req-nombre')?.value || '').trim();
+    if (!nombre) { Router.toast('Ingrese el nombre del documento'); return; }
+    const exp      = document.getElementById('req-exp')?.value || '';
+    const venc     = document.getElementById('req-venc')?.value || '';
+    const sinVenc  = !!document.getElementById('req-sin-venc')?.checked;
+    _venc = Vencimientos.agregarRequerimiento(_venc, trId, nombre, exp, venc, sinVenc);
+    _vencReqFormOpen = false;
+    _guardarVencAuto();
+    Router.toast('✓ Requerimiento guardado');
+  }
+
+  function actualizarRequerimiento(trId, reqId, campo, valor) {
+    if (!_venc) return;
+    _venc = Vencimientos.actualizarRequerimiento(_venc, trId, reqId, campo, valor);
+    _guardarVencAuto();
+  }
+
+  function eliminarRequerimiento(trId, reqId) {
+    if (!_venc) return;
+    if (!confirm('¿Eliminar este requerimiento adicional?')) return;
+    _venc = Vencimientos.eliminarRequerimiento(_venc, trId, reqId);
+    _guardarVencAuto();
+    Router.toast('Requerimiento eliminado');
+  }
+
   function agregarTrabajador() {
     if (!_venc) return;
     const nombre = prompt('Nombre del trabajador:');
@@ -932,7 +1082,7 @@ const Planificar = (() => {
         data: ev.target.result,
         subido_en: new Date().toISOString(),
       }, trabajadorId || null);
-      _refreshVencBody();
+      _guardarVencAuto();
       Router.toast('📎 Soporte adjuntado');
     };
     reader.readAsDataURL(file);
@@ -941,7 +1091,7 @@ const Planificar = (() => {
   function eliminarSoporteVenc(itemId, trabajadorId) {
     if (!_venc) return;
     Vencimientos.setArchivo(_venc, itemId, null, trabajadorId || null);
-    _refreshVencBody();
+    _guardarVencAuto();
     Router.toast('Soporte eliminado');
   }
 
@@ -1273,5 +1423,6 @@ const Planificar = (() => {
 
   return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, diagEvaluar, diagNavegar, marcoSub,
     actualizarVenc, guardarVencimientos, vencTab, vencFiltro, subirSoporteVenc, eliminarSoporteVenc, verSoporteVenc,
-    agregarTrabajador, actualizarTrabajador, agregarEquipo, actualizarEquipo, exportarVencPDF };
+    agregarTrabajador, actualizarTrabajador, agregarEquipo, actualizarEquipo, exportarVencPDF,
+    toggleReqForm, cancelarRequerimiento, crearRequerimiento, actualizarRequerimiento, eliminarRequerimiento, toggleReqSinVencNuevo };
 })();

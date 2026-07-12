@@ -25,8 +25,8 @@ const Vencimientos = (() => {
       periodicidad: 'Anual',
       norma: 'Decreto 3075 de 1997, Art. 11',
       archivoLabel: 'Adjuntar soporte' },
-    { id: 'capacitacion_induccion', label: 'Capacitación inducción',
-      expId: 'capacitacion_induccion_exp', vencId: null, soloExp: true,
+    { id: 'induccion', label: 'Inducción',
+      expId: 'induccion_exp', vencId: null, soloExp: true,
       periodicidad: 'Personal nuevo — sin vencimiento',
       norma: NORMA_BASE + ', Cap. 6 — Inducción SST',
       archivoLabel: 'Adjuntar soporte' },
@@ -83,7 +83,7 @@ const Vencimientos = (() => {
   ];
 
   const GRUPOS = {
-    personal: { label: 'Personal', desc: 'Cédula, examen médico, capacitación BPM e inducción — Decreto 1072/2015.' },
+    personal: { label: 'Personal', desc: 'Cédula, examen médico, BPM, inducción y requerimientos adicionales — Decreto 1072/2015.' },
     equipos:  { label: 'Equipos',  desc: 'Soportes de equipos: facturas, manuales y certificados de calibración.' },
   };
 
@@ -118,6 +118,8 @@ const Vencimientos = (() => {
       delete docs[oldKey];
     });
     LEGACY_PERSONAL_DROP.forEach(k => delete docs[k]);
+    if (docs.capacitacion_induccion_exp && !docs.induccion_exp) docs.induccion_exp = docs.capacitacion_induccion_exp;
+    delete docs.capacitacion_induccion_exp;
     tr.documentos = docs;
     const arch = { ...(tr.archivos || {}) };
     Object.entries(LEGACY_ARCHIVO_MAP).forEach(([oldId, newId]) => {
@@ -125,6 +127,9 @@ const Vencimientos = (() => {
       const newAk = _archivoKey(newId);
       if (!arch[newAk] && arch[oldAk]) arch[newAk] = arch[oldAk];
     });
+    const indOld = _archivoKey('capacitacion_induccion');
+    const indNew = _archivoKey('induccion');
+    if (!arch[indNew] && arch[indOld]) arch[indNew] = arch[indOld];
     const cedAk = _archivoKey(CEDULA_DOC.id);
     if (!arch[cedAk] && arch.cedula_archivo) arch[cedAk] = arch.cedula_archivo;
     tr.archivos = arch;
@@ -143,6 +148,19 @@ const Vencimientos = (() => {
         : { estado: 'sin_registrar', proximo: null, dias: null };
     }
     const venc = docs[doc.vencId] || '';
+    return estadoFechaVencimiento(venc);
+  }
+
+  function estadoRequerimiento(req) {
+    if (!req || !req.nombre) return { estado: 'sin_registrar', proximo: null, dias: null };
+    if (req.sinVencimiento) {
+      const exp = req.exp || '';
+      return exp
+        ? { estado: 'vigente', proximo: exp, dias: null }
+        : { estado: 'sin_registrar', proximo: null, dias: null };
+    }
+    const venc = req.venc || '';
+    if (!venc) return { estado: 'sin_registrar', proximo: null, dias: null };
     return estadoFechaVencimiento(venc);
   }
 
@@ -203,6 +221,7 @@ const Vencimientos = (() => {
         cedula: '',
         documentos,
         archivos,
+        requerimientos: Array.isArray(d.requerimientos) ? d.requerimientos : [],
       }];
     }
     if (!Array.isArray(d.equiposLista) || !d.equiposLista.length) {
@@ -221,6 +240,7 @@ const Vencimientos = (() => {
     d.trabajadores.forEach(tr => {
       tr.documentos = tr.documentos || {};
       tr.archivos = tr.archivos || {};
+      tr.requerimientos = Array.isArray(tr.requerimientos) ? tr.requerimientos : [];
       _migratePersonalDocs(tr, d);
     });
     d.equiposLista.forEach(eq => {
@@ -345,6 +365,23 @@ const Vencimientos = (() => {
           dias: e.dias,
         });
       });
+      (tr.requerimientos || []).forEach(req => {
+        const e = estadoRequerimiento(req);
+        rows.push({
+          trabajadorId: tr.id,
+          nombre: tr.nombre,
+          cedula: tr.cedula,
+          documento: req.nombre,
+          itemId: req.id,
+          custom: true,
+          expedicion: req.exp || '',
+          vencimiento: req.venc || '',
+          vigencia: req.sinVencimiento ? (req.exp || '') : (e.proximo || req.venc || ''),
+          sinVencimiento: !!req.sinVencimiento,
+          estado: e.estado,
+          dias: e.dias,
+        });
+      });
     });
     if (!q) return rows;
     return rows.filter(r =>
@@ -430,6 +467,7 @@ const Vencimientos = (() => {
       cedula: cedula || '',
       documentos: {},
       archivos: {},
+      requerimientos: [],
     });
     return d;
   }
@@ -449,6 +487,46 @@ const Vencimientos = (() => {
       });
       _syncLegacyFromTrabajador(d, tr);
     }
+    return d;
+  }
+
+  function agregarRequerimiento(data, trId, nombre, exp, venc, sinVencimiento) {
+    const d = _migrate(data);
+    const tr = d.trabajadores.find(t => t.id === trId);
+    if (!tr || !nombre) return d;
+    if (!tr.requerimientos) tr.requerimientos = [];
+    tr.requerimientos.push({
+      id: _uid('req'),
+      nombre: String(nombre).trim(),
+      exp: exp || '',
+      venc: sinVencimiento ? '' : (venc || ''),
+      sinVencimiento: !!sinVencimiento,
+    });
+    return d;
+  }
+
+  function actualizarRequerimiento(data, trId, reqId, campo, valor) {
+    const d = _migrate(data);
+    const tr = d.trabajadores.find(t => t.id === trId);
+    if (!tr) return d;
+    const req = (tr.requerimientos || []).find(r => r.id === reqId);
+    if (!req) return d;
+    if (campo === 'nombre') req.nombre = String(valor || '').trim();
+    else if (campo === 'exp') req.exp = valor || '';
+    else if (campo === 'venc') req.venc = valor || '';
+    else if (campo === 'sinVencimiento') {
+      req.sinVencimiento = !!valor;
+      if (req.sinVencimiento) req.venc = '';
+    }
+    return d;
+  }
+
+  function eliminarRequerimiento(data, trId, reqId) {
+    const d = _migrate(data);
+    const tr = d.trabajadores.find(t => t.id === trId);
+    if (!tr) return d;
+    tr.requerimientos = (tr.requerimientos || []).filter(r => r.id !== reqId);
+    if (tr.archivos) delete tr.archivos[_archivoKey(reqId)];
     return d;
   }
 
@@ -501,10 +579,11 @@ const Vencimientos = (() => {
     ITEMS, DOC_PERSONAL, CEDULA_DOC, GRUPOS, NORMA_BASE, ALERTA_DIAS,
     getVencimientos, saveVencimientos,
     getArchivo, setArchivo,
-    estado, estadoFechaVencimiento, estadoDocPersonal, periodicidadTexto,
+    estado, estadoFechaVencimiento, estadoDocPersonal, estadoRequerimiento, periodicidadTexto,
     itemsGrupo, allDocsPersonal, resumenGrupo,
     getPersonalRows, getEquiposRows, getDashboard,
     agregarTrabajador, actualizarTrabajador,
+    agregarRequerimiento, actualizarRequerimiento, eliminarRequerimiento,
     agregarEquipo, actualizarEquipo, agregarCalibracion,
   };
 })();
