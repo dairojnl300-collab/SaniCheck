@@ -521,7 +521,9 @@ const Planificar = (() => {
           ${rows.map((r, i) => {
             const st = _vencEstadoLabel(r.estado);
             const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('es-CO') : '—';
-            const alerta = r.estado === 'por_vencer' ? ' ⚠' : '';
+            const vigTxt = r.sinVencimiento ? '—' : fmt(r.vigencia);
+            const expTxt = r.sinVencimiento && !r.expedicion ? '—' : fmt(r.expedicion);
+            const alerta = !r.sinVencimiento && r.estado === 'por_vencer' ? ' ⚠' : '';
             return `
           <tr style="background:${i % 2 === 0 ? 'var(--color-white)' : 'var(--color-surface)'};">
             <td style="padding:8px;border-bottom:1px solid var(--color-border);">
@@ -529,8 +531,8 @@ const Planificar = (() => {
               <div style="color:var(--color-ink3);font-size:10px;">CC ${_escAttr(r.cedula || '—')}</div>
             </td>
             <td style="padding:8px;border-bottom:1px solid var(--color-border);">${_escAttr(r.documento)}</td>
-            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${fmt(r.expedicion)}</td>
-            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${fmt(r.vigencia)}${alerta}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${expTxt}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${vigTxt}${alerta}</td>
             <td style="padding:8px;border-bottom:1px solid var(--color-border);text-align:center;">
               <span class="estado-chip ${st.cls}">${st.label}</span></td>
           </tr>`;
@@ -572,54 +574,113 @@ const Planificar = (() => {
       </table>`;
   }
 
+  function _renderArchivoPreview(arch, itemId, trId) {
+    if (!arch || !arch.data) return '';
+    const isPdf  = (arch.tipo || '').includes('pdf') || /\.pdf$/i.test(arch.nombre || '');
+    const isImg  = (arch.tipo || '').startsWith('image/');
+    const nombre = _escAttr(arch.nombre || 'Soporte');
+    const bar = `
+      <div style="padding:6px 10px;font-size:10px;display:flex;justify-content:space-between;align-items:center;
+        gap:8px;background:var(--color-surface);border-top:1px solid var(--color-border);">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">${nombre}</span>
+        <button type="button" onclick="Planificar.verSoporteVenc('${itemId}','${trId}')"
+          style="padding:2px 8px;font-size:10px;border:1px solid var(--color-border);border-radius:4px;
+            background:#fff;cursor:pointer;color:var(--emerald-2);">Ver</button>
+        <button type="button" onclick="Planificar.eliminarSoporteVenc('${itemId}','${trId}')"
+          style="padding:2px 8px;font-size:10px;border:1px solid var(--color-border);border-radius:4px;
+            background:#fff;cursor:pointer;color:var(--color-deficiente);">✕</button>
+      </div>`;
+    if (isImg) {
+      return `<div style="margin-top:8px;border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;">
+        <img src="${arch.data}" alt="Vista previa" style="width:100%;max-height:140px;object-fit:contain;background:#f8faf9;display:block;">
+        ${bar}</div>`;
+    }
+    return `<div style="margin-top:8px;border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;">
+      <div style="padding:16px 12px;text-align:center;background:#f8faf9;">
+        <div style="font-size:28px;line-height:1;">📄</div>
+        <div style="font-size:11px;color:var(--color-ink2);margin-top:4px;">${isPdf ? 'Documento PDF' : 'Archivo adjunto'}</div>
+      </div>${bar}</div>`;
+  }
+
+  function _renderDocPersonalCard(v, tr, doc) {
+    const arch = Vencimientos.getArchivo(v, doc.id, tr.id);
+    const est  = Vencimientos.estadoDocPersonal(doc, tr);
+    const st   = _vencEstadoLabel(est.estado);
+    const docs = tr.documentos || {};
+    const alerta = est.estado === 'por_vencer'
+      ? `<div style="margin-top:6px;font-size:10px;color:var(--color-regular);">⚠ Vence en ${est.dias} días</div>` : '';
+    const periodicidad = doc.periodicidad
+      ? `<span style="font-size:10px;color:var(--color-ink3);background:var(--color-surface);padding:2px 8px;border-radius:99px;">${_escAttr(doc.periodicidad)}</span>` : '';
+
+    let campos = '';
+    if (doc.soloNumero) {
+      campos = `
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" style="font-size:10px;">Número de cédula</label>
+          <input class="form-input" type="text" inputmode="numeric" pattern="[0-9]*"
+            placeholder="Solo número — sin fechas ni vencimiento" value="${_escAttr(tr.cedula)}"
+            onchange="Planificar.actualizarTrabajador('${tr.id}','cedula',this.value)">
+        </div>`;
+    } else if (doc.soloExp) {
+      campos = `
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" style="font-size:10px;">Fecha expedición</label>
+          <input class="form-input" type="date" value="${_escAttr(docs[doc.expId] || '')}"
+            onchange="Planificar.actualizarTrabajador('${tr.id}','${doc.expId}',this.value)">
+        </div>`;
+    } else {
+      campos = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" style="font-size:10px;">Fecha expedición</label>
+            <input class="form-input" type="date" value="${_escAttr(docs[doc.expId] || '')}"
+              onchange="Planificar.actualizarTrabajador('${tr.id}','${doc.expId}',this.value)">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" style="font-size:10px;">Fecha vencimiento</label>
+            <input class="form-input" type="date" value="${_escAttr(docs[doc.vencId] || '')}"
+              onchange="Planificar.actualizarTrabajador('${tr.id}','${doc.vencId}',this.value)">
+          </div>
+        </div>`;
+    }
+
+    return `
+      <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:10px;background:var(--color-white);">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;
+          background:var(--emerald-2);color:#fff;">
+          <div>
+            <div style="font-size:var(--text-sm);font-weight:700;">${_escAttr(doc.label)}</div>
+            <div style="font-size:10px;opacity:0.85;margin-top:2px;">${_escAttr(doc.norma)}</div>
+          </div>
+          <span class="estado-chip ${st.cls}" style="flex-shrink:0;">${st.label}</span>
+        </div>
+        <div style="padding:12px;">
+          <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px;">${periodicidad}</div>
+          ${campos}
+          ${alerta}
+          <button type="button" onclick="Planificar.subirSoporteVenc('${doc.id}','${tr.id}')"
+            style="margin-top:10px;width:100%;padding:10px;cursor:pointer;border:1.5px dashed var(--emerald-2);
+              border-radius:var(--radius-md);background:rgba(10,115,80,0.06);color:var(--emerald-2);font-size:12px;font-weight:600;">
+            📎 ${_escAttr(doc.archivoLabel)}${arch ? ' ✓' : ''}
+          </button>
+          ${_renderArchivoPreview(arch, doc.id, tr.id)}
+        </div>
+      </div>`;
+  }
+
   function _vencPersonalGestion(v) {
     const tr = (v.trabajadores || [])[0];
     if (!tr) return '';
     return `
       <div style="margin-top:var(--sp-md);padding-top:var(--sp-md);border-top:1px dashed var(--color-border);">
         <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);text-transform:uppercase;
-          letter-spacing:0.05em;margin-bottom:var(--sp-sm);">Registrar / editar</div>
+          letter-spacing:0.05em;margin-bottom:var(--sp-sm);">Registrar / editar — 4 documentos</div>
         <div class="form-group">
           <label class="form-label">Nombre del trabajador</label>
           <input class="form-input" type="text" value="${_escAttr(tr.nombre)}"
             onchange="Planificar.actualizarTrabajador('${tr.id}','nombre',this.value)">
         </div>
-        <div class="form-group">
-          <label class="form-label">${_escAttr(Vencimientos.CEDULA_DOC.label)}</label>
-          <input class="form-input" type="text" inputmode="numeric" pattern="[0-9]*"
-            placeholder="Número de cédula (sin fechas)" value="${_escAttr(tr.cedula)}"
-            onchange="Planificar.actualizarTrabajador('${tr.id}','cedula',this.value)">
-          <button type="button" onclick="Planificar.subirSoporteVenc('cedula','${tr.id}')"
-            style="margin-top:6px;width:100%;padding:8px;cursor:pointer;border:1.5px dashed var(--color-border);
-              border-radius:var(--radius-md);background:var(--color-surface);color:var(--color-ink2);font-size:12px;">
-            📎 ${_escAttr(Vencimientos.CEDULA_DOC.archivoLabel)}${Vencimientos.getArchivo(v, 'cedula', tr.id) ? ' ✓' : ''}
-          </button>
-        </div>
-        ${Vencimientos.itemsGrupo('personal').map(doc => {
-          const arch = Vencimientos.getArchivo(v, doc.id, tr.id);
-          return `
-        <div class="form-group">
-          <label class="form-label">${_escAttr(doc.label)}</label>
-          <div style="font-size:10px;color:var(--color-ink3);margin-bottom:6px;">${_escAttr(doc.norma)}</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <div>
-              <label class="form-label" style="font-size:10px;font-weight:600;">Fecha expedición</label>
-              <input class="form-input" type="date" value="${_escAttr(tr.documentos[doc.expId] || '')}"
-                onchange="Planificar.actualizarTrabajador('${tr.id}','${doc.expId}',this.value)">
-            </div>
-            <div>
-              <label class="form-label" style="font-size:10px;font-weight:600;">Fecha vencimiento</label>
-              <input class="form-input" type="date" value="${_escAttr(tr.documentos[doc.vencId] || '')}"
-                onchange="Planificar.actualizarTrabajador('${tr.id}','${doc.vencId}',this.value)">
-            </div>
-          </div>
-          <button type="button" onclick="Planificar.subirSoporteVenc('${doc.id}','${tr.id}')"
-            style="margin-top:6px;width:100%;padding:8px;cursor:pointer;border:1.5px dashed var(--color-border);
-              border-radius:var(--radius-md);background:var(--color-surface);color:var(--color-ink2);font-size:12px;">
-            📎 ${_escAttr(doc.archivoLabel)}${arch ? ' ✓' : ''}
-          </button>
-        </div>`;
-        }).join('')}
+        ${Vencimientos.allDocsPersonal().map(doc => _renderDocPersonalCard(v, tr, doc)).join('')}
         <button type="button" class="btn btn-outline" style="width:auto;padding:8px 14px;margin-top:8px;"
           onclick="Planificar.agregarTrabajador()">+ Agregar trabajador</button>
       </div>`;
@@ -796,7 +857,7 @@ const Planificar = (() => {
     const tabla = grupo === 'personal'
       ? `<table><thead><tr><th>Trabajador</th><th>CC</th><th>Documento</th><th>Expedición</th><th>Vigencia</th><th>Estado</th></tr></thead><tbody>
         ${rows.map(r => `<tr><td>${_escAttr(r.nombre)}</td><td>${_escAttr(r.cedula)}</td><td>${_escAttr(r.documento)}</td>
-          <td>${r.expedicion || '—'}</td><td>${r.vigencia || '—'}</td><td>${_vencEstadoLabel(r.estado).label}</td></tr>`).join('')}</tbody></table>`
+          <td>${r.expedicion || '—'}</td><td>${r.sinVencimiento ? '—' : (r.vigencia || '—')}</td><td>${_vencEstadoLabel(r.estado).label}</td></tr>`).join('')}</tbody></table>`
       : `<table><thead><tr><th>Código</th><th>Tipo</th><th>Últ. calibración</th><th>Próx. calibración</th><th>Estado</th></tr></thead><tbody>
         ${rows.map(r => `<tr><td>${_escAttr(r.codigo)}</td><td>${_escAttr(r.tipo)}</td><td>${r.ultima_calibracion || '—'}</td>
           <td>${r.proxima_calibracion || '—'}</td><td>${_vencEstadoLabel(r.estado).label}</td></tr>`).join('')}</tbody></table>`;
@@ -814,6 +875,26 @@ const Planificar = (() => {
       ${tabla}
       <p style="margin-top:24px;font-size:10px;color:#888;">Documento generado por SaniCheck · ECODESA Ing. S.A.S</p>
       <script>setTimeout(function(){window.print();},400);</script></body></html>`);
+    win.document.close();
+  }
+
+  function verSoporteVenc(itemId, trabajadorId) {
+    if (!_venc) return;
+    const arch = Vencimientos.getArchivo(_venc, itemId, trabajadorId || null);
+    if (!arch || !arch.data) { Router.toast('Sin soporte adjunto'); return; }
+    const win = window.open('', '_blank');
+    if (!win) { Router.toast('Permite ventanas emergentes para ver el soporte'); return; }
+    const isImg = (arch.tipo || '').startsWith('image/');
+    if (isImg) {
+      win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${_escAttr(arch.nombre)}</title>
+        <style>body{margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+        img{max-width:100%;max-height:100vh;object-fit:contain;}</style></head>
+        <body><img src="${arch.data}" alt="Soporte"></body></html>`);
+    } else {
+      win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${_escAttr(arch.nombre)}</title>
+        <style>body{margin:0;}iframe{border:0;width:100vw;height:100vh;}</style></head>
+        <body><iframe src="${arch.data}"></iframe></body></html>`);
+    }
     win.document.close();
   }
 
@@ -1191,6 +1272,6 @@ const Planificar = (() => {
   }
 
   return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, diagEvaluar, diagNavegar, marcoSub,
-    actualizarVenc, guardarVencimientos, vencTab, vencFiltro, subirSoporteVenc, eliminarSoporteVenc,
+    actualizarVenc, guardarVencimientos, vencTab, vencFiltro, subirSoporteVenc, eliminarSoporteVenc, verSoporteVenc,
     agregarTrabajador, actualizarTrabajador, agregarEquipo, actualizarEquipo, exportarVencPDF };
 })();
