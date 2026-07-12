@@ -1391,13 +1391,6 @@ const Planificar = (() => {
         </tr>`).join('')
       : `<tr><td colspan="5" style="text-align:center;color:#065F46;padding:12px;">Sin vencimientos próximos (30 días)</td></tr>`;
 
-    const semHtml = ['verde', 'amarillo', 'rojo'].map(c => {
-      const on = estG.sem === c;
-      const colors = { verde: '#065F46', amarillo: '#D97706', rojo: '#991B1B' };
-      return `<div style="width:28px;height:28px;border-radius:50%;background:${colors[c]};
-        opacity:${on ? '1' : '0.2'};box-shadow:${on ? '0 0 0 3px rgba(10,46,35,0.15)' : 'none'};"></div>`;
-    }).join('');
-
     return `
       <div class="hdr">
         <div class="hdr-title">${_escAttr(nombre)}</div>
@@ -1405,83 +1398,62 @@ const Planificar = (() => {
         <div class="hdr-date">Dashboard Ejecutivo · Generado ${fechaGen}</div>
       </div>
 
-      <div class="kpi-grid">
-        <div class="kpi" style="border-top:3px solid #0A7350;">
-          <div class="kpi-lbl">Cumplimiento general</div>
-          <div class="kpi-val" style="color:#0A7350;">${pct}%</div>
-          <div class="kpi-sub">${estG.label}</div>
-        </div>
-        <div class="kpi" style="border-top:3px solid #0E86C8;">
-          <div class="kpi-lbl">Aspectos evaluados</div>
-          <div class="kpi-val" style="color:#0E86C8;">${rated.length}</div>
-          <div class="kpi-sub">de 13 ítems diagnóstico</div>
-        </div>
-        <div class="kpi" style="border-top:3px solid #991B1B;">
-          <div class="kpi-lbl">Aspectos críticos</div>
-          <div class="kpi-val" style="color:#991B1B;">${d}</div>
-          <div class="kpi-sub">calificación Deficiente</div>
-        </div>
-        <div class="kpi" style="border-top:3px solid #DF8A00;">
-          <div class="kpi-lbl">Próx. vencimientos</div>
-          <div class="kpi-val" style="color:#DF8A00;">${dash.alertas30}</div>
-          <div class="kpi-sub">alertas 30 días</div>
-        </div>
-      </div>
-
-      <div class="row-2">
-        <div class="panel">
-          <div class="panel-h">Distribución B / R / D / N·A</div>
-          ${_buildDonutSvg({ B: b, R: r, D: d, NA: na })}
-        </div>
-        <div class="panel">
-          <div class="panel-h">Semáforo de estado</div>
-          <div style="display:flex;align-items:center;gap:16px;padding:8px 0;">
-            <div style="display:flex;gap:10px;">${semHtml}</div>
-            <div>
-              <div style="font-size:22px;font-weight:800;color:${estG.color};">${estG.label}</div>
-              <div style="font-size:11px;color:#6B7280;margin-top:2px;">${pct}% cumplimiento diagnóstico</div>
+      <div class="main-section">
+        <div class="main-section-title">Sección 1 · Resultados del Diagnóstico Inicial</div>
+        <div class="main-section-body">
+          <div class="sub-section-h">Indicadores clave</div>
+          <div class="kpi-grid kpi-grid-2">
+            <div class="kpi" style="border-top:3px solid #0A7350;">
+              <div class="kpi-lbl">Cumplimiento general</div>
+              <div class="kpi-val" style="color:#0A7350;">${pct}%</div>
+              <div class="kpi-sub">${estG.label}</div>
+            </div>
+            <div class="kpi" style="border-top:3px solid #0E86C8;">
+              <div class="kpi-lbl">Aspectos evaluados</div>
+              <div class="kpi-val" style="color:#0E86C8;">${rated.length}</div>
+              <div class="kpi-sub">de 13 ítems diagnóstico</div>
             </div>
           </div>
-          <div style="margin-top:12px;padding:10px;background:${estG.bg};border-radius:8px;font-size:10px;color:${estG.color};">
-            ${pct >= 80 ? 'Establecimiento en condiciones favorables. Mantener controles y registros actualizados.'
-              : pct >= 50 ? 'Requiere plan de mejora. Priorizar aspectos deficientes y vencimientos próximos.'
-              : 'Estado crítico. Acción inmediata en hallazgos deficientes y documentación vencida.'}
+
+          <div class="sub-section-h">Distribución B / R / D / N·A</div>
+          <div class="panel">
+            ${_buildDonutSvg({ B: b, R: r, D: d, NA: na })}
+          </div>
+
+          <div class="sub-section-h">Cuadro de resultados</div>
+          ${_buildPdfResultadosDiagnostico()}
+        </div>
+      </div>
+
+      <div class="main-section main-section-break">
+        <div class="main-section-title">Sección 2 · Control de Vencimientos</div>
+        <div class="main-section-body">
+          <div class="sub-section-h">Personal</div>
+          <div class="venc-section-summary">
+            <span class="chip chip-b">${persCnt.vigente} vigentes</span>
+            <span class="chip chip-r">${persCnt.por_vencer} por vencer</span>
+            <span class="chip chip-d">${persCnt.vencido} vencidos</span>
+            <span style="font-size:10px;color:#6B7280;">Vigencia documental: <strong>${dash.pctPersonal}%</strong></span>
+          </div>
+          <div class="venc-section-body">${_buildPdfVencPersonalBlocks(v)}</div>
+
+          <div class="sub-section-h sub-section-gap">Equipos</div>
+          <div class="venc-section-summary">
+            <span class="chip chip-b">${eqCnt.vigente} vigentes</span>
+            <span class="chip chip-r">${eqCnt.por_vencer} por vencer</span>
+            <span class="chip chip-d">${eqCnt.vencido} vencidos</span>
+            <span style="font-size:10px;color:#6B7280;">Vigencia calibración: <strong>${dash.pctEquipos}%</strong></span>
+          </div>
+          <div class="venc-section-body">${_buildPdfVencEquiposBlocks(v)}</div>
+
+          <div class="sub-section-h sub-section-gap">Resumen próximos vencimientos</div>
+          <div class="panel" style="margin-bottom:0;">
+            <table>
+              <thead><tr><th>Grupo</th><th>Referencia</th><th>Documento</th><th>Fecha</th><th>Estado</th></tr></thead>
+              <tbody>${proxRows}</tbody>
+            </table>
           </div>
         </div>
-      </div>
-
-      <div class="panel" style="padding:0;background:transparent;box-shadow:none;">
-        ${_buildPdfResultadosDiagnostico()}
-      </div>
-
-      <div class="venc-section">
-        <div class="venc-section-title">Sección 1 · Personal</div>
-        <div class="venc-section-summary">
-          <span class="chip chip-b">${persCnt.vigente} vigentes</span>
-          <span class="chip chip-r">${persCnt.por_vencer} por vencer</span>
-          <span class="chip chip-d">${persCnt.vencido} vencidos</span>
-          <span style="font-size:10px;color:#6B7280;">Vigencia documental: <strong>${dash.pctPersonal}%</strong></span>
-        </div>
-        <div class="venc-section-body">${_buildPdfVencPersonalBlocks(v)}</div>
-      </div>
-
-      <div class="venc-section venc-section-break">
-        <div class="venc-section-title">Sección 2 · Equipos</div>
-        <div class="venc-section-summary">
-          <span class="chip chip-b">${eqCnt.vigente} vigentes</span>
-          <span class="chip chip-r">${eqCnt.por_vencer} por vencer</span>
-          <span class="chip chip-d">${eqCnt.vencido} vencidos</span>
-          <span style="font-size:10px;color:#6B7280;">Vigencia calibración: <strong>${dash.pctEquipos}%</strong></span>
-        </div>
-        <div class="venc-section-body">${_buildPdfVencEquiposBlocks(v)}</div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-h">Próximos vencimientos (30 días)</div>
-        <table>
-          <thead><tr><th>Grupo</th><th>Referencia</th><th>Documento</th><th>Fecha</th><th>Estado</th></tr></thead>
-          <tbody>${proxRows}</tbody>
-        </table>
       </div>
 
       <div class="footer">
@@ -1516,6 +1488,15 @@ const Planificar = (() => {
         .hdr-sub{font-size:11px;opacity:0.85;margin-top:4px;}
         .hdr-date{font-size:10px;opacity:0.65;margin-top:8px;}
         .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+        .kpi-grid-2{grid-template-columns:repeat(2,1fr);}
+        .main-section{margin-bottom:20px;}
+        .main-section-title{font-size:13px;font-weight:800;color:#fff;background:linear-gradient(90deg,#0A2E23,#0A7350);
+          padding:12px 16px;border-radius:10px 10px 0 0;text-transform:uppercase;letter-spacing:0.07em;}
+        .main-section-body{background:#fff;border:2px solid #0A7350;border-top:none;border-radius:0 0 10px 10px;padding:16px;}
+        .main-section-break{margin-top:24px;border-top:4px solid #0A7350;padding-top:0;}
+        .sub-section-h{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#0A7350;
+          margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #D1FAE5;}
+        .sub-section-gap{margin-top:18px;padding-top:4px;}
         .kpi{background:#fff;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(10,46,35,0.06);}
         .kpi-lbl{font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:#6B7280;font-weight:600;}
         .kpi-val{font-size:26px;font-weight:800;line-height:1.1;margin:6px 0 2px;}
@@ -1533,13 +1514,12 @@ const Planificar = (() => {
         .chip-r{background:#FEF3C7;color:#92400E;}
         .chip-d{background:#FEE2E2;color:#991B1B;}
         .mini-kpis{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
-        .venc-section{margin-bottom:16px;}
+        .venc-section{margin-bottom:0;}
         .venc-section-title{font-size:12px;font-weight:800;color:#fff;background:linear-gradient(90deg,#0A7350,#0A2E23);
           padding:10px 14px;border-radius:8px 8px 0 0;text-transform:uppercase;letter-spacing:0.06em;}
         .venc-section-summary{font-size:10px;color:#6B7280;padding:8px 14px;background:#F9FAFB;
-          border:1px solid #E5E7EB;border-bottom:none;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-        .venc-section-body{background:#fff;border:1px solid #E5E7EB;border-top:none;border-radius:0 0 10px 10px;padding:14px;}
-        .venc-section-break{margin-top:20px;border-top:3px solid #0A7350;padding-top:4px;}
+          border:1px solid #E5E7EB;border-bottom:none;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:0;}
+        .venc-section-body{background:#fff;border:1px solid #E5E7EB;border-top:none;border-radius:0 0 10px 10px;padding:14px;margin-bottom:14px;}
         .venc-entity{margin-bottom:4px;}
         .venc-entity-gap{margin-top:14px;padding-top:14px;border-top:1px dashed #D1D5DB;}
         .venc-entity-hdr{background:#F0FDF4;border-left:4px solid #0A7350;padding:8px 12px;margin-bottom:8px;border-radius:0 6px 6px 0;}
@@ -1563,7 +1543,8 @@ const Planificar = (() => {
           .no-print{display:none!important;}
           body{padding-top:12px;background:#fff;}
           .panel,.kpi{box-shadow:none;border:1px solid #E5E7EB;}
-          .venc-section-break{page-break-before:always;border-top:none;padding-top:0;}
+          .main-section-break{page-break-before:always;border-top:none;margin-top:0;}
+          .main-section{page-break-inside:avoid;}
           .venc-entity{page-break-inside:avoid;}
         }
       </style></head><body>
