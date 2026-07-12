@@ -1124,6 +1124,91 @@ const Planificar = (() => {
       + `L${xi1.toFixed(2)},${yi1.toFixed(2)} A${ir},${ir} 0 ${large},0 ${xi2.toFixed(2)},${yi2.toFixed(2)}Z`;
   }
 
+  function _pdfEstadoChip(est_) {
+    const map = {
+      vigente:       { label: 'Vigente',       cls: 'chip-b' },
+      por_vencer:    { label: 'Por vencer',    cls: 'chip-r' },
+      vencido:       { label: 'Vencido',       cls: 'chip-d' },
+      sin_registrar: { label: 'Sin registrar', cls: '' },
+    };
+    const m = map[est_] || map.sin_registrar;
+    return m.cls
+      ? `<span class="chip ${m.cls}">${m.label}</span>`
+      : `<span style="font-size:9px;color:#9CA3AF;">${m.label}</span>`;
+  }
+
+  function _buildPdfVencPersonalBlocks(v) {
+    const rows = Vencimientos.getPersonalRows(v, '').filter(r => r.itemId !== 'cedula');
+    const workers = [];
+    const seen = new Set();
+    rows.forEach(r => {
+      if (!seen.has(r.trabajadorId)) {
+        seen.add(r.trabajadorId);
+        workers.push({ id: r.trabajadorId, nombre: r.nombre, cedula: r.cedula });
+      }
+    });
+    if (!workers.length) {
+      return '<div class="venc-empty">Sin trabajadores registrados</div>';
+    }
+    return workers.map((w, idx) => {
+      const docs = rows.filter(r => r.trabajadorId === w.id);
+      const docRows = docs.map(r => {
+        const exp  = r.sinVencimiento && !r.expedicion ? '—' : _fmtVencFecha(r.expedicion);
+        const venc = r.sinVencimiento ? '—' : _fmtVencFecha(r.vencimiento || r.vigencia);
+        return `<tr>
+          <td>${_escAttr(r.documento)}</td>
+          <td>${exp}</td>
+          <td>${venc}</td>
+          <td>${_pdfEstadoChip(r.estado)}</td>
+        </tr>`;
+      }).join('');
+      return `
+        <div class="venc-entity${idx > 0 ? ' venc-entity-gap' : ''}">
+          <div class="venc-entity-hdr">
+            <span class="venc-entity-name">${_escAttr(w.nombre || 'Sin nombre')}</span>
+            <span class="venc-entity-meta">Cédula ${_escAttr(w.cedula || '—')}</span>
+          </div>
+          <table class="venc-tbl">
+            <thead><tr><th>Documento</th><th>Fecha expedición</th><th>Fecha vencimiento</th><th>Estado</th></tr></thead>
+            <tbody>${docRows}</tbody>
+          </table>
+        </div>`;
+    }).join('');
+  }
+
+  function _buildPdfVencEquiposBlocks(v) {
+    const equipos  = Vencimientos.getEquiposRows(v, '');
+    const mantItem = Vencimientos.ITEMS.find(x => x.id === 'mantenimiento_fecha');
+    if (!equipos.length) {
+      return '<div class="venc-empty">Sin equipos registrados</div>';
+    }
+    return equipos.map((eq, idx) => {
+      const mantEst = Vencimientos.estado(eq.mantenimiento_programado, mantItem);
+      const docs = [
+        { doc: 'Certificado de calibración', exp: eq.ultima_calibracion, venc: eq.proxima_calibracion, estado: eq.estado },
+        { doc: 'Mantenimiento preventivo',   exp: eq.mantenimiento_programado, venc: mantEst.proximo, estado: mantEst.estado },
+      ];
+      const docRows = docs.map(d => `
+        <tr>
+          <td>${_escAttr(d.doc)}</td>
+          <td>${_fmtVencFecha(d.exp)}</td>
+          <td>${_fmtVencFecha(d.venc)}</td>
+          <td>${_pdfEstadoChip(d.estado)}</td>
+        </tr>`).join('');
+      return `
+        <div class="venc-entity${idx > 0 ? ' venc-entity-gap' : ''}">
+          <div class="venc-entity-hdr">
+            <span class="venc-entity-name">${_escAttr(eq.codigo || 'Sin código')}</span>
+            ${eq.tipo ? `<span class="venc-entity-meta">${_escAttr(eq.tipo)}</span>` : ''}
+          </div>
+          <table class="venc-tbl">
+            <thead><tr><th>Documento / Certificado</th><th>Fecha expedición</th><th>Fecha vencimiento</th><th>Estado</th></tr></thead>
+            <tbody>${docRows}</tbody>
+          </table>
+        </div>`;
+    }).join('');
+  }
+
   function _buildDonutSvg(counts) {
     const segs = [
       { k: 'B', color: '#065F46', label: 'Bueno' },
@@ -1277,27 +1362,26 @@ const Planificar = (() => {
         </table>
       </div>
 
-      <div class="row-2">
-        <div class="panel">
-          <div class="panel-h">Control de Vencimiento — Personal</div>
-          <div class="mini-kpis">
-            <span class="chip chip-b">${persCnt.vigente} vigentes</span>
-            <span class="chip chip-r">${persCnt.por_vencer} por vencer</span>
-            <span class="chip chip-d">${persCnt.vencido} vencidos</span>
-            <span style="font-size:10px;color:#6B7280;">${persCnt.sin_registrar} sin registrar</span>
-          </div>
-          <div style="font-size:10px;color:#6B7280;margin-top:6px;">Vigencia documental: <strong>${dash.pctPersonal}%</strong></div>
+      <div class="venc-section">
+        <div class="venc-section-title">Sección 1 · Personal</div>
+        <div class="venc-section-summary">
+          <span class="chip chip-b">${persCnt.vigente} vigentes</span>
+          <span class="chip chip-r">${persCnt.por_vencer} por vencer</span>
+          <span class="chip chip-d">${persCnt.vencido} vencidos</span>
+          <span style="font-size:10px;color:#6B7280;">Vigencia documental: <strong>${dash.pctPersonal}%</strong></span>
         </div>
-        <div class="panel">
-          <div class="panel-h">Control de Vencimiento — Equipos</div>
-          <div class="mini-kpis">
-            <span class="chip chip-b">${eqCnt.vigente} vigentes</span>
-            <span class="chip chip-r">${eqCnt.por_vencer} por vencer</span>
-            <span class="chip chip-d">${eqCnt.vencido} vencidos</span>
-            <span style="font-size:10px;color:#6B7280;">${eqCnt.sin_registrar} sin registrar</span>
-          </div>
-          <div style="font-size:10px;color:#6B7280;margin-top:6px;">Vigencia calibración: <strong>${dash.pctEquipos}%</strong></div>
+        <div class="venc-section-body">${_buildPdfVencPersonalBlocks(v)}</div>
+      </div>
+
+      <div class="venc-section venc-section-break">
+        <div class="venc-section-title">Sección 2 · Equipos</div>
+        <div class="venc-section-summary">
+          <span class="chip chip-b">${eqCnt.vigente} vigentes</span>
+          <span class="chip chip-r">${eqCnt.por_vencer} por vencer</span>
+          <span class="chip chip-d">${eqCnt.vencido} vencidos</span>
+          <span style="font-size:10px;color:#6B7280;">Vigencia calibración: <strong>${dash.pctEquipos}%</strong></span>
         </div>
+        <div class="venc-section-body">${_buildPdfVencEquiposBlocks(v)}</div>
       </div>
 
       <div class="panel">
@@ -1357,6 +1441,23 @@ const Planificar = (() => {
         .chip-r{background:#FEF3C7;color:#92400E;}
         .chip-d{background:#FEE2E2;color:#991B1B;}
         .mini-kpis{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+        .venc-section{margin-bottom:16px;}
+        .venc-section-title{font-size:12px;font-weight:800;color:#fff;background:linear-gradient(90deg,#0A7350,#0A2E23);
+          padding:10px 14px;border-radius:8px 8px 0 0;text-transform:uppercase;letter-spacing:0.06em;}
+        .venc-section-summary{font-size:10px;color:#6B7280;padding:8px 14px;background:#F9FAFB;
+          border:1px solid #E5E7EB;border-bottom:none;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+        .venc-section-body{background:#fff;border:1px solid #E5E7EB;border-top:none;border-radius:0 0 10px 10px;padding:14px;}
+        .venc-section-break{margin-top:20px;border-top:3px solid #0A7350;padding-top:4px;}
+        .venc-entity{margin-bottom:4px;}
+        .venc-entity-gap{margin-top:14px;padding-top:14px;border-top:1px dashed #D1D5DB;}
+        .venc-entity-hdr{background:#F0FDF4;border-left:4px solid #0A7350;padding:8px 12px;margin-bottom:8px;border-radius:0 6px 6px 0;}
+        .venc-entity-name{font-size:12px;font-weight:700;color:#0A2E23;display:block;}
+        .venc-entity-meta{font-size:10px;color:#6B7280;}
+        .venc-tbl{width:100%;border-collapse:collapse;font-size:10px;}
+        .venc-tbl th{background:#E8F5F0;color:#0A2E23;padding:6px 8px;text-align:left;font-weight:600;}
+        .venc-tbl td{padding:6px 8px;border-bottom:1px solid #E5E7EB;color:#374151;}
+        .venc-tbl tr:nth-child(even) td{background:#F9FAFB;}
+        .venc-empty{padding:16px;text-align:center;color:#6B7280;font-size:11px;}
         .footer{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px;padding-top:14px;
           border-top:2px solid #0A7350;}
         .footer-lbl{font-size:9px;text-transform:uppercase;color:#6B7280;letter-spacing:0.04em;}
@@ -1370,6 +1471,8 @@ const Planificar = (() => {
           .no-print{display:none!important;}
           body{padding-top:12px;background:#fff;}
           .panel,.kpi{box-shadow:none;border:1px solid #E5E7EB;}
+          .venc-section-break{page-break-before:always;border-top:none;padding-top:0;}
+          .venc-entity{page-break-inside:avoid;}
         }
       </style></head><body>
       <div class="toolbar no-print">
