@@ -71,8 +71,10 @@ const Store = (() => {
       draft: getPlanificarDraft(),
       saved_at: new Date().toISOString(),
     };
-    _idbSet('snapshot', snap);
-    _idbSet(KEY, state);
+    return Promise.all([
+      _idbSet('snapshot', snap),
+      _idbSet(KEY, state),
+    ]);
   }
 
   function load() {

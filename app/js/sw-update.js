@@ -91,6 +91,7 @@ const SwUpdate = (() => {
     if (banner) {
       const txt = banner.querySelector('.sw-update-text');
       if (txt) txt.textContent = label;
+      _bindReloadBtn();
       return;
     }
 
@@ -101,8 +102,66 @@ const SwUpdate = (() => {
       '<span class="sw-update-text">' + _esc(label) + '</span>' +
       '<button type="button" class="sw-update-btn" id="sw-update-btn">Recargar</button>';
     document.body.appendChild(banner);
-    document.getElementById('sw-update-btn').onclick = reload;
+    _bindReloadBtn();
     document.body.classList.add('has-sw-update');
+  }
+
+  function _bindReloadBtn() {
+    const btn = document.getElementById('sw-update-btn');
+    if (!btn) return;
+    btn.disabled = false;
+    btn.textContent = 'Recargar';
+    btn.onclick = reload;
+  }
+
+  async function _resolveWaitingWorker() {
+    if (_waitingWorker) return _waitingWorker;
+    let reg = _registration;
+    if (!reg && 'serviceWorker' in navigator) {
+      try { reg = await navigator.serviceWorker.getRegistration(); } catch { reg = null; }
+    }
+    if (!reg) return null;
+    if (reg.waiting) return reg.waiting;
+    try { await reg.update(); } catch (e) { console.warn('SwUpdate: reg.update', e); }
+    if (reg.waiting) return reg.waiting;
+    if (reg.installing) {
+      await new Promise(resolve => {
+        const w = reg.installing;
+        const done = () => { w.removeEventListener('statechange', onState); resolve(); };
+        const onState = () => {
+          if (w.state === 'installed' || w.state === 'activated') done();
+        };
+        w.addEventListener('statechange', onState);
+        setTimeout(done, 3000);
+      });
+    }
+    return reg.waiting || null;
+  }
+
+  async function _applyUpdateAndReload() {
+    if (_reloading) return;
+    _reloading = true;
+
+    const worker = await _resolveWaitingWorker();
+    if (worker) {
+      _waitingWorker = worker;
+      try {
+        worker.postMessage('SKIP_WAITING');
+      } catch (e) {
+        console.warn('SwUpdate: skipWaiting', e);
+      }
+      await new Promise(resolve => {
+        const t = setTimeout(resolve, 2500);
+        const onChange = () => {
+          clearTimeout(t);
+          navigator.serviceWorker.removeEventListener('controllerchange', onChange);
+          resolve();
+        };
+        navigator.serviceWorker.addEventListener('controllerchange', onChange);
+      });
+    }
+
+    window.location.reload();
   }
 
   function hideBanner() {
@@ -113,18 +172,31 @@ const SwUpdate = (() => {
     _waitingWorker  = null;
   }
 
-  function reload() {
-    const doReload = () => {
-      if (_waitingWorker) {
-        _waitingWorker.postMessage('SKIP_WAITING');
-        return;
+  async function reload() {
+    const btn = document.getElementById('sw-update-btn');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Actualizando…';
+    }
+
+    try {
+      if (typeof Store !== 'undefined' && Store.flush) {
+        await Store.flush();
       }
-      location.reload();
-    };
-    if (typeof Store !== 'undefined' && Store.flush) {
-      Store.flush().finally(doReload);
-    } else {
-      doReload();
+    } catch (e) {
+      console.warn('SwUpdate: flush before reload', e);
+    }
+
+    try {
+      await _applyUpdateAndReload();
+    } catch (e) {
+      console.warn('SwUpdate: reload failed', e);
+      _reloading = false;
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Recargar';
+      }
+      window.location.reload();
     }
   }
 
