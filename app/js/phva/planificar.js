@@ -64,6 +64,7 @@ const Planificar = (() => {
   let _resultadosOpen = false;
   let _marcoOpen      = false;
   let _vencOpen       = false;
+  let _vencTab        = 'personal';
   let _marcoOpenSubs  = { general: true };
   let _diagItems      = null;
   let _diagEst        = null;
@@ -421,50 +422,216 @@ const Planificar = (() => {
 
   function _vencBadgeInfo() {
     const v = _venc || Vencimientos.getVencimientos(_currentEst());
-    const estados = Vencimientos.ITEMS.map(it => Vencimientos.estado(v[it.id], it.meses).estado);
+    const estados = Vencimientos.ITEMS.map(it => Vencimientos.estado(v[it.id], it).estado);
     if (estados.includes('vencido'))       return { text: 'Vencido', cls: 'estado-chip estado-D', style: '' };
     if (estados.includes('por_vencer'))    return { text: 'Por vencer', cls: 'estado-chip estado-R', style: '' };
     if (estados.includes('sin_registrar')) return { text: 'Pendiente', cls: '', style: _pendienteStyle() };
     return { text: 'Vigente', cls: 'estado-chip estado-B', style: '' };
   }
 
-  function _vencDetalle(fecha, meses) {
-    const e = Vencimientos.estado(fecha, meses);
+  function _vencEstadoLabel(est_) {
+    if (est_ === 'vencido') return { cls: 'estado-D', label: 'Vencido' };
+    if (est_ === 'por_vencer') return { cls: 'estado-R', label: 'Por vencer' };
+    if (est_ === 'sin_registrar') return { cls: '', label: 'Sin registrar' };
+    return { cls: 'estado-B', label: 'Vigente' };
+  }
+
+  function _vencEstadoTable(grupo) {
+    const v     = _venc || Vencimientos.getVencimientos(_currentEst());
+    const items = Vencimientos.itemsGrupo(grupo);
+    return `
+      <table style="width:100%;border-collapse:collapse;font-size:var(--text-xs);">
+        <thead><tr style="background:var(--emerald-2);color:#fff;">
+          <th style="padding:8px;text-align:left;">Documento / Soporte</th>
+          <th style="padding:8px;text-align:left;width:100px;">Vencimiento</th>
+          <th style="padding:8px;text-align:center;width:88px;">Estado</th>
+          <th style="padding:8px;text-align:center;width:72px;">Archivo</th>
+        </tr></thead>
+        <tbody>
+          ${items.map((it, i) => {
+            const e     = Vencimientos.estado(v[it.id], it);
+            const st    = _vencEstadoLabel(e.estado);
+            const arch  = Vencimientos.getArchivo(v, it.id);
+            const prox  = e.proximo
+              ? new Date(e.proximo + 'T00:00:00').toLocaleDateString('es-CO') : '—';
+            return `
+          <tr style="background:${i % 2 === 0 ? 'var(--color-white)' : 'var(--color-surface)'};">
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);font-weight:600;">${_escAttr(it.label)}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${prox}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);text-align:center;">
+              <span class="estado-chip ${st.cls}">${st.label}</span></td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);text-align:center;color:${arch ? 'var(--color-bueno)' : 'var(--color-ink3)'};">
+              ${arch ? '✓' : '—'}</td>
+          </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  function _vencDetalle(fecha, item) {
+    const e = Vencimientos.estado(fecha, item);
     if (e.estado === 'sin_registrar') {
       return `<div style="font-size:var(--text-xs);color:var(--color-ink3);margin-top:6px;">Sin registrar aún.</div>`;
     }
-    const cls   = e.estado === 'vencido' ? 'estado-D' : e.estado === 'por_vencer' ? 'estado-R' : 'estado-B';
-    const label = e.estado === 'vencido' ? 'Vencido' : e.estado === 'por_vencer' ? 'Por vencer' : 'Vigente';
+    const st = _vencEstadoLabel(e.estado);
     const proximoTexto = new Date(e.proximo + 'T00:00:00').toLocaleDateString('es-CO');
+    const labelFecha = item.tipoFecha === 'vencimiento' ? 'Vence el' : 'Próximo vencimiento';
     return `
       <div style="font-size:var(--text-sm);color:var(--color-ink);margin-top:6px;">
-        Próximo vencimiento: <strong>${proximoTexto}</strong>
+        ${labelFecha}: <strong>${proximoTexto}</strong>
+        ${e.dias !== null && e.estado === 'por_vencer' ? `<span style="color:var(--color-regular);"> (${e.dias} días)</span>` : ''}
       </div>
-      <span class="estado-chip ${cls}" style="margin-top:4px;">${label}</span>`;
+      <span class="estado-chip ${st.cls}" style="margin-top:4px;">${st.label}</span>`;
+  }
+
+  function _vencArchivoHtml(it) {
+    const v    = _venc || Vencimientos.getVencimientos(_currentEst());
+    const arch = Vencimientos.getArchivo(v, it.id);
+    if (!arch) {
+      return `
+        <button type="button" onclick="Planificar.subirSoporteVenc('${it.id}')"
+          style="margin-top:8px;width:100%;padding:10px;cursor:pointer;
+            border:1.5px dashed var(--color-border);border-radius:var(--radius-md);
+            background:var(--color-surface);color:var(--color-ink2);font-size:13px;">
+          📎 ${_escAttr(it.archivoLabel)}
+        </button>`;
+    }
+    const esImg = arch.tipo && arch.tipo.startsWith('image/');
+    return `
+      <div style="margin-top:8px;padding:10px 12px;border:1px solid var(--color-border);
+        border-radius:var(--radius-md);background:var(--color-surface);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div style="font-size:var(--text-xs);color:var(--color-ink2);min-width:0;">
+            <strong style="color:var(--color-ink);">📎 ${_escAttr(arch.nombre)}</strong>
+            <div style="color:var(--color-ink3);margin-top:2px;">Subido · ${new Date(arch.subido_en).toLocaleDateString('es-CO')}</div>
+          </div>
+          <button type="button" onclick="Planificar.eliminarSoporteVenc('${it.id}')"
+            style="flex-shrink:0;background:none;border:none;color:var(--color-deficiente);
+              font-size:18px;cursor:pointer;padding:4px;">✕</button>
+        </div>
+        ${esImg ? `<img src="${arch.data}" alt="soporte" style="margin-top:8px;max-width:100%;max-height:120px;border-radius:8px;border:1px solid var(--color-border);">` : ''}
+      </div>
+      <button type="button" onclick="Planificar.subirSoporteVenc('${it.id}')"
+        style="margin-top:6px;width:100%;padding:8px;cursor:pointer;
+          border:1px dashed var(--color-border);border-radius:var(--radius-md);
+          background:transparent;color:var(--color-ink3);font-size:12px;">
+        Reemplazar archivo</button>`;
   }
 
   function _renderVencimientosBody() {
-    const v = _venc || Vencimientos.getVencimientos(_currentEst());
-    const secciones = Vencimientos.ITEMS.map((it, i) => {
-      const esUltima = i === Vencimientos.ITEMS.length - 1;
-      return `
-      <div style="${esUltima ? '' : 'padding-bottom:var(--sp-md);margin-bottom:var(--sp-md);border-bottom:1px dashed var(--color-border);'}">
-        <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:2px;">
-          ${_escAttr(it.label)}</div>
-        <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:6px;">
-          Periodicidad: ${_escAttr(Vencimientos.periodicidadTexto(it.meses))}</div>
-        <span class="norma-badge">${_escAttr(it.norma)}</span>
-        <div class="form-group" style="margin-top:8px;">
-          <label class="form-label" for="inp-venc-${it.id}">${_escAttr(it.campoLabel)}</label>
-          <input class="form-input" type="date" id="inp-venc-${it.id}" value="${_escAttr(v[it.id])}"
-            onchange="Planificar.actualizarVenc('${it.id}', this.value)">
+    const v      = _venc || Vencimientos.getVencimientos(_currentEst());
+    const grupo  = _vencTab;
+    const meta   = Vencimientos.GRUPOS[grupo];
+    const items  = Vencimientos.itemsGrupo(grupo);
+    const res    = Vencimientos.resumenGrupo(v, grupo);
+    const resSt  = _vencEstadoLabel(res === 'sin_registrar' ? 'sin_registrar' : res);
+
+    return `
+      <div style="display:flex;gap:8px;margin-bottom:var(--sp-md);">
+        ${['personal', 'equipos'].map(g => {
+          const active = g === grupo;
+          const m = Vencimientos.GRUPOS[g];
+          return `
+          <button type="button" onclick="Planificar.vencTab('${g}')"
+            style="flex:1;padding:12px 10px;border-radius:var(--radius-md);cursor:pointer;
+              border:2px solid ${active ? 'var(--color-accent)' : 'var(--color-border)'};
+              background:${active ? 'var(--color-primary-bg)' : 'var(--color-white)'};
+              font-size:var(--text-sm);font-weight:${active ? 700 : 500};
+              color:${active ? 'var(--color-primary)' : 'var(--color-ink2)'};">
+            ${m.label}
+          </button>`;
+        }).join('')}
+      </div>
+
+      <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:var(--sp-md);">
+        <div style="background:var(--emerald-2);color:#fff;padding:10px 14px;">
+          <div style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">
+            Seguimiento normativo · ${Vencimientos.NORMA_BASE}</div>
+          <div style="font-size:var(--text-sm);font-weight:700;margin-top:4px;">${meta.label}</div>
         </div>
-        ${_vencDetalle(v[it.id], it.meses)}
-      </div>`;
-    }).join('');
-    return secciones + `
+        <div style="padding:10px 14px;background:var(--color-surface);border-bottom:1px solid var(--color-border);
+          font-size:var(--text-xs);color:var(--color-ink3);display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <span>${meta.desc}</span>
+          <span class="estado-chip ${resSt.cls}">${resSt.label}</span>
+        </div>
+        <div style="overflow-x:auto;">${_vencEstadoTable(grupo)}</div>
+      </div>
+
+      ${items.map((it, i) => {
+        const esUltima = i === items.length - 1;
+        return `
+        <div style="${esUltima ? '' : 'padding-bottom:var(--sp-md);margin-bottom:var(--sp-md);border-bottom:1px dashed var(--color-border);'}">
+          <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:2px;">
+            ${_escAttr(it.label)}</div>
+          <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:6px;">
+            Periodicidad: ${_escAttr(Vencimientos.periodicidadTexto(it))}</div>
+          <span class="norma-badge">${_escAttr(it.norma)}</span>
+          <div class="form-group" style="margin-top:8px;">
+            <label class="form-label" for="inp-venc-${it.id}">${_escAttr(it.campoLabel)}</label>
+            <input class="form-input" type="date" id="inp-venc-${it.id}" value="${_escAttr(v[it.id])}"
+              onchange="Planificar.actualizarVenc('${it.id}', this.value)">
+          </div>
+          ${_vencDetalle(v[it.id], it)}
+          ${_vencArchivoHtml(it)}
+        </div>`;
+      }).join('')}
+
       <button type="button" class="btn btn-primary" style="margin-top:var(--sp-md);" onclick="Planificar.guardarVencimientos()">
-        Guardar</button>`;
+        Guardar vencimientos</button>`;
+  }
+
+  function vencTab(tab) {
+    _vencTab = tab;
+    const inner = document.querySelector('#acc-body-vencimientos .acc-body-inner');
+    if (inner) inner.innerHTML = _renderVencimientosBody();
+  }
+
+  function subirSoporteVenc(itemId) {
+    let inp = document.getElementById('_venc-soporte-input');
+    if (!inp) {
+      inp = document.createElement('input');
+      inp.type = 'file';
+      inp.id = '_venc-soporte-input';
+      inp.accept = 'image/*,application/pdf';
+      inp.style.display = 'none';
+      inp.addEventListener('change', _onSoporteVenc);
+      document.body.appendChild(inp);
+    }
+    inp.dataset.itemId = itemId;
+    inp.value = '';
+    inp.click();
+  }
+
+  function _onSoporteVenc(e) {
+    const file   = e.target.files[0];
+    const itemId = e.target.dataset.itemId;
+    if (!file || !itemId || !_venc) return;
+    if (file.size > 3 * 1024 * 1024) {
+      Router.toast('⚠ Archivo muy grande (máx. 3 MB)');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      Vencimientos.setArchivo(_venc, itemId, {
+        nombre: file.name,
+        tipo: file.type || 'application/octet-stream',
+        data: ev.target.result,
+        subido_en: new Date().toISOString(),
+      });
+      const inner = document.querySelector('#acc-body-vencimientos .acc-body-inner');
+      if (inner) inner.innerHTML = _renderVencimientosBody();
+      _setCardState('vencimientos', _vencOpen, _vencBadgeInfo());
+      Router.toast('📎 Soporte adjuntado');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function eliminarSoporteVenc(itemId) {
+    if (!_venc) return;
+    Vencimientos.setArchivo(_venc, itemId, null);
+    const inner = document.querySelector('#acc-body-vencimientos .acc-body-inner');
+    if (inner) inner.innerHTML = _renderVencimientosBody();
+    Router.toast('Soporte eliminado');
   }
 
   function actualizarVenc(campo, valor) {
@@ -788,5 +955,5 @@ const Planificar = (() => {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, diagEvaluar, diagNavegar, marcoSub, actualizarVenc, guardarVencimientos };
+  return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, diagEvaluar, diagNavegar, marcoSub, actualizarVenc, guardarVencimientos, vencTab, subirSoporteVenc, eliminarSoporteVenc };
 })();
