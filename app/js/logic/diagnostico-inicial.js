@@ -93,10 +93,23 @@ const DiagnosticoInicial = (() => {
     return ITEMS.map(it => ({ id: it.id, condicion: '', calificacion: '', accion: '', prioridad: '' }));
   }
 
+  function prioridadAuto(calificacion) {
+    if (!calificacion || calificacion === 'NA') return '';
+    const MAP = { B: 'Baja', R: 'Media', D: 'Alta' };
+    return MAP[calificacion] || '';
+  }
+
   function getDiagnostico(est) {
     try {
       const raw = localStorage.getItem(_key(est));
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const data = JSON.parse(raw);
+        data.items = (data.items || []).map(it => ({
+          ...it,
+          prioridad: prioridadAuto(it.calificacion),
+        }));
+        return data;
+      }
     } catch {}
     return { items: _vacio(), actualizado_en: null };
   }
@@ -111,5 +124,5 @@ const DiagnosticoInicial = (() => {
     return items.filter(it => it.calificacion).length;
   }
 
-  return { ITEMS, getDiagnostico, saveDiagnostico, contarCompletados };
+  return { ITEMS, getDiagnostico, saveDiagnostico, contarCompletados, prioridadAuto };
 })();

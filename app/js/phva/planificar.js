@@ -575,16 +575,7 @@ const Planificar = (() => {
           <label class="form-label" for="di-accion-${def.id}">Acción requerida</label>
           <input class="form-input" type="text" id="di-accion-${def.id}" value="${_escAttr(it.accion)}"
             placeholder="Indique la acción correctiva sugerida"
-            onchange="Planificar.actualizarDiagItem('${def.id}','accion',this.value)" style="margin-bottom:8px;">
-
-          <label class="form-label" for="di-prio-${def.id}">Prioridad</label>
-          <select class="form-select" id="di-prio-${def.id}" style="margin-bottom:8px;"
-            onchange="Planificar.actualizarDiagItem('${def.id}','prioridad',this.value)">
-            <option value="" ${!it.prioridad ? 'selected' : ''}>Seleccionar…</option>
-            <option value="Alta" ${it.prioridad === 'Alta' ? 'selected' : ''}>Alta</option>
-            <option value="Media" ${it.prioridad === 'Media' ? 'selected' : ''}>Media</option>
-            <option value="Baja" ${it.prioridad === 'Baja' ? 'selected' : ''}>Baja</option>
-          </select>` : ''}
+            onchange="Planificar.actualizarDiagItem('${def.id}','accion',this.value)" style="margin-bottom:8px;">` : ''}
       ` : `
         <div style="padding:20px;background:var(--color-surface);border-radius:var(--radius-md);
           text-align:center;color:var(--color-ink3);font-size:13px;
@@ -621,12 +612,8 @@ const Planificar = (() => {
     if (valor === 'NA') {
       it.condicion = '';
       it.accion    = '';
-      it.prioridad = '';
-    } else if (valor === 'D' && !it.prioridad) {
-      it.prioridad = 'Alta';
-    } else if (valor === 'R' && !it.prioridad) {
-      it.prioridad = 'Media';
     }
+    it.prioridad = DiagnosticoInicial.prioridadAuto(valor);
     _diagEst = _currentEst();
     DiagnosticoInicial.saveDiagnostico(_diagEst, _diagItems);
     _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
