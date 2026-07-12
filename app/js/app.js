@@ -71,10 +71,10 @@
 
   /* ── Home ────────────────────────────────────────── */
   const FASE_ICONS = {
-    P: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/><path d="M8 4h8a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M6 6h-.5A1.5 1.5 0 0 0 4 7.5v12A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18.5 6H18"/><path d="M9 12h6M9 16h6"/></svg>',
-    H: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5l1.5 1.5l2.5-2.5"/><path d="M3.5 12.5l1.5 1.5l2.5-2.5"/><path d="M3.5 19.5l1.5 1.5l2.5-2.5"/><path d="M11 6h9M11 13h9M11 20h9"/></svg>',
-    V: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7"/><path d="M4 20h16"/></svg>',
-    A: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9.5 15l1.5 1.5l3-3.5"/></svg>',
+    P: PhvaIcons.tileSvg('P'),
+    H: PhvaIcons.tileSvg('H'),
+    V: PhvaIcons.tileSvg('V'),
+    A: PhvaIcons.tileSvg('A'),
   };
   const FASE_META = {
     P: { fase: 'Fase 1', label: 'Planificar', screen: 'planificar' },

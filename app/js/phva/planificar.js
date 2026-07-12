@@ -89,7 +89,7 @@ const Planificar = (() => {
     return `
       <img src="assets/icons/isotipo-transparente.png" class="watermark-bg" alt="">
       <div class="screen-header">
-        <div class="screen-fase-badge badge-P">📋 PLANIFICAR</div>
+        ${PhvaIcons.badge('P', 'PLANIFICAR')}
         <div class="screen-title">Nuevo Establecimiento</div>
         <div class="screen-subtitle">Complete los datos para iniciar la inspección PSB</div>
       </div>

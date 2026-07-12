@@ -42,6 +42,7 @@ const Actuar = (() => {
       <div class="acta-actions" style="padding:var(--sp-md);display:flex;
         flex-direction:column;gap:var(--sp-sm);background:var(--color-white);
         border-bottom:1px solid var(--color-border);position:sticky;top:0;z-index:10;">
+        ${PhvaIcons.badge('A', 'ACTUAR', 'font-size:11px;padding:3px 8px;margin-bottom:6px;')}
         <div style="font-size:11px;font-weight:700;color:var(--color-ink3);
           text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;">
           📄 ${_esc(inspeccion.numero_acta)} · ${_esc(inspeccion.establecimiento.nombre)}</div>

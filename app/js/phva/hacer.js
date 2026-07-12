@@ -66,7 +66,7 @@ const Hacer = (() => {
     const pct = sc.pct_cumplimiento || 0;
     return `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <div class="screen-fase-badge badge-H" style="font-size:11px;padding:3px 8px;">🔍 HACER</div>
+        ${PhvaIcons.badge('H', 'HACER', 'font-size:11px;padding:3px 8px;')}
         <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-size:11px;color:var(--color-ink3)">Cumplimiento:</span>
           <span style="font-size:14px;font-weight:900;color:${Scores.getColor(pct)}">${pct}%</span>

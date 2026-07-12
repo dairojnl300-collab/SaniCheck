@@ -30,7 +30,7 @@ const Verificar = (() => {
       <img src="assets/icons/isotipo-transparente.png" class="watermark-bg" alt="">
       <div style="padding:var(--sp-md);">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-md);">
-          <div class="screen-fase-badge badge-V">📊 VERIFICAR</div>
+          ${PhvaIcons.badge('V', 'VERIFICAR')}
           <span style="font-size:11px;color:var(--color-ink3);max-width:190px;
             overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
             ${_esc(inspeccion.establecimiento.nombre)}</span>
