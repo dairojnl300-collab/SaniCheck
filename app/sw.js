@@ -1,11 +1,13 @@
 // Service Worker — SaniCheck — Offline-first completo
 
 const APP_VERSION = '4.0.0';
-const CACHE = 'sanicheck-' + APP_VERSION;
+const BUILD_HASH = 'f568ac7ea75c';
+const CACHE = 'sanicheck-' + BUILD_HASH;
 
 const ASSETS = [
   './index.html',
   './manifest.json',
+  './version.json',
   './css/brand.css',
   './js/store.js',
   './js/router.js',
@@ -36,11 +38,28 @@ const ASSETS = [
 ];
 
 function _versionPayload() {
-  return { type: 'VERSION', version: APP_VERSION, cache: CACHE };
+  return { type: 'VERSION', version: APP_VERSION, build: BUILD_HASH, cache: CACHE };
+}
+
+function _notifyClients(msg) {
+  return self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+    .then(clients => { clients.forEach(c => c.postMessage(msg)); });
 }
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(c => c.addAll(ASSETS))
+      .then(() => {
+        if (self.registration && self.registration.active) {
+          return _notifyClients({
+            type: 'UPDATE_AVAILABLE',
+            version: APP_VERSION,
+            build: BUILD_HASH,
+          });
+        }
+      })
+  );
 });
 
 self.addEventListener('message', e => {
@@ -62,16 +81,24 @@ self.addEventListener('activate', e => {
         keys.filter(k => k !== CACHE).map(k => caches.delete(k))
       ))
       .then(() => self.clients.claim())
-      .then(() => self.clients.matchAll({ type: 'window' }))
-      .then(clients => {
-        clients.forEach(c => c.postMessage({ type: 'ACTIVATED', version: APP_VERSION }));
-      })
+      .then(() => _notifyClients({ type: 'ACTIVATED', version: APP_VERSION, build: BUILD_HASH }))
   );
 });
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
+
+  // version.json y sw.js — siempre red primero (detección de actualizaciones)
+  if (url.pathname.endsWith('/version.json') || url.pathname.endsWith('/sw.js')) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        if (res && res.status === 200) return res;
+        return caches.match(e.request);
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
 
   // Google Fonts — network-first con fallback silencioso
   if (url.hostname.includes('fonts.g')) {

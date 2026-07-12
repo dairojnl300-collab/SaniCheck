@@ -73,6 +73,11 @@ const About = (() => {
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;
         padding:10px 0;border-bottom:1px dashed var(--color-border);">
+        <span>Hash de build</span>
+        <strong style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-ink2);">${_esc(info.build || '—')}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;
+        padding:10px 0;border-bottom:1px dashed var(--color-border);">
         <span>Nombre de caché</span>
         <strong style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--color-ink2);">${_esc(info.cache)}</strong>
       </div>
