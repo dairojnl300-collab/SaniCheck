@@ -534,10 +534,10 @@ const Planificar = (() => {
           return `
           <button type="button" onclick="Planificar.vencTab('${g}')"
             style="flex:1;padding:12px 10px;border-radius:var(--radius-md);cursor:pointer;
-              border:2px solid ${active ? 'var(--color-accent)' : 'var(--color-border)'};
-              background:${active ? 'var(--color-primary-bg)' : 'var(--color-white)'};
-              font-size:var(--text-sm);font-weight:${active ? 700 : 500};
-              color:${active ? 'var(--color-primary)' : 'var(--color-ink2)'};">
+              border:2px solid ${active ? 'var(--color-accent)' : 'var(--emerald-2)'};
+              background:${active ? 'var(--emerald-2)' : 'var(--emerald)'};
+              font-size:var(--text-sm);font-weight:${active ? 700 : 600};
+              color:#fff;">
             ${m.label}
           </button>`;
         }).join('')}
