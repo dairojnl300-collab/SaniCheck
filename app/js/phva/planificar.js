@@ -1244,6 +1244,114 @@ const Planificar = (() => {
       </div>`;
   }
 
+  function _buildPdfResultadosDiagnostico() {
+    const { rated, d, r, b, critList } = _resultadosData();
+    if (!rated.length) {
+      return `<div style="border:1px solid #E5E7EB;border-radius:8px;padding:16px;text-align:center;color:#6B7280;font-size:11px;">
+        Aún no hay ítems calificados. Guarda el diagnóstico con al menos una calificación para ver resultados aquí.</div>`;
+    }
+
+    const estNombre = _escAttr(_draftVal('inp-nombre') || 'Establecimiento');
+    const estNit    = _escAttr(_draftVal('inp-nit') || '—');
+    const fecha     = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    const resumenTable = `
+      <table style="width:100%;border-collapse:collapse;font-size:10px;">
+        <thead><tr style="background:#0A7350;color:#fff;">
+          <th style="padding:8px;text-align:left;">Indicador</th>
+          <th style="padding:8px;text-align:center;width:90px;">Cantidad</th>
+          <th style="padding:8px;text-align:left;">Estado</th>
+        </tr></thead>
+        <tbody>
+          <tr style="background:#fff;">
+            <td style="padding:8px;border-bottom:1px solid #E5E7EB;font-weight:600;">Aspectos deficientes</td>
+            <td style="padding:8px;border-bottom:1px solid #E5E7EB;text-align:center;font-weight:700;color:#991B1B;">${d.length}</td>
+            <td style="padding:8px;border-bottom:1px solid #E5E7EB;"><span class="chip chip-d">Crítico</span></td>
+          </tr>
+          <tr style="background:#F9FAFB;">
+            <td style="padding:8px;border-bottom:1px solid #E5E7EB;font-weight:600;">Aspectos regulares</td>
+            <td style="padding:8px;border-bottom:1px solid #E5E7EB;text-align:center;font-weight:700;color:#D97706;">${r.length}</td>
+            <td style="padding:8px;border-bottom:1px solid #E5E7EB;"><span class="chip chip-r">Por mejorar</span></td>
+          </tr>
+          <tr style="background:#fff;">
+            <td style="padding:8px;border-bottom:1px solid #E5E7EB;font-weight:600;">Aspectos en buen estado</td>
+            <td style="padding:8px;border-bottom:1px solid #E5E7EB;text-align:center;font-weight:700;color:#065F46;">${b.length}</td>
+            <td style="padding:8px;border-bottom:1px solid #E5E7EB;"><span class="chip chip-b">Conforme</span></td>
+          </tr>
+        </tbody>
+      </table>`;
+
+    const docHeader = `
+      <div style="border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;margin-bottom:12px;">
+        <div style="background:#0A7350;color:#fff;padding:12px 14px;">
+          <div style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.85;">
+            ECODESA · SaniCheck · Documento oficial</div>
+          <div style="font-size:14px;font-weight:700;margin-top:4px;letter-spacing:-0.01em;">
+            Resultado del Diagnóstico Inicial</div>
+        </div>
+        <div style="padding:10px 14px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;
+          font-size:10px;color:#6B7280;line-height:1.6;">
+          <strong style="color:#0A2E23;">Establecimiento:</strong> ${estNombre}<br>
+          <strong style="color:#0A2E23;">NIT:</strong> ${estNit} ·
+          <strong style="color:#0A2E23;">Fecha de consulta:</strong> ${fecha}
+        </div>
+        <div style="padding:12px 14px;font-size:10px;color:#6B7280;font-style:italic;
+          border-bottom:1px solid #E5E7EB;">
+          Resumen consolidado del perfil sanitario inicial. Los hallazgos deficientes y regulares requieren seguimiento
+          según prioridad automática asignada (Alta · Media · Baja).</div>
+        <div style="overflow-x:auto;">${resumenTable}</div>
+      </div>`;
+
+    if (!critList.length) {
+      return docHeader + `
+        <div style="border:1px solid #065F46;border-radius:8px;overflow:hidden;">
+          <div style="padding:14px 16px;background:#D1FAE5;text-align:center;">
+            <div style="font-size:12px;font-weight:700;color:#065F46;margin-bottom:4px;">✓ Sin hallazgos críticos</div>
+            <div style="font-size:10px;color:#065F46;">
+              Mantener buenas prácticas y actualizar el diagnóstico ante cambios en infraestructura o procesos.</div>
+          </div>
+        </div>`;
+    }
+
+    const hallazgosRows = critList.map((it, i) => {
+      const isD   = it.calificacion === 'D';
+      const chip  = isD ? 'chip-d' : 'chip-r';
+      const label = isD ? 'Deficiente' : 'Regular';
+      return `
+        <tr style="background:${i % 2 === 0 ? '#fff' : '#F9FAFB'};">
+          <td style="padding:8px;border-bottom:1px solid #E5E7EB;color:#6B7280;font-weight:600;">${i + 1}</td>
+          <td style="padding:8px;border-bottom:1px solid #E5E7EB;font-weight:600;">${_escAttr(it.texto)}</td>
+          <td style="padding:8px;border-bottom:1px solid #E5E7EB;"><span class="chip ${chip}">${label}</span></td>
+          <td style="padding:8px;border-bottom:1px solid #E5E7EB;color:#6B7280;">${_escAttr(it.prioridad || '—')}</td>
+          <td style="padding:8px;border-bottom:1px solid #E5E7EB;color:#374151;">${_escAttr(it.accion || it.condicion || '—')}</td>
+        </tr>`;
+    }).join('');
+
+    const hallazgosTable = `
+      <table style="width:100%;border-collapse:collapse;font-size:10px;">
+        <thead><tr style="background:#0A7350;color:#fff;">
+          <th style="padding:8px;text-align:left;width:28px;">#</th>
+          <th style="padding:8px;text-align:left;">Aspecto evaluado</th>
+          <th style="padding:8px;text-align:left;width:88px;">Calificación</th>
+          <th style="padding:8px;text-align:left;width:72px;">Prioridad</th>
+          <th style="padding:8px;text-align:left;">Acción requerida</th>
+        </tr></thead>
+        <tbody>${hallazgosRows}</tbody>
+      </table>`;
+
+    return docHeader + `
+      <div style="border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;
+          padding:10px 12px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;">
+          <span style="font-size:12px;font-weight:700;color:#0A2E23;">
+            Hallazgos Prioritarios (${critList.length})</span>
+          <span style="font-size:10px;color:#6B7280;">
+            ${d.length} crítico${d.length !== 1 ? 's' : ''} · ${r.length} por mejorar</span>
+        </div>
+        <div style="overflow-x:auto;">${hallazgosTable}</div>
+      </div>`;
+  }
+
   function _buildDashboardPdfHtml() {
     const est     = _currentEst();
     const nombre  = _draftVal('inp-nombre') || 'Establecimiento';
@@ -1262,8 +1370,6 @@ const Planificar = (() => {
     const pct = _calcDiagPct(rated);
     const estG = _estadoGeneral(pct);
 
-    const deficientes = rated.filter(it => it.calificacion === 'D');
-
     const v    = _venc || Vencimientos.getVencimientos(est);
     const dash = Vencimientos.getDashboard(v);
     const persRows = Vencimientos.getPersonalRows(v, '').filter(row => row.itemId !== 'cedula');
@@ -1273,16 +1379,6 @@ const Planificar = (() => {
 
     const responsable = _draftVal('inp-responsable') || _draftVal('inp-inspector') || '—';
     const proxVisita  = _proximaVisita(v, dash);
-
-    const defRows = deficientes.length
-      ? deficientes.map((it, i) => `
-        <tr>
-          <td>${i + 1}</td>
-          <td>${_escAttr(it.texto)}</td>
-          <td>${_escAttr(it.norma)}</td>
-          <td><span class="chip chip-d">Alta</span></td>
-        </tr>`).join('')
-      : `<tr><td colspan="4" style="text-align:center;color:#065F46;padding:12px;">Sin aspectos deficientes registrados</td></tr>`;
 
     const proxRows = dash.proximos30.length
       ? dash.proximos30.slice(0, 6).map(p => `
@@ -1354,12 +1450,8 @@ const Planificar = (() => {
         </div>
       </div>
 
-      <div class="panel">
-        <div class="panel-h">Hallazgos Prioritarios</div>
-        <table>
-          <thead><tr><th>#</th><th>Aspecto</th><th>Normativa</th><th>Prioridad</th></tr></thead>
-          <tbody>${defRows}</tbody>
-        </table>
+      <div class="panel" style="padding:0;background:transparent;box-shadow:none;">
+        ${_buildPdfResultadosDiagnostico()}
       </div>
 
       <div class="venc-section">
