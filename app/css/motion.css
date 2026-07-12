@@ -1,0 +1,114 @@
+/* motion.css — Transiciones premium SaniCheck (aislado, sin dependencias) */
+
+:root {
+  --motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-dur: 380ms;
+}
+
+/* ── Navegación entre pantallas PHVA ───────────────────────── */
+#screen-area {
+  transform-origin: center top;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+@keyframes scExit {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 0; transform: scale(0.98) translateY(-6px); }
+}
+
+@keyframes scEnter {
+  from { opacity: 0; transform: scale(1.02) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+#screen-area.is-exiting {
+  animation: scExit var(--motion-dur) var(--motion-ease) forwards;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+
+#screen-area.is-entering {
+  animation: scEnter var(--motion-dur) var(--motion-ease) forwards;
+  will-change: opacity, transform;
+}
+
+/* ── Barras de progreso (Aspecto X de Y) ───────────────────── */
+.progress-fill {
+  transition: width var(--motion-dur) var(--motion-ease) !important;
+}
+
+/* ── Micro-interacción botones principales ─────────────────── */
+.btn-primary,
+.btn-accent,
+.btn-solid,
+.home-nueva-btn,
+.phva-step,
+.sw-update-btn,
+.eval-btn {
+  transition:
+    transform 280ms var(--motion-ease),
+    box-shadow 280ms var(--motion-ease),
+    background 200ms ease,
+    border-color 200ms ease,
+    opacity 200ms ease;
+}
+
+.btn-primary:active,
+.btn-accent:active,
+.btn-solid:active,
+.home-nueva-btn:active,
+.phva-step:active:not(:disabled),
+.sw-update-btn:active {
+  transform: scale(0.97) !important;
+}
+
+.eval-btn:active {
+  transform: scale(0.97);
+}
+
+.eval-btn.selected {
+  transition: transform 320ms var(--motion-ease), box-shadow 280ms var(--motion-ease), background 200ms ease;
+}
+
+/* ── Acordeones (Control de Vencimientos, etc.) ────────────── */
+.acc-body-wrap {
+  transition:
+    max-height var(--motion-dur) var(--motion-ease),
+    opacity 300ms var(--motion-ease) !important;
+}
+
+.acc-header {
+  transition: transform 200ms var(--motion-ease);
+}
+
+.acc-header:active {
+  transform: scale(0.99);
+}
+
+/* ── Banner actualización PWA ──────────────────────────────── */
+@keyframes swBannerEnter {
+  0%   { opacity: 0; transform: translateY(-100%); }
+  72%  { opacity: 1; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.sw-update-banner.sw-banner-enter {
+  animation: swBannerEnter 420ms var(--motion-ease) forwards;
+}
+
+/* ── Accesibilidad ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  #screen-area.is-exiting,
+  #screen-area.is-entering,
+  .sw-update-banner.sw-banner-enter {
+    animation: none !important;
+  }
+  .progress-fill,
+  .acc-body-wrap,
+  .btn-primary,
+  .btn-accent,
+  .phva-step {
+    transition: none !important;
+  }
+}
