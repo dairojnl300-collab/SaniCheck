@@ -67,6 +67,7 @@ const Planificar = (() => {
   let _marcoOpenSubs  = { general: true };
   let _diagItems      = null;
   let _diagEst        = null;
+  let _diagIdx        = 0;
   let _venc           = null;
   let _vencEst        = null;
 
@@ -528,46 +529,121 @@ const Planificar = (() => {
   }
 
   function _renderDiagnosticoBody(items) {
-    return `
-      ${DiagnosticoInicial.ITEMS.map((def, i) => {
-        const it = items[i];
-        return `
-        <div style="padding-bottom:var(--sp-md);margin-bottom:var(--sp-md);border-bottom:1px dashed var(--color-border);">
-          <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:8px;">
-            ${i + 1}. ${_escAttr(def.texto)}</div>
+    const total     = DiagnosticoInicial.ITEMS.length;
+    const idx       = Math.min(_diagIdx, total - 1);
+    const def       = DiagnosticoInicial.ITEMS[idx];
+    const it        = items[idx];
+    const evaluados = DiagnosticoInicial.contarCompletados(items);
+    const pct       = Math.round((evaluados / total) * 100);
 
+    return `
+      <div class="progress-label">
+        <span>Aspecto <strong>${idx + 1}</strong> de <strong>${total}</strong></span>
+        <span style="color:${pct === 100 ? 'var(--color-bueno)' : 'var(--color-ink3)'};">
+          ${evaluados}/${total} evaluados · ${pct}%</span>
+      </div>
+      <div class="progress-bar" style="margin-bottom:var(--sp-md);">
+        <div class="progress-fill" style="width:${pct || 2}%"></div>
+      </div>
+
+      <div class="aspecto-texto">${_escAttr(def.texto)}</div>
+      <div style="font-size:var(--text-sm);color:var(--color-ink3);line-height:1.55;margin-bottom:var(--sp-sm);text-align:justify;">
+        ${_escAttr(def.descripcion)}</div>
+      <div class="norma-badge">📋 ${_escAttr(def.norma)}</div>
+
+      <div class="eval-group">
+        ${['B', 'R', 'D', 'NA'].map(v => `
+          <button type="button" class="eval-btn eval-btn-${v}${it.calificacion === v ? ' selected' : ''}"
+            onclick="Planificar.diagEvaluar('${v}')">
+            <span class="eval-letter">${v === 'NA' ? 'N/A' : v}</span>
+            <span class="eval-word">${v === 'B' ? 'BUENO' : v === 'R' ? 'REGULAR' : v === 'D' ? 'DEFIC.' : 'NO APLICA'}</span>
+          </button>`).join('')}
+      </div>
+
+      ${it.calificacion === 'NA' ? `
+        <div style="padding:14px;background:#F3F4F6;border-radius:var(--radius-md);
+          text-align:center;color:#6B7280;font-size:13px;border:1px solid #E5E7EB;">
+          ℹ️ No aplica a este establecimiento
+        </div>
+      ` : it.calificacion ? `
+        ${(it.calificacion === 'R' || it.calificacion === 'D') ? `
           <label class="form-label" for="di-cond-${def.id}">Condición encontrada</label>
           <input class="form-input" type="text" id="di-cond-${def.id}" value="${_escAttr(it.condicion)}"
+            placeholder="Describa brevemente la condición observada"
             onchange="Planificar.actualizarDiagItem('${def.id}','condicion',this.value)" style="margin-bottom:8px;">
-
-          <label class="form-label" for="di-calif-${def.id}">Calificación</label>
-          <select class="form-select" id="di-calif-${def.id}" style="margin-bottom:8px;"
-            onchange="Planificar.actualizarDiagItem('${def.id}','calificacion',this.value)">
-            <option value="" ${!it.calificacion ? 'selected' : ''}>Seleccionar…</option>
-            <option value="B" ${it.calificacion === 'B' ? 'selected' : ''}>Bueno</option>
-            <option value="R" ${it.calificacion === 'R' ? 'selected' : ''}>Regular</option>
-            <option value="D" ${it.calificacion === 'D' ? 'selected' : ''}>Deficiente</option>
-          </select>
 
           <label class="form-label" for="di-accion-${def.id}">Acción requerida</label>
           <input class="form-input" type="text" id="di-accion-${def.id}" value="${_escAttr(it.accion)}"
+            placeholder="Indique la acción correctiva sugerida"
             onchange="Planificar.actualizarDiagItem('${def.id}','accion',this.value)" style="margin-bottom:8px;">
 
           <label class="form-label" for="di-prio-${def.id}">Prioridad</label>
-          <select class="form-select" id="di-prio-${def.id}"
+          <select class="form-select" id="di-prio-${def.id}" style="margin-bottom:8px;"
             onchange="Planificar.actualizarDiagItem('${def.id}','prioridad',this.value)">
             <option value="" ${!it.prioridad ? 'selected' : ''}>Seleccionar…</option>
             <option value="Alta" ${it.prioridad === 'Alta' ? 'selected' : ''}>Alta</option>
             <option value="Media" ${it.prioridad === 'Media' ? 'selected' : ''}>Media</option>
             <option value="Baja" ${it.prioridad === 'Baja' ? 'selected' : ''}>Baja</option>
-          </select>
-        </div>`;
-      }).join('')}
-      <button type="button" class="btn btn-primary" onclick="Planificar.guardarDiagnostico()">
-        Guardar diagnóstico</button>
+          </select>` : ''}
+      ` : `
+        <div style="padding:20px;background:var(--color-surface);border-radius:var(--radius-md);
+          text-align:center;color:var(--color-ink3);font-size:13px;
+          border:1px dashed var(--color-border);">
+          Seleccione B / R / D / N·A para registrar la calificación
+        </div>`}
+
+      <div class="checklist-nav" style="margin:var(--sp-md) calc(-1 * var(--sp-md)) 0;padding:var(--sp-md) 0 0;">
+        <button type="button" class="btn btn-outline nav-prev" style="width:auto;padding:10px 16px;"
+          onclick="Planificar.diagNavegar(-1)"${idx === 0 ? ' disabled' : ''}>← Anterior</button>
+        <div class="nav-counter">${idx + 1} / ${total}</div>
+        <button type="button" class="btn ${idx === total - 1 ? 'btn-primary' : 'btn-accent'} nav-next"
+          style="width:auto;padding:10px 16px;"
+          onclick="Planificar.diagNavegar(1)">
+          ${idx === total - 1 ? 'Guardar →' : 'Siguiente →'}</button>
+      </div>
+
       <div style="margin-top:var(--sp-sm);font-size:var(--text-xs);color:var(--color-ink3);text-align:justify;">
         Este diagnóstico debe actualizarse anualmente o tras cambios significativos en infraestructura o procesos.
       </div>`;
+  }
+
+  function _refreshDiagnosticoBody() {
+    const inner = document.querySelector('#acc-body-diagnostico .acc-body-inner');
+    if (inner && _diagItems) inner.innerHTML = _renderDiagnosticoBody(_diagItems);
+  }
+
+  function diagEvaluar(valor) {
+    if (!_diagItems) return;
+    const def = DiagnosticoInicial.ITEMS[_diagIdx];
+    const it  = _diagItems.find(x => x.id === def.id);
+    if (!it) return;
+    it.calificacion = valor;
+    if (valor === 'NA') {
+      it.condicion = '';
+      it.accion    = '';
+      it.prioridad = '';
+    } else if (valor === 'D' && !it.prioridad) {
+      it.prioridad = 'Alta';
+    } else if (valor === 'R' && !it.prioridad) {
+      it.prioridad = 'Media';
+    }
+    _diagEst = _currentEst();
+    DiagnosticoInicial.saveDiagnostico(_diagEst, _diagItems);
+    _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
+    _syncResultados();
+    _refreshDiagnosticoBody();
+  }
+
+  function diagNavegar(dir) {
+    const total = DiagnosticoInicial.ITEMS.length;
+    const next  = _diagIdx + dir;
+    if (next < 0) return;
+    if (next >= total) {
+      if (dir > 0) guardarDiagnostico();
+      return;
+    }
+    _diagIdx = next;
+    _refreshDiagnosticoBody();
   }
 
   function actualizarDiagItem(id, campo, valor) {
@@ -647,5 +723,5 @@ const Planificar = (() => {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, marcoSub, actualizarVenc, guardarVencimientos };
+  return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, diagEvaluar, diagNavegar, marcoSub, actualizarVenc, guardarVencimientos };
 })();
