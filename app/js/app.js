@@ -84,6 +84,63 @@
   };
   const ESTADO_COLOR = { B: 'var(--color-bueno)', R: 'var(--color-regular)', D: 'var(--color-deficiente)' };
 
+  const TRASH_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>';
+
+  let _pendingDeleteId = null;
+
+  function _ensureDeleteModal() {
+    if (document.getElementById('insp-delete-modal')) return;
+    const el = document.createElement('div');
+    el.id = 'insp-delete-modal';
+    el.style.cssText = 'display:none;position:fixed;inset:0;z-index:2000;align-items:center;justify-content:center;padding:var(--sp-md);';
+    el.innerHTML = `
+      <div onclick="_cerrarModalEliminar()" style="position:absolute;inset:0;background:rgba(10,46,35,0.45);"></div>
+      <div style="position:relative;width:100%;max-width:340px;background:var(--color-white);border-radius:var(--radius-md);
+        box-shadow:var(--shadow-lg);padding:var(--sp-lg);border:1px solid var(--color-border);">
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(163,45,45,0.1);color:var(--color-deficiente);
+          display:flex;align-items:center;justify-content:center;margin-bottom:var(--sp-md);">
+          ${TRASH_ICON.replace('width="14" height="14"', 'width="20" height="20"')}
+        </div>
+        <div style="font-size:var(--text-md);font-weight:700;color:var(--color-ink);margin-bottom:6px;">¿Estás seguro?</div>
+        <div style="font-size:var(--text-sm);color:var(--color-ink3);line-height:1.5;margin-bottom:var(--sp-sm);">
+          Esta acción no se puede deshacer.</div>
+        <div id="insp-delete-nombre" style="font-size:var(--text-sm);font-weight:600;color:var(--color-ink);
+          padding:8px 10px;background:var(--color-surface);border-radius:var(--radius-md);margin-bottom:var(--sp-md);"></div>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="btn btn-outline" style="flex:1;padding:10px;" onclick="_cerrarModalEliminar()">Cancelar</button>
+          <button type="button" style="flex:1;padding:10px;border:none;border-radius:var(--radius-md);cursor:pointer;
+            background:rgba(163,45,45,0.12);color:var(--color-deficiente);font-weight:700;font-size:var(--text-sm);"
+            onclick="_confirmarEliminarInsp()">Eliminar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+  }
+
+  window._pedirEliminarInsp = function (id) {
+    const ins = Store.get().inspecciones.find(i => i.id === id);
+    if (!ins) return;
+    _ensureDeleteModal();
+    _pendingDeleteId = id;
+    const nom = document.getElementById('insp-delete-nombre');
+    if (nom) nom.textContent = ins.establecimiento?.nombre || 'Inspección';
+    document.getElementById('insp-delete-modal').style.display = 'flex';
+  };
+
+  window._cerrarModalEliminar = function () {
+    _pendingDeleteId = null;
+    const m = document.getElementById('insp-delete-modal');
+    if (m) m.style.display = 'none';
+  };
+
+  window._confirmarEliminarInsp = function () {
+    if (!_pendingDeleteId) return;
+    const id = _pendingDeleteId;
+    _cerrarModalEliminar();
+    Store.deleteInspeccion(id);
+    Router.toast('✓ Inspección eliminada');
+    Router.go('home');
+  };
+
   function renderHome() {
     const { inspecciones } = Store.get();
     const esDemo    = Licencias.esDemo();
@@ -128,6 +185,12 @@
             <div class="inspeccion-card-progress">
               <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
             </div>
+            <button type="button" onclick="event.stopPropagation();_pedirEliminarInsp('${ins.id}')"
+              style="margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;
+                padding:8px;border:1px solid rgba(163,45,45,0.25);border-radius:var(--radius-md);
+                background:rgba(163,45,45,0.06);color:var(--color-deficiente);font-size:11px;font-weight:600;cursor:pointer;">
+              ${TRASH_ICON} Eliminar
+            </button>
           </div>`;
         }).join('');
 
@@ -188,6 +251,7 @@
   function init() {
     Store.load();
     SwUpdate.init();
+    _ensureDeleteModal();
     if (Licencias.esValida()) {
       Router.go('home');
     } else {

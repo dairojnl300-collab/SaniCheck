@@ -41,10 +41,27 @@ const Store = (() => {
     save();
   }
 
+  function _estSlug(est) {
+    return String((est && (est.nit || est.nombre)) || 'default').replace(/[^a-zA-Z0-9]/g, '_');
+  }
+
+  function _purgeEstData(est) {
+    const slug = _estSlug(est);
+    ['vencimientos_', 'diagnostico_', 'psb_checklist_'].forEach(prefix => {
+      try { localStorage.removeItem(prefix + slug); } catch {}
+    });
+  }
+
   function deleteInspeccion(id) {
+    const ins = state.inspecciones.find(i => i.id === id);
     state.inspecciones = state.inspecciones.filter(i => i.id !== id);
     if (state.currentId === id) state.currentId = null;
     save();
+    if (ins && ins.establecimiento) {
+      const slug = _estSlug(ins.establecimiento);
+      const quedan = state.inspecciones.some(i => _estSlug(i.establecimiento) === slug);
+      if (!quedan) _purgeEstData(ins.establecimiento);
+    }
   }
 
   function setUI(partial) { state.ui = { ...state.ui, ...partial }; save(); }
