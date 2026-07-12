@@ -71,8 +71,11 @@ const Planificar = (() => {
   let _vencReqFormOpen    = false;
   let _marcoOpenSubs  = { general: true };
   let _diagItems      = null;
+  let _diagCatalog    = null;
   let _diagEst        = null;
   let _diagIdx        = 0;
+  let _diagModalMode  = 'edit';
+  let _diagModalCal   = '';
   let _venc           = null;
   let _vencEst        = null;
   let _draftTimer     = null;
@@ -140,20 +143,28 @@ const Planificar = (() => {
     }, 500);
   }
 
+  function _persistDiagnostico() {
+    if (!_diagItems || !_diagCatalog) return;
+    _diagEst = _currentEst();
+    const data = DiagnosticoInicial.saveDiagnostico(_diagEst, _diagItems, _diagCatalog);
+    _diagItems   = data.items;
+    _diagCatalog = data.catalog;
+    Store.flush();
+  }
+
   function _scheduleDiagSave() {
     if (!_diagItems) return;
     clearTimeout(_diagSaveTimer);
-    _diagSaveTimer = setTimeout(() => {
-      _diagEst = _currentEst();
-      DiagnosticoInicial.saveDiagnostico(_diagEst, _diagItems);
-      Store.flush();
-    }, 500);
+    _diagSaveTimer = setTimeout(_persistDiagnostico, 500);
   }
 
   function render() {
     _restoreUiFromDraft();
     _diagEst   = _currentEst();
-    _diagItems = DiagnosticoInicial.getDiagnostico(_diagEst).items;
+    const diag = DiagnosticoInicial.getDiagnostico(_diagEst);
+    _diagItems   = diag.items;
+    _diagCatalog = diag.catalog;
+    _diagIdx     = Math.min(_diagIdx, Math.max(0, _diagCatalog.length - 1));
     if (!_venc) {
       _vencEst = _currentEst();
       _venc    = Vencimientos.getVencimientos(_vencEst);
@@ -411,10 +422,12 @@ const Planificar = (() => {
   }
 
   function _diagBadgeInfo() {
-    const items = _diagItems || DiagnosticoInicial.getDiagnostico(_diagEst || _currentEst()).items;
+    const catalog = _diagCatalog || DiagnosticoInicial.getCatalog(_diagEst || _currentEst());
+    const items   = _diagItems || DiagnosticoInicial.getDiagnostico(_diagEst || _currentEst()).items;
+    const total   = catalog.length;
     const completados = DiagnosticoInicial.contarCompletados(items);
-    if (completados === 13) return { text: 'Completado', cls: 'estado-chip estado-B', style: '' };
-    if (completados > 0)    return { text: `${completados} de 13 completados`, cls: 'estado-chip estado-R', style: '' };
+    if (completados === total && total > 0) return { text: 'Completado', cls: 'estado-chip estado-B', style: '' };
+    if (completados > 0) return { text: `${completados} de ${total} completados`, cls: 'estado-chip estado-R', style: '' };
     return { text: 'Pendiente', cls: '', style: _pendienteStyle() };
   }
 
@@ -423,10 +436,16 @@ const Planificar = (() => {
   }
 
   function _resultadosData() {
-    const saved = DiagnosticoInicial.getDiagnostico(_currentEst()).items;
-    const rated = saved
-      .map((it, i) => ({ ...it, texto: DiagnosticoInicial.ITEMS[i].texto }))
-      .filter(it => it.calificacion);
+    const est     = _currentEst();
+    const diag    = DiagnosticoInicial.getDiagnostico(est);
+    const catMap  = Object.fromEntries(diag.catalog.map(c => [c.id, c]));
+    const rated   = diag.items
+      .map(it => ({
+        ...it,
+        texto: catMap[it.id]?.texto || '',
+        norma: catMap[it.id]?.norma || '',
+      }))
+      .filter(it => it.calificacion && it.texto);
     const d = rated.filter(it => it.calificacion === 'D');
     const r = rated.filter(it => it.calificacion === 'R');
     const b = rated.filter(it => it.calificacion === 'B');
@@ -1359,9 +1378,15 @@ const Planificar = (() => {
     const ciudad  = _draftVal('inp-ciudad') || '';
     const fechaGen = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-    const saved = DiagnosticoInicial.getDiagnostico(est).items;
-    const rated = saved
-      .map((it, i) => ({ ...it, texto: DiagnosticoInicial.ITEMS[i].texto, norma: DiagnosticoInicial.ITEMS[i].norma }))
+    const saved   = DiagnosticoInicial.getDiagnostico(est);
+    const catalog = saved.catalog;
+    const catMap  = Object.fromEntries(catalog.map(c => [c.id, c]));
+    const rated   = saved.items
+      .map(it => ({
+        ...it,
+        texto: catMap[it.id]?.texto || '',
+        norma: catMap[it.id]?.norma || '',
+      }))
       .filter(it => it.calificacion);
     const b  = rated.filter(it => it.calificacion === 'B').length;
     const r  = rated.filter(it => it.calificacion === 'R').length;
@@ -1411,7 +1436,7 @@ const Planificar = (() => {
             <div class="kpi" style="border-top:3px solid #0E86C8;">
               <div class="kpi-lbl">Aspectos evaluados</div>
               <div class="kpi-val" style="color:#0E86C8;">${rated.length}</div>
-              <div class="kpi-sub">de 13 ítems diagnóstico</div>
+              <div class="kpi-sub">de ${catalog.length} ítems diagnóstico</div>
             </div>
           </div>
 
@@ -1778,14 +1803,24 @@ const Planificar = (() => {
   }
 
   function _renderDiagnosticoBody(items) {
-    const total     = DiagnosticoInicial.ITEMS.length;
+    const catalog = _diagCatalog || DiagnosticoInicial.getCatalog(_currentEst());
+    const total     = catalog.length || 1;
     const idx       = Math.min(_diagIdx, total - 1);
-    const def       = DiagnosticoInicial.ITEMS[idx];
-    const it        = items[idx];
+    const def       = catalog[idx];
+    const it        = items.find(x => x.id === def?.id) || items[idx];
     const evaluados = DiagnosticoInicial.contarCompletados(items);
     const pct       = Math.round((evaluados / total) * 100);
+    const desc      = def?.descripcion || def?.texto || '';
 
     return `
+      <div style="display:flex;justify-content:flex-end;margin-bottom:var(--sp-sm);">
+        <button type="button" class="btn btn-outline" style="width:auto;padding:8px 14px;font-size:var(--text-xs);
+          display:inline-flex;align-items:center;gap:6px;"
+          onclick="Planificar.abrirDiagItemModal()">
+          ${AppIcons.row('sliders', 'Editar/Agregar ítem', 12)}
+        </button>
+      </div>
+
       <div class="progress-label">
         <span>Aspecto <strong>${idx + 1}</strong> de <strong>${total}</strong></span>
         <span style="color:${pct === 100 ? 'var(--color-bueno)' : 'var(--color-ink3)'};">
@@ -1795,26 +1830,26 @@ const Planificar = (() => {
         <div class="progress-fill" style="width:${pct || 2}%"></div>
       </div>
 
-      <div class="aspecto-texto">${_escAttr(def.texto)}</div>
+      <div class="aspecto-texto">${_escAttr(def?.texto || '')}</div>
       <div style="font-size:var(--text-sm);color:var(--color-ink3);line-height:1.55;margin-bottom:var(--sp-sm);text-align:justify;">
-        ${_escAttr(def.descripcion)}</div>
-      <div class="norma-badge">${AppIcons.icon('scale', 12)} ${_escAttr(def.norma)}</div>
+        ${_escAttr(desc)}</div>
+      <div class="norma-badge">${AppIcons.icon('scale', 12)} ${_escAttr(def?.norma || '')}</div>
 
       <div class="eval-group">
         ${['B', 'R', 'D', 'NA'].map(v => `
-          <button type="button" class="eval-btn eval-btn-${v}${it.calificacion === v ? ' selected' : ''}"
+          <button type="button" class="eval-btn eval-btn-${v}${it?.calificacion === v ? ' selected' : ''}"
             onclick="Planificar.diagEvaluar('${v}')">
             <span class="eval-letter">${v === 'NA' ? 'N/A' : v}</span>
             <span class="eval-word">${v === 'B' ? 'BUENO' : v === 'R' ? 'REGULAR' : v === 'D' ? 'DEFIC.' : 'NO APLICA'}</span>
           </button>`).join('')}
       </div>
 
-      ${it.calificacion === 'NA' ? `
+      ${it?.calificacion === 'NA' ? `
         <div style="padding:14px;background:#F3F4F6;border-radius:var(--radius-md);
           text-align:center;color:#6B7280;font-size:13px;border:1px solid #E5E7EB;">
           ${AppIcons.row('info', 'No aplica a este establecimiento', 12)}
         </div>
-      ` : it.calificacion ? `
+      ` : it?.calificacion ? `
         ${(it.calificacion === 'R' || it.calificacion === 'D') ? `
           <label class="form-label" for="di-cond-${def.id}">Condición encontrada</label>
           <input class="form-input" type="text" id="di-cond-${def.id}" value="${_escAttr(it.condicion)}"
@@ -1853,8 +1888,9 @@ const Planificar = (() => {
   }
 
   function diagEvaluar(valor) {
-    if (!_diagItems) return;
-    const def = DiagnosticoInicial.ITEMS[_diagIdx];
+    if (!_diagItems || !_diagCatalog) return;
+    const def = _diagCatalog[_diagIdx];
+    if (!def) return;
     const it  = _diagItems.find(x => x.id === def.id);
     if (!it) return;
     it.calificacion = valor;
@@ -1871,7 +1907,7 @@ const Planificar = (() => {
   }
 
   function diagNavegar(dir) {
-    const total = DiagnosticoInicial.ITEMS.length;
+    const total = (_diagCatalog || []).length;
     const next  = _diagIdx + dir;
     if (next < 0) return;
     if (next >= total) {
@@ -1893,11 +1929,156 @@ const Planificar = (() => {
   }
 
   function guardarDiagnostico() {
-    if (!_diagItems) return;
-    _diagEst = _currentEst();
-    DiagnosticoInicial.saveDiagnostico(_diagEst, _diagItems);
+    if (!_diagItems || !_diagCatalog) return;
+    _persistDiagnostico();
     Router.toast('Diagnóstico guardado');
     _syncAccordion();
+  }
+
+  function _ensureDiagItemModal() {
+    if (document.getElementById('diag-item-modal')) return;
+    const el = document.createElement('div');
+    el.id = 'diag-item-modal';
+    el.style.cssText = 'display:none;position:fixed;inset:0;z-index:2000;align-items:center;justify-content:center;padding:var(--sp-md);';
+    el.innerHTML = `
+      <div onclick="Planificar.cerrarDiagItemModal()" style="position:absolute;inset:0;background:rgba(10,46,35,0.45);"></div>
+      <div style="position:relative;width:100%;max-width:420px;background:var(--color-white);border-radius:var(--radius-md);
+        box-shadow:var(--shadow-lg);padding:var(--sp-lg);border:1px solid var(--color-border);max-height:90vh;overflow-y:auto;">
+        <div style="font-size:var(--text-md);font-weight:700;color:var(--color-ink);margin-bottom:var(--sp-sm);"
+          id="diag-modal-title">Editar ítem</div>
+        <div style="display:flex;gap:6px;margin-bottom:var(--sp-md);">
+          <button type="button" id="diag-modal-tab-edit" class="btn btn-accent" style="flex:1;padding:8px;font-size:var(--text-xs);"
+            onclick="Planificar.setDiagItemModalMode('edit')">Editar actual</button>
+          <button type="button" id="diag-modal-tab-add" class="btn btn-outline" style="flex:1;padding:8px;font-size:var(--text-xs);"
+            onclick="Planificar.setDiagItemModalMode('add')">Agregar nuevo</button>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="diag-modal-texto">Pregunta / aspecto a evaluar</label>
+          <input class="form-input" type="text" id="diag-modal-texto" placeholder="Ej: Cadena de frío en almacenamiento">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="diag-modal-norma">Referencia normativa</label>
+          <input class="form-input" type="text" id="diag-modal-norma" placeholder="Ej: Dec. 3075/1997 Art. 8">
+        </div>
+        <div class="form-label" style="margin-bottom:8px;">Calificación</div>
+        <div class="eval-group" id="diag-modal-eval" style="margin-bottom:var(--sp-md);">
+          ${['B', 'R', 'D', 'NA'].map(v => `
+            <button type="button" class="eval-btn eval-btn-${v}" data-cal="${v}"
+              onclick="Planificar.diagModalEvaluar('${v}')">
+              <span class="eval-letter">${v === 'NA' ? 'N/A' : v}</span>
+              <span class="eval-word">${v === 'B' ? 'BUENO' : v === 'R' ? 'REGULAR' : v === 'D' ? 'DEFIC.' : 'NO APLICA'}</span>
+            </button>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="btn btn-outline" style="flex:1;padding:10px;"
+            onclick="Planificar.cerrarDiagItemModal()">Cancelar</button>
+          <button type="button" class="btn btn-primary" style="flex:1;padding:10px;"
+            onclick="Planificar.guardarDiagItemModal()">Guardar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+  }
+
+  function _refreshDiagModalEvalBtns() {
+    document.querySelectorAll('#diag-modal-eval .eval-btn').forEach(btn => {
+      const v = btn.getAttribute('data-cal');
+      btn.classList.toggle('selected', v === _diagModalCal);
+    });
+  }
+
+  function setDiagItemModalMode(mode) {
+    _diagModalMode = mode === 'add' ? 'add' : 'edit';
+    const editTab = document.getElementById('diag-modal-tab-edit');
+    const addTab  = document.getElementById('diag-modal-tab-add');
+    const title   = document.getElementById('diag-modal-title');
+    const texto   = document.getElementById('diag-modal-texto');
+    const norma   = document.getElementById('diag-modal-norma');
+    if (editTab) {
+      editTab.className = _diagModalMode === 'edit' ? 'btn btn-accent' : 'btn btn-outline';
+      editTab.style.cssText = 'flex:1;padding:8px;font-size:var(--text-xs);';
+    }
+    if (addTab) {
+      addTab.className = _diagModalMode === 'add' ? 'btn btn-accent' : 'btn btn-outline';
+      addTab.style.cssText = 'flex:1;padding:8px;font-size:var(--text-xs);';
+    }
+    if (_diagModalMode === 'add') {
+      if (title) title.textContent = 'Agregar ítem';
+      if (texto) texto.value = '';
+      if (norma) norma.value = '';
+      _diagModalCal = '';
+    } else {
+      if (title) title.textContent = 'Editar ítem actual';
+      const def = (_diagCatalog || [])[_diagIdx];
+      const it  = def ? (_diagItems || []).find(x => x.id === def.id) : null;
+      if (texto) texto.value = def?.texto || '';
+      if (norma) norma.value = def?.norma || '';
+      _diagModalCal = it?.calificacion || '';
+    }
+    _refreshDiagModalEvalBtns();
+  }
+
+  function abrirDiagItemModal() {
+    _ensureDiagItemModal();
+    _diagModalMode = 'edit';
+    setDiagItemModalMode('edit');
+    document.getElementById('diag-item-modal').style.display = 'flex';
+  }
+
+  function cerrarDiagItemModal() {
+    const m = document.getElementById('diag-item-modal');
+    if (m) m.style.display = 'none';
+  }
+
+  function diagModalEvaluar(valor) {
+    _diagModalCal = valor;
+    _refreshDiagModalEvalBtns();
+  }
+
+  function guardarDiagItemModal() {
+    const texto = document.getElementById('diag-modal-texto')?.value.trim();
+    const norma = document.getElementById('diag-modal-norma')?.value.trim();
+    if (!texto || !norma) {
+      Router.toast('Complete la pregunta y la referencia normativa');
+      return;
+    }
+    if (!_diagCatalog) _diagCatalog = DiagnosticoInicial.getCatalog(_currentEst());
+    if (!_diagItems) _diagItems = DiagnosticoInicial.getDiagnostico(_currentEst()).items;
+
+    if (_diagModalMode === 'add') {
+      const id = DiagnosticoInicial.newCustomId();
+      _diagCatalog.push({ id, texto, norma, descripcion: texto, custom: true });
+      _diagItems.push({
+        id,
+        condicion: '',
+        calificacion: _diagModalCal || '',
+        accion: '',
+        prioridad: DiagnosticoInicial.prioridadAuto(_diagModalCal || ''),
+      });
+      _diagIdx = _diagCatalog.length - 1;
+    } else {
+      const def = _diagCatalog[_diagIdx];
+      if (!def) return;
+      def.texto = texto;
+      def.norma = norma;
+      if (!def.descripcion || def.custom) def.descripcion = texto;
+      const it = _diagItems.find(x => x.id === def.id);
+      if (it && _diagModalCal) {
+        it.calificacion = _diagModalCal;
+        if (_diagModalCal === 'NA') {
+          it.condicion = '';
+          it.accion    = '';
+        }
+        it.prioridad = DiagnosticoInicial.prioridadAuto(_diagModalCal);
+      }
+    }
+
+    cerrarDiagItemModal();
+    _persistDiagnostico();
+    _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
+    _syncResultados();
+    _refreshDiagnosticoBody();
+    _schedulePlanificarDraft();
+    Router.toast(_diagModalMode === 'add' ? 'Ítem agregado' : 'Ítem actualizado');
   }
 
   function _hydrateFormFromDraft() {
@@ -1980,6 +2161,7 @@ const Planificar = (() => {
   }
 
   return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, diagEvaluar, diagNavegar, marcoSub,
+    abrirDiagItemModal, cerrarDiagItemModal, setDiagItemModalMode, diagModalEvaluar, guardarDiagItemModal,
     actualizarVenc, guardarVencimientos, vencTab, vencFiltro, subirSoporteVenc, eliminarSoporteVenc, verSoporteVenc,
     agregarTrabajador, actualizarTrabajador, agregarEquipo, actualizarEquipo, exportarDashboardPDF,
     toggleReqForm, cancelarRequerimiento, crearRequerimiento, actualizarRequerimiento, eliminarRequerimiento, toggleReqSinVencNuevo };

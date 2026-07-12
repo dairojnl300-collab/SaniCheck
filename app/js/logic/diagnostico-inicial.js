@@ -89,8 +89,12 @@ const DiagnosticoInicial = (() => {
     return 'diagnostico_' + String(id).replace(/[^a-zA-Z0-9]/g, '_');
   }
 
-  function _vacio() {
-    return ITEMS.map(it => ({ id: it.id, condicion: '', calificacion: '', accion: '', prioridad: '' }));
+  function _defaultCatalog() {
+    return ITEMS.map(it => ({ ...it }));
+  }
+
+  function newCustomId() {
+    return 'di_c_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
   }
 
   function prioridadAuto(calificacion) {
@@ -99,23 +103,46 @@ const DiagnosticoInicial = (() => {
     return MAP[calificacion] || '';
   }
 
+  function _mergeItems(catalog, items) {
+    const map = {};
+    (items || []).forEach(it => { map[it.id] = it; });
+    return catalog.map(def => {
+      const saved = map[def.id];
+      const cal   = saved?.calificacion || '';
+      return {
+        id: def.id,
+        condicion: saved?.condicion || '',
+        calificacion: cal,
+        accion: saved?.accion || '',
+        prioridad: prioridadAuto(cal),
+      };
+    });
+  }
+
   function getDiagnostico(est) {
     try {
       const raw = localStorage.getItem(_key(est));
       if (raw) {
         const data = JSON.parse(raw);
-        data.items = (data.items || []).map(it => ({
-          ...it,
-          prioridad: prioridadAuto(it.calificacion),
-        }));
-        return data;
+        const catalog = Array.isArray(data.catalog) && data.catalog.length
+          ? data.catalog
+          : _defaultCatalog();
+        const items = _mergeItems(catalog, data.items);
+        return { items, catalog, actualizado_en: data.actualizado_en || null };
       }
     } catch {}
-    return { items: _vacio(), actualizado_en: null };
+    const catalog = _defaultCatalog();
+    return { items: _mergeItems(catalog, null), catalog, actualizado_en: null };
   }
 
-  function saveDiagnostico(est, items) {
-    const data = { items, actualizado_en: new Date().toISOString() };
+  function getCatalog(est) {
+    return getDiagnostico(est).catalog;
+  }
+
+  function saveDiagnostico(est, items, catalog) {
+    const cat = Array.isArray(catalog) && catalog.length ? catalog : _defaultCatalog();
+    const merged = _mergeItems(cat, items);
+    const data = { items: merged, catalog: cat, actualizado_en: new Date().toISOString() };
     localStorage.setItem(_key(est), JSON.stringify(data));
     return data;
   }
@@ -124,5 +151,7 @@ const DiagnosticoInicial = (() => {
     return items.filter(it => it.calificacion).length;
   }
 
-  return { ITEMS, getDiagnostico, saveDiagnostico, contarCompletados, prioridadAuto };
+  return {
+    ITEMS, getDiagnostico, getCatalog, saveDiagnostico, contarCompletados, prioridadAuto, newCustomId,
+  };
 })();
