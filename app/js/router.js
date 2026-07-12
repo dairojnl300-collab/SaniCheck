@@ -2,7 +2,7 @@
 
 const Router = (() => {
   const SCREEN_FASE = {
-    home: null, planificar: 'P', personalizar: 'P', hacer: 'H', verificar: 'V', actuar: 'A',
+    home: null, about: null, planificar: 'P', personalizar: 'P', hacer: 'H', verificar: 'V', actuar: 'A',
   };
 
   let currentScreen = 'home';
@@ -32,6 +32,7 @@ const Router = (() => {
       try { if (currentScreen === 'hacer')       Hacer.attach();        } catch(e) {}
       try { if (currentScreen === 'verificar')  Verificar.attach();  } catch(e) {}
       try { if (currentScreen === 'actuar')     Actuar.attach();     } catch(e) {}
+      try { if (currentScreen === 'about')      About.attach();      } catch(e) {}
     } else {
       area.innerHTML = _comingSoon(currentScreen);
     }

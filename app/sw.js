@@ -1,6 +1,8 @@
-// Service Worker — SaniCheck v2 — Offline-first completo
+// Service Worker — SaniCheck — Offline-first completo
 
-const CACHE = 'sanicheck-v10';
+const APP_VERSION = '4.0.0';
+const CACHE = 'sanicheck-' + APP_VERSION;
+
 const ASSETS = [
   './index.html',
   './manifest.json',
@@ -8,9 +10,12 @@ const ASSETS = [
   './js/store.js',
   './js/router.js',
   './js/licencias.js',
+  './js/sw-update.js',
+  './js/about.js',
   './js/app.js',
   './js/logic/psb-data.js',
   './js/logic/checklist-config.js',
+  './js/logic/diagnostico-inicial.js',
   './js/logic/vencimientos.js',
   './js/logic/observaciones.js',
   './js/logic/scores.js',
@@ -30,12 +35,24 @@ const ASSETS = [
   './assets/icons/isotipo-transparente.png',
 ];
 
+function _versionPayload() {
+  return { type: 'VERSION', version: APP_VERSION, cache: CACHE };
+}
+
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
 });
 
 self.addEventListener('message', e => {
-  if (e.data === 'SKIP_WAITING') self.skipWaiting();
+  if (e.data === 'SKIP_WAITING') {
+    self.skipWaiting();
+    return;
+  }
+  if (e.data && e.data.type === 'GET_VERSION') {
+    const payload = _versionPayload();
+    if (e.ports && e.ports[0]) e.ports[0].postMessage(payload);
+    else if (e.source) e.source.postMessage(payload);
+  }
 });
 
 self.addEventListener('activate', e => {
@@ -45,6 +62,10 @@ self.addEventListener('activate', e => {
         keys.filter(k => k !== CACHE).map(k => caches.delete(k))
       ))
       .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then(clients => {
+        clients.forEach(c => c.postMessage({ type: 'ACTIVATED', version: APP_VERSION }));
+      })
   );
 });
 

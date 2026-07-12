@@ -58,6 +58,23 @@
       background: none; border: none; color: rgba(241,245,249,0.5);
       font-size: 20px; cursor: pointer; padding: 0 2px; line-height: 1;
     }
+
+    /* Banner actualización Service Worker */
+    .sw-update-banner {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 10000;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      flex-wrap: wrap; padding: 10px 16px;
+      background: #0A7350; color: #fff;
+      font-size: 13px; font-weight: 600;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
+    .sw-update-btn {
+      background: #fff; color: #0A7350; border: none;
+      padding: 7px 16px; border-radius: 999px;
+      font-weight: 700; font-size: 12px; cursor: pointer; white-space: nowrap;
+    }
+    body.has-sw-update .phva-topbar { margin-top: 44px; }
+    body.has-sw-update #screen-area { scroll-padding-top: 44px; }
   </style>
 </head>
 <body>
@@ -134,6 +151,8 @@
   <script src="js/logic/hallazgos.js"></script>
   <script src="js/logic/fotos.js"></script>
   <script src="js/licencias.js"></script>
+  <script src="js/sw-update.js"></script>
+  <script src="js/about.js"></script>
   <script src="js/phva/planificar.js"></script>
   <script src="js/phva/personalizar.js"></script>
   <script src="js/phva/hacer.js"></script>
