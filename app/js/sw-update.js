@@ -114,11 +114,18 @@ const SwUpdate = (() => {
   }
 
   function reload() {
-    if (_waitingWorker) {
-      _waitingWorker.postMessage('SKIP_WAITING');
-      return;
+    const doReload = () => {
+      if (_waitingWorker) {
+        _waitingWorker.postMessage('SKIP_WAITING');
+        return;
+      }
+      location.reload();
+    };
+    if (typeof Store !== 'undefined' && Store.flush) {
+      Store.flush().finally(doReload);
+    } else {
+      doReload();
     }
-    location.reload();
   }
 
   async function _resolveWorkerVersion(worker) {

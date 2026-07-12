@@ -251,19 +251,24 @@
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  function init() {
+  async function init() {
     Store.load();
+    Store.bindLifecycleFlush();
+    await Store.recoverFromIdb();
     SwUpdate.init();
     _ensureDeleteModal();
     if (Licencias.esValida()) {
-      Router.go('home');
+      const ui = Store.get().ui || {};
+      const screens = ['home', 'about', 'planificar', 'personalizar', 'hacer', 'verificar', 'actuar'];
+      const screen  = screens.includes(ui.screen) ? ui.screen : 'home';
+      Router.go(screen);
     } else {
       Router.go('licencia');
     }
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', () => { init(); });
   } else {
     init();
   }

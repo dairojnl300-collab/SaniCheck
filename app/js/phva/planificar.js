@@ -75,12 +75,85 @@ const Planificar = (() => {
   let _diagIdx        = 0;
   let _venc           = null;
   let _vencEst        = null;
+  let _draftTimer     = null;
+  let _diagSaveTimer  = null;
+
+  const FORM_IDS = [
+    'inp-nombre', 'inp-nit', 'inp-direccion', 'inp-barrio', 'inp-ciudad', 'inp-telefono',
+    'inp-correo', 'inp-representante', 'inp-ciiu', 'inp-tipo', 'inp-turnos', 'inp-raciones',
+    'inp-empresa-cliente', 'inp-concepto-sanitario', 'inp-fecha-elaboracion', 'inp-fecha-vigencia',
+    'inp-version-doc', 'inp-responsable-cocina', 'inp-responsable', 'inp-inspector', 'inp-fecha',
+  ];
+
+  function _draftVal(id) {
+    const el = document.getElementById(id);
+    if (el && String(el.value || '').trim()) return el.value.trim();
+    const draft = Store.getPlanificarDraft();
+    return (draft?.form?.[id] || '').trim();
+  }
+
+  function _fv(id) { return _escAttr(_draftVal(id)); }
+
+  function _restoreUiFromDraft() {
+    const d = Store.getPlanificarDraft();
+    if (!d?.ui) return;
+    const u = d.ui;
+    if (typeof u.generalOpen === 'boolean')    _generalOpen    = u.generalOpen;
+    if (typeof u.diagOpen === 'boolean')       _diagOpen       = u.diagOpen;
+    if (typeof u.resultadosOpen === 'boolean') _resultadosOpen = u.resultadosOpen;
+    if (typeof u.marcoOpen === 'boolean')      _marcoOpen      = u.marcoOpen;
+    if (typeof u.vencOpen === 'boolean')       _vencOpen       = u.vencOpen;
+    if (u.vencTab)                             _vencTab        = u.vencTab;
+    if (typeof u.vencFiltroPersonal === 'string') _vencFiltroPersonal = u.vencFiltroPersonal;
+    if (typeof u.vencFiltroEquipos === 'string')  _vencFiltroEquipos  = u.vencFiltroEquipos;
+    if (typeof u.diagIdx === 'number')         _diagIdx        = u.diagIdx;
+    if (u.marcoOpenSubs)                       _marcoOpenSubs  = { ..._marcoOpenSubs, ...u.marcoOpenSubs };
+  }
+
+  function _collectPlanificarDraft() {
+    const form = {};
+    FORM_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      form[id] = el ? (el.value || '').trim() : _draftVal(id);
+    });
+    return {
+      form,
+      ui: {
+        generalOpen: _generalOpen,
+        diagOpen: _diagOpen,
+        resultadosOpen: _resultadosOpen,
+        marcoOpen: _marcoOpen,
+        vencOpen: _vencOpen,
+        vencTab: _vencTab,
+        vencFiltroPersonal: _vencFiltroPersonal,
+        vencFiltroEquipos: _vencFiltroEquipos,
+        diagIdx: _diagIdx,
+        marcoOpenSubs: _marcoOpenSubs,
+      },
+    };
+  }
+
+  function _schedulePlanificarDraft() {
+    clearTimeout(_draftTimer);
+    _draftTimer = setTimeout(() => {
+      Store.savePlanificarDraft(_collectPlanificarDraft());
+    }, 500);
+  }
+
+  function _scheduleDiagSave() {
+    if (!_diagItems) return;
+    clearTimeout(_diagSaveTimer);
+    _diagSaveTimer = setTimeout(() => {
+      _diagEst = _currentEst();
+      DiagnosticoInicial.saveDiagnostico(_diagEst, _diagItems);
+      Store.flush();
+    }, 500);
+  }
 
   function render() {
-    if (!_diagItems) {
-      _diagEst   = _currentEst();
-      _diagItems = DiagnosticoInicial.getDiagnostico(_diagEst).items;
-    }
+    _restoreUiFromDraft();
+    _diagEst   = _currentEst();
+    _diagItems = DiagnosticoInicial.getDiagnostico(_diagEst).items;
     if (!_venc) {
       _vencEst = _currentEst();
       _venc    = Vencimientos.getVencimientos(_vencEst);
@@ -178,6 +251,7 @@ const Planificar = (() => {
     _marcoOpen      = key === 'marco'        ? !_marcoOpen      : false;
     _vencOpen       = key === 'vencimientos' ? !_vencOpen       : false;
     _syncAccordion();
+    _schedulePlanificarDraft();
   }
 
   function _syncAccordion() {
@@ -338,7 +412,7 @@ const Planificar = (() => {
   }
 
   function _currentEst() {
-    return { nombre: _val('inp-nombre'), nit: _val('inp-nit') };
+    return { nombre: _draftVal('inp-nombre'), nit: _draftVal('inp-nit') };
   }
 
   function _resultadosData() {
@@ -675,6 +749,7 @@ const Planificar = (() => {
     _vencNotified = false;
     _refreshVencBody();
     _setCardState('vencimientos', _vencOpen, _vencBadgeInfo());
+    Store.flush();
   }
 
   function _renderRequerimientoCard(v, tr, req) {
@@ -908,12 +983,14 @@ const Planificar = (() => {
   function vencTab(tab) {
     _vencTab = tab;
     _refreshVencBody();
+    _schedulePlanificarDraft();
   }
 
   function vencFiltro(val) {
     if (_vencTab === 'personal') _vencFiltroPersonal = val;
     else _vencFiltroEquipos = val;
     _refreshVencBody();
+    _schedulePlanificarDraft();
   }
 
   function toggleReqForm() {
@@ -1204,47 +1281,50 @@ const Planificar = (() => {
         <div class="form-group">
           <label class="form-label" for="inp-nombre">Nombre / Razón Social *</label>
           <input class="form-input" type="text" id="inp-nombre"
-            placeholder="Ej: Restaurante El Rincón Costeño" autocomplete="organization" required>
+            placeholder="Ej: Restaurante El Rincón Costeño" autocomplete="organization" required
+            value="${_fv('inp-nombre')}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-nit">NIT / CC Propietario *</label>
           <input class="form-input" type="text" id="inp-nit"
-            placeholder="Ej: 800.123.456-7" inputmode="numeric" required>
+            placeholder="Ej: 800.123.456-7" inputmode="numeric" required
+            value="${_fv('inp-nit')}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-direccion">Dirección *</label>
           <input class="form-input" type="text" id="inp-direccion"
-            placeholder="Ej: Cra. 10 # 20-30, Cartagena" required>
+            placeholder="Ej: Cra. 10 # 20-30, Cartagena" required
+            value="${_fv('inp-direccion')}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-barrio">Barrio / Localidad</label>
           <input class="form-input" type="text" id="inp-barrio"
-            placeholder="Ej: Bocagrande">
+            placeholder="Ej: Bocagrande" value="${_fv('inp-barrio')}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-ciudad">Ciudad / Municipio</label>
           <input class="form-input" type="text" id="inp-ciudad"
-            placeholder="Ej: Cartagena de Indias">
+            placeholder="Ej: Cartagena de Indias" value="${_fv('inp-ciudad')}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-telefono">Teléfono / WhatsApp</label>
           <input class="form-input" type="tel" id="inp-telefono"
-            placeholder="Ej: 300 123 4567" inputmode="tel">
+            placeholder="Ej: 300 123 4567" inputmode="tel" value="${_fv('inp-telefono')}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-correo">Correo electrónico</label>
           <input class="form-input" type="email" id="inp-correo"
-            placeholder="Ej: contacto@empresa.com">
+            placeholder="Ej: contacto@empresa.com" value="${_fv('inp-correo')}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-representante">Representante Legal</label>
           <input class="form-input" type="text" id="inp-representante"
-            placeholder="Nombre del representante legal">
+            placeholder="Nombre del representante legal" value="${_fv('inp-representante')}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-ciiu">Actividad Económica (CIIU)</label>
           <input class="form-input" type="text" id="inp-ciiu"
-            placeholder="Ej: 5610 - Expendio a la mesa">
+            placeholder="Ej: 5610 - Expendio a la mesa" value="${_fv('inp-ciiu')}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-tipo">Tipo de establecimiento *</label>
@@ -1264,17 +1344,17 @@ const Planificar = (() => {
         <div class="form-group">
           <label class="form-label" for="inp-turnos">Turnos de producción</label>
           <input class="form-input" type="text" id="inp-turnos"
-            placeholder="Ej: Mañana y tarde">
+            placeholder="Ej: Mañana y tarde" value="${_fv('inp-turnos')}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-raciones">Volumen diario de raciones servidas</label>
           <input class="form-input" type="number" id="inp-raciones"
-            placeholder="Ej: 500" inputmode="numeric" min="0">
+            placeholder="Ej: 500" inputmode="numeric" min="0" value="${_fv('inp-raciones')}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-empresa-cliente">Empresa cliente / contratante</label>
           <input class="form-input" type="text" id="inp-empresa-cliente"
-            placeholder="Ej: Industrias del Caribe S.A.S.">
+            placeholder="Ej: Industrias del Caribe S.A.S." value="${_fv('inp-empresa-cliente')}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-concepto-sanitario">Concepto sanitario vigente</label>
@@ -1287,36 +1367,36 @@ const Planificar = (() => {
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-fecha-elaboracion">Fecha de elaboración</label>
-          <input class="form-input" type="date" id="inp-fecha-elaboracion" value="${_hoy()}">
+          <input class="form-input" type="date" id="inp-fecha-elaboracion" value="${_fv('inp-fecha-elaboracion') || _hoy()}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-fecha-vigencia">Fecha de vigencia</label>
-          <input class="form-input" type="date" id="inp-fecha-vigencia">
+          <input class="form-input" type="date" id="inp-fecha-vigencia" value="${_fv('inp-fecha-vigencia')}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-version-doc">Versión del documento</label>
-          <input class="form-input" type="text" id="inp-version-doc" value="1.0">
+          <input class="form-input" type="text" id="inp-version-doc" value="${_fv('inp-version-doc') || '1.0'}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-responsable-cocina">Responsable — Personal de Cocina/Manipulación</label>
           <input class="form-input" type="text" id="inp-responsable-cocina"
-            placeholder="Nombre de quien vela por BPM en cocina y almacenamiento">
+            placeholder="Nombre de quien vela por BPM en cocina y almacenamiento" value="${_fv('inp-responsable-cocina')}">
         </div>
 
         <div class="form-label" style="margin-top:var(--sp-md);font-weight:700;">Datos de la inspección</div>
         <div class="form-group">
           <label class="form-label" for="inp-responsable">Administrador / Responsable PSB</label>
           <input class="form-input" type="text" id="inp-responsable"
-            placeholder="Nombre del administrador / responsable PSB">
+            placeholder="Nombre del administrador / responsable PSB" value="${_fv('inp-responsable')}">
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-inspector">Profesional *</label>
           <input class="form-input" type="text" id="inp-inspector"
-            value="Ing. Ambiental" required>
+            value="${_fv('inp-inspector') || 'Ing. Ambiental'}" required>
         </div>
         <div class="form-group">
           <label class="form-label" for="inp-fecha">Fecha de inspección</label>
-          <input class="form-input" type="date" id="inp-fecha" value="${_hoy()}" required>
+          <input class="form-input" type="date" id="inp-fecha" value="${_fv('inp-fecha') || _hoy()}" required>
         </div>
       </form>`;
   }
@@ -1407,11 +1487,11 @@ const Planificar = (() => {
       it.accion    = '';
     }
     it.prioridad = DiagnosticoInicial.prioridadAuto(valor);
-    _diagEst = _currentEst();
-    DiagnosticoInicial.saveDiagnostico(_diagEst, _diagItems);
     _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
     _syncResultados();
     _refreshDiagnosticoBody();
+    _scheduleDiagSave();
+    _schedulePlanificarDraft();
   }
 
   function diagNavegar(dir) {
@@ -1424,6 +1504,7 @@ const Planificar = (() => {
     }
     _diagIdx = next;
     _refreshDiagnosticoBody();
+    _schedulePlanificarDraft();
   }
 
   function actualizarDiagItem(id, campo, valor) {
@@ -1431,6 +1512,8 @@ const Planificar = (() => {
     const it = _diagItems.find(x => x.id === id);
     if (it) it[campo] = valor;
     if (campo === 'calificacion') _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
+    _scheduleDiagSave();
+    _schedulePlanificarDraft();
   }
 
   function guardarDiagnostico() {
@@ -1441,9 +1524,25 @@ const Planificar = (() => {
     _syncAccordion();
   }
 
+  function _hydrateFormFromDraft() {
+    const draft = Store.getPlanificarDraft();
+    if (!draft?.form) return;
+    FORM_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      const v  = draft.form[id];
+      if (el && v !== undefined && v !== '') el.value = v;
+    });
+  }
+
   function attach() {
     const form = document.getElementById('form-planificar');
-    if (form) form.addEventListener('submit', _submit);
+    if (form) {
+      form.addEventListener('submit', _submit);
+      _hydrateFormFromDraft();
+      const onDraft = () => _schedulePlanificarDraft();
+      form.addEventListener('input', onDraft);
+      form.addEventListener('change', onDraft);
+    }
   }
 
   function _submit(e) {
@@ -1485,6 +1584,7 @@ const Planificar = (() => {
     inspeccion.inspeccion.fecha = fecha;
 
     Store.upsertInspeccion(inspeccion);
+    Store.clearPlanificarDraft();
     Store.setUI({ aspectoIdx: 0, programaIdx: 0 });
     Router.toast('Establecimiento guardado');
     Router.go('personalizar');

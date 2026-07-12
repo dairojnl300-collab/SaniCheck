@@ -1,7 +1,7 @@
 // Service Worker — SaniCheck — Offline-first completo
 
-const APP_VERSION = '4.6.2';
-const BUILD_HASH = '57733e5a09f4';
+const APP_VERSION = '4.7.0';
+const BUILD_HASH = '2092a3df519a';
 const CACHE = 'sanicheck-' + BUILD_HASH;
 
 const ASSETS = [
@@ -76,6 +76,7 @@ self.addEventListener('message', e => {
 });
 
 self.addEventListener('activate', e => {
+  // Solo elimina cachés de assets antiguos — NUNCA toca localStorage ni IndexedDB del usuario.
   e.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
