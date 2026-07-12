@@ -6,26 +6,36 @@ const Vencimientos = (() => {
   const NORMA_BASE = 'Decreto 1072 de 2015';
   const ALERTA_DIAS = 30;
 
-  const ITEMS = [
-    { id: 'cedula_fecha', grupo: 'personal', label: 'Cédula de ciudadanía',
-      campoLabel: 'Fecha de vencimiento', tipoFecha: 'vencimiento', meses: 0,
-      norma: NORMA_BASE, archivoLabel: 'Soporte — cédula escaneada' },
-    { id: 'carne_fecha', grupo: 'personal', label: 'Carné de manipulador de alimentos',
-      campoLabel: 'Fecha de vencimiento', tipoFecha: 'vencimiento', meses: 0,
-      norma: 'Resolución 2674 de 2013', archivoLabel: 'Soporte — carné vigente' },
-    { id: 'examen_medico_fecha', grupo: 'personal', label: 'Examen médico ocupacional',
-      campoLabel: 'Fecha del último examen', tipoFecha: 'ultimo', meses: 12,
-      norma: 'Resolución 2674 de 2013', archivoLabel: 'Soporte — certificado médico' },
-    { id: 'certificado_manipulacion_fecha', grupo: 'personal', label: 'Certificado de manipulación',
-      campoLabel: 'Fecha del certificado', tipoFecha: 'vencimiento', meses: 0,
-      norma: 'Resolución 2674 de 2013', archivoLabel: 'Soporte — certificado vigencia' },
-    { id: 'capacitacion_bpm_fecha', grupo: 'personal', label: 'Capacitación BPM',
-      campoLabel: 'Fecha de la última capacitación', tipoFecha: 'ultimo', meses: 12,
-      norma: 'Decreto 3075 de 1997, Art. 11', archivoLabel: 'Soporte — certificado capacitación' },
-    { id: 'frotis_fecha', grupo: 'personal', label: 'Frotis de manos y superficies',
-      campoLabel: 'Fecha del último frotis', tipoFecha: 'ultimo', meses: 3,
-      norma: 'Decreto 3075 de 1997', archivoLabel: 'Soporte — informe de laboratorio' },
+  const CEDULA_DOC = {
+    id: 'cedula',
+    label: 'Cédula de ciudadanía',
+    norma: NORMA_BASE,
+    archivoLabel: 'Soporte — cédula escaneada',
+  };
 
+  const DOC_PERSONAL = [
+    { id: 'carne_salud', label: 'Carné salud ocupacional',
+      expId: 'carne_salud_exp', vencId: 'carne_salud_venc',
+      norma: NORMA_BASE + ', Cap. 6 — Seguridad y Salud en el Trabajo',
+      archivoLabel: 'Soporte — carné salud ocupacional' },
+    { id: 'cert_vacunacion', label: 'Certificado de vacunación',
+      expId: 'cert_vacunacion_exp', vencId: 'cert_vacunacion_venc',
+      norma: NORMA_BASE + ', Art. 2.2.4.6.15',
+      archivoLabel: 'Soporte — certificado de vacunación' },
+    { id: 'curso_capacitacion', label: 'Curso / capacitación',
+      expId: 'curso_capacitacion_exp', vencId: 'curso_capacitacion_venc',
+      norma: NORMA_BASE + ', Cap. 6 — Capacitación SST',
+      archivoLabel: 'Soporte — certificado de capacitación' },
+  ];
+
+  const LEGACY_PERSONAL_MAP = {
+    carne_fecha:               { venc: 'carne_salud_venc' },
+    examen_medico_fecha:       { exp: 'carne_salud_exp', venc: 'carne_salud_venc', meses: 12 },
+    certificado_manipulacion_fecha: { venc: 'cert_vacunacion_venc' },
+    capacitacion_bpm_fecha:    { exp: 'curso_capacitacion_exp', venc: 'curso_capacitacion_venc', meses: 12 },
+  };
+
+  const ITEMS = [
     { id: 'mantenimiento_fecha', grupo: 'equipos', label: 'Mantenimiento preventivo',
       campoLabel: 'Fecha del último mantenimiento', tipoFecha: 'ultimo', meses: 3,
       norma: 'Decreto 3075 de 1997', archivoLabel: 'Soporte — orden de mantenimiento' },
@@ -50,7 +60,7 @@ const Vencimientos = (() => {
   ];
 
   const GRUPOS = {
-    personal: { label: 'Personal', desc: 'Soportes personales: cédula, carné y certificados de vigencia.' },
+    personal: { label: 'Personal', desc: 'Cédula (número), carné salud ocupacional, vacunación y capacitación — Decreto 1072/2015.' },
     equipos:  { label: 'Equipos',  desc: 'Soportes de equipos: facturas, manuales y certificados de calibración.' },
   };
 
@@ -59,8 +69,45 @@ const Vencimientos = (() => {
     return 'vencimientos_' + String(id).replace(/[^a-zA-Z0-9]/g, '_');
   }
 
-  function _archivoKey(itemId) { return itemId.replace(/_fecha$/, '') + '_archivo'; }
+  function _archivoKey(itemId) {
+    if (itemId.endsWith('_archivo')) return itemId;
+    if (itemId.endsWith('_fecha')) return itemId.replace(/_fecha$/, '') + '_archivo';
+    return itemId + '_archivo';
+  }
   function _uid(prefix) { return prefix + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  function _addMeses(fecha, meses) {
+    if (!fecha || !meses) return '';
+    const d = new Date(fecha + 'T00:00:00');
+    d.setMonth(d.getMonth() + meses);
+    return d.toISOString().split('T')[0];
+  }
+
+  function _migratePersonalDocs(tr, legacy) {
+    const docs = { ...(tr.documentos || {}) };
+    Object.entries(LEGACY_PERSONAL_MAP).forEach(([oldKey, map]) => {
+      const val = docs[oldKey] || legacy[oldKey] || '';
+      if (!val) return;
+      if (map.exp && !docs[map.exp]) docs[map.exp] = val;
+      if (map.venc && !docs[map.venc]) {
+        docs[map.venc] = map.meses ? _addMeses(val, map.meses) : val;
+      }
+      delete docs[oldKey];
+    });
+    ['cedula_fecha', 'frotis_fecha'].forEach(k => delete docs[k]);
+    tr.documentos = docs;
+    const arch = { ...(tr.archivos || {}) };
+    DOC_PERSONAL.forEach(doc => {
+      const newAk = _archivoKey(doc.id);
+      Object.keys(LEGACY_PERSONAL_MAP).forEach(oldKey => {
+        const oldAk = _archivoKey(oldKey);
+        if (!arch[newAk] && arch[oldAk]) arch[newAk] = arch[oldAk];
+      });
+    });
+    const cedAk = _archivoKey(CEDULA_DOC.id);
+    if (!arch[cedAk] && arch.cedula_archivo) arch[cedAk] = arch.cedula_archivo;
+    tr.archivos = arch;
+  }
 
   function _vacio() {
     const out = { actualizado_en: null, trabajadores: [], equiposLista: [] };
@@ -68,16 +115,27 @@ const Vencimientos = (() => {
       out[it.id] = '';
       out[_archivoKey(it.id)] = null;
     });
+    DOC_PERSONAL.forEach(doc => {
+      out[doc.expId] = '';
+      out[doc.vencId] = '';
+      out[_archivoKey(doc.id)] = null;
+    });
+    out[_archivoKey(CEDULA_DOC.id)] = null;
     return out;
   }
 
   function _syncLegacyFromTrabajador(data, tr) {
     if (!tr || tr.id !== 'tr-default') return;
-    itemsGrupo('personal').forEach(it => {
-      if (tr.documentos && tr.documentos[it.id] !== undefined) data[it.id] = tr.documentos[it.id] || '';
-      const ak = _archivoKey(it.id);
+    DOC_PERSONAL.forEach(doc => {
+      if (tr.documentos) {
+        data[doc.expId] = tr.documentos[doc.expId] || '';
+        data[doc.vencId] = tr.documentos[doc.vencId] || '';
+      }
+      const ak = _archivoKey(doc.id);
       if (tr.archivos && tr.archivos[ak] !== undefined) data[ak] = tr.archivos[ak];
     });
+    const cedAk = _archivoKey(CEDULA_DOC.id);
+    if (tr.archivos && tr.archivos[cedAk] !== undefined) data[cedAk] = tr.archivos[cedAk];
   }
 
   function _syncLegacyFromEquipo(data, eq) {
@@ -92,10 +150,12 @@ const Vencimientos = (() => {
     if (!Array.isArray(d.trabajadores) || !d.trabajadores.length) {
       const documentos = {};
       const archivos = {};
-      itemsGrupo('personal').forEach(it => {
-        documentos[it.id] = d[it.id] || '';
-        archivos[_archivoKey(it.id)] = d[_archivoKey(it.id)] || null;
+      DOC_PERSONAL.forEach(doc => {
+        documentos[doc.expId] = d[doc.expId] || '';
+        documentos[doc.vencId] = d[doc.vencId] || '';
+        archivos[_archivoKey(doc.id)] = d[_archivoKey(doc.id)] || null;
       });
+      archivos[_archivoKey(CEDULA_DOC.id)] = d[_archivoKey(CEDULA_DOC.id)] || null;
       d.trabajadores = [{
         id: 'tr-default',
         nombre: 'Personal del establecimiento',
@@ -120,6 +180,7 @@ const Vencimientos = (() => {
     d.trabajadores.forEach(tr => {
       tr.documentos = tr.documentos || {};
       tr.archivos = tr.archivos || {};
+      _migratePersonalDocs(tr, d);
     });
     d.equiposLista.forEach(eq => {
       eq.historial = Array.isArray(eq.historial) ? eq.historial : [];
@@ -128,15 +189,7 @@ const Vencimientos = (() => {
   }
 
   function _mergeStored(raw) {
-    const base = _vacio();
-    Object.keys(raw).forEach(k => {
-      if (k === 'actualizado_en' || k === 'trabajadores' || k === 'equiposLista') {
-        base[k] = raw[k];
-      } else if (Object.prototype.hasOwnProperty.call(base, k) || k.endsWith('_archivo')) {
-        base[k] = raw[k];
-      }
-    });
-    return _migrate(base);
+    return _migrate({ ..._vacio(), ...raw });
   }
 
   function getVencimientos(est) {
@@ -156,6 +209,12 @@ const Vencimientos = (() => {
       out[it.id] = d[it.id] || '';
       out[_archivoKey(it.id)] = d[_archivoKey(it.id)] || null;
     });
+    DOC_PERSONAL.forEach(doc => {
+      out[doc.expId] = d[doc.expId] || '';
+      out[doc.vencId] = d[doc.vencId] || '';
+      out[_archivoKey(doc.id)] = d[_archivoKey(doc.id)] || null;
+    });
+    out[_archivoKey(CEDULA_DOC.id)] = d[_archivoKey(CEDULA_DOC.id)] || null;
     localStorage.setItem(_key(est), JSON.stringify(out));
     return out;
   }
@@ -216,24 +275,29 @@ const Vencimientos = (() => {
     return { proximo: proximo.toISOString().split('T')[0], estado: est_, dias };
   }
 
-  function itemsGrupo(grupo) { return ITEMS.filter(it => it.grupo === grupo); }
+  function itemsGrupo(grupo) {
+    if (grupo === 'personal') return DOC_PERSONAL;
+    return ITEMS.filter(it => it.grupo === grupo);
+  }
 
   function getPersonalRows(data, filtro) {
     const d = _migrate(data);
     const q = (filtro || '').toLowerCase().trim();
     const rows = [];
     d.trabajadores.forEach(tr => {
-      itemsGrupo('personal').forEach(it => {
-        const fecha = tr.documentos[it.id] || '';
-        const e = estado(fecha, it);
+      DOC_PERSONAL.forEach(doc => {
+        const exp = tr.documentos[doc.expId] || '';
+        const venc = tr.documentos[doc.vencId] || '';
+        const e = estadoFechaVencimiento(venc);
         rows.push({
           trabajadorId: tr.id,
           nombre: tr.nombre,
           cedula: tr.cedula,
-          documento: it.label,
-          itemId: it.id,
-          fecha,
-          vigencia: e.proximo,
+          documento: doc.label,
+          itemId: doc.id,
+          expedicion: exp,
+          vencimiento: venc,
+          vigencia: e.proximo || venc,
           estado: e.estado,
           dias: e.dias,
         });
@@ -385,7 +449,7 @@ const Vencimientos = (() => {
   }
 
   return {
-    ITEMS, GRUPOS, NORMA_BASE, ALERTA_DIAS,
+    ITEMS, DOC_PERSONAL, CEDULA_DOC, GRUPOS, NORMA_BASE, ALERTA_DIAS,
     getVencimientos, saveVencimientos,
     getArchivo, setArchivo,
     estado, estadoFechaVencimiento, periodicidadTexto,

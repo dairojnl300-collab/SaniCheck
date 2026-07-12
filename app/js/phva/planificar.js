@@ -450,8 +450,8 @@ const Planificar = (() => {
     if (dash.alertas30 > 0) {
       return { text: `${dash.alertas30} por vencer`, cls: 'estado-chip estado-R', style: '' };
     }
-    const estados = Vencimientos.ITEMS.map(it => Vencimientos.estado(v[it.id], it).estado);
-    if (estados.every(e => e === 'sin_registrar')) return { text: 'Pendiente', cls: '', style: _pendienteStyle() };
+    const resumen = Vencimientos.resumenGrupo(v, 'personal');
+    if (resumen === 'sin_registrar') return { text: 'Pendiente', cls: '', style: _pendienteStyle() };
     return { text: 'Vigente', cls: 'estado-chip estado-B', style: '' };
   }
 
@@ -513,13 +513,14 @@ const Planificar = (() => {
         <thead><tr style="background:var(--emerald-2);color:#fff;">
           <th style="padding:8px;text-align:left;">Trabajador</th>
           <th style="padding:8px;text-align:left;">Documento</th>
-          <th style="padding:8px;text-align:left;width:100px;">Vigencia</th>
+          <th style="padding:8px;text-align:left;width:88px;">Expedición</th>
+          <th style="padding:8px;text-align:left;width:88px;">Vigencia</th>
           <th style="padding:8px;text-align:center;width:88px;">Estado</th>
         </tr></thead>
         <tbody>
           ${rows.map((r, i) => {
             const st = _vencEstadoLabel(r.estado);
-            const vig = r.vigencia ? new Date(r.vigencia + 'T00:00:00').toLocaleDateString('es-CO') : '—';
+            const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('es-CO') : '—';
             const alerta = r.estado === 'por_vencer' ? ' ⚠' : '';
             return `
           <tr style="background:${i % 2 === 0 ? 'var(--color-white)' : 'var(--color-surface)'};">
@@ -528,7 +529,8 @@ const Planificar = (() => {
               <div style="color:var(--color-ink3);font-size:10px;">CC ${_escAttr(r.cedula || '—')}</div>
             </td>
             <td style="padding:8px;border-bottom:1px solid var(--color-border);">${_escAttr(r.documento)}</td>
-            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${vig}${alerta}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${fmt(r.expedicion)}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${fmt(r.vigencia)}${alerta}</td>
             <td style="padding:8px;border-bottom:1px solid var(--color-border);text-align:center;">
               <span class="estado-chip ${st.cls}">${st.label}</span></td>
           </tr>`;
@@ -583,21 +585,38 @@ const Planificar = (() => {
             onchange="Planificar.actualizarTrabajador('${tr.id}','nombre',this.value)">
         </div>
         <div class="form-group">
-          <label class="form-label">Cédula</label>
-          <input class="form-input" type="text" value="${_escAttr(tr.cedula)}"
+          <label class="form-label">${_escAttr(Vencimientos.CEDULA_DOC.label)}</label>
+          <input class="form-input" type="text" inputmode="numeric" pattern="[0-9]*"
+            placeholder="Número de cédula (sin fechas)" value="${_escAttr(tr.cedula)}"
             onchange="Planificar.actualizarTrabajador('${tr.id}','cedula',this.value)">
-        </div>
-        ${Vencimientos.itemsGrupo('personal').map(it => {
-          const arch = Vencimientos.getArchivo(v, it.id, tr.id);
-          return `
-        <div class="form-group">
-          <label class="form-label">${_escAttr(it.label)}</label>
-          <input class="form-input" type="date" value="${_escAttr(tr.documentos[it.id] || '')}"
-            onchange="Planificar.actualizarTrabajador('${tr.id}','${it.id}',this.value)">
-          <button type="button" onclick="Planificar.subirSoporteVenc('${it.id}','${tr.id}')"
+          <button type="button" onclick="Planificar.subirSoporteVenc('cedula','${tr.id}')"
             style="margin-top:6px;width:100%;padding:8px;cursor:pointer;border:1.5px dashed var(--color-border);
               border-radius:var(--radius-md);background:var(--color-surface);color:var(--color-ink2);font-size:12px;">
-            📎 ${_escAttr(it.archivoLabel)}${arch ? ' ✓' : ''}
+            📎 ${_escAttr(Vencimientos.CEDULA_DOC.archivoLabel)}${Vencimientos.getArchivo(v, 'cedula', tr.id) ? ' ✓' : ''}
+          </button>
+        </div>
+        ${Vencimientos.itemsGrupo('personal').map(doc => {
+          const arch = Vencimientos.getArchivo(v, doc.id, tr.id);
+          return `
+        <div class="form-group">
+          <label class="form-label">${_escAttr(doc.label)}</label>
+          <div style="font-size:10px;color:var(--color-ink3);margin-bottom:6px;">${_escAttr(doc.norma)}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div>
+              <label class="form-label" style="font-size:10px;font-weight:600;">Fecha expedición</label>
+              <input class="form-input" type="date" value="${_escAttr(tr.documentos[doc.expId] || '')}"
+                onchange="Planificar.actualizarTrabajador('${tr.id}','${doc.expId}',this.value)">
+            </div>
+            <div>
+              <label class="form-label" style="font-size:10px;font-weight:600;">Fecha vencimiento</label>
+              <input class="form-input" type="date" value="${_escAttr(tr.documentos[doc.vencId] || '')}"
+                onchange="Planificar.actualizarTrabajador('${tr.id}','${doc.vencId}',this.value)">
+            </div>
+          </div>
+          <button type="button" onclick="Planificar.subirSoporteVenc('${doc.id}','${tr.id}')"
+            style="margin-top:6px;width:100%;padding:8px;cursor:pointer;border:1.5px dashed var(--color-border);
+              border-radius:var(--radius-md);background:var(--color-surface);color:var(--color-ink2);font-size:12px;">
+            📎 ${_escAttr(doc.archivoLabel)}${arch ? ' ✓' : ''}
           </button>
         </div>`;
         }).join('')}
@@ -775,9 +794,9 @@ const Planificar = (() => {
     const titulo = grupo === 'personal' ? 'Control de Vencimientos — Personal' : 'Control de Vencimientos — Equipos';
     const fecha = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' });
     const tabla = grupo === 'personal'
-      ? `<table><thead><tr><th>Trabajador</th><th>CC</th><th>Documento</th><th>Vigencia</th><th>Estado</th></tr></thead><tbody>
+      ? `<table><thead><tr><th>Trabajador</th><th>CC</th><th>Documento</th><th>Expedición</th><th>Vigencia</th><th>Estado</th></tr></thead><tbody>
         ${rows.map(r => `<tr><td>${_escAttr(r.nombre)}</td><td>${_escAttr(r.cedula)}</td><td>${_escAttr(r.documento)}</td>
-          <td>${r.vigencia || '—'}</td><td>${_vencEstadoLabel(r.estado).label}</td></tr>`).join('')}</tbody></table>`
+          <td>${r.expedicion || '—'}</td><td>${r.vigencia || '—'}</td><td>${_vencEstadoLabel(r.estado).label}</td></tr>`).join('')}</tbody></table>`
       : `<table><thead><tr><th>Código</th><th>Tipo</th><th>Últ. calibración</th><th>Próx. calibración</th><th>Estado</th></tr></thead><tbody>
         ${rows.map(r => `<tr><td>${_escAttr(r.codigo)}</td><td>${_escAttr(r.tipo)}</td><td>${r.ultima_calibracion || '—'}</td>
           <td>${r.proxima_calibracion || '—'}</td><td>${_vencEstadoLabel(r.estado).label}</td></tr>`).join('')}</tbody></table>`;
