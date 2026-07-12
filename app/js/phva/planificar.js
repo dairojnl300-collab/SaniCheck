@@ -201,6 +201,13 @@ const Planificar = (() => {
       ${_renderAccordionCard('vencimientos', 'Control de Vencimientos',
         'calendarTime', 'var(--amber)', _vencBadgeInfo(), _vencOpen, _renderVencimientosBody())}
 
+      <div style="margin:0 var(--sp-md) var(--sp-sm);">
+        <button type="button" class="btn btn-accent" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+          onclick="Planificar.exportarDashboardPDF()">
+          ${AppIcons.row('barChart', 'Dashboard Ejecutivo PDF', 14)}
+        </button>
+      </div>
+
       <div style="margin:0 var(--sp-md);">
         <button type="submit" form="form-planificar" class="btn btn-primary">
           Iniciar Ciclo PHVA ${AppIcons.icon('arrowRight', 14)}
@@ -969,12 +976,8 @@ const Planificar = (() => {
           background:rgba(245,124,0,0.1);border-radius:var(--radius-md);border:1px solid rgba(245,124,0,0.25);">
           ${AppIcons.row('alertTriangle', 'Alerta automática 30 días antes del vencimiento de cada documento.', 12)}</div>
         ${_vencPersonalGestion(v)}
-        <button type="button" class="btn btn-accent" style="margin-top:var(--sp-md);width:100%;"
-          onclick="Planificar.exportarVencPDF('personal')">${AppIcons.row('fileText', 'Exportar PDF — Personal', 14)}</button>
       ` : `
-        ${_vencEquiposGestion(v)}
-        <button type="button" class="btn btn-accent" style="margin-top:var(--sp-md);width:100%;"
-          onclick="Planificar.exportarVencPDF('equipos')">${AppIcons.row('fileText', 'Exportar PDF — Equipos', 14)}</button>`}
+        ${_vencEquiposGestion(v)}`}
 
       <button type="button" class="btn btn-primary" style="margin-top:var(--sp-md);" onclick="Planificar.guardarVencimientos()">
         Guardar vencimientos</button>`;
@@ -1077,112 +1080,309 @@ const Planificar = (() => {
     }
   }
 
-  function _buildPersonalPdfSections(rows) {
-    const pdfRows = rows.filter(r => r.itemId !== 'cedula');
-    const order = [];
-    const byId  = new Map();
-    pdfRows.forEach(r => {
-      if (!byId.has(r.trabajadorId)) {
-        byId.set(r.trabajadorId, { nombre: r.nombre, cedula: r.cedula, docs: [] });
-        order.push(r.trabajadorId);
-      }
-      byId.get(r.trabajadorId).docs.push(r);
-    });
-    return order.map((id, i) => {
-      const g = byId.get(id);
-      return `
-      <section class="trabajador-section" style="margin-top:${i ? '28px' : '12px'};padding-top:${i ? '20px' : '0'};${i ? 'border-top:2px solid #E5E7EB;' : ''}">
-        <div style="margin-bottom:10px;padding:10px 12px;background:#F0FDF4;border-radius:8px;border-left:4px solid #0A7350;">
-          <div style="font-size:14px;font-weight:700;color:#0A2E23;">${_escAttr(g.nombre || 'Sin nombre')}</div>
-          <div style="font-size:11px;color:#555;margin-top:4px;">Cédula: ${_escAttr(g.cedula || '—')}</div>
-        </div>
-        <table>
-          <thead><tr><th>Documento</th><th>Fecha expedición</th><th>Fecha vencimiento</th><th>Estado</th></tr></thead>
-          <tbody>
-            ${g.docs.map(d => `<tr>
-              <td>${_escAttr(d.documento)}</td>
-              <td>${d.sinVencimiento && !d.expedicion ? '—' : _fmtVencFecha(d.expedicion)}</td>
-              <td>${d.sinVencimiento ? '—' : _fmtVencFecha(d.vencimiento || d.vigencia)}</td>
-              <td>${_vencEstadoLabel(d.estado).label}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </section>`;
+  function _calcDiagPct(rated) {
+    const activos = rated.filter(it => it.calificacion && it.calificacion !== 'NA');
+    if (!activos.length) return 0;
+    const vals = { B: 1, R: 0.5, D: 0 };
+    const sum  = activos.reduce((s, it) => s + (vals[it.calificacion] ?? 0), 0);
+    return Math.round((sum / activos.length) * 100);
+  }
+
+  function _estadoGeneral(pct) {
+    if (pct >= 80) return { label: 'BUENO', color: '#065F46', bg: '#D1FAE5', sem: 'verde' };
+    if (pct >= 50) return { label: 'REGULAR', color: '#92400E', bg: '#FEF3C7', sem: 'amarillo' };
+    return { label: 'DEFICIENTE', color: '#991B1B', bg: '#FEE2E2', sem: 'rojo' };
+  }
+
+  function _countVencEstados(rows) {
+    return {
+      vigente:       rows.filter(r => r.estado === 'vigente').length,
+      por_vencer:    rows.filter(r => r.estado === 'por_vencer').length,
+      vencido:       rows.filter(r => r.estado === 'vencido').length,
+      sin_registrar: rows.filter(r => r.estado === 'sin_registrar').length,
+    };
+  }
+
+  function _proximaVisita(v, dash) {
+    const fv = _draftVal('inp-fecha-vigencia');
+    if (fv) return fv;
+    if (dash.proximos30?.[0]?.fecha) return dash.proximos30[0].fecha;
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    return d.toISOString().split('T')[0];
+  }
+
+  function _arcSegment(cx, cy, r, ir, startDeg, endDeg) {
+    const rad = d => (d * Math.PI) / 180;
+    const s = rad(startDeg), e = rad(endDeg);
+    const x1 = cx + r * Math.cos(s), y1 = cy + r * Math.sin(s);
+    const x2 = cx + r * Math.cos(e), y2 = cy + r * Math.sin(e);
+    const xi1 = cx + ir * Math.cos(e), yi1 = cy + ir * Math.sin(e);
+    const xi2 = cx + ir * Math.cos(s), yi2 = cy + ir * Math.sin(s);
+    const large = endDeg - startDeg > 180 ? 1 : 0;
+    return `M${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${large},1 ${x2.toFixed(2)},${y2.toFixed(2)} `
+      + `L${xi1.toFixed(2)},${yi1.toFixed(2)} A${ir},${ir} 0 ${large},0 ${xi2.toFixed(2)},${yi2.toFixed(2)}Z`;
+  }
+
+  function _buildDonutSvg(counts) {
+    const segs = [
+      { k: 'B', color: '#065F46', label: 'Bueno' },
+      { k: 'R', color: '#D97706', label: 'Regular' },
+      { k: 'D', color: '#991B1B', label: 'Deficiente' },
+      { k: 'NA', color: '#9CA3AF', label: 'N/A' },
+    ].filter(s => counts[s.k] > 0);
+    const total = segs.reduce((n, s) => n + counts[s.k], 0);
+    if (!total) return '<div style="font-size:11px;color:#6B7280;text-align:center;padding:24px;">Sin aspectos evaluados</div>';
+    let angle = -90;
+    const paths = segs.map(s => {
+      const sweep = (counts[s.k] / total) * 360;
+      const d = _arcSegment(70, 70, 56, 34, angle, angle + sweep - 0.2);
+      angle += sweep;
+      return `<path d="${d}" fill="${s.color}"/>`;
     }).join('');
+    const legend = segs.map(s => `
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:10px;">
+        <span style="width:10px;height:10px;border-radius:2px;background:${s.color};flex-shrink:0;"></span>
+        <span style="flex:1;color:#374151;">${s.label}</span>
+        <strong style="color:#0A2E23;">${counts[s.k]}</strong>
+        <span style="color:#6B7280;">(${Math.round(counts[s.k] / total * 100)}%)</span>
+      </div>`).join('');
+    return `
+      <div style="display:flex;align-items:center;gap:20px;">
+        <svg width="140" height="140" viewBox="0 0 140 140" style="flex-shrink:0;">
+          ${paths}
+          <circle cx="70" cy="70" r="34" fill="#fff"/>
+          <text x="70" y="66" text-anchor="middle" font-size="18" font-weight="800" fill="#0A2E23">${total}</text>
+          <text x="70" y="82" text-anchor="middle" font-size="9" fill="#6B7280">ítems</text>
+        </svg>
+        <div style="flex:1;">${legend}</div>
+      </div>`;
   }
 
-  function restaurarVencTab(tab) {
-    if (tab === 'personal' || tab === 'equipos') _vencTab = tab;
-    _vencOpen = true;
-    const hdr  = document.getElementById('acc-header-vencimientos');
-    const wrap = document.getElementById('acc-body-vencimientos');
-    if (hdr) hdr.classList.add('open');
-    if (wrap) wrap.classList.add('open');
-    _refreshVencBody();
-    if (hdr) hdr.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+  function _buildDashboardPdfHtml() {
+    const est     = _currentEst();
+    const nombre  = _draftVal('inp-nombre') || 'Establecimiento';
+    const nit     = _draftVal('inp-nit') || '—';
+    const ciudad  = _draftVal('inp-ciudad') || '';
+    const fechaGen = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-  function exportarVencPDF(grupo) {
-    if (!_venc) return;
-    const v   = _venc;
-    const est = _currentEst();
+    const saved = DiagnosticoInicial.getDiagnostico(est).items;
+    const rated = saved
+      .map((it, i) => ({ ...it, texto: DiagnosticoInicial.ITEMS[i].texto, norma: DiagnosticoInicial.ITEMS[i].norma }))
+      .filter(it => it.calificacion);
+    const b  = rated.filter(it => it.calificacion === 'B').length;
+    const r  = rated.filter(it => it.calificacion === 'R').length;
+    const d  = rated.filter(it => it.calificacion === 'D').length;
+    const na = rated.filter(it => it.calificacion === 'NA').length;
+    const pct = _calcDiagPct(rated);
+    const estG = _estadoGeneral(pct);
+
+    const deficientes = rated.filter(it => it.calificacion === 'D');
+
+    const v    = _venc || Vencimientos.getVencimientos(est);
     const dash = Vencimientos.getDashboard(v);
+    const persRows = Vencimientos.getPersonalRows(v, '').filter(row => row.itemId !== 'cedula');
+    const eqRows   = Vencimientos.getEquiposRows(v, '');
+    const persCnt  = _countVencEstados(persRows);
+    const eqCnt    = _countVencEstados(eqRows);
+
+    const responsable = _draftVal('inp-responsable') || _draftVal('inp-inspector') || '—';
+    const proxVisita  = _proximaVisita(v, dash);
+
+    const defRows = deficientes.length
+      ? deficientes.map((it, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${_escAttr(it.texto)}</td>
+          <td>${_escAttr(it.norma)}</td>
+          <td><span class="chip chip-d">Alta</span></td>
+        </tr>`).join('')
+      : `<tr><td colspan="4" style="text-align:center;color:#065F46;padding:12px;">Sin aspectos deficientes registrados</td></tr>`;
+
+    const proxRows = dash.proximos30.length
+      ? dash.proximos30.slice(0, 6).map(p => `
+        <tr>
+          <td>${_escAttr(p.grupo)}</td>
+          <td>${_escAttr(p.ref)}</td>
+          <td>${_escAttr(p.detalle)}</td>
+          <td>${_fmtVencFecha(p.fecha)}</td>
+          <td><span class="chip chip-${p.estado === 'vencido' ? 'd' : 'r'}">${p.estado === 'vencido' ? 'Vencido' : 'Por vencer'}</span></td>
+        </tr>`).join('')
+      : `<tr><td colspan="5" style="text-align:center;color:#065F46;padding:12px;">Sin vencimientos próximos (30 días)</td></tr>`;
+
+    const semHtml = ['verde', 'amarillo', 'rojo'].map(c => {
+      const on = estG.sem === c;
+      const colors = { verde: '#065F46', amarillo: '#D97706', rojo: '#991B1B' };
+      return `<div style="width:28px;height:28px;border-radius:50%;background:${colors[c]};
+        opacity:${on ? '1' : '0.2'};box-shadow:${on ? '0 0 0 3px rgba(10,46,35,0.15)' : 'none'};"></div>`;
+    }).join('');
+
+    return `
+      <div class="hdr">
+        <div class="hdr-title">${_escAttr(nombre)}</div>
+        <div class="hdr-sub">${ciudad ? _escAttr(ciudad) + ' · ' : ''}NIT ${_escAttr(nit)}</div>
+        <div class="hdr-date">Dashboard Ejecutivo · Generado ${fechaGen}</div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi" style="border-top:3px solid #0A7350;">
+          <div class="kpi-lbl">Cumplimiento general</div>
+          <div class="kpi-val" style="color:#0A7350;">${pct}%</div>
+          <div class="kpi-sub">${estG.label}</div>
+        </div>
+        <div class="kpi" style="border-top:3px solid #0E86C8;">
+          <div class="kpi-lbl">Aspectos evaluados</div>
+          <div class="kpi-val" style="color:#0E86C8;">${rated.length}</div>
+          <div class="kpi-sub">de 13 ítems diagnóstico</div>
+        </div>
+        <div class="kpi" style="border-top:3px solid #991B1B;">
+          <div class="kpi-lbl">Aspectos críticos</div>
+          <div class="kpi-val" style="color:#991B1B;">${d}</div>
+          <div class="kpi-sub">calificación Deficiente</div>
+        </div>
+        <div class="kpi" style="border-top:3px solid #DF8A00;">
+          <div class="kpi-lbl">Próx. vencimientos</div>
+          <div class="kpi-val" style="color:#DF8A00;">${dash.alertas30}</div>
+          <div class="kpi-sub">alertas 30 días</div>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="panel">
+          <div class="panel-h">Distribución B / R / D / N·A</div>
+          ${_buildDonutSvg({ B: b, R: r, D: d, NA: na })}
+        </div>
+        <div class="panel">
+          <div class="panel-h">Semáforo de estado</div>
+          <div style="display:flex;align-items:center;gap:16px;padding:8px 0;">
+            <div style="display:flex;gap:10px;">${semHtml}</div>
+            <div>
+              <div style="font-size:22px;font-weight:800;color:${estG.color};">${estG.label}</div>
+              <div style="font-size:11px;color:#6B7280;margin-top:2px;">${pct}% cumplimiento diagnóstico</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;padding:10px;background:${estG.bg};border-radius:8px;font-size:10px;color:${estG.color};">
+            ${pct >= 80 ? 'Establecimiento en condiciones favorables. Mantener controles y registros actualizados.'
+              : pct >= 50 ? 'Requiere plan de mejora. Priorizar aspectos deficientes y vencimientos próximos.'
+              : 'Estado crítico. Acción inmediata en hallazgos deficientes y documentación vencida.'}
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h">Aspectos Deficientes — prioridad alta</div>
+        <table>
+          <thead><tr><th>#</th><th>Aspecto</th><th>Normativa</th><th>Prioridad</th></tr></thead>
+          <tbody>${defRows}</tbody>
+        </table>
+      </div>
+
+      <div class="row-2">
+        <div class="panel">
+          <div class="panel-h">Control de Vencimiento — Personal</div>
+          <div class="mini-kpis">
+            <span class="chip chip-b">${persCnt.vigente} vigentes</span>
+            <span class="chip chip-r">${persCnt.por_vencer} por vencer</span>
+            <span class="chip chip-d">${persCnt.vencido} vencidos</span>
+            <span style="font-size:10px;color:#6B7280;">${persCnt.sin_registrar} sin registrar</span>
+          </div>
+          <div style="font-size:10px;color:#6B7280;margin-top:6px;">Vigencia documental: <strong>${dash.pctPersonal}%</strong></div>
+        </div>
+        <div class="panel">
+          <div class="panel-h">Control de Vencimiento — Equipos</div>
+          <div class="mini-kpis">
+            <span class="chip chip-b">${eqCnt.vigente} vigentes</span>
+            <span class="chip chip-r">${eqCnt.por_vencer} por vencer</span>
+            <span class="chip chip-d">${eqCnt.vencido} vencidos</span>
+            <span style="font-size:10px;color:#6B7280;">${eqCnt.sin_registrar} sin registrar</span>
+          </div>
+          <div style="font-size:10px;color:#6B7280;margin-top:6px;">Vigencia calibración: <strong>${dash.pctEquipos}%</strong></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h">Próximos vencimientos (30 días)</div>
+        <table>
+          <thead><tr><th>Grupo</th><th>Referencia</th><th>Documento</th><th>Fecha</th><th>Estado</th></tr></thead>
+          <tbody>${proxRows}</tbody>
+        </table>
+      </div>
+
+      <div class="footer">
+        <div class="footer-col">
+          <div class="footer-lbl">Responsable / Profesional</div>
+          <div class="footer-val">${_escAttr(responsable)}</div>
+          <div class="footer-line"></div>
+          <div style="font-size:9px;color:#9CA3AF;margin-top:4px;">Firma</div>
+        </div>
+        <div class="footer-col">
+          <div class="footer-lbl">Próxima visita sugerida</div>
+          <div class="footer-val">${_fmtVencFecha(proxVisita)}</div>
+        </div>
+        <div class="footer-col" style="text-align:right;">
+          <div style="font-size:9px;color:#9CA3AF;">SaniCheck · Planificar</div>
+          <div style="font-size:9px;color:#9CA3AF;margin-top:2px;">Documento consolidado — estado actual</div>
+        </div>
+      </div>`;
+  }
+
+  function exportarDashboardPDF() {
+    if (!_venc) _venc = Vencimientos.getVencimientos(_currentEst());
     const win = window.open('', '_blank');
     if (!win) { Router.toast('Permite ventanas emergentes para exportar PDF'); return; }
-    const rows = grupo === 'personal'
-      ? Vencimientos.getPersonalRows(v, _vencFiltroPersonal)
-      : Vencimientos.getEquiposRows(v, _vencFiltroEquipos);
-    const titulo = grupo === 'personal' ? 'Control de Vencimientos — Personal' : 'Control de Vencimientos — Equipos';
-    const fecha = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' });
-    const contenido = grupo === 'personal'
-      ? _buildPersonalPdfSections(rows)
-      : `<table><thead><tr><th>Código</th><th>Tipo</th><th>Últ. calibración</th><th>Próx. calibración</th><th>Estado</th></tr></thead><tbody>
-        ${rows.map(r => `<tr><td>${_escAttr(r.codigo)}</td><td>${_escAttr(r.tipo)}</td><td>${_fmtVencFecha(r.ultima_calibracion)}</td>
-          <td>${_fmtVencFecha(r.proxima_calibracion)}</td><td>${_vencEstadoLabel(r.estado).label}</td></tr>`).join('')}</tbody></table>`;
-    win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${titulo}</title>
+    const body = _buildDashboardPdfHtml();
+    win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Dashboard Ejecutivo</title>
       <style>
-        body{font-family:Arial,sans-serif;padding:24px;padding-top:64px;color:#0A2E23;}
-        h1{font-size:18px;color:#0A7350;margin:0;}
-        .meta{font-size:12px;color:#555;margin-bottom:16px;}
-        table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;}
-        th{background:#0A7350;color:#fff;padding:8px;text-align:left;}
-        td{padding:8px;border-bottom:1px solid #ddd;}
-        .stats{display:flex;gap:16px;margin:12px 0;font-size:12px;flex-wrap:wrap;}
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:'Segoe UI',Arial,sans-serif;padding:20px;padding-top:58px;color:#0A2E23;background:#F8FAFC;font-size:11px;}
+        .hdr{background:linear-gradient(135deg,#0A2E23 0%,#0A7350 100%);color:#fff;padding:20px 24px;border-radius:12px;margin-bottom:16px;}
+        .hdr-title{font-size:20px;font-weight:800;letter-spacing:-0.02em;}
+        .hdr-sub{font-size:11px;opacity:0.85;margin-top:4px;}
+        .hdr-date{font-size:10px;opacity:0.65;margin-top:8px;}
+        .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+        .kpi{background:#fff;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(10,46,35,0.06);}
+        .kpi-lbl{font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:#6B7280;font-weight:600;}
+        .kpi-val{font-size:26px;font-weight:800;line-height:1.1;margin:6px 0 2px;}
+        .kpi-sub{font-size:9px;color:#9CA3AF;}
+        .row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+        .panel{background:#fff;border-radius:10px;padding:14px;box-shadow:0 2px 8px rgba(10,46,35,0.06);margin-bottom:12px;}
+        .panel-h{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#0A7350;
+          margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #E5E7EB;}
+        table{width:100%;border-collapse:collapse;font-size:10px;}
+        th{background:#0A7350;color:#fff;padding:7px 8px;text-align:left;font-weight:600;}
+        td{padding:7px 8px;border-bottom:1px solid #E5E7EB;color:#374151;}
+        tr:nth-child(even) td{background:#F9FAFB;}
+        .chip{display:inline-block;padding:2px 8px;border-radius:99px;font-size:9px;font-weight:700;}
+        .chip-b{background:#D1FAE5;color:#065F46;}
+        .chip-r{background:#FEF3C7;color:#92400E;}
+        .chip-d{background:#FEE2E2;color:#991B1B;}
+        .mini-kpis{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+        .footer{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px;padding-top:14px;
+          border-top:2px solid #0A7350;}
+        .footer-lbl{font-size:9px;text-transform:uppercase;color:#6B7280;letter-spacing:0.04em;}
+        .footer-val{font-size:12px;font-weight:700;color:#0A2E23;margin-top:4px;}
+        .footer-line{border-bottom:1px solid #9CA3AF;margin-top:28px;}
         .toolbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:12px;
           padding:10px 16px;background:#0A2E23;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
         .toolbar button{padding:8px 18px;border:none;border-radius:6px;background:#52B788;color:#0A2E23;
           font-size:13px;font-weight:700;cursor:pointer;}
-        .toolbar button:hover{background:#40916C;}
-        .toolbar-title{font-size:13px;font-weight:600;flex:1;}
         @media print{
           .no-print{display:none!important;}
-          body{padding-top:24px;}
-          .trabajador-section{page-break-inside:avoid;break-inside:avoid;}
+          body{padding-top:12px;background:#fff;}
+          .panel,.kpi{box-shadow:none;border:1px solid #E5E7EB;}
         }
       </style></head><body>
       <div class="toolbar no-print">
-        <button type="button" onclick="volverVenc()">← Volver</button>
-        <span class="toolbar-title">${titulo}</span>
+        <button type="button" onclick="volverDash()">← Volver</button>
+        <span style="font-size:13px;font-weight:600;flex:1;">Dashboard Ejecutivo</span>
       </div>
-      <h1>${titulo}</h1>
-      <div class="meta">ECODESA SaniCheck · ${fecha}<br>Establecimiento: ${_escAttr(est.nombre || '—')} · NIT: ${_escAttr(est.nit || '—')}<br>
-      Normativa: ${Vencimientos.NORMA_BASE}</div>
-      <div class="stats"><span>Vigencia personal: <strong>${dash.pctPersonal}%</strong></span>
-      <span>Vigencia equipos: <strong>${dash.pctEquipos}%</strong></span>
-      <span>Alertas 30 días: <strong>${dash.alertas30}</strong></span></div>
-      ${contenido}
-      <p style="margin-top:24px;font-size:10px;color:#888;">Documento generado por SaniCheck · ECODESA Ing. S.A.S</p>
+      ${body}
       <script>
-        function volverVenc() {
-          try {
-            if (window.opener && window.opener.Planificar && window.opener.Planificar.restaurarVencTab) {
-              window.opener.Planificar.restaurarVencTab('${grupo}');
-              window.opener.focus();
-            }
-          } catch (e) {}
+        function volverDash() {
+          try { if (window.opener) window.opener.focus(); } catch (e) {}
           window.close();
         }
-        setTimeout(function(){window.print();},400);
+        setTimeout(function(){window.print();},500);
       </script></body></html>`);
     win.document.close();
   }
@@ -1605,6 +1805,6 @@ const Planificar = (() => {
 
   return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, diagEvaluar, diagNavegar, marcoSub,
     actualizarVenc, guardarVencimientos, vencTab, vencFiltro, subirSoporteVenc, eliminarSoporteVenc, verSoporteVenc,
-    agregarTrabajador, actualizarTrabajador, agregarEquipo, actualizarEquipo, exportarVencPDF, restaurarVencTab,
+    agregarTrabajador, actualizarTrabajador, agregarEquipo, actualizarEquipo, exportarDashboardPDF,
     toggleReqForm, cancelarRequerimiento, crearRequerimiento, actualizarRequerimiento, eliminarRequerimiento, toggleReqSinVencNuevo };
 })();
