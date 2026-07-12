@@ -64,7 +64,10 @@ const Planificar = (() => {
   let _resultadosOpen = false;
   let _marcoOpen      = false;
   let _vencOpen       = false;
-  let _vencTab        = 'personal';
+  let _vencTab            = 'personal';
+  let _vencFiltroPersonal = '';
+  let _vencFiltroEquipos  = '';
+  let _vencNotified       = false;
   let _marcoOpenSubs  = { general: true };
   let _diagItems      = null;
   let _diagEst        = null;
@@ -420,12 +423,35 @@ const Planificar = (() => {
       </div>`;
   }
 
+  function _refreshVencBody() {
+    const inner = document.querySelector('#acc-body-vencimientos .acc-body-inner');
+    if (inner && _venc) {
+      inner.innerHTML = _renderVencimientosBody();
+      _mostrarNotificacionesVenc();
+    }
+    _setCardState('vencimientos', _vencOpen, _vencBadgeInfo());
+  }
+
+  function _mostrarNotificacionesVenc() {
+    if (!_venc || _vencNotified) return;
+    const dash = Vencimientos.getDashboard(_venc);
+    if (dash.notificaciones.length) {
+      Router.toast(`⚠ ${dash.notificaciones.length} alerta(s) de vencimiento — revisar dashboard`);
+      _vencNotified = true;
+    }
+  }
+
   function _vencBadgeInfo() {
     const v = _venc || Vencimientos.getVencimientos(_currentEst());
+    const dash = Vencimientos.getDashboard(v);
+    if (dash.notificaciones.some(n => n.nivel === 'critico')) {
+      return { text: `${dash.notificaciones.length} alerta(s)`, cls: 'estado-chip estado-D', style: '' };
+    }
+    if (dash.alertas30 > 0) {
+      return { text: `${dash.alertas30} por vencer`, cls: 'estado-chip estado-R', style: '' };
+    }
     const estados = Vencimientos.ITEMS.map(it => Vencimientos.estado(v[it.id], it).estado);
-    if (estados.includes('vencido'))       return { text: 'Vencido', cls: 'estado-chip estado-D', style: '' };
-    if (estados.includes('por_vencer'))    return { text: 'Por vencer', cls: 'estado-chip estado-R', style: '' };
-    if (estados.includes('sin_registrar')) return { text: 'Pendiente', cls: '', style: _pendienteStyle() };
+    if (estados.every(e => e === 'sin_registrar')) return { text: 'Pendiente', cls: '', style: _pendienteStyle() };
     return { text: 'Vigente', cls: 'estado-chip estado-B', style: '' };
   }
 
@@ -436,97 +462,215 @@ const Planificar = (() => {
     return { cls: 'estado-B', label: 'Vigente' };
   }
 
-  function _vencEstadoTable(grupo) {
-    const v     = _venc || Vencimientos.getVencimientos(_currentEst());
-    const items = Vencimientos.itemsGrupo(grupo);
+  function _vencDashboardHtml(v) {
+    const dash = Vencimientos.getDashboard(v);
+    return `
+      <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:var(--sp-md);">
+        <div style="background:var(--emerald-2);color:#fff;padding:10px 14px;">
+          <div style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">Dashboard general</div>
+          <div style="font-size:var(--text-sm);font-weight:700;margin-top:4px;">Control de Vencimientos</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 14px;background:var(--color-surface);
+          border-bottom:1px solid var(--color-border);">
+          <div style="text-align:center;padding:10px;background:var(--color-white);border-radius:var(--radius-md);border:1px solid var(--color-border);">
+            <div style="font-size:22px;font-weight:900;color:var(--color-bueno);">${dash.pctPersonal}%</div>
+            <div style="font-size:10px;color:var(--color-ink3);text-transform:uppercase;letter-spacing:0.04em;">Vigencia personal</div>
+          </div>
+          <div style="text-align:center;padding:10px;background:var(--color-white);border-radius:var(--radius-md);border:1px solid var(--color-border);">
+            <div style="font-size:22px;font-weight:900;color:var(--color-bueno);">${dash.pctEquipos}%</div>
+            <div style="font-size:10px;color:var(--color-ink3);text-transform:uppercase;letter-spacing:0.04em;">Vigencia equipos</div>
+          </div>
+        </div>
+        ${dash.proximos30.length ? `
+        <div style="padding:10px 14px;border-bottom:1px solid var(--color-border);">
+          <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;">
+            Próximos vencimientos (30 días)</div>
+          ${dash.proximos30.slice(0, 5).map(p => {
+            const st = _vencEstadoLabel(p.estado);
+            return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;
+              border-bottom:1px dashed var(--color-border);font-size:var(--text-xs);">
+              <span style="color:var(--color-ink2);"><strong>${_escAttr(p.ref)}</strong> · ${_escAttr(p.detalle)}</span>
+              <span class="estado-chip ${st.cls}">${st.label}</span>
+            </div>`;
+          }).join('')}
+        </div>` : ''}
+        ${dash.notificaciones.length ? `
+        <div style="padding:10px 14px;background:rgba(245,124,0,0.08);">
+          <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-regular);margin-bottom:6px;">🔔 Notificaciones automáticas</div>
+          ${dash.notificaciones.slice(0, 4).map(n => `
+            <div style="font-size:11px;color:var(--color-ink2);margin-bottom:4px;">• ${_escAttr(n.texto)}</div>`).join('')}
+        </div>` : `<div style="padding:10px 14px;font-size:var(--text-xs);color:var(--color-bueno);">✓ Sin alertas de vencimiento</div>`}
+      </div>`;
+  }
+
+  function _vencPersonalTable(v) {
+    const rows = Vencimientos.getPersonalRows(v, _vencFiltroPersonal);
+    if (!rows.length) {
+      return `<div style="padding:16px;text-align:center;font-size:var(--text-sm);color:var(--color-ink3);">Sin resultados para el filtro.</div>`;
+    }
     return `
       <table style="width:100%;border-collapse:collapse;font-size:var(--text-xs);">
         <thead><tr style="background:var(--emerald-2);color:#fff;">
-          <th style="padding:8px;text-align:left;">Documento / Soporte</th>
-          <th style="padding:8px;text-align:left;width:100px;">Vencimiento</th>
+          <th style="padding:8px;text-align:left;">Trabajador</th>
+          <th style="padding:8px;text-align:left;">Documento</th>
+          <th style="padding:8px;text-align:left;width:100px;">Vigencia</th>
           <th style="padding:8px;text-align:center;width:88px;">Estado</th>
-          <th style="padding:8px;text-align:center;width:72px;">Archivo</th>
         </tr></thead>
         <tbody>
-          ${items.map((it, i) => {
-            const e     = Vencimientos.estado(v[it.id], it);
-            const st    = _vencEstadoLabel(e.estado);
-            const arch  = Vencimientos.getArchivo(v, it.id);
-            const prox  = e.proximo
-              ? new Date(e.proximo + 'T00:00:00').toLocaleDateString('es-CO') : '—';
+          ${rows.map((r, i) => {
+            const st = _vencEstadoLabel(r.estado);
+            const vig = r.vigencia ? new Date(r.vigencia + 'T00:00:00').toLocaleDateString('es-CO') : '—';
+            const alerta = r.estado === 'por_vencer' ? ' ⚠' : '';
             return `
           <tr style="background:${i % 2 === 0 ? 'var(--color-white)' : 'var(--color-surface)'};">
-            <td style="padding:8px;border-bottom:1px solid var(--color-border);font-weight:600;">${_escAttr(it.label)}</td>
-            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${prox}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);">
+              <div style="font-weight:600;">${_escAttr(r.nombre)}</div>
+              <div style="color:var(--color-ink3);font-size:10px;">CC ${_escAttr(r.cedula || '—')}</div>
+            </td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);">${_escAttr(r.documento)}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${vig}${alerta}</td>
             <td style="padding:8px;border-bottom:1px solid var(--color-border);text-align:center;">
               <span class="estado-chip ${st.cls}">${st.label}</span></td>
-            <td style="padding:8px;border-bottom:1px solid var(--color-border);text-align:center;color:${arch ? 'var(--color-bueno)' : 'var(--color-ink3)'};">
-              ${arch ? '✓' : '—'}</td>
           </tr>`;
           }).join('')}
         </tbody>
       </table>`;
   }
 
-  function _vencDetalle(fecha, item) {
-    const e = Vencimientos.estado(fecha, item);
-    if (e.estado === 'sin_registrar') {
-      return `<div style="font-size:var(--text-xs);color:var(--color-ink3);margin-top:6px;">Sin registrar aún.</div>`;
+  function _vencEquiposTable(v) {
+    const rows = Vencimientos.getEquiposRows(v, _vencFiltroEquipos);
+    if (!rows.length) {
+      return `<div style="padding:16px;text-align:center;font-size:var(--text-sm);color:var(--color-ink3);">Sin resultados para el filtro.</div>`;
     }
-    const st = _vencEstadoLabel(e.estado);
-    const proximoTexto = new Date(e.proximo + 'T00:00:00').toLocaleDateString('es-CO');
-    const labelFecha = item.tipoFecha === 'vencimiento' ? 'Vence el' : 'Próximo vencimiento';
     return `
-      <div style="font-size:var(--text-sm);color:var(--color-ink);margin-top:6px;">
-        ${labelFecha}: <strong>${proximoTexto}</strong>
-        ${e.dias !== null && e.estado === 'por_vencer' ? `<span style="color:var(--color-regular);"> (${e.dias} días)</span>` : ''}
-      </div>
-      <span class="estado-chip ${st.cls}" style="margin-top:4px;">${st.label}</span>`;
+      <table style="width:100%;border-collapse:collapse;font-size:var(--text-xs);">
+        <thead><tr style="background:var(--emerald-2);color:#fff;">
+          <th style="padding:8px;text-align:left;">Equipo</th>
+          <th style="padding:8px;text-align:left;width:96px;">Últ. calibración</th>
+          <th style="padding:8px;text-align:left;width:96px;">Próx. calibración</th>
+          <th style="padding:8px;text-align:center;width:88px;">Estado</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map((r, i) => {
+            const st = _vencEstadoLabel(r.estado);
+            const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('es-CO') : '—';
+            return `
+          <tr style="background:${i % 2 === 0 ? 'var(--color-white)' : 'var(--color-surface)'};">
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);">
+              <div style="font-weight:600;">${_escAttr(r.codigo)}</div>
+              <div style="color:var(--color-ink3);font-size:10px;">${_escAttr(r.tipo)}</div>
+            </td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${fmt(r.ultima_calibracion)}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${fmt(r.proxima_calibracion)}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);text-align:center;">
+              <span class="estado-chip ${st.cls}">${st.label}</span></td>
+          </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
   }
 
-  function _vencArchivoHtml(it) {
-    const v    = _venc || Vencimientos.getVencimientos(_currentEst());
-    const arch = Vencimientos.getArchivo(v, it.id);
-    if (!arch) {
-      return `
-        <button type="button" onclick="Planificar.subirSoporteVenc('${it.id}')"
-          style="margin-top:8px;width:100%;padding:10px;cursor:pointer;
-            border:1.5px dashed var(--color-border);border-radius:var(--radius-md);
-            background:var(--color-surface);color:var(--color-ink2);font-size:13px;">
-          📎 ${_escAttr(it.archivoLabel)}
-        </button>`;
-    }
-    const esImg = arch.tipo && arch.tipo.startsWith('image/');
+  function _vencPersonalGestion(v) {
+    const tr = (v.trabajadores || [])[0];
+    if (!tr) return '';
     return `
-      <div style="margin-top:8px;padding:10px 12px;border:1px solid var(--color-border);
-        border-radius:var(--radius-md);background:var(--color-surface);">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-          <div style="font-size:var(--text-xs);color:var(--color-ink2);min-width:0;">
-            <strong style="color:var(--color-ink);">📎 ${_escAttr(arch.nombre)}</strong>
-            <div style="color:var(--color-ink3);margin-top:2px;">Subido · ${new Date(arch.subido_en).toLocaleDateString('es-CO')}</div>
-          </div>
-          <button type="button" onclick="Planificar.eliminarSoporteVenc('${it.id}')"
-            style="flex-shrink:0;background:none;border:none;color:var(--color-deficiente);
-              font-size:18px;cursor:pointer;padding:4px;">✕</button>
+      <div style="margin-top:var(--sp-md);padding-top:var(--sp-md);border-top:1px dashed var(--color-border);">
+        <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);text-transform:uppercase;
+          letter-spacing:0.05em;margin-bottom:var(--sp-sm);">Registrar / editar</div>
+        <div class="form-group">
+          <label class="form-label">Nombre del trabajador</label>
+          <input class="form-input" type="text" value="${_escAttr(tr.nombre)}"
+            onchange="Planificar.actualizarTrabajador('${tr.id}','nombre',this.value)">
         </div>
-        ${esImg ? `<img src="${arch.data}" alt="soporte" style="margin-top:8px;max-width:100%;max-height:120px;border-radius:8px;border:1px solid var(--color-border);">` : ''}
-      </div>
-      <button type="button" onclick="Planificar.subirSoporteVenc('${it.id}')"
-        style="margin-top:6px;width:100%;padding:8px;cursor:pointer;
-          border:1px dashed var(--color-border);border-radius:var(--radius-md);
-          background:transparent;color:var(--color-ink3);font-size:12px;">
-        Reemplazar archivo</button>`;
+        <div class="form-group">
+          <label class="form-label">Cédula</label>
+          <input class="form-input" type="text" value="${_escAttr(tr.cedula)}"
+            onchange="Planificar.actualizarTrabajador('${tr.id}','cedula',this.value)">
+        </div>
+        ${Vencimientos.itemsGrupo('personal').map(it => {
+          const arch = Vencimientos.getArchivo(v, it.id, tr.id);
+          return `
+        <div class="form-group">
+          <label class="form-label">${_escAttr(it.label)}</label>
+          <input class="form-input" type="date" value="${_escAttr(tr.documentos[it.id] || '')}"
+            onchange="Planificar.actualizarTrabajador('${tr.id}','${it.id}',this.value)">
+          <button type="button" onclick="Planificar.subirSoporteVenc('${it.id}','${tr.id}')"
+            style="margin-top:6px;width:100%;padding:8px;cursor:pointer;border:1.5px dashed var(--color-border);
+              border-radius:var(--radius-md);background:var(--color-surface);color:var(--color-ink2);font-size:12px;">
+            📎 ${_escAttr(it.archivoLabel)}${arch ? ' ✓' : ''}
+          </button>
+        </div>`;
+        }).join('')}
+        <button type="button" class="btn btn-outline" style="width:auto;padding:8px 14px;margin-top:8px;"
+          onclick="Planificar.agregarTrabajador()">+ Agregar trabajador</button>
+      </div>`;
+  }
+
+  function _vencEquiposGestion(v) {
+    const eq = (v.equiposLista || [])[0];
+    if (!eq) return '';
+    const hist = (eq.historial || []).slice(0, 5);
+    return `
+      <div style="margin-top:var(--sp-md);padding-top:var(--sp-md);border-top:1px dashed var(--color-border);">
+        <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);text-transform:uppercase;
+          letter-spacing:0.05em;margin-bottom:var(--sp-sm);">Registrar / editar equipo</div>
+        <div class="form-group">
+          <label class="form-label">Código del equipo</label>
+          <input class="form-input" type="text" value="${_escAttr(eq.codigo)}"
+            onchange="Planificar.actualizarEquipo('${eq.id}','codigo',this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo de equipo</label>
+          <input class="form-input" type="text" value="${_escAttr(eq.tipo)}"
+            onchange="Planificar.actualizarEquipo('${eq.id}','tipo',this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Última calibración</label>
+          <input class="form-input" type="date" value="${_escAttr(eq.ultima_calibracion || '')}"
+            onchange="Planificar.actualizarEquipo('${eq.id}','ultima_calibracion',this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Próxima calibración</label>
+          <input class="form-input" type="date" value="${_escAttr(eq.proxima_calibracion || '')}"
+            onchange="Planificar.actualizarEquipo('${eq.id}','proxima_calibracion',this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mantenimiento programado</label>
+          <input class="form-input" type="date" value="${_escAttr(eq.mantenimiento_programado || '')}"
+            onchange="Planificar.actualizarEquipo('${eq.id}','mantenimiento_programado',this.value)">
+        </div>
+        ${hist.length ? `
+        <div style="margin-top:var(--sp-sm);">
+          <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink);margin-bottom:6px;">Historial de calibraciones</div>
+          <table style="width:100%;border-collapse:collapse;font-size:var(--text-xs);">
+            <thead><tr style="background:var(--color-surface);">
+              <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--color-border);">Fecha</th>
+              <th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--color-border);">Resultado</th>
+            </tr></thead>
+            <tbody>${hist.map(h => `
+              <tr><td style="padding:6px 8px;border-bottom:1px solid var(--color-border);">${new Date(h.fecha + 'T00:00:00').toLocaleDateString('es-CO')}</td>
+              <td style="padding:6px 8px;border-bottom:1px solid var(--color-border);">${_escAttr(h.resultado)}${_escAttr(h.nota ? ' — ' + h.nota : '')}</td></tr>`).join('')}
+            </tbody>
+          </table>
+        </div>` : ''}
+        <button type="button" class="btn btn-outline" style="width:auto;padding:8px 14px;margin-top:8px;"
+          onclick="Planificar.agregarEquipo()">+ Agregar equipo</button>
+      </div>`;
   }
 
   function _renderVencimientosBody() {
-    const v      = _venc || Vencimientos.getVencimientos(_currentEst());
-    const grupo  = _vencTab;
-    const meta   = Vencimientos.GRUPOS[grupo];
-    const items  = Vencimientos.itemsGrupo(grupo);
-    const res    = Vencimientos.resumenGrupo(v, grupo);
-    const resSt  = _vencEstadoLabel(res === 'sin_registrar' ? 'sin_registrar' : res);
+    if (!_venc) _venc = Vencimientos.getVencimientos(_currentEst());
+    const v     = _venc;
+    const grupo = _vencTab;
+    const meta  = Vencimientos.GRUPOS[grupo];
+    const res   = Vencimientos.resumenGrupo(v, grupo);
+    const resSt = _vencEstadoLabel(res === 'sin_registrar' ? 'sin_registrar' : res);
+    const filtroVal = grupo === 'personal' ? _vencFiltroPersonal : _vencFiltroEquipos;
+    const filtroPh  = grupo === 'personal' ? 'Buscar por nombre o cédula…' : 'Buscar por código o tipo…';
 
     return `
+      ${_vencDashboardHtml(v)}
+
       <div style="display:flex;gap:8px;margin-bottom:var(--sp-md);">
         ${['personal', 'equipos'].map(g => {
           const active = g === grupo;
@@ -536,8 +680,7 @@ const Planificar = (() => {
             style="flex:1;padding:12px 10px;border-radius:var(--radius-md);cursor:pointer;
               border:2px solid ${active ? 'var(--color-accent)' : 'var(--emerald-2)'};
               background:${active ? 'var(--emerald-2)' : 'var(--emerald)'};
-              font-size:var(--text-sm);font-weight:${active ? 700 : 600};
-              color:#fff;">
+              font-size:var(--text-sm);font-weight:${active ? 700 : 600};color:#fff;">
             ${m.label}
           </button>`;
         }).join('')}
@@ -546,35 +689,32 @@ const Planificar = (() => {
       <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:var(--sp-md);">
         <div style="background:var(--emerald-2);color:#fff;padding:10px 14px;">
           <div style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">
-            Seguimiento normativo · ${Vencimientos.NORMA_BASE}</div>
+            ${Vencimientos.NORMA_BASE}</div>
           <div style="font-size:var(--text-sm);font-weight:700;margin-top:4px;">${meta.label}</div>
         </div>
         <div style="padding:10px 14px;background:var(--color-surface);border-bottom:1px solid var(--color-border);
-          font-size:var(--text-xs);color:var(--color-ink3);display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <span>${meta.desc}</span>
+          display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;">
+          <span style="font-size:var(--text-xs);color:var(--color-ink3);">${meta.desc}</span>
           <span class="estado-chip ${resSt.cls}">${resSt.label}</span>
         </div>
-        <div style="overflow-x:auto;">${_vencEstadoTable(grupo)}</div>
+        <div style="padding:10px 14px;border-bottom:1px solid var(--color-border);">
+          <input class="form-input" type="search" placeholder="${filtroPh}" value="${_escAttr(filtroVal)}"
+            oninput="Planificar.vencFiltro(this.value)" style="margin:0;">
+        </div>
+        <div style="overflow-x:auto;">${grupo === 'personal' ? _vencPersonalTable(v) : _vencEquiposTable(v)}</div>
       </div>
 
-      ${items.map((it, i) => {
-        const esUltima = i === items.length - 1;
-        return `
-        <div style="${esUltima ? '' : 'padding-bottom:var(--sp-md);margin-bottom:var(--sp-md);border-bottom:1px dashed var(--color-border);'}">
-          <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:2px;">
-            ${_escAttr(it.label)}</div>
-          <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:6px;">
-            Periodicidad: ${_escAttr(Vencimientos.periodicidadTexto(it))}</div>
-          <span class="norma-badge">${_escAttr(it.norma)}</span>
-          <div class="form-group" style="margin-top:8px;">
-            <label class="form-label" for="inp-venc-${it.id}">${_escAttr(it.campoLabel)}</label>
-            <input class="form-input" type="date" id="inp-venc-${it.id}" value="${_escAttr(v[it.id])}"
-              onchange="Planificar.actualizarVenc('${it.id}', this.value)">
-          </div>
-          ${_vencDetalle(v[it.id], it)}
-          ${_vencArchivoHtml(it)}
-        </div>`;
-      }).join('')}
+      ${grupo === 'personal' ? `
+        <div style="margin-bottom:var(--sp-sm);font-size:var(--text-xs);color:var(--color-regular);padding:8px 12px;
+          background:rgba(245,124,0,0.1);border-radius:var(--radius-md);border:1px solid rgba(245,124,0,0.25);">
+          ⚠ Alerta automática 30 días antes del vencimiento de cada documento.</div>
+        ${_vencPersonalGestion(v)}
+        <button type="button" class="btn btn-accent" style="margin-top:var(--sp-md);width:100%;"
+          onclick="Planificar.exportarVencPDF('personal')">📄 Exportar PDF — Personal</button>
+      ` : `
+        ${_vencEquiposGestion(v)}
+        <button type="button" class="btn btn-accent" style="margin-top:var(--sp-md);width:100%;"
+          onclick="Planificar.exportarVencPDF('equipos')">📄 Exportar PDF — Equipos</button>`}
 
       <button type="button" class="btn btn-primary" style="margin-top:var(--sp-md);" onclick="Planificar.guardarVencimientos()">
         Guardar vencimientos</button>`;
@@ -582,11 +722,83 @@ const Planificar = (() => {
 
   function vencTab(tab) {
     _vencTab = tab;
-    const inner = document.querySelector('#acc-body-vencimientos .acc-body-inner');
-    if (inner) inner.innerHTML = _renderVencimientosBody();
+    _refreshVencBody();
   }
 
-  function subirSoporteVenc(itemId) {
+  function vencFiltro(val) {
+    if (_vencTab === 'personal') _vencFiltroPersonal = val;
+    else _vencFiltroEquipos = val;
+    _refreshVencBody();
+  }
+
+  function agregarTrabajador() {
+    if (!_venc) return;
+    const nombre = prompt('Nombre del trabajador:');
+    if (!nombre) return;
+    const cedula = prompt('Cédula:') || '';
+    _venc = Vencimientos.agregarTrabajador(_venc, nombre, cedula);
+    _refreshVencBody();
+    Router.toast('✓ Trabajador agregado');
+  }
+
+  function actualizarTrabajador(trId, campo, valor) {
+    if (!_venc) return;
+    _venc = Vencimientos.actualizarTrabajador(_venc, trId, campo, valor);
+    _refreshVencBody();
+  }
+
+  function agregarEquipo() {
+    if (!_venc) return;
+    const codigo = prompt('Código del equipo:') || 'EQ-NEW';
+    const tipo   = prompt('Tipo de equipo:') || 'Equipo';
+    _venc = Vencimientos.agregarEquipo(_venc, codigo, tipo);
+    _refreshVencBody();
+    Router.toast('✓ Equipo agregado');
+  }
+
+  function actualizarEquipo(eqId, campo, valor) {
+    if (!_venc) return;
+    _venc = Vencimientos.actualizarEquipo(_venc, eqId, campo, valor);
+    _refreshVencBody();
+  }
+
+  function exportarVencPDF(grupo) {
+    if (!_venc) return;
+    const v   = _venc;
+    const est = _currentEst();
+    const dash = Vencimientos.getDashboard(v);
+    const win = window.open('', '_blank');
+    if (!win) { Router.toast('Permite ventanas emergentes para exportar PDF'); return; }
+    const rows = grupo === 'personal'
+      ? Vencimientos.getPersonalRows(v, _vencFiltroPersonal)
+      : Vencimientos.getEquiposRows(v, _vencFiltroEquipos);
+    const titulo = grupo === 'personal' ? 'Control de Vencimientos — Personal' : 'Control de Vencimientos — Equipos';
+    const fecha = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' });
+    const tabla = grupo === 'personal'
+      ? `<table><thead><tr><th>Trabajador</th><th>CC</th><th>Documento</th><th>Vigencia</th><th>Estado</th></tr></thead><tbody>
+        ${rows.map(r => `<tr><td>${_escAttr(r.nombre)}</td><td>${_escAttr(r.cedula)}</td><td>${_escAttr(r.documento)}</td>
+          <td>${r.vigencia || '—'}</td><td>${_vencEstadoLabel(r.estado).label}</td></tr>`).join('')}</tbody></table>`
+      : `<table><thead><tr><th>Código</th><th>Tipo</th><th>Últ. calibración</th><th>Próx. calibración</th><th>Estado</th></tr></thead><tbody>
+        ${rows.map(r => `<tr><td>${_escAttr(r.codigo)}</td><td>${_escAttr(r.tipo)}</td><td>${r.ultima_calibracion || '—'}</td>
+          <td>${r.proxima_calibracion || '—'}</td><td>${_vencEstadoLabel(r.estado).label}</td></tr>`).join('')}</tbody></table>`;
+    win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${titulo}</title>
+      <style>body{font-family:Arial,sans-serif;padding:24px;color:#0A2E23;}h1{font-size:18px;color:#0A7350;}
+      .meta{font-size:12px;color:#555;margin-bottom:16px;}table{width:100%;border-collapse:collapse;font-size:11px;margin-top:12px;}
+      th{background:#0A7350;color:#fff;padding:8px;text-align:left;}td{padding:8px;border-bottom:1px solid #ddd;}
+      .stats{display:flex;gap:16px;margin:12px 0;font-size:12px;}</style></head><body>
+      <h1>${titulo}</h1>
+      <div class="meta">ECODESA SaniCheck · ${fecha}<br>Establecimiento: ${_escAttr(est.nombre || '—')} · NIT: ${_escAttr(est.nit || '—')}<br>
+      Normativa: ${Vencimientos.NORMA_BASE}</div>
+      <div class="stats"><span>Vigencia personal: <strong>${dash.pctPersonal}%</strong></span>
+      <span>Vigencia equipos: <strong>${dash.pctEquipos}%</strong></span>
+      <span>Alertas 30 días: <strong>${dash.alertas30}</strong></span></div>
+      ${tabla}
+      <p style="margin-top:24px;font-size:10px;color:#888;">Documento generado por SaniCheck · ECODESA Ing. S.A.S</p>
+      <script>setTimeout(function(){window.print();},400);</script></body></html>`);
+    win.document.close();
+  }
+
+  function subirSoporteVenc(itemId, trabajadorId) {
     let inp = document.getElementById('_venc-soporte-input');
     if (!inp) {
       inp = document.createElement('input');
@@ -598,13 +810,15 @@ const Planificar = (() => {
       document.body.appendChild(inp);
     }
     inp.dataset.itemId = itemId;
+    inp.dataset.trabajadorId = trabajadorId || '';
     inp.value = '';
     inp.click();
   }
 
   function _onSoporteVenc(e) {
-    const file   = e.target.files[0];
-    const itemId = e.target.dataset.itemId;
+    const file         = e.target.files[0];
+    const itemId       = e.target.dataset.itemId;
+    const trabajadorId = e.target.dataset.trabajadorId || null;
     if (!file || !itemId || !_venc) return;
     if (file.size > 3 * 1024 * 1024) {
       Router.toast('⚠ Archivo muy grande (máx. 3 MB)');
@@ -617,37 +831,39 @@ const Planificar = (() => {
         tipo: file.type || 'application/octet-stream',
         data: ev.target.result,
         subido_en: new Date().toISOString(),
-      });
-      const inner = document.querySelector('#acc-body-vencimientos .acc-body-inner');
-      if (inner) inner.innerHTML = _renderVencimientosBody();
-      _setCardState('vencimientos', _vencOpen, _vencBadgeInfo());
+      }, trabajadorId || null);
+      _refreshVencBody();
       Router.toast('📎 Soporte adjuntado');
     };
     reader.readAsDataURL(file);
   }
 
-  function eliminarSoporteVenc(itemId) {
+  function eliminarSoporteVenc(itemId, trabajadorId) {
     if (!_venc) return;
-    Vencimientos.setArchivo(_venc, itemId, null);
-    const inner = document.querySelector('#acc-body-vencimientos .acc-body-inner');
-    if (inner) inner.innerHTML = _renderVencimientosBody();
+    Vencimientos.setArchivo(_venc, itemId, null, trabajadorId || null);
+    _refreshVencBody();
     Router.toast('Soporte eliminado');
   }
 
   function actualizarVenc(campo, valor) {
     if (!_venc) return;
     _venc[campo] = valor;
-    const inner = document.querySelector('#acc-body-vencimientos .acc-body-inner');
-    if (inner) inner.innerHTML = _renderVencimientosBody();
-    _setCardState('vencimientos', _vencOpen, _vencBadgeInfo());
+    const tr = (_venc.trabajadores || []).find(t => t.id === 'tr-default');
+    if (tr && campo.endsWith('_fecha')) {
+      if (!tr.documentos) tr.documentos = {};
+      tr.documentos[campo] = valor;
+    }
+    _refreshVencBody();
   }
 
   function guardarVencimientos() {
     if (!_venc) return;
     _vencEst = _currentEst();
-    Vencimientos.saveVencimientos(_vencEst, _venc);
+    _venc = Vencimientos.saveVencimientos(_vencEst, _venc);
+    _vencNotified = false;
     Router.toast('✓ Vencimientos guardados');
     _syncAccordion();
+    _mostrarNotificacionesVenc();
   }
 
   function _renderGeneralForm() {
@@ -955,5 +1171,7 @@ const Planificar = (() => {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, diagEvaluar, diagNavegar, marcoSub, actualizarVenc, guardarVencimientos, vencTab, subirSoporteVenc, eliminarSoporteVenc };
+  return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, diagEvaluar, diagNavegar, marcoSub,
+    actualizarVenc, guardarVencimientos, vencTab, vencFiltro, subirSoporteVenc, eliminarSoporteVenc,
+    agregarTrabajador, actualizarTrabajador, agregarEquipo, actualizarEquipo, exportarVencPDF };
 })();
