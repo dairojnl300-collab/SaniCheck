@@ -194,6 +194,61 @@ const Planificar = (() => {
     return { text: '10 categorías', cls: 'estado-chip estado-B', style: '' };
   }
 
+  function _diagResumenTable(d, r, b) {
+    return `
+      <table style="width:100%;border-collapse:collapse;font-size:var(--text-xs);">
+        <thead><tr style="background:var(--emerald-2);color:#fff;">
+          <th style="padding:8px;text-align:left;">Indicador</th>
+          <th style="padding:8px;text-align:center;width:90px;">Cantidad</th>
+          <th style="padding:8px;text-align:left;">Estado</th>
+        </tr></thead>
+        <tbody>
+          <tr style="background:var(--color-white);">
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);font-weight:600;">Aspectos deficientes</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);text-align:center;font-weight:700;color:var(--color-deficiente);">${d.length}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);"><span class="estado-chip estado-D">Crítico</span></td>
+          </tr>
+          <tr style="background:var(--color-surface);">
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);font-weight:600;">Aspectos regulares</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);text-align:center;font-weight:700;color:var(--color-regular);">${r.length}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);"><span class="estado-chip estado-R">Por mejorar</span></td>
+          </tr>
+          <tr style="background:var(--color-white);">
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);font-weight:600;">Aspectos en buen estado</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);text-align:center;font-weight:700;color:var(--color-bueno);">${b.length}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);"><span class="estado-chip estado-B">Conforme</span></td>
+          </tr>
+        </tbody>
+      </table>`;
+  }
+
+  function _diagHallazgosTable(rows) {
+    return `
+      <table style="width:100%;border-collapse:collapse;font-size:var(--text-xs);">
+        <thead><tr style="background:var(--emerald-2);color:#fff;">
+          <th style="padding:8px;text-align:left;width:28px;">#</th>
+          <th style="padding:8px;text-align:left;">Aspecto evaluado</th>
+          <th style="padding:8px;text-align:left;width:88px;">Calificación</th>
+          <th style="padding:8px;text-align:left;width:72px;">Prioridad</th>
+          <th style="padding:8px;text-align:left;">Acción requerida</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map((it, i) => {
+            const cls   = it.calificacion === 'D' ? 'estado-D' : 'estado-R';
+            const label = it.calificacion === 'D' ? 'Deficiente' : 'Regular';
+            return `
+          <tr style="background:${i % 2 === 0 ? 'var(--color-white)' : 'var(--color-surface)'};">
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);font-weight:600;">${i + 1}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);font-weight:600;">${_escAttr(it.texto)}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);"><span class="estado-chip ${cls}">${label}</span></td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${_escAttr(it.prioridad || '—')}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink2);">${_escAttr(it.accion || it.condicion || '—')}</td>
+          </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  }
+
   function _normaTable(rows) {
     return `
       <table style="width:100%;border-collapse:collapse;font-size:var(--text-xs);">
@@ -313,32 +368,55 @@ const Planificar = (() => {
       return `<div style="font-size:var(--text-sm);color:var(--color-ink3);text-align:center;padding:var(--sp-md) 0;">
         Aún no hay ítems calificados. Guarda el diagnóstico con al menos una calificación para ver resultados aquí.</div>`;
     }
-    const header = `
-      <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);margin-bottom:var(--sp-md);">
-        ${d.length} aspecto${d.length !== 1 ? 's' : ''} crítico${d.length !== 1 ? 's' : ''} ·
-        ${r.length} aspecto${r.length !== 1 ? 's' : ''} por mejorar ·
-        ${b.length} en buen estado</div>`;
+
+    const estNombre = _escAttr(_val('inp-nombre') || 'Establecimiento');
+    const estNit    = _escAttr(_val('inp-nit') || '—');
+    const fecha     = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    const docHeader = `
+      <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:var(--sp-md);">
+        <div style="background:var(--emerald-2);color:#fff;padding:12px 14px;">
+          <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.85;">
+            ECODESA · SaniCheck · Documento oficial</div>
+          <div style="font-size:var(--text-base);font-weight:700;margin-top:4px;letter-spacing:-0.01em;">
+            Resultados del Diagnóstico Inicial</div>
+        </div>
+        <div style="padding:10px 14px;background:var(--color-surface);border-bottom:1px solid var(--color-border);
+          font-size:var(--text-xs);color:var(--color-ink3);line-height:1.6;">
+          <strong style="color:var(--color-ink);">Establecimiento:</strong> ${estNombre}<br>
+          <strong style="color:var(--color-ink);">NIT:</strong> ${estNit} ·
+          <strong style="color:var(--color-ink);">Fecha de consulta:</strong> ${fecha}
+        </div>
+        <div style="padding:12px 14px;font-size:var(--text-xs);color:var(--color-ink3);font-style:italic;
+          border-bottom:1px solid var(--color-border);">
+          Resumen consolidado del perfil sanitario inicial. Los hallazgos deficientes y regulares requieren seguimiento
+          según prioridad automática asignada (Alta · Media · Baja).</div>
+        <div style="overflow-x:auto;">${_diagResumenTable(d, r, b)}</div>
+      </div>`;
+
     if (!critList.length) {
-      return header + `
-        <div style="padding:16px;background:var(--color-bueno-bg);border-radius:var(--radius-md);
-          color:var(--color-bueno);font-weight:600;text-align:center;">
-          ✓ Sin hallazgos críticos — mantener buenas prácticas.</div>`;
-    }
-    const rows = critList.map(it => {
-      const cls   = it.calificacion === 'D' ? 'estado-D' : 'estado-R';
-      const label = it.calificacion === 'D' ? 'Deficiente' : 'Regular';
-      return `
-        <div style="padding:12px 0;border-bottom:1px dashed var(--color-border);">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
-            <span class="estado-chip ${cls}">${label}</span>
-            ${it.prioridad ? `<span class="norma-badge" style="margin:0;">Prioridad: ${_escAttr(it.prioridad)}</span>` : ''}
+      return docHeader + `
+        <div style="border:1px solid var(--color-bueno);border-radius:var(--radius-md);overflow:hidden;">
+          <div style="padding:14px 16px;background:var(--color-bueno-bg);text-align:center;">
+            <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-bueno);margin-bottom:4px;">
+              ✓ Sin hallazgos críticos</div>
+            <div style="font-size:var(--text-xs);color:var(--color-ink3);">
+              Mantener buenas prácticas y actualizar el diagnóstico ante cambios en infraestructura o procesos.</div>
           </div>
-          <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);">${_escAttr(it.texto)}</div>
-          ${it.accion ? `<div style="font-size:var(--text-xs);color:var(--color-ink3);margin-top:4px;">
-            Acción requerida: ${_escAttr(it.accion)}</div>` : ''}
         </div>`;
-    }).join('');
-    return header + rows;
+    }
+
+    return docHeader + `
+      <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;
+          padding:10px 12px;background:var(--color-surface);border-bottom:1px solid var(--color-border);">
+          <span style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);">
+            Hallazgos prioritarios (${critList.length})</span>
+          <span style="font-size:var(--text-xs);color:var(--color-ink3);">
+            ${d.length} crítico${d.length !== 1 ? 's' : ''} · ${r.length} por mejorar</span>
+        </div>
+        <div style="overflow-x:auto;">${_diagHallazgosTable(critList)}</div>
+      </div>`;
   }
 
   function _vencBadgeInfo() {

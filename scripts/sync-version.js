@@ -16,6 +16,7 @@ const ASSET_PATHS = [
   'js/store.js',
   'js/router.js',
   'js/licencias.js',
+  'js/app-version.js',
   'js/sw-update.js',
   'js/about.js',
   'js/app.js',
@@ -67,6 +68,24 @@ function computeBuildHash(version) {
   return hash.digest('hex').slice(0, 12);
 }
 
+function readAppVersion() {
+  const avPath = path.join(APP, 'js/app-version.js');
+  if (fs.existsSync(avPath)) {
+    const m = fs.readFileSync(avPath, 'utf8').match(/VERSION\s*=\s*'([^']+)'/);
+    if (m) return m[1];
+  }
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  return pkg.version || '0.0.0';
+}
+
+function syncPackageJson(version) {
+  const pkgPath = path.join(ROOT, 'package.json');
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  if (pkg.version === version) return;
+  pkg.version = version;
+  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
+}
+
 function patchSw(version, build) {
   const swPath = path.join(APP, 'sw.js');
   let sw = fs.readFileSync(swPath, 'utf8');
@@ -84,8 +103,8 @@ function patchSw(version, build) {
 }
 
 function main() {
-  const pkg     = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
-  const version = pkg.version || '0.0.0';
+  const version = readAppVersion();
+  syncPackageJson(version);
   const build   = computeBuildHash(version);
   const builtAt = new Date().toISOString();
   const manifest = { version, build, builtAt };
