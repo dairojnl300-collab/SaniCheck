@@ -991,6 +991,59 @@ const Planificar = (() => {
     _refreshVencBody();
   }
 
+  function _fmtVencFecha(d) {
+    if (!d) return '—';
+    try {
+      return new Date(d + 'T00:00:00').toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch {
+      return d;
+    }
+  }
+
+  function _buildPersonalPdfSections(rows) {
+    const order = [];
+    const byId  = new Map();
+    rows.forEach(r => {
+      if (!byId.has(r.trabajadorId)) {
+        byId.set(r.trabajadorId, { nombre: r.nombre, cedula: r.cedula, docs: [] });
+        order.push(r.trabajadorId);
+      }
+      byId.get(r.trabajadorId).docs.push(r);
+    });
+    return order.map((id, i) => {
+      const g = byId.get(id);
+      return `
+      <section class="trabajador-section" style="margin-top:${i ? '28px' : '12px'};padding-top:${i ? '20px' : '0'};${i ? 'border-top:2px solid #E5E7EB;' : ''}">
+        <div style="margin-bottom:10px;padding:10px 12px;background:#F0FDF4;border-radius:8px;border-left:4px solid #0A7350;">
+          <div style="font-size:14px;font-weight:700;color:#0A2E23;">${_escAttr(g.nombre || 'Sin nombre')}</div>
+          <div style="font-size:11px;color:#555;margin-top:4px;">Cédula: ${_escAttr(g.cedula || '—')}</div>
+        </div>
+        <table>
+          <thead><tr><th>Documento</th><th>Fecha expedición</th><th>Fecha vencimiento</th><th>Estado</th></tr></thead>
+          <tbody>
+            ${g.docs.map(d => `<tr>
+              <td>${_escAttr(d.documento)}</td>
+              <td>${d.sinVencimiento && !d.expedicion ? '—' : _fmtVencFecha(d.expedicion)}</td>
+              <td>${d.sinVencimiento ? '—' : _fmtVencFecha(d.vencimiento || d.vigencia)}</td>
+              <td>${_vencEstadoLabel(d.estado).label}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </section>`;
+    }).join('');
+  }
+
+  function restaurarVencTab(tab) {
+    if (tab === 'personal' || tab === 'equipos') _vencTab = tab;
+    _vencOpen = true;
+    const hdr  = document.getElementById('acc-header-vencimientos');
+    const wrap = document.getElementById('acc-body-vencimientos');
+    if (hdr) hdr.classList.add('open');
+    if (wrap) wrap.classList.add('open');
+    _refreshVencBody();
+    if (hdr) hdr.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   function exportarVencPDF(grupo) {
     if (!_venc) return;
     const v   = _venc;
@@ -1003,27 +1056,56 @@ const Planificar = (() => {
       : Vencimientos.getEquiposRows(v, _vencFiltroEquipos);
     const titulo = grupo === 'personal' ? 'Control de Vencimientos — Personal' : 'Control de Vencimientos — Equipos';
     const fecha = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' });
-    const tabla = grupo === 'personal'
-      ? `<table><thead><tr><th>Trabajador</th><th>CC</th><th>Documento</th><th>Expedición</th><th>Vigencia</th><th>Estado</th></tr></thead><tbody>
-        ${rows.map(r => `<tr><td>${_escAttr(r.nombre)}</td><td>${_escAttr(r.cedula)}</td><td>${_escAttr(r.documento)}</td>
-          <td>${r.expedicion || '—'}</td><td>${r.sinVencimiento ? '—' : (r.vigencia || '—')}</td><td>${_vencEstadoLabel(r.estado).label}</td></tr>`).join('')}</tbody></table>`
+    const contenido = grupo === 'personal'
+      ? _buildPersonalPdfSections(rows)
       : `<table><thead><tr><th>Código</th><th>Tipo</th><th>Últ. calibración</th><th>Próx. calibración</th><th>Estado</th></tr></thead><tbody>
-        ${rows.map(r => `<tr><td>${_escAttr(r.codigo)}</td><td>${_escAttr(r.tipo)}</td><td>${r.ultima_calibracion || '—'}</td>
-          <td>${r.proxima_calibracion || '—'}</td><td>${_vencEstadoLabel(r.estado).label}</td></tr>`).join('')}</tbody></table>`;
+        ${rows.map(r => `<tr><td>${_escAttr(r.codigo)}</td><td>${_escAttr(r.tipo)}</td><td>${_fmtVencFecha(r.ultima_calibracion)}</td>
+          <td>${_fmtVencFecha(r.proxima_calibracion)}</td><td>${_vencEstadoLabel(r.estado).label}</td></tr>`).join('')}</tbody></table>`;
     win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${titulo}</title>
-      <style>body{font-family:Arial,sans-serif;padding:24px;color:#0A2E23;}h1{font-size:18px;color:#0A7350;}
-      .meta{font-size:12px;color:#555;margin-bottom:16px;}table{width:100%;border-collapse:collapse;font-size:11px;margin-top:12px;}
-      th{background:#0A7350;color:#fff;padding:8px;text-align:left;}td{padding:8px;border-bottom:1px solid #ddd;}
-      .stats{display:flex;gap:16px;margin:12px 0;font-size:12px;}</style></head><body>
+      <style>
+        body{font-family:Arial,sans-serif;padding:24px;padding-top:64px;color:#0A2E23;}
+        h1{font-size:18px;color:#0A7350;margin:0;}
+        .meta{font-size:12px;color:#555;margin-bottom:16px;}
+        table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px;}
+        th{background:#0A7350;color:#fff;padding:8px;text-align:left;}
+        td{padding:8px;border-bottom:1px solid #ddd;}
+        .stats{display:flex;gap:16px;margin:12px 0;font-size:12px;flex-wrap:wrap;}
+        .toolbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:12px;
+          padding:10px 16px;background:#0A2E23;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+        .toolbar button{padding:8px 18px;border:none;border-radius:6px;background:#52B788;color:#0A2E23;
+          font-size:13px;font-weight:700;cursor:pointer;}
+        .toolbar button:hover{background:#40916C;}
+        .toolbar-title{font-size:13px;font-weight:600;flex:1;}
+        @media print{
+          .no-print{display:none!important;}
+          body{padding-top:24px;}
+          .trabajador-section{page-break-inside:avoid;break-inside:avoid;}
+        }
+      </style></head><body>
+      <div class="toolbar no-print">
+        <button type="button" onclick="volverVenc()">← Volver</button>
+        <span class="toolbar-title">${titulo}</span>
+      </div>
       <h1>${titulo}</h1>
       <div class="meta">ECODESA SaniCheck · ${fecha}<br>Establecimiento: ${_escAttr(est.nombre || '—')} · NIT: ${_escAttr(est.nit || '—')}<br>
       Normativa: ${Vencimientos.NORMA_BASE}</div>
       <div class="stats"><span>Vigencia personal: <strong>${dash.pctPersonal}%</strong></span>
       <span>Vigencia equipos: <strong>${dash.pctEquipos}%</strong></span>
       <span>Alertas 30 días: <strong>${dash.alertas30}</strong></span></div>
-      ${tabla}
+      ${contenido}
       <p style="margin-top:24px;font-size:10px;color:#888;">Documento generado por SaniCheck · ECODESA Ing. S.A.S</p>
-      <script>setTimeout(function(){window.print();},400);</script></body></html>`);
+      <script>
+        function volverVenc() {
+          try {
+            if (window.opener && window.opener.Planificar && window.opener.Planificar.restaurarVencTab) {
+              window.opener.Planificar.restaurarVencTab('${grupo}');
+              window.opener.focus();
+            }
+          } catch (e) {}
+          window.close();
+        }
+        setTimeout(function(){window.print();},400);
+      </script></body></html>`);
     win.document.close();
   }
 
@@ -1422,6 +1504,6 @@ const Planificar = (() => {
 
   return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, diagEvaluar, diagNavegar, marcoSub,
     actualizarVenc, guardarVencimientos, vencTab, vencFiltro, subirSoporteVenc, eliminarSoporteVenc, verSoporteVenc,
-    agregarTrabajador, actualizarTrabajador, agregarEquipo, actualizarEquipo, exportarVencPDF,
+    agregarTrabajador, actualizarTrabajador, agregarEquipo, actualizarEquipo, exportarVencPDF, restaurarVencTab,
     toggleReqForm, cancelarRequerimiento, crearRequerimiento, actualizarRequerimiento, eliminarRequerimiento, toggleReqSinVencNuevo };
 })();
