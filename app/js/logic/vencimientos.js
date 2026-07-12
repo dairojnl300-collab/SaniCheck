@@ -26,8 +26,8 @@ const Vencimientos = (() => {
       norma: 'Decreto 3075 de 1997, Art. 11',
       archivoLabel: 'Adjuntar soporte' },
     { id: 'induccion', label: 'Inducción',
-      expId: 'induccion_exp', vencId: null, soloExp: true,
-      periodicidad: 'Personal nuevo — sin vencimiento',
+      expId: 'induccion_exp', vencId: 'induccion_venc',
+      periodicidad: 'Renovable — alerta 30 días antes',
       norma: NORMA_BASE + ', Cap. 6 — Inducción SST',
       archivoLabel: 'Adjuntar soporte' },
   ];

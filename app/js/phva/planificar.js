@@ -1001,9 +1001,10 @@ const Planificar = (() => {
   }
 
   function _buildPersonalPdfSections(rows) {
+    const pdfRows = rows.filter(r => r.itemId !== 'cedula');
     const order = [];
     const byId  = new Map();
-    rows.forEach(r => {
+    pdfRows.forEach(r => {
       if (!byId.has(r.trabajadorId)) {
         byId.set(r.trabajadorId, { nombre: r.nombre, cedula: r.cedula, docs: [] });
         order.push(r.trabajadorId);
