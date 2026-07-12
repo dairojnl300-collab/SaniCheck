@@ -2,12 +2,12 @@
 
 const Planificar = (() => {
 
-  const ICONS = {
-    building: '<path d="M4 21V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v16"/><path d="M13 10h5a1 1 0 0 1 1 1v10"/><path d="M2 21h20"/><path d="M7 8h1M10 8h1M7 12h1M10 12h1M7 16h1M10 16h1"/>',
-    clipboardCheck: '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2l4-4"/>',
-    listCheck: '<path d="M3.5 5.5l1.5 1.5l2.5 -2.5"/><path d="M3.5 11.5l1.5 1.5l2.5 -2.5"/><path d="M3.5 17.5l1.5 1.5l2.5 -2.5"/><path d="M11 6l9 0"/><path d="M11 12l9 0"/><path d="M11 18l9 0"/>',
-    scale: '<path d="M12 3v18"/><path d="M5 7l7 -4l7 4"/><path d="M5 7l-3 7a4 4 0 0 0 7 0z"/><path d="M19 7l-3 7a4 4 0 0 0 7 0z"/><path d="M7 21h10"/>',
-    calendarTime: '<path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4"/><path d="M14 18a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496v1.504l1 1"/>',
+  const _ACC_ICON = {
+    building: 'building',
+    clipboardCheck: 'clipboardCheck',
+    listCheck: 'listCheck',
+    scale: 'scale',
+    calendarTime: 'calendarClock',
   };
 
   const MARCO_GENERAL = [
@@ -130,7 +130,7 @@ const Planificar = (() => {
 
       <div style="margin:0 var(--sp-md);">
         <button type="submit" form="form-planificar" class="btn btn-primary">
-          Iniciar Ciclo PHVA →
+          Iniciar Ciclo PHVA ${AppIcons.icon('arrowRight', 14)}
         </button>
       </div>
 
@@ -138,8 +138,7 @@ const Planificar = (() => {
   }
 
   function _icon(name, color) {
-    return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.6"
-      stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">${ICONS[name]}</svg>`;
+    return AppIcons.accordion(_ACC_ICON[name] || name, color);
   }
 
   function _chevron() {
@@ -170,7 +169,7 @@ const Planificar = (() => {
 
   function toggle(key) {
     if (key === 'resultados' && !_resultadosData().rated.length) {
-      Router.toast('⚠ Guarda el diagnóstico con al menos 1 ítem calificado primero');
+      Router.toast('Guarda el diagnóstico con al menos 1 ítem calificado primero');
       return;
     }
     _generalOpen    = key === 'general'      ? !_generalOpen    : false;
@@ -403,9 +402,9 @@ const Planificar = (() => {
       return docHeader + `
         <div style="border:1px solid var(--color-bueno);border-radius:var(--radius-md);overflow:hidden;">
           <div style="padding:14px 16px;background:var(--color-bueno-bg);text-align:center;">
-            <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-bueno);margin-bottom:4px;">
-              ✓ Sin hallazgos críticos</div>
-            <div style="font-size:var(--text-xs);color:var(--color-ink3);">
+            <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-bueno);margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:6px;">
+              ${AppIcons.icon('check', 14)} Sin hallazgos críticos
+            </div>
               Mantener buenas prácticas y actualizar el diagnóstico ante cambios en infraestructura o procesos.</div>
           </div>
         </div>`;
@@ -437,7 +436,7 @@ const Planificar = (() => {
     if (!_venc || _vencNotified) return;
     const dash = Vencimientos.getDashboard(_venc);
     if (dash.notificaciones.length) {
-      Router.toast(`⚠ ${dash.notificaciones.length} alerta(s) de vencimiento — revisar dashboard`);
+      Router.toast(`${dash.notificaciones.length} alerta(s) de vencimiento — revisar dashboard`);
       _vencNotified = true;
     }
   }
@@ -500,7 +499,7 @@ const Planificar = (() => {
           <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-regular);margin-bottom:6px;">🔔 Notificaciones automáticas</div>
           ${dash.notificaciones.slice(0, 4).map(n => `
             <div style="font-size:11px;color:var(--color-ink2);margin-bottom:4px;">• ${_escAttr(n.texto)}</div>`).join('')}
-        </div>` : `<div style="padding:10px 14px;font-size:var(--text-xs);color:var(--color-bueno);">✓ Sin alertas de vencimiento</div>`}
+        </div>` : `<div style="padding:10px 14px;font-size:var(--text-xs);color:var(--color-bueno);display:flex;align-items:center;gap:6px;">${AppIcons.icon('check', 12)} Sin alertas de vencimiento</div>`}
       </div>`;
   }
 
@@ -524,7 +523,7 @@ const Planificar = (() => {
             const fmt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('es-CO') : '—';
             const vigTxt = r.sinVencimiento ? '—' : fmt(r.vigencia);
             const expTxt = r.sinVencimiento && !r.expedicion ? '—' : fmt(r.expedicion);
-            const alerta = !r.sinVencimiento && r.estado === 'por_vencer' ? ' ⚠' : '';
+            const alerta = !r.sinVencimiento && r.estado === 'por_vencer' ? ` ${AppIcons.icon('alertTriangle', 11)}` : '';
             return `
           <tr style="background:${i % 2 === 0 ? 'var(--color-white)' : 'var(--color-surface)'};">
             <td style="padding:8px;border-bottom:1px solid var(--color-border);">
@@ -589,7 +588,7 @@ const Planificar = (() => {
             background:#fff;cursor:pointer;color:var(--emerald-2);">Ver</button>
         <button type="button" onclick="Planificar.eliminarSoporteVenc('${itemId}','${trId}')"
           style="padding:2px 8px;font-size:10px;border:1px solid var(--color-border);border-radius:4px;
-            background:#fff;cursor:pointer;color:var(--color-deficiente);">✕</button>
+            background:#fff;cursor:pointer;color:var(--color-deficiente);display:inline-flex;align-items:center;justify-content:center;">${AppIcons.icon('x', 12)}</button>
       </div>`;
     if (isImg) {
       return `<div style="margin-top:8px;border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;">
@@ -597,8 +596,8 @@ const Planificar = (() => {
         ${bar}</div>`;
     }
     return `<div style="margin-top:8px;border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;">
-      <div style="padding:16px 12px;text-align:center;background:#f8faf9;">
-        <div style="font-size:28px;line-height:1;">📄</div>
+      <div style="padding:16px 12px;text-align:center;background:#f8faf9;color:var(--color-ink3);">
+        ${AppIcons.icon('fileText', 28)}
         <div style="font-size:11px;color:var(--color-ink2);margin-top:4px;">${isPdf ? 'Documento PDF' : 'Archivo adjunto'}</div>
       </div>${bar}</div>`;
   }
@@ -609,7 +608,7 @@ const Planificar = (() => {
     const st   = _vencEstadoLabel(est.estado);
     const docs = tr.documentos || {};
     const alerta = est.estado === 'por_vencer'
-      ? `<div style="margin-top:6px;font-size:10px;color:var(--color-regular);">⚠ Vence en ${est.dias} días</div>` : '';
+      ? `<div style="margin-top:6px;font-size:10px;color:var(--color-regular);display:flex;align-items:center;gap:4px;">${AppIcons.icon('alertTriangle', 11)} Vence en ${est.dias} días</div>` : '';
     const periodicidad = doc.periodicidad
       ? `<span style="font-size:10px;color:var(--color-ink3);background:var(--color-surface);padding:2px 8px;border-radius:99px;">${_escAttr(doc.periodicidad)}</span>` : '';
 
@@ -662,7 +661,7 @@ const Planificar = (() => {
           <button type="button" onclick="Planificar.subirSoporteVenc('${doc.id}','${tr.id}')"
             style="margin-top:10px;width:100%;padding:10px;cursor:pointer;border:1.5px dashed var(--emerald-2);
               border-radius:var(--radius-md);background:rgba(10,115,80,0.06);color:var(--emerald-2);font-size:12px;font-weight:600;">
-            📎 ${_escAttr(doc.archivoLabel)}${arch ? ' ✓' : ''}
+            ${AppIcons.row('paperclip', _escAttr(doc.archivoLabel) + (arch ? ' — adjunto' : ''), 12)}
           </button>
           ${_renderArchivoPreview(arch, doc.id, tr.id)}
         </div>
@@ -683,7 +682,7 @@ const Planificar = (() => {
     const est  = Vencimientos.estadoRequerimiento(req);
     const st   = _vencEstadoLabel(est.estado);
     const alerta = est.estado === 'por_vencer'
-      ? `<div style="margin-top:6px;font-size:10px;color:var(--color-regular);">⚠ Vence en ${est.dias} días</div>` : '';
+      ? `<div style="margin-top:6px;font-size:10px;color:var(--color-regular);display:flex;align-items:center;gap:4px;">${AppIcons.icon('alertTriangle', 11)} Vence en ${est.dias} días</div>` : '';
     const vencCampo = req.sinVencimiento ? '' : `
           <div class="form-group" style="margin-bottom:0;">
             <label class="form-label" style="font-size:10px;">Fecha vencimiento</label>
@@ -723,7 +722,7 @@ const Planificar = (() => {
           <button type="button" onclick="Planificar.subirSoporteVenc('${req.id}','${tr.id}')"
             style="margin-top:10px;width:100%;padding:10px;cursor:pointer;border:1.5px dashed var(--emerald-2);
               border-radius:var(--radius-md);background:rgba(10,115,80,0.06);color:var(--emerald-2);font-size:12px;font-weight:600;">
-            📎 Adjuntar soporte${arch ? ' ✓' : ''}
+            ${AppIcons.row('paperclip', 'Adjuntar soporte' + (arch ? ' — adjunto' : ''), 12)}
           </button>
           ${_renderArchivoPreview(arch, req.id, tr.id)}
           <button type="button" onclick="Planificar.eliminarRequerimiento('${tr.id}','${req.id}')"
@@ -785,10 +784,10 @@ const Planificar = (() => {
           letter-spacing:0.05em;margin:var(--sp-md) 0 var(--sp-sm);">Requerimientos adicionales</div>
         ${reqs.map(req => _renderRequerimientoCard(v, tr, req)).join('')}` : ''}
         ${_vencReqFormOpen ? _renderNuevoRequerimientoForm(tr) : ''}
-        <button type="button" class="btn btn-accent" style="width:100%;padding:10px;margin-top:8px;"
-          onclick="Planificar.toggleReqForm()">+ Agregar requerimiento adicional</button>
-        <button type="button" class="btn btn-outline" style="width:auto;padding:8px 14px;margin-top:8px;"
-          onclick="Planificar.agregarTrabajador()">+ Agregar trabajador</button>
+        <button type="button" class="btn btn-accent" style="width:100%;padding:10px;margin-top:8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+          onclick="Planificar.toggleReqForm()">${AppIcons.row('plus', 'Agregar requerimiento adicional', 14)}</button>
+        <button type="button" class="btn btn-outline" style="width:auto;padding:8px 14px;margin-top:8px;display:inline-flex;align-items:center;gap:6px;"
+          onclick="Planificar.agregarTrabajador()">${AppIcons.row('plus', 'Agregar trabajador', 14)}</button>
       </div>`;
   }
 
@@ -839,8 +838,8 @@ const Planificar = (() => {
             </tbody>
           </table>
         </div>` : ''}
-        <button type="button" class="btn btn-outline" style="width:auto;padding:8px 14px;margin-top:8px;"
-          onclick="Planificar.agregarEquipo()">+ Agregar equipo</button>
+        <button type="button" class="btn btn-outline" style="width:auto;padding:8px 14px;margin-top:8px;display:inline-flex;align-items:center;gap:6px;"
+          onclick="Planificar.agregarEquipo()">${AppIcons.row('plus', 'Agregar equipo', 14)}</button>
       </div>`;
   }
 
@@ -893,14 +892,14 @@ const Planificar = (() => {
       ${grupo === 'personal' ? `
         <div style="margin-bottom:var(--sp-sm);font-size:var(--text-xs);color:var(--color-regular);padding:8px 12px;
           background:rgba(245,124,0,0.1);border-radius:var(--radius-md);border:1px solid rgba(245,124,0,0.25);">
-          ⚠ Alerta automática 30 días antes del vencimiento de cada documento.</div>
+          ${AppIcons.row('alertTriangle', 'Alerta automática 30 días antes del vencimiento de cada documento.', 12)}</div>
         ${_vencPersonalGestion(v)}
         <button type="button" class="btn btn-accent" style="margin-top:var(--sp-md);width:100%;"
-          onclick="Planificar.exportarVencPDF('personal')">📄 Exportar PDF — Personal</button>
+          onclick="Planificar.exportarVencPDF('personal')">${AppIcons.row('fileText', 'Exportar PDF — Personal', 14)}</button>
       ` : `
         ${_vencEquiposGestion(v)}
         <button type="button" class="btn btn-accent" style="margin-top:var(--sp-md);width:100%;"
-          onclick="Planificar.exportarVencPDF('equipos')">📄 Exportar PDF — Equipos</button>`}
+          onclick="Planificar.exportarVencPDF('equipos')">${AppIcons.row('fileText', 'Exportar PDF — Equipos', 14)}</button>`}
 
       <button type="button" class="btn btn-primary" style="margin-top:var(--sp-md);" onclick="Planificar.guardarVencimientos()">
         Guardar vencimientos</button>`;
@@ -944,7 +943,7 @@ const Planificar = (() => {
     _venc = Vencimientos.agregarRequerimiento(_venc, trId, nombre, exp, venc, sinVenc);
     _vencReqFormOpen = false;
     _guardarVencAuto();
-    Router.toast('✓ Requerimiento guardado');
+    Router.toast('Requerimiento guardado');
   }
 
   function actualizarRequerimiento(trId, reqId, campo, valor) {
@@ -968,7 +967,7 @@ const Planificar = (() => {
     const cedula = prompt('Cédula:') || '';
     _venc = Vencimientos.agregarTrabajador(_venc, nombre, cedula);
     _refreshVencBody();
-    Router.toast('✓ Trabajador agregado');
+    Router.toast('Trabajador agregado');
   }
 
   function actualizarTrabajador(trId, campo, valor) {
@@ -983,7 +982,7 @@ const Planificar = (() => {
     const tipo   = prompt('Tipo de equipo:') || 'Equipo';
     _venc = Vencimientos.agregarEquipo(_venc, codigo, tipo);
     _refreshVencBody();
-    Router.toast('✓ Equipo agregado');
+    Router.toast('Equipo agregado');
   }
 
   function actualizarEquipo(eqId, campo, valor) {
@@ -1071,7 +1070,7 @@ const Planificar = (() => {
     const trabajadorId = e.target.dataset.trabajadorId || null;
     if (!file || !itemId || !_venc) return;
     if (file.size > 3 * 1024 * 1024) {
-      Router.toast('⚠ Archivo muy grande (máx. 3 MB)');
+      Router.toast('Archivo muy grande (máx. 3 MB)');
       return;
     }
     const reader = new FileReader();
@@ -1083,7 +1082,7 @@ const Planificar = (() => {
         subido_en: new Date().toISOString(),
       }, trabajadorId || null);
       _guardarVencAuto();
-      Router.toast('📎 Soporte adjuntado');
+      Router.toast('Soporte adjuntado');
     };
     reader.readAsDataURL(file);
   }
@@ -1111,7 +1110,7 @@ const Planificar = (() => {
     _vencEst = _currentEst();
     _venc = Vencimientos.saveVencimientos(_vencEst, _venc);
     _vencNotified = false;
-    Router.toast('✓ Vencimientos guardados');
+    Router.toast('Vencimientos guardados');
     _syncAccordion();
     _mostrarNotificacionesVenc();
   }
@@ -1260,7 +1259,7 @@ const Planificar = (() => {
       <div class="aspecto-texto">${_escAttr(def.texto)}</div>
       <div style="font-size:var(--text-sm);color:var(--color-ink3);line-height:1.55;margin-bottom:var(--sp-sm);text-align:justify;">
         ${_escAttr(def.descripcion)}</div>
-      <div class="norma-badge">📋 ${_escAttr(def.norma)}</div>
+      <div class="norma-badge">${AppIcons.icon('scale', 12)} ${_escAttr(def.norma)}</div>
 
       <div class="eval-group">
         ${['B', 'R', 'D', 'NA'].map(v => `
@@ -1274,7 +1273,7 @@ const Planificar = (() => {
       ${it.calificacion === 'NA' ? `
         <div style="padding:14px;background:#F3F4F6;border-radius:var(--radius-md);
           text-align:center;color:#6B7280;font-size:13px;border:1px solid #E5E7EB;">
-          ℹ️ No aplica a este establecimiento
+          ${AppIcons.row('info', 'No aplica a este establecimiento', 12)}
         </div>
       ` : it.calificacion ? `
         ${(it.calificacion === 'R' || it.calificacion === 'D') ? `
@@ -1296,12 +1295,12 @@ const Planificar = (() => {
 
       <div class="checklist-nav" style="margin:var(--sp-md) calc(-1 * var(--sp-md)) 0;padding:var(--sp-md) 0 0;">
         <button type="button" class="btn btn-outline nav-prev" style="width:auto;padding:10px 16px;"
-          onclick="Planificar.diagNavegar(-1)"${idx === 0 ? ' disabled' : ''}>← Anterior</button>
+          onclick="Planificar.diagNavegar(-1)"${idx === 0 ? ' disabled' : ''}>${AppIcons.row('arrowLeft', 'Anterior', 14)}</button>
         <div class="nav-counter">${idx + 1} / ${total}</div>
         <button type="button" class="btn ${idx === total - 1 ? 'btn-primary' : 'btn-accent'} nav-next"
           style="width:auto;padding:10px 16px;"
           onclick="Planificar.diagNavegar(1)">
-          ${idx === total - 1 ? 'Guardar →' : 'Siguiente →'}</button>
+          ${idx === total - 1 ? AppIcons.row('check', 'Guardar', 14) : AppIcons.row('arrowRight', 'Siguiente', 14)}</button>
       </div>
 
       <div style="margin-top:var(--sp-sm);font-size:var(--text-xs);color:var(--color-ink3);text-align:justify;">
@@ -1355,7 +1354,7 @@ const Planificar = (() => {
     if (!_diagItems) return;
     _diagEst = _currentEst();
     DiagnosticoInicial.saveDiagnostico(_diagEst, _diagItems);
-    Router.toast('✓ Diagnóstico guardado');
+    Router.toast('Diagnóstico guardado');
     _syncAccordion();
   }
 
@@ -1374,7 +1373,7 @@ const Planificar = (() => {
     const tipo      = val('inp-tipo');
 
     if (!nombre || !nit || !direccion || !tipo) {
-      Router.toast('⚠ Complete los campos obligatorios (*)');
+      Router.toast('Complete los campos obligatorios (*)');
       return;
     }
 
@@ -1404,7 +1403,7 @@ const Planificar = (() => {
 
     Store.upsertInspeccion(inspeccion);
     Store.setUI({ aspectoIdx: 0, programaIdx: 0 });
-    Router.toast('✓ Establecimiento guardado');
+    Router.toast('Establecimiento guardado');
     Router.go('personalizar');
   }
 

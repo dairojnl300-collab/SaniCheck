@@ -17,7 +17,9 @@
     return `
       <div style="padding:var(--sp-lg);display:flex;flex-direction:column;
         align-items:center;justify-content:center;min-height:70vh;gap:var(--sp-md);">
-        <div style="font-size:64px;text-align:center;">🔐</div>
+        <div style="display:flex;justify-content:center;margin-bottom:var(--sp-md);color:var(--color-accent);">
+          ${AppIcons.icon('lock', 48)}
+        </div>
         <div style="font-size:22px;font-weight:900;color:var(--color-brand);
           letter-spacing:-0.02em;text-align:center;">Activar SaniCheck</div>
         <div style="font-size:13px;color:var(--color-ink3);text-align:center;
@@ -45,8 +47,8 @@
             ECODESA Ecología Desarrollo e Ingeniería S.A.S
           </div>
           <a href="../../index.html"
-            style="font-size:11px;color:var(--color-brand);text-decoration:none;">
-            Ver planes y precios →
+            style="font-size:11px;color:var(--color-brand);text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+            Ver planes y precios ${AppIcons.icon('arrowRight', 12)}
           </a>
         </div>
       </div>`;
@@ -84,7 +86,7 @@
   };
   const ESTADO_COLOR = { B: 'var(--color-bueno)', R: 'var(--color-regular)', D: 'var(--color-deficiente)' };
 
-  const TRASH_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>';
+  const TRASH_ICON = AppIcons.icon('trash', 14);
 
   let _pendingDeleteId = null;
 
@@ -99,7 +101,7 @@
         box-shadow:var(--shadow-lg);padding:var(--sp-lg);border:1px solid var(--color-border);">
         <div style="width:40px;height:40px;border-radius:50%;background:rgba(163,45,45,0.1);color:var(--color-deficiente);
           display:flex;align-items:center;justify-content:center;margin-bottom:var(--sp-md);">
-          ${TRASH_ICON.replace('width="14" height="14"', 'width="20" height="20"')}
+          ${AppIcons.icon('trash', 20)}
         </div>
         <div style="font-size:var(--text-md);font-weight:700;color:var(--color-ink);margin-bottom:6px;">¿Estás seguro?</div>
         <div style="font-size:var(--text-sm);color:var(--color-ink3);line-height:1.5;margin-bottom:var(--sp-sm);">
@@ -137,7 +139,7 @@
     const id = _pendingDeleteId;
     _cerrarModalEliminar();
     Store.deleteInspeccion(id);
-    Router.toast('✓ Inspección eliminada');
+    Router.toast('Inspección eliminada');
     Router.go('home');
   };
 
@@ -160,7 +162,7 @@
 
     const lista = inspecciones.length === 0
       ? `<div class="empty-state">
-           <div class="empty-state-icon">📋</div>
+           <div class="empty-state-icon" style="display:flex;justify-content:center;color:var(--color-ink3);">${AppIcons.block('clipboardList', 40)}</div>
            <div class="empty-state-text">Aún no hay inspecciones registradas.<br>
              Crea la primera con el botón de arriba.</div>
          </div>`
@@ -196,7 +198,7 @@
 
     return `
       <div class="home-hero">
-        <div class="home-hero-icon">🌿</div>
+        <div class="home-hero-icon" style="display:flex;justify-content:center;color:rgba(255,255,255,0.95);">${AppIcons.block('shieldCheck', 40)}</div>
         <div class="home-hero-title">SaneamientoApp</div>
         <div class="home-hero-sub">Inspección PSB móvil · Normativa colombiana real<br>ECODESA Ing. S.A.S</div>
       </div>
@@ -205,13 +207,14 @@
           <div style="background:rgba(245,158,11,0.12);border:0.5px solid #F59E0B;border-radius:10px;
             padding:10px 14px;margin-bottom:var(--sp-md);font-size:12px;
             color:#FBBF24;display:flex;align-items:center;gap:8px;">
-            <span>⚡</span>
+            <span style="display:inline-flex;align-items:center;">${AppIcons.icon('zap', 14)}</span>
             <span>Versión Demo · máx. ${limiteMax} establecimiento.
-              <a href="../../index.html" style="color:#FBBF24;font-weight:700;">Actualizar →</a></span>
+              <a href="../../index.html" style="color:#FBBF24;font-weight:700;display:inline-flex;align-items:center;gap:3px;">
+                Actualizar ${AppIcons.icon('arrowRight', 11)}</a></span>
           </div>` : ''}
         <button class="home-nueva-btn" onclick="_nuevaInspeccion()"
-          ${topeFull ? 'style="opacity:0.5;cursor:not-allowed;"' : ''}>
-          + Nueva Inspección PSB
+          style="display:inline-flex;align-items:center;justify-content:center;gap:8px;${topeFull ? 'opacity:0.5;cursor:not-allowed;' : ''}">
+          ${AppIcons.row('plus', 'Nueva Inspección PSB', 16)}
         </button>
         <div class="home-section-title">Fases del proceso</div>
         ${phvaGrid}
@@ -222,7 +225,7 @@
             background:transparent;border:1px dashed var(--color-border);
             border-radius:var(--radius-md);color:var(--color-ink3);
             font-size:var(--text-sm);cursor:pointer;">
-          ⚙ Acerca de SaniCheck · versión ${SwUpdate.APP_VERSION}
+          ${AppIcons.row('settings', `Acerca de SaniCheck · versión ${SwUpdate.APP_VERSION}`, 14)}
         </button>
         <div style="height:32px;"></div>
       </div>`;

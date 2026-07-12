@@ -28,7 +28,7 @@ const Hacer = (() => {
     const s = _state();
     if (!s) return `
       <div class="coming-soon">
-        <div class="coming-soon-icon">⚠️</div>
+        <div class="coming-soon-icon" style="display:flex;justify-content:center;color:var(--color-ink3);">${AppIcons.block('circleAlert', 40)}</div>
         <div class="coming-soon-title">Sin inspección activa</div>
         <div class="coming-soon-desc">Primero configure el establecimiento en PLANIFICAR.</div>
         <button class="btn btn-primary mt-md" style="width:auto;padding:12px 24px"
@@ -51,13 +51,15 @@ const Hacer = (() => {
       </div>
 
       <div class="checklist-nav">
-        <button class="btn btn-outline nav-prev" style="width:auto;padding:10px 16px;"
-          onclick="Hacer.navegar(-1)"${aspectoIdx === 0 ? ' disabled' : ''}>← Anterior</button>
+        <button class="btn btn-outline nav-prev" style="width:auto;padding:10px 16px;display:inline-flex;align-items:center;gap:6px;"
+          onclick="Hacer.navegar(-1)"${aspectoIdx === 0 ? ' disabled' : ''}>${AppIcons.icon('arrowLeft', 14)} Anterior</button>
         <div class="nav-counter">${aspectoIdx + 1} / ${programa.aspectos.length}</div>
         <button class="btn ${aspectoIdx === programa.aspectos.length - 1 ? 'btn-primary' : 'btn-accent'} nav-next"
-          style="width:auto;padding:10px 16px;"
+          style="width:auto;padding:10px 16px;display:inline-flex;align-items:center;gap:6px;"
           onclick="Hacer.navegar(1)">
-          ${aspectoIdx === programa.aspectos.length - 1 ? 'Finalizar →' : 'Siguiente →'}</button>
+          ${aspectoIdx === programa.aspectos.length - 1
+            ? `Finalizar ${AppIcons.icon('arrowRight', 14)}`
+            : `Siguiente ${AppIcons.icon('arrowRight', 14)}`}</button>
       </div>`;
   }
 
@@ -121,7 +123,7 @@ const Hacer = (() => {
   function _renderAspecto(aspecto, programaIdx, aspectoIdx) {
     return `
       <div class="aspecto-texto">${aspecto.texto}</div>
-      <div class="norma-badge">📋 ${aspecto.norma}</div>
+      <div class="norma-badge" style="display:inline-flex;align-items:center;gap:6px;">${AppIcons.icon('scale', 12)} ${aspecto.norma}</div>
 
       <div class="eval-group">
         ${['B', 'R', 'D', 'NA'].map(v => `
@@ -134,8 +136,9 @@ const Hacer = (() => {
 
       ${aspecto.evaluacion === 'NA' ? `
         <div style="padding:14px;background:#F3F4F6;border-radius:var(--radius-md);
-          text-align:center;color:#6B7280;font-size:13px;border:1px solid #E5E7EB;">
-          ℹ️ No aplica a este establecimiento
+          text-align:center;color:#6B7280;font-size:13px;border:1px solid #E5E7EB;
+          display:flex;align-items:center;justify-content:center;gap:6px;">
+          ${AppIcons.icon('info', 14)} No aplica a este establecimiento
         </div>
       ` : aspecto.evaluacion ? `
         <div class="obs-label">Observación</div>
@@ -146,9 +149,10 @@ const Hacer = (() => {
         <button onclick="Fotos.capturar(${programaIdx},${aspectoIdx})"
           style="margin-top:10px;width:100%;padding:10px;cursor:pointer;
             border:1.5px dashed var(--color-border);border-radius:var(--radius-md);
-            background:var(--color-surface);color:var(--color-ink2);font-size:13px;">
-          📷 Añadir fotografía${aspecto.fotografias && aspecto.fotografias.length
-            ? ' (' + aspecto.fotografias.length + ')' : ''}
+            background:var(--color-surface);color:var(--color-ink2);font-size:13px;
+            display:inline-flex;align-items:center;justify-content:center;gap:6px;">
+          ${AppIcons.row('camera', 'Añadir fotografía' + (aspecto.fotografias && aspecto.fotografias.length
+            ? ' (' + aspecto.fotografias.length + ')' : ''), 14)}
         </button>
 
         ${Fotos.renderThumbnails(aspecto.fotografias || [], programaIdx, aspectoIdx)}
@@ -157,8 +161,8 @@ const Hacer = (() => {
           <div style="margin-top:10px;padding:10px 14px;
             background:var(--color-deficiente-bg);
             border-left:3px solid var(--color-deficiente);
-            border-radius:0 8px 8px 0;font-size:12px;">
-            ⛔ <strong>HALLAZGO CRÍTICO</strong> · Plazo: ${aspecto.plazo}
+            border-radius:0 8px 8px 0;font-size:12px;display:flex;align-items:center;gap:6px;">
+            ${AppIcons.icon('octagonAlert', 14)} <strong>HALLAZGO CRÍTICO</strong> · Plazo: ${aspecto.plazo}
           </div>` : ''}
       ` : `
         <div style="padding:20px;background:var(--color-surface);border-radius:var(--radius-md);
@@ -260,7 +264,7 @@ const Hacer = (() => {
     const ui          = Store.get().ui;
     const inspeccion  = Store.getCurrentInspeccion();
     const siguienteIdx = (ui.programaIdx || 0) + 1;
-    Router.toast(`✓ ${programa.nombre} completado`);
+    Router.toast(`${programa.nombre} completado`);
     if (siguienteIdx < inspeccion.programas.length) {
       Store.setUI({ programaIdx: siguienteIdx, aspectoIdx: 0 });
       _refresh();

@@ -187,10 +187,10 @@
       var b = document.createElement('div');
       b.id = 'pwa-banner';
       b.innerHTML =
-        '<span style="font-size:24px;">🌿</span>' +
+        '<span style="display:inline-flex;color:var(--color-accent);">' + AppIcons.block('shieldCheck', 24) + '</span>' +
         '<span class="pwa-text">Instala SaniCheck para usar sin conexión</span>' +
         '<button class="pwa-install" onclick="_instalarPWA()">Instalar</button>' +
-        '<button class="pwa-close" onclick="this.parentElement.remove()">×</button>';
+        '<button class="pwa-close" onclick="this.parentElement.remove()" style="display:inline-flex;align-items:center;justify-content:center;">' + AppIcons.icon('x', 16) + '</button>';
       document.body.appendChild(b);
     }
 

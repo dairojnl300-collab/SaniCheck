@@ -184,7 +184,7 @@ const SwUpdate = (() => {
       }
     }
 
-    if (typeof Router !== 'undefined') Router.toast('✓ Ya tienes la última versión');
+    if (typeof Router !== 'undefined') Router.toast('Ya tienes la última versión');
     return { updated: false };
   }
 

@@ -42,13 +42,13 @@ const Verificar = (() => {
         ${hallazgos.length ? _renderHallazgos(hallazgos) : ''}
         ${historico ? _renderHistorico(historico, inspeccion) : ''}
 
-        <button class="btn btn-primary" style="margin-top:var(--sp-lg);"
+        <button class="btn btn-primary" style="margin-top:var(--sp-lg);display:inline-flex;align-items:center;justify-content:center;gap:6px;"
           onclick="Router.go('actuar')">
-          📄 GENERAR ACTA PSB
+          ${AppIcons.row('fileText', 'GENERAR ACTA PSB', 14)}
         </button>
-        <button class="btn btn-outline" style="margin-top:var(--sp-sm);"
+        <button class="btn btn-outline" style="margin-top:var(--sp-sm);display:inline-flex;align-items:center;justify-content:center;gap:6px;"
           onclick="Router.go('hacer')">
-          ← Volver a HACER
+          ${AppIcons.row('arrowLeft', 'Volver a HACER', 14)}
         </button>
         <div style="height:32px;"></div>
       </div>`;
@@ -230,10 +230,12 @@ const Verificar = (() => {
               <span style="flex-shrink:0;font-size:10px;font-weight:700;padding:2px 8px;
                 border-radius:var(--radius-full);color:#fff;
                 background:${h.evaluacion==='D'?'var(--color-deficiente)':'var(--color-regular)'};">
-                ${h.critico ? '⚡ INMEDIATO' : h.plazo}</span>
+                ${h.critico
+                  ? `<span style="display:inline-flex;align-items:center;gap:3px;">${AppIcons.icon('zap', 10)} INMEDIATO</span>`
+                  : h.plazo}</span>
             </div>
-            <div style="font-size:10px;color:var(--color-ink3);">
-              📋 ${_esc(h.norma)} · ${_esc(h.programa_nombre)}</div>
+            <div style="font-size:10px;color:var(--color-ink3);display:flex;align-items:center;gap:4px;">
+              ${AppIcons.icon('scale', 10)} ${_esc(h.norma)} · ${_esc(h.programa_nombre)}</div>
           </div>`).join('')}
       </div>`;
   }
@@ -269,7 +271,7 @@ const Verificar = (() => {
               const scA   = Scores.calcularPrograma(pA).pct;
               const scB   = Scores.calcularPrograma(pB).pct;
               const delta = scB - scA;
-              const arrow = delta > 0 ? '↑' : delta < 0 ? '↓' : '→';
+              const arrow = AppIcons.delta(delta, 11);
               const clr   = delta > 0 ? 'var(--color-bueno)'
                           : delta < 0 ? 'var(--color-deficiente)'
                           :             'var(--color-ink3)';
@@ -279,7 +281,8 @@ const Verificar = (() => {
                   <td style="text-align:center;padding:6px;color:var(--color-ink3);">${scA}%</td>
                   <td style="text-align:center;padding:6px;font-weight:700;">${scB}%</td>
                   <td style="text-align:center;padding:6px;font-weight:800;color:${clr};">
-                    ${arrow} ${Math.abs(delta)}%</td>
+                    <span style="display:inline-flex;align-items:center;justify-content:center;gap:3px;">
+                      ${arrow} ${Math.abs(delta)}%</span></td>
                 </tr>`;
             }).join('')}
           </tbody>
@@ -299,7 +302,7 @@ const Verificar = (() => {
 
   function _sinInspeccion() {
     return `<div class="coming-soon">
-      <div class="coming-soon-icon">⚠️</div>
+      <div class="coming-soon-icon" style="display:flex;justify-content:center;color:var(--color-ink3);">${AppIcons.block('circleAlert', 40)}</div>
       <div class="coming-soon-title">Sin inspección activa</div>
       <div class="coming-soon-desc">Complete el checklist PSB en HACER primero.</div>
       <button class="btn btn-primary mt-md" style="width:auto;padding:12px 24px"

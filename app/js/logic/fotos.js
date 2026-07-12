@@ -44,7 +44,7 @@ const Fotos = (() => {
         tomada_en: new Date().toISOString(),
       });
       Store.upsertInspeccion(inspeccion);
-      Router.toast('📷 Foto guardada');
+      Router.toast('Foto guardada');
       if (typeof Hacer !== 'undefined' && Hacer.refresh) Hacer.refresh();
     };
     reader.readAsDataURL(file);
@@ -71,7 +71,8 @@ const Fotos = (() => {
           <button onclick="Fotos.eliminar(${programaIdx},${aspectoIdx},'${f.id}')"
             style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;
               border-radius:50%;border:none;background:var(--color-deficiente);
-              color:#fff;font-size:11px;cursor:pointer;line-height:20px;padding:0;">✕</button>
+              color:#fff;cursor:pointer;line-height:20px;padding:0;display:inline-flex;align-items:center;justify-content:center;">
+            ${AppIcons.icon('x', 11)}</button>
         </div>`).join('')}
     </div>`;
   }

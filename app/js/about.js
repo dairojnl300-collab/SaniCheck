@@ -7,7 +7,8 @@ const About = (() => {
     setTimeout(_hydrate, 0);
     return `
       <div class="screen-header">
-        <div class="screen-fase-badge" style="background:rgba(148,163,184,0.14);color:var(--color-ink3);">⚙ AJUSTES</div>
+        <div class="screen-fase-badge" style="background:rgba(148,163,184,0.14);color:var(--color-ink3);display:inline-flex;align-items:center;gap:6px;">
+          ${AppIcons.icon('settings', 12)} AJUSTES</div>
         <div class="screen-title">Acerca de SaniCheck</div>
         <div class="screen-subtitle">Versión de caché, actualizaciones y soporte</div>
       </div>
@@ -51,8 +52,8 @@ const About = (() => {
           </div>
         </div>
 
-        <button type="button" class="btn btn-outline" style="width:100%;"
-          onclick="Router.go('home')">← Volver al inicio</button>
+        <button type="button" class="btn btn-outline" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+          onclick="Router.go('home')">${AppIcons.row('arrowLeft', 'Volver al inicio', 14)}</button>
       </div>`;
   }
 

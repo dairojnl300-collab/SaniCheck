@@ -44,19 +44,19 @@ const Actuar = (() => {
         border-bottom:1px solid var(--color-border);position:sticky;top:0;z-index:10;">
         ${PhvaIcons.badge('A', 'ACTUAR', 'font-size:11px;padding:3px 8px;margin-bottom:6px;')}
         <div style="font-size:11px;font-weight:700;color:var(--color-ink3);
-          text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;">
-          📄 ${_esc(inspeccion.numero_acta)} · ${_esc(inspeccion.establecimiento.nombre)}</div>
+          text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;display:flex;align-items:center;gap:6px;">
+          ${AppIcons.icon('fileText', 12)} ${_esc(inspeccion.numero_acta)} · ${_esc(inspeccion.establecimiento.nombre)}</div>
         <div style="display:flex;gap:var(--sp-sm);">
-          <button class="btn btn-primary" style="flex:1;min-height:44px;"
-            onclick="Actuar.abrirPDF()">📄 DESCARGAR PDF</button>
-          <button class="btn btn-accent" style="flex:1;min-height:44px;"
-            onclick="Actuar.compartir()">📤 COMPARTIR</button>
+          <button class="btn btn-primary" style="flex:1;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+            onclick="Actuar.abrirPDF()">${AppIcons.row('download', 'DESCARGAR PDF', 14)}</button>
+          <button class="btn btn-accent" style="flex:1;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+            onclick="Actuar.compartir()">${AppIcons.row('share', 'COMPARTIR', 14)}</button>
         </div>
         <div style="display:flex;gap:var(--sp-sm);">
-          <button class="btn btn-outline" style="flex:1;min-height:40px;"
-            onclick="Router.go('verificar')">← VERIFICAR</button>
-          <button class="btn btn-outline" style="flex:1;min-height:40px;"
-            onclick="Router.go('home')">🔁 NUEVA</button>
+          <button class="btn btn-outline" style="flex:1;min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+            onclick="Router.go('verificar')">${AppIcons.row('arrowLeft', 'VERIFICAR', 14)}</button>
+          <button class="btn btn-outline" style="flex:1;min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+            onclick="Router.go('home')">${AppIcons.row('refresh', 'NUEVA', 14)}</button>
         </div>
       </div>
 
@@ -469,7 +469,7 @@ const Actuar = (() => {
     const delta   = currPct - prevPct;
     const dColor  = delta > 0 ? C.acento : delta < 0 ? C.rojo : C.gris;
     const dSign   = delta > 0 ? '+' : '';
-    const dIcon   = delta > 0 ? '▲' : delta < 0 ? '▼' : '→';
+    const dIcon   = AppIcons.delta(delta, 14);
 
     const kpiBase = `flex:1;text-align:center;padding:10px 8px;background:#F9FAFB;
       border-radius:8px;border:1px solid #E5E7EB;`;
@@ -482,9 +482,9 @@ const Actuar = (() => {
       if (prevPctP === null || !Scores.calcularPrograma(p).evaluados) return '';
       const d = currPctP - prevPctP;
       const bc = d > 2 ? C.acento : d < -2 ? C.rojo : C.gris;
-      const bi = d > 2 ? '↑' : d < -2 ? '↓' : '=';
+      const bi = d > 2 ? AppIcons.icon('chevronUp', 9) : d < -2 ? AppIcons.icon('chevronDown', 9) : AppIcons.icon('equal', 9);
       return `<span style="background:${bc};color:#fff;padding:2px 7px;border-radius:999px;
-        font-size:9px;font-weight:700;margin:2px;">${_shortName(p.nombre)} ${bi}${d > 0 ? '+' : ''}${d}%</span>`;
+        font-size:9px;font-weight:700;margin:2px;display:inline-flex;align-items:center;gap:2px;">${_shortName(p.nombre)} ${bi}${d > 0 ? '+' : ''}${d}%</span>`;
     }).filter(Boolean).join('');
 
     return `
@@ -509,7 +509,7 @@ const Actuar = (() => {
           <div style="${kpiBase}">
             <div style="font-size:9px;color:${C.gris};font-weight:700;text-transform:uppercase;
               letter-spacing:0.05em;margin-bottom:4px;">Variación</div>
-            <div style="font-size:26px;font-weight:900;color:${dColor};line-height:1.1;">
+            <div style="font-size:26px;font-weight:900;color:${dColor};line-height:1.1;display:flex;align-items:center;justify-content:center;gap:4px;">
               ${dSign}${delta} ${dIcon}</div>
             <div style="font-size:9px;color:#6B7280;margin-top:2px;">puntos</div>
           </div>
@@ -526,7 +526,7 @@ const Actuar = (() => {
         border-radius:8px;border:1px solid #E2E8F0;
         break-inside:avoid;page-break-inside:avoid;">
         <div style="display:flex;gap:8px;align-items:flex-start;">
-          <span style="font-size:14px;flex-shrink:0;margin-top:1px;">ℹ️</span>
+          <span style="flex-shrink:0;margin-top:1px;color:${C.gris};">${AppIcons.icon('info', 14)}</span>
           <div style="font-size:9px;color:#374151;line-height:1.5;text-align:justify;hyphens:auto;">
             <strong style="font-size:9.5px;color:${C.verde};display:block;margin-bottom:3px;">
               METODOLOGÍA DE EVALUACIÓN
@@ -565,8 +565,8 @@ const Actuar = (() => {
               <div style="flex:1;">
                 <div style="font-size:11px;font-weight:700;color:#111827;margin-bottom:3px;">
                   ${idx+1}. ${_esc(h.texto)}</div>
-                <div style="font-size:10px;color:#6B7280;">
-                  📋 ${_esc(h.norma)} · ${_esc(h.programa_nombre)}</div>
+                <div style="font-size:10px;color:#6B7280;display:flex;align-items:center;gap:4px;">
+                  ${AppIcons.icon('scale', 10)} ${_esc(h.norma)} · ${_esc(h.programa_nombre)}</div>
               </div>
               <div style="text-align:right;flex-shrink:0;">
                 <div style="font-size:10px;font-weight:800;
@@ -960,13 +960,13 @@ window.addEventListener('load', function() {
       navigator.share({ title: 'Acta PSB ECODESA', text: texto }).catch(() => {});
     } else {
       navigator.clipboard?.writeText(texto)
-        .then(() => Router.toast('✓ Copiado al portapapeles'));
+        .then(() => Router.toast('Copiado al portapapeles'));
     }
   }
 
   function _sinInspeccion() {
     return `<div class="coming-soon">
-      <div class="coming-soon-icon">📄</div>
+      <div class="coming-soon-icon" style="display:flex;justify-content:center;color:var(--color-ink3);">${AppIcons.block('fileText', 40)}</div>
       <div class="coming-soon-title">Sin inspección activa</div>
       <div class="coming-soon-desc">Complete una inspección PSB para generar el acta.</div>
       <button class="btn btn-primary mt-md" style="width:auto;padding:12px 24px"

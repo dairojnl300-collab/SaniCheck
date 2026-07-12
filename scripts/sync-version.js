@@ -19,6 +19,7 @@ const ASSET_PATHS = [
   'js/app-version.js',
   'js/sw-update.js',
   'js/about.js',
+  'js/phva-icons.js',
   'js/app.js',
   'js/logic/psb-data.js',
   'js/logic/checklist-config.js',

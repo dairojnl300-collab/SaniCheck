@@ -56,17 +56,17 @@ const Router = (() => {
 
   function _comingSoon(screen) {
     const MAP = {
-      verificar: { icon: '📊', title: 'VERIFICAR', desc: 'Dashboard de resultados y comparación histórica. Disponible en Semana 3.' },
-      actuar:    { icon: '📄', title: 'ACTUAR',    desc: 'Generación automática del Acta PSB en PDF. Disponible en Semana 3.' },
+      verificar: { icon: 'barChart', title: 'VERIFICAR', desc: 'Dashboard de resultados y comparación histórica. Disponible en Semana 3.' },
+      actuar:    { icon: 'fileText', title: 'ACTUAR',    desc: 'Generación automática del Acta PSB en PDF. Disponible en Semana 3.' },
     };
-    const i = MAP[screen] || { icon: '🔧', title: screen.toUpperCase(), desc: 'Próximamente.' };
+    const i = MAP[screen] || { icon: 'wrench', title: screen.toUpperCase(), desc: 'Próximamente.' };
     return `<div class="coming-soon">
-      <div class="coming-soon-icon">${i.icon}</div>
+      <div class="coming-soon-icon" style="display:flex;justify-content:center;color:var(--color-ink3);">${AppIcons.block(i.icon, 40)}</div>
       <div class="coming-soon-title">${i.title}</div>
       <div class="coming-soon-desc">${i.desc}</div>
       <div class="coming-soon-badge">SEMANA 3</div>
-      <button class="btn btn-outline mt-md" style="width:auto;padding:10px 24px"
-        onclick="Router.go('home')">← Inicio</button>
+      <button class="btn btn-outline mt-md" style="width:auto;padding:10px 24px;display:inline-flex;align-items:center;gap:6px;"
+        onclick="Router.go('home')">${AppIcons.row('arrowLeft', 'Inicio', 14)}</button>
     </div>`;
   }
 

@@ -23,7 +23,7 @@ const Personalizar = (() => {
     const insp = Store.getCurrentInspeccion();
     if (!insp) return `
       <div class="coming-soon">
-        <div class="coming-soon-icon">⚠️</div>
+        <div class="coming-soon-icon" style="display:flex;justify-content:center;color:var(--color-ink3);">${AppIcons.block('circleAlert', 40)}</div>
         <div class="coming-soon-title">Sin inspección activa</div>
         <div class="coming-soon-desc">Primero configure el establecimiento en PLANIFICAR.</div>
         <button class="btn btn-primary mt-md" style="width:auto;padding:12px 24px"
@@ -43,8 +43,8 @@ const Personalizar = (() => {
 
     return `
       <div class="screen-header">
-        <div class="screen-fase-badge badge-P" style="font-size:11px;padding:3px 8px;">
-          ⚙️ PERSONALIZAR
+        <div class="screen-fase-badge badge-P" style="font-size:11px;padding:3px 8px;display:inline-flex;align-items:center;gap:6px;">
+          ${AppIcons.icon('sliders', 12)} PERSONALIZAR
         </div>
         <div class="screen-title" style="font-size:17px;">Checklist del establecimiento</div>
         <div class="screen-subtitle">${_esc(insp.establecimiento.nombre)}</div>
@@ -61,8 +61,8 @@ const Personalizar = (() => {
       ${_renderFormCustom()}
 
       <button onclick="Personalizar.comenzar()" class="btn btn-primary"
-        style="width:100%;padding:14px;font-size:15px;font-weight:700;margin-top:6px;">
-        Comenzar inspección →
+        style="width:100%;padding:14px;font-size:15px;font-weight:700;margin-top:6px;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
+        Comenzar inspección ${AppIcons.icon('arrowRight', 16)}
       </button>
       <div style="height:40px;"></div>`;
   }
@@ -103,8 +103,8 @@ const Personalizar = (() => {
             background:#F0FDF4;${i < custProg.length - 1 ? 'border-bottom:1px solid #D1FAE5;' : ''}">
             <div style="width:15px;height:15px;border-radius:50%;
               background:var(--color-accent);flex-shrink:0;margin-top:2px;
-              display:flex;align-items:center;justify-content:center;
-              color:#fff;font-size:9px;font-weight:900;">✓</div>
+              display:flex;align-items:center;justify-content:center;color:#fff;">
+              ${AppIcons.icon('check', 9)}</div>
             <div style="flex:1;min-width:0;">
               <div style="font-size:12px;color:var(--color-ink);font-weight:600;">
                 ${_esc(c.nombre)}</div>
@@ -112,7 +112,8 @@ const Personalizar = (() => {
             </div>
             <button onclick="Personalizar.eliminarCustom('${c.id}')"
               style="border:none;background:none;cursor:pointer;color:#EF4444;
-                font-size:20px;line-height:1;padding:0 0 0 8px;flex-shrink:0;">×</button>
+                line-height:1;padding:0 0 0 8px;flex-shrink:0;display:inline-flex;align-items:center;">
+              ${AppIcons.icon('x', 16)}</button>
           </div>`).join('')}
       </div>`;
   }
@@ -121,8 +122,8 @@ const Personalizar = (() => {
     return `
       <div style="background:var(--color-surface);border-radius:var(--radius-md);
         border:1.5px dashed var(--color-border);padding:14px;margin-bottom:10px;">
-        <div style="font-size:13px;font-weight:700;color:var(--color-primary);margin-bottom:10px;">
-          + Agregar ítem personalizado
+        <div style="font-size:13px;font-weight:700;color:var(--color-primary);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+          ${AppIcons.row('plus', 'Agregar ítem personalizado', 14)}
         </div>
         <div class="form-group" style="margin-bottom:8px;">
           <input class="form-input" id="cust-nombre" type="text"
@@ -141,8 +142,8 @@ const Personalizar = (() => {
             placeholder="Norma (opcional)" style="font-size:13px;">
         </div>
         <button onclick="Personalizar.agregarCustom()"
-          class="btn btn-accent" style="width:100%;padding:10px;font-size:13px;">
-          + Agregar ítem
+          class="btn btn-accent" style="width:100%;padding:10px;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
+          ${AppIcons.row('plus', 'Agregar ítem', 14)}
         </button>
       </div>`;
   }
@@ -159,7 +160,7 @@ const Personalizar = (() => {
     const programaId = document.getElementById('cust-programa')?.value;
     const norma      = document.getElementById('cust-norma')?.value.trim();
     if (!nombre || !programaId) {
-      Router.toast('⚠ Complete descripción y programa');
+      Router.toast('Complete descripción y programa');
       return;
     }
     _custom.push({ id: 'cust_' + Date.now(), nombre, programaId, norma });
@@ -179,7 +180,7 @@ const Personalizar = (() => {
     insp.programas = ChecklistConfig.applyConfig(getPSBPrograms(), config);
     Store.upsertInspeccion(insp);
     Store.setUI({ programaIdx: 0, aspectoIdx: 0 });
-    Router.toast('✓ Checklist configurado');
+    Router.toast('Checklist configurado');
     Router.go('hacer');
   }
 
