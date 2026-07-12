@@ -496,7 +496,7 @@ const Planificar = (() => {
         <div style="display:flex;align-items:center;justify-content:space-between;
           padding:10px 12px;background:var(--color-surface);border-bottom:1px solid var(--color-border);">
           <span style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);">
-            Hallazgos prioritarios (${critList.length})</span>
+            Hallazgos Prioritarios (${critList.length})</span>
           <span style="font-size:var(--text-xs);color:var(--color-ink3);">
             ${d.length} crítico${d.length !== 1 ? 's' : ''} · ${r.length} por mejorar</span>
         </div>
@@ -1355,7 +1355,7 @@ const Planificar = (() => {
       </div>
 
       <div class="panel">
-        <div class="panel-h">Aspectos Deficientes — prioridad alta</div>
+        <div class="panel-h">Hallazgos Prioritarios</div>
         <table>
           <thead><tr><th>#</th><th>Aspecto</th><th>Normativa</th><th>Prioridad</th></tr></thead>
           <tbody>${defRows}</tbody>
