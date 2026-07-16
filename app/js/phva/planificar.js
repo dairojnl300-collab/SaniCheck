@@ -214,7 +214,7 @@ const Planificar = (() => {
 
       <div style="margin:0 var(--sp-md) var(--sp-sm);">
         <button type="button" class="btn btn-accent" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
-          onclick="Planificar.exportarDashboardPDF()">
+          data-p-act="exportarDashboardPDF">
           ${AppIcons.row('barChart', 'Dashboard Ejecutivo PDF', 14)}
         </button>
       </div>
@@ -242,7 +242,7 @@ const Planificar = (() => {
     return `
       <div class="card acc-card">
         <div class="acc-header${openEff ? ' open' : ''}${disabled ? ' disabled' : ''}" id="acc-header-${key}"
-          onclick="Planificar.toggle('${key}')">
+          data-p-act="toggle" data-p-key="${key}">
           <div style="display:flex;align-items:center;gap:10px;min-width:0;">
             ${_icon(iconName, iconColor)}
             <div style="font-size:var(--text-base);font-weight:700;color:var(--color-ink);">${title}</div>
@@ -371,7 +371,7 @@ const Planificar = (() => {
           Solo normativa general aplica a este tipo de establecimiento.</div>`;
     return `
       <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);margin-bottom:8px;overflow:hidden;">
-        <div onclick="Planificar.marcoSub('${key}')" style="display:flex;align-items:center;justify-content:space-between;
+        <div data-p-act="marcoSub" data-p-key="${key}" style="display:flex;align-items:center;justify-content:space-between;
           padding:10px 12px;cursor:pointer;background:var(--color-surface);">
           <span style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);">${_escAttr(title)}</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -683,10 +683,10 @@ const Planificar = (() => {
       <div style="padding:6px 10px;font-size:10px;display:flex;justify-content:space-between;align-items:center;
         gap:8px;background:var(--color-surface);border-top:1px solid var(--color-border);">
         <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">${nombre}</span>
-        <button type="button" onclick="Planificar.verSoporteVenc('${itemId}','${trId}')"
+        <button type="button" data-p-act="verSoporteVenc" data-p-item="${_escAttr(itemId)}" data-p-tr="${_escAttr(trId)}"
           style="padding:2px 8px;font-size:10px;border:1px solid var(--color-border);border-radius:4px;
             background:#fff;cursor:pointer;color:var(--emerald-2);">Ver</button>
-        <button type="button" onclick="Planificar.eliminarSoporteVenc('${itemId}','${trId}')"
+        <button type="button" data-p-act="eliminarSoporteVenc" data-p-item="${_escAttr(itemId)}" data-p-tr="${_escAttr(trId)}"
           style="padding:2px 8px;font-size:10px;border:1px solid var(--color-border);border-radius:4px;
             background:#fff;cursor:pointer;color:var(--color-deficiente);display:inline-flex;align-items:center;justify-content:center;">${AppIcons.icon('x', 12)}</button>
       </div>`;
@@ -719,14 +719,14 @@ const Planificar = (() => {
           <label class="form-label" style="font-size:10px;">Número de cédula</label>
           <input class="form-input" type="text" inputmode="numeric" pattern="[0-9]*"
             placeholder="Solo número — sin fechas ni vencimiento" value="${_escAttr(tr.cedula)}"
-            onchange="Planificar.actualizarTrabajador('${tr.id}','cedula',this.value)">
+            data-p-change="actualizarTrabajador" data-p-tr="${_escAttr(tr.id)}" data-p-campo="cedula">
         </div>`;
     } else if (doc.soloExp) {
       campos = `
         <div class="form-group" style="margin-bottom:0;">
           <label class="form-label" style="font-size:10px;">Fecha expedición</label>
           <input class="form-input" type="date" value="${_escAttr(docs[doc.expId] || '')}"
-            onchange="Planificar.actualizarTrabajador('${tr.id}','${doc.expId}',this.value)">
+            data-p-change="actualizarTrabajador" data-p-tr="${_escAttr(tr.id)}" data-p-campo="${_escAttr(doc.expId)}">
         </div>`;
     } else {
       campos = `
@@ -734,12 +734,12 @@ const Planificar = (() => {
           <div class="form-group" style="margin-bottom:0;">
             <label class="form-label" style="font-size:10px;">Fecha expedición</label>
             <input class="form-input" type="date" value="${_escAttr(docs[doc.expId] || '')}"
-              onchange="Planificar.actualizarTrabajador('${tr.id}','${doc.expId}',this.value)">
+              data-p-change="actualizarTrabajador" data-p-tr="${_escAttr(tr.id)}" data-p-campo="${_escAttr(doc.expId)}">
           </div>
           <div class="form-group" style="margin-bottom:0;">
             <label class="form-label" style="font-size:10px;">Fecha vencimiento</label>
             <input class="form-input" type="date" value="${_escAttr(docs[doc.vencId] || '')}"
-              onchange="Planificar.actualizarTrabajador('${tr.id}','${doc.vencId}',this.value)">
+              data-p-change="actualizarTrabajador" data-p-tr="${_escAttr(tr.id)}" data-p-campo="${_escAttr(doc.vencId)}">
           </div>
         </div>`;
     }
@@ -758,7 +758,7 @@ const Planificar = (() => {
           <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px;">${periodicidad}</div>
           ${campos}
           ${alerta}
-          <button type="button" onclick="Planificar.subirSoporteVenc('${doc.id}','${tr.id}')"
+          <button type="button" data-p-act="subirSoporteVenc" data-p-item="${_escAttr(doc.id)}" data-p-tr="${_escAttr(tr.id)}"
             style="margin-top:10px;width:100%;padding:10px;cursor:pointer;border:1.5px dashed var(--emerald-2);
               border-radius:var(--radius-md);background:rgba(10,115,80,0.06);color:var(--emerald-2);font-size:12px;font-weight:600;">
             ${AppIcons.row('paperclip', _escAttr(doc.archivoLabel) + (arch ? ' — adjunto' : ''), 12)}
@@ -788,7 +788,7 @@ const Planificar = (() => {
           <div class="form-group" style="margin-bottom:0;">
             <label class="form-label" style="font-size:10px;">Fecha vencimiento</label>
             <input class="form-input" type="date" value="${_escAttr(req.venc || '')}"
-              onchange="Planificar.actualizarRequerimiento('${tr.id}','${req.id}','venc',this.value)">
+              data-p-change="actualizarRequerimiento" data-p-tr="${_escAttr(tr.id)}" data-p-req="${_escAttr(req.id)}" data-p-campo="venc">
           </div>`;
     const gridCols = req.sinVencimiento ? '1fr' : '1fr 1fr';
 
@@ -799,7 +799,7 @@ const Planificar = (() => {
           <div style="flex:1;min-width:0;">
             <input class="form-input" type="text" value="${_escAttr(req.nombre)}"
               placeholder="Nombre del documento"
-              onchange="Planificar.actualizarRequerimiento('${tr.id}','${req.id}','nombre',this.value)"
+              data-p-change="actualizarRequerimiento" data-p-tr="${_escAttr(tr.id)}" data-p-req="${_escAttr(req.id)}" data-p-campo="nombre"
               style="margin:0;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.35);color:#fff;font-weight:700;">
             <div style="font-size:10px;opacity:0.85;margin-top:4px;">Requerimiento adicional</div>
           </div>
@@ -810,23 +810,23 @@ const Planificar = (() => {
             <div class="form-group" style="margin-bottom:0;">
               <label class="form-label" style="font-size:10px;">Fecha expedición</label>
               <input class="form-input" type="date" value="${_escAttr(req.exp || '')}"
-                onchange="Planificar.actualizarRequerimiento('${tr.id}','${req.id}','exp',this.value)">
+                data-p-change="actualizarRequerimiento" data-p-tr="${_escAttr(tr.id)}" data-p-req="${_escAttr(req.id)}" data-p-campo="exp">
             </div>
             ${vencCampo}
           </div>
           <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:var(--text-xs);color:var(--color-ink2);cursor:pointer;">
             <input type="checkbox" ${req.sinVencimiento ? 'checked' : ''}
-              onchange="Planificar.actualizarRequerimiento('${tr.id}','${req.id}','sinVencimiento',this.checked)">
+              data-p-change="actualizarRequerimiento" data-p-tr="${_escAttr(tr.id)}" data-p-req="${_escAttr(req.id)}" data-p-campo="sinVencimiento">
             No aplica vencimiento
           </label>
           ${alerta}
-          <button type="button" onclick="Planificar.subirSoporteVenc('${req.id}','${tr.id}')"
+          <button type="button" data-p-act="subirSoporteVenc" data-p-item="${_escAttr(req.id)}" data-p-tr="${_escAttr(tr.id)}"
             style="margin-top:10px;width:100%;padding:10px;cursor:pointer;border:1.5px dashed var(--emerald-2);
               border-radius:var(--radius-md);background:rgba(10,115,80,0.06);color:var(--emerald-2);font-size:12px;font-weight:600;">
             ${AppIcons.row('paperclip', 'Adjuntar soporte' + (arch ? ' — adjunto' : ''), 12)}
           </button>
           ${_renderArchivoPreview(arch, req.id, tr.id)}
-          <button type="button" onclick="Planificar.eliminarRequerimiento('${tr.id}','${req.id}')"
+          <button type="button" data-p-act="eliminarRequerimiento" data-p-tr="${_escAttr(tr.id)}" data-p-req="${_escAttr(req.id)}"
             style="margin-top:8px;width:100%;padding:8px;border:1px solid rgba(163,45,45,0.35);border-radius:var(--radius-md);
               background:rgba(163,45,45,0.06);color:var(--color-deficiente);font-size:11px;cursor:pointer;">
             Eliminar requerimiento
@@ -854,14 +854,14 @@ const Planificar = (() => {
           </div>
         </div>
         <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:var(--text-xs);color:var(--color-ink2);cursor:pointer;">
-          <input type="checkbox" id="req-sin-venc" onchange="Planificar.toggleReqSinVencNuevo(this.checked)">
+          <input type="checkbox" id="req-sin-venc" data-p-change="toggleReqSinVencNuevo">
           No aplica vencimiento
         </label>
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
           <button type="button" class="btn btn-primary" style="flex:1;min-width:120px;padding:10px;"
-            onclick="Planificar.crearRequerimiento('${tr.id}')">Guardar requerimiento</button>
+            data-p-act="crearRequerimiento" data-p-tr="${_escAttr(tr.id)}">Guardar requerimiento</button>
           <button type="button" class="btn btn-outline" style="padding:10px;"
-            onclick="Planificar.cancelarRequerimiento()">Cancelar</button>
+            data-p-act="cancelarRequerimiento">Cancelar</button>
         </div>
       </div>`;
   }
@@ -877,7 +877,7 @@ const Planificar = (() => {
         <div class="form-group">
           <label class="form-label">Nombre del trabajador</label>
           <input class="form-input" type="text" value="${_escAttr(tr.nombre)}"
-            onchange="Planificar.actualizarTrabajador('${tr.id}','nombre',this.value)">
+            data-p-change="actualizarTrabajador" data-p-tr="${_escAttr(tr.id)}" data-p-campo="nombre">
         </div>
         ${Vencimientos.allDocsPersonal().map(doc => _renderDocPersonalCard(v, tr, doc)).join('')}
         ${reqs.length ? `
@@ -886,9 +886,9 @@ const Planificar = (() => {
         ${reqs.map(req => _renderRequerimientoCard(v, tr, req)).join('')}` : ''}
         ${_vencReqFormOpen ? _renderNuevoRequerimientoForm(tr) : ''}
         <button type="button" class="btn btn-accent" style="width:100%;padding:10px;margin-top:8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
-          onclick="Planificar.toggleReqForm()">${AppIcons.row('plus', 'Agregar requerimiento adicional', 14)}</button>
+          data-p-act="toggleReqForm">${AppIcons.row('plus', 'Agregar requerimiento adicional', 14)}</button>
         <button type="button" class="btn btn-outline" style="width:auto;padding:8px 14px;margin-top:8px;display:inline-flex;align-items:center;gap:6px;"
-          onclick="Planificar.agregarTrabajador()">${AppIcons.row('plus', 'Agregar trabajador', 14)}</button>
+          data-p-act="agregarTrabajador">${AppIcons.row('plus', 'Agregar trabajador', 14)}</button>
       </div>`;
   }
 
@@ -903,27 +903,27 @@ const Planificar = (() => {
         <div class="form-group">
           <label class="form-label">Código del equipo</label>
           <input class="form-input" type="text" value="${_escAttr(eq.codigo)}"
-            onchange="Planificar.actualizarEquipo('${eq.id}','codigo',this.value)">
+            data-p-change="actualizarEquipo" data-p-eq="${_escAttr(eq.id)}" data-p-campo="codigo">
         </div>
         <div class="form-group">
           <label class="form-label">Tipo de equipo</label>
           <input class="form-input" type="text" value="${_escAttr(eq.tipo)}"
-            onchange="Planificar.actualizarEquipo('${eq.id}','tipo',this.value)">
+            data-p-change="actualizarEquipo" data-p-eq="${_escAttr(eq.id)}" data-p-campo="tipo">
         </div>
         <div class="form-group">
           <label class="form-label">Última calibración</label>
           <input class="form-input" type="date" value="${_escAttr(eq.ultima_calibracion || '')}"
-            onchange="Planificar.actualizarEquipo('${eq.id}','ultima_calibracion',this.value)">
+            data-p-change="actualizarEquipo" data-p-eq="${_escAttr(eq.id)}" data-p-campo="ultima_calibracion">
         </div>
         <div class="form-group">
           <label class="form-label">Próxima calibración</label>
           <input class="form-input" type="date" value="${_escAttr(eq.proxima_calibracion || '')}"
-            onchange="Planificar.actualizarEquipo('${eq.id}','proxima_calibracion',this.value)">
+            data-p-change="actualizarEquipo" data-p-eq="${_escAttr(eq.id)}" data-p-campo="proxima_calibracion">
         </div>
         <div class="form-group">
           <label class="form-label">Mantenimiento programado</label>
           <input class="form-input" type="date" value="${_escAttr(eq.mantenimiento_programado || '')}"
-            onchange="Planificar.actualizarEquipo('${eq.id}','mantenimiento_programado',this.value)">
+            data-p-change="actualizarEquipo" data-p-eq="${_escAttr(eq.id)}" data-p-campo="mantenimiento_programado">
         </div>
         ${hist.length ? `
         <div style="margin-top:var(--sp-sm);">
@@ -940,7 +940,7 @@ const Planificar = (() => {
           </table>
         </div>` : ''}
         <button type="button" class="btn btn-outline" style="width:auto;padding:8px 14px;margin-top:8px;display:inline-flex;align-items:center;gap:6px;"
-          onclick="Planificar.agregarEquipo()">${AppIcons.row('plus', 'Agregar equipo', 14)}</button>
+          data-p-act="agregarEquipo">${AppIcons.row('plus', 'Agregar equipo', 14)}</button>
       </div>`;
   }
 
@@ -962,7 +962,7 @@ const Planificar = (() => {
           const active = g === grupo;
           const m = Vencimientos.GRUPOS[g];
           return `
-          <button type="button" onclick="Planificar.vencTab('${g}')"
+          <button type="button" data-p-act="vencTab" data-p-tab="${g}"
             style="flex:1;padding:12px 10px;border-radius:var(--radius-md);cursor:pointer;
               border:2px solid ${active ? 'var(--color-accent)' : 'var(--emerald-2)'};
               background:${active ? 'var(--emerald-2)' : 'var(--emerald)'};
@@ -985,7 +985,7 @@ const Planificar = (() => {
         </div>
         <div style="padding:10px 14px;border-bottom:1px solid var(--color-border);">
           <input class="form-input" type="search" placeholder="${filtroPh}" value="${_escAttr(filtroVal)}"
-            oninput="Planificar.vencFiltro(this.value)" style="margin:0;">
+            data-p-input="vencFiltro" style="margin:0;">
         </div>
         <div style="overflow-x:auto;">${grupo === 'personal' ? _vencPersonalTable(v) : _vencEquiposTable(v)}</div>
       </div>
@@ -998,7 +998,7 @@ const Planificar = (() => {
       ` : `
         ${_vencEquiposGestion(v)}`}
 
-      <button type="button" class="btn btn-primary" style="margin-top:var(--sp-md);" onclick="Planificar.guardarVencimientos()">
+      <button type="button" class="btn btn-primary" style="margin-top:var(--sp-md);" data-p-act="guardarVencimientos">
         Guardar vencimientos</button>`;
   }
 
@@ -1816,7 +1816,7 @@ const Planificar = (() => {
       <div style="display:flex;justify-content:flex-end;margin-bottom:var(--sp-sm);">
         <button type="button" class="btn btn-outline" style="width:auto;padding:8px 14px;font-size:var(--text-xs);
           display:inline-flex;align-items:center;gap:6px;"
-          onclick="Planificar.abrirDiagItemModal()">
+          data-p-act="abrirDiagItemModal">
           ${AppIcons.row('sliders', 'Editar/Agregar ítem', 12)}
         </button>
       </div>
@@ -1838,7 +1838,7 @@ const Planificar = (() => {
       <div class="eval-group">
         ${['B', 'R', 'D', 'NA'].map(v => `
           <button type="button" class="eval-btn eval-btn-${v}${it?.calificacion === v ? ' selected' : ''}"
-            onclick="Planificar.diagEvaluar('${v}')">
+            data-p-act="diagEvaluar" data-p-v="${v}">
             <span class="eval-letter">${v === 'NA' ? 'N/A' : v}</span>
             <span class="eval-word">${v === 'B' ? 'BUENO' : v === 'R' ? 'REGULAR' : v === 'D' ? 'DEFIC.' : 'NO APLICA'}</span>
           </button>`).join('')}
@@ -1851,15 +1851,15 @@ const Planificar = (() => {
         </div>
       ` : it?.calificacion ? `
         ${(it.calificacion === 'R' || it.calificacion === 'D') ? `
-          <label class="form-label" for="di-cond-${def.id}">Condición encontrada</label>
-          <input class="form-input" type="text" id="di-cond-${def.id}" value="${_escAttr(it.condicion)}"
+          <label class="form-label" for="di-cond-${_escAttr(def.id)}">Condición encontrada</label>
+          <input class="form-input" type="text" id="di-cond-${_escAttr(def.id)}" value="${_escAttr(it.condicion)}"
             placeholder="Describa brevemente la condición observada"
-            onchange="Planificar.actualizarDiagItem('${def.id}','condicion',this.value)" style="margin-bottom:8px;">
+            data-p-change="actualizarDiagItem" data-p-id="${_escAttr(def.id)}" data-p-campo="condicion" style="margin-bottom:8px;">
 
-          <label class="form-label" for="di-accion-${def.id}">Acción requerida</label>
-          <input class="form-input" type="text" id="di-accion-${def.id}" value="${_escAttr(it.accion)}"
+          <label class="form-label" for="di-accion-${_escAttr(def.id)}">Acción requerida</label>
+          <input class="form-input" type="text" id="di-accion-${_escAttr(def.id)}" value="${_escAttr(it.accion)}"
             placeholder="Indique la acción correctiva sugerida"
-            onchange="Planificar.actualizarDiagItem('${def.id}','accion',this.value)" style="margin-bottom:8px;">` : ''}
+            data-p-change="actualizarDiagItem" data-p-id="${_escAttr(def.id)}" data-p-campo="accion" style="margin-bottom:8px;">` : ''}
       ` : `
         <div style="padding:20px;background:var(--color-surface);border-radius:var(--radius-md);
           text-align:center;color:var(--color-ink3);font-size:13px;
@@ -1869,11 +1869,11 @@ const Planificar = (() => {
 
       <div class="checklist-nav" style="margin:var(--sp-md) calc(-1 * var(--sp-md)) 0;padding:var(--sp-md) 0 0;">
         <button type="button" class="btn btn-outline nav-prev" style="width:auto;padding:10px 16px;"
-          onclick="Planificar.diagNavegar(-1)"${idx === 0 ? ' disabled' : ''}>${AppIcons.row('arrowLeft', 'Anterior', 14)}</button>
+          data-p-act="diagNavegar" data-p-dir="-1"${idx === 0 ? ' disabled' : ''}>${AppIcons.row('arrowLeft', 'Anterior', 14)}</button>
         <div class="nav-counter">${idx + 1} / ${total}</div>
         <button type="button" class="btn ${idx === total - 1 ? 'btn-primary' : 'btn-accent'} nav-next"
           style="width:auto;padding:10px 16px;"
-          onclick="Planificar.diagNavegar(1)">
+          data-p-act="diagNavegar" data-p-dir="1">
           ${idx === total - 1 ? AppIcons.row('check', 'Guardar', 14) : AppIcons.row('arrowRight', 'Siguiente', 14)}</button>
       </div>
 
@@ -1921,6 +1921,7 @@ const Planificar = (() => {
 
   function actualizarDiagItem(id, campo, valor) {
     if (!_diagItems) return;
+    if (!DiagnosticoInicial.isValidId(id)) return;
     const it = _diagItems.find(x => x.id === id);
     if (it) it[campo] = valor;
     if (campo === 'calificacion') _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
@@ -1941,16 +1942,16 @@ const Planificar = (() => {
     el.id = 'diag-item-modal';
     el.style.cssText = 'display:none;position:fixed;inset:0;z-index:2000;align-items:center;justify-content:center;padding:var(--sp-md);';
     el.innerHTML = `
-      <div onclick="Planificar.cerrarDiagItemModal()" style="position:absolute;inset:0;background:rgba(10,46,35,0.45);"></div>
+      <div data-p-act="cerrarDiagItemModal" style="position:absolute;inset:0;background:rgba(10,46,35,0.45);"></div>
       <div style="position:relative;width:100%;max-width:420px;background:var(--color-white);border-radius:var(--radius-md);
         box-shadow:var(--shadow-lg);padding:var(--sp-lg);border:1px solid var(--color-border);max-height:90vh;overflow-y:auto;">
         <div style="font-size:var(--text-md);font-weight:700;color:var(--color-ink);margin-bottom:var(--sp-sm);"
           id="diag-modal-title">Editar ítem</div>
         <div style="display:flex;gap:6px;margin-bottom:var(--sp-md);">
           <button type="button" id="diag-modal-tab-edit" class="btn btn-accent" style="flex:1;padding:8px;font-size:var(--text-xs);"
-            onclick="Planificar.setDiagItemModalMode('edit')">Editar actual</button>
+            data-p-act="setDiagItemModalMode" data-p-mode="edit">Editar actual</button>
           <button type="button" id="diag-modal-tab-add" class="btn btn-outline" style="flex:1;padding:8px;font-size:var(--text-xs);"
-            onclick="Planificar.setDiagItemModalMode('add')">Agregar nuevo</button>
+            data-p-act="setDiagItemModalMode" data-p-mode="add">Agregar nuevo</button>
         </div>
         <div class="form-group">
           <label class="form-label" for="diag-modal-texto">Pregunta / aspecto a evaluar</label>
@@ -1964,16 +1965,16 @@ const Planificar = (() => {
         <div class="eval-group" id="diag-modal-eval" style="margin-bottom:var(--sp-md);">
           ${['B', 'R', 'D', 'NA'].map(v => `
             <button type="button" class="eval-btn eval-btn-${v}" data-cal="${v}"
-              onclick="Planificar.diagModalEvaluar('${v}')">
+              data-p-act="diagModalEvaluar" data-p-v="${v}">
               <span class="eval-letter">${v === 'NA' ? 'N/A' : v}</span>
               <span class="eval-word">${v === 'B' ? 'BUENO' : v === 'R' ? 'REGULAR' : v === 'D' ? 'DEFIC.' : 'NO APLICA'}</span>
             </button>`).join('')}
         </div>
         <div style="display:flex;gap:8px;">
           <button type="button" class="btn btn-outline" style="flex:1;padding:10px;"
-            onclick="Planificar.cerrarDiagItemModal()">Cancelar</button>
+            data-p-act="cerrarDiagItemModal">Cancelar</button>
           <button type="button" class="btn btn-primary" style="flex:1;padding:10px;"
-            onclick="Planificar.guardarDiagItemModal()">Guardar</button>
+            data-p-act="guardarDiagItemModal">Guardar</button>
         </div>
       </div>`;
     document.body.appendChild(el);
@@ -2057,7 +2058,7 @@ const Planificar = (() => {
       _diagIdx = _diagCatalog.length - 1;
     } else {
       const def = _diagCatalog[_diagIdx];
-      if (!def) return;
+      if (!def || !DiagnosticoInicial.isValidId(def.id)) return;
       def.texto = texto;
       def.norma = norma;
       if (!def.descripcion || def.custom) def.descripcion = texto;
@@ -2091,7 +2092,115 @@ const Planificar = (() => {
     });
   }
 
+  let _pDelegated = false;
+
+  function _ensurePlanificarDelegation() {
+    if (_pDelegated) return;
+    _pDelegated = true;
+
+    document.addEventListener('click', e => {
+      const el = e.target.closest('[data-p-act]');
+      if (!el) return;
+      const act = el.getAttribute('data-p-act');
+      if (!act) return;
+
+      switch (act) {
+        case 'toggle':
+          toggle(el.getAttribute('data-p-key') || '');
+          break;
+        case 'marcoSub':
+          marcoSub(el.getAttribute('data-p-key') || '');
+          break;
+        case 'exportarDashboardPDF':
+          exportarDashboardPDF();
+          break;
+        case 'abrirDiagItemModal':
+          abrirDiagItemModal();
+          break;
+        case 'cerrarDiagItemModal':
+          cerrarDiagItemModal();
+          break;
+        case 'setDiagItemModalMode':
+          setDiagItemModalMode(el.getAttribute('data-p-mode') || 'edit');
+          break;
+        case 'diagModalEvaluar':
+          diagModalEvaluar(el.getAttribute('data-p-v') || '');
+          break;
+        case 'guardarDiagItemModal':
+          guardarDiagItemModal();
+          break;
+        case 'diagEvaluar':
+          diagEvaluar(el.getAttribute('data-p-v') || '');
+          break;
+        case 'diagNavegar':
+          diagNavegar(Number(el.getAttribute('data-p-dir') || 0));
+          break;
+        case 'verSoporteVenc':
+          verSoporteVenc(el.getAttribute('data-p-item') || '', el.getAttribute('data-p-tr') || '');
+          break;
+        case 'eliminarSoporteVenc':
+          eliminarSoporteVenc(el.getAttribute('data-p-item') || '', el.getAttribute('data-p-tr') || '');
+          break;
+        case 'subirSoporteVenc':
+          subirSoporteVenc(el.getAttribute('data-p-item') || '', el.getAttribute('data-p-tr') || '');
+          break;
+        case 'eliminarRequerimiento':
+          eliminarRequerimiento(el.getAttribute('data-p-tr') || '', el.getAttribute('data-p-req') || '');
+          break;
+        case 'crearRequerimiento':
+          crearRequerimiento(el.getAttribute('data-p-tr') || '');
+          break;
+        case 'cancelarRequerimiento':
+          cancelarRequerimiento();
+          break;
+        case 'toggleReqForm':
+          toggleReqForm();
+          break;
+        case 'agregarTrabajador':
+          agregarTrabajador();
+          break;
+        case 'agregarEquipo':
+          agregarEquipo();
+          break;
+        case 'vencTab':
+          vencTab(el.getAttribute('data-p-tab') || '');
+          break;
+        case 'guardarVencimientos':
+          guardarVencimientos();
+          break;
+        default:
+          break;
+      }
+    });
+
+    document.addEventListener('change', e => {
+      const el = e.target.closest('[data-p-change]');
+      if (!el) return;
+      const act = el.getAttribute('data-p-change');
+      if (act === 'actualizarTrabajador') {
+        actualizarTrabajador(el.getAttribute('data-p-tr') || '', el.getAttribute('data-p-campo') || '', el.value);
+      } else if (act === 'actualizarRequerimiento') {
+        const campo = el.getAttribute('data-p-campo') || '';
+        const valor = el.type === 'checkbox' ? !!el.checked : el.value;
+        actualizarRequerimiento(el.getAttribute('data-p-tr') || '', el.getAttribute('data-p-req') || '', campo, valor);
+      } else if (act === 'actualizarEquipo') {
+        actualizarEquipo(el.getAttribute('data-p-eq') || '', el.getAttribute('data-p-campo') || '', el.value);
+      } else if (act === 'actualizarDiagItem') {
+        actualizarDiagItem(el.getAttribute('data-p-id') || '', el.getAttribute('data-p-campo') || '', el.value);
+      } else if (act === 'toggleReqSinVencNuevo') {
+        toggleReqSinVencNuevo(!!el.checked);
+      }
+    });
+
+    document.addEventListener('input', e => {
+      const el = e.target.closest('[data-p-input]');
+      if (!el) return;
+      if (el.getAttribute('data-p-input') === 'vencFiltro') vencFiltro(el.value);
+    });
+  }
+
   function attach() {
+    _ensurePlanificarDelegation();
     const form = document.getElementById('form-planificar');
     if (form) {
       form.addEventListener('submit', _submit);

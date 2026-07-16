@@ -6,3 +6,12 @@
 .vscode/
 dist/
 build/
+
+# Deploy / docs locales (no pertenecen al deploy de la app)
+.netlify/
+CLAUDE.MD
+CLAUDE.md
+
+# Assets sueltos no usados por la PWA
+app/assets/icons/isotipo-app.png
+app/assets/icons/logo-completo.png

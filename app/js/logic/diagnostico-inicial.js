@@ -3,6 +3,8 @@
 
 const DiagnosticoInicial = (() => {
 
+  const ID_RE = /^di_[a-z0-9_]+$/i;
+
   const ITEMS = [
     {
       id: 'di_01',
@@ -84,6 +86,10 @@ const DiagnosticoInicial = (() => {
     },
   ];
 
+  function isValidId(id) {
+    return typeof id === 'string' && ID_RE.test(id);
+  }
+
   function _key(est) {
     const id = (est && (est.nit || est.nombre)) || 'default';
     return 'diagnostico_' + String(id).replace(/[^a-zA-Z0-9]/g, '_');
@@ -103,17 +109,43 @@ const DiagnosticoInicial = (() => {
     return MAP[calificacion] || '';
   }
 
+  function _clip(s, max) {
+    return String(s || '').slice(0, max);
+  }
+
+  function _sanitizeCatalog(catalog) {
+    if (!Array.isArray(catalog) || !catalog.length) return _defaultCatalog();
+    const cleaned = [];
+    const seen = new Set();
+    catalog.forEach(entry => {
+      if (!entry || !isValidId(entry.id)) return;
+      if (seen.has(entry.id)) return;
+      seen.add(entry.id);
+      cleaned.push({
+        id: entry.id,
+        texto: _clip(entry.texto, 500),
+        norma: _clip(entry.norma, 200),
+        descripcion: _clip(entry.descripcion || entry.texto, 1000),
+        custom: !!entry.custom,
+      });
+    });
+    return cleaned.length ? cleaned : _defaultCatalog();
+  }
+
   function _mergeItems(catalog, items) {
     const map = {};
-    (items || []).forEach(it => { map[it.id] = it; });
+    (items || []).forEach(it => {
+      if (!it || !isValidId(it.id)) return;
+      map[it.id] = it;
+    });
     return catalog.map(def => {
       const saved = map[def.id];
       const cal   = saved?.calificacion || '';
       return {
         id: def.id,
-        condicion: saved?.condicion || '',
+        condicion: _clip(saved?.condicion, 1000),
         calificacion: cal,
-        accion: saved?.accion || '',
+        accion: _clip(saved?.accion, 1000),
         prioridad: prioridadAuto(cal),
       };
     });
@@ -125,7 +157,7 @@ const DiagnosticoInicial = (() => {
       if (raw) {
         const data = JSON.parse(raw);
         const catalog = Array.isArray(data.catalog) && data.catalog.length
-          ? data.catalog
+          ? _sanitizeCatalog(data.catalog)
           : _defaultCatalog();
         const items = _mergeItems(catalog, data.items);
         return { items, catalog, actualizado_en: data.actualizado_en || null };
@@ -140,7 +172,9 @@ const DiagnosticoInicial = (() => {
   }
 
   function saveDiagnostico(est, items, catalog) {
-    const cat = Array.isArray(catalog) && catalog.length ? catalog : _defaultCatalog();
+    const cat = _sanitizeCatalog(
+      Array.isArray(catalog) && catalog.length ? catalog : _defaultCatalog()
+    );
     const merged = _mergeItems(cat, items);
     const data = { items: merged, catalog: cat, actualizado_en: new Date().toISOString() };
     localStorage.setItem(_key(est), JSON.stringify(data));
@@ -152,6 +186,7 @@ const DiagnosticoInicial = (() => {
   }
 
   return {
-    ITEMS, getDiagnostico, getCatalog, saveDiagnostico, contarCompletados, prioridadAuto, newCustomId,
+    ITEMS, ID_RE, isValidId, getDiagnostico, getCatalog, saveDiagnostico,
+    contarCompletados, prioridadAuto, newCustomId,
   };
 })();
