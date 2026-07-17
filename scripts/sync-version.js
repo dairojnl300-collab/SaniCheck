@@ -31,11 +31,14 @@ const ASSET_PATHS = [
   'js/logic/scores.js',
   'js/logic/hallazgos.js',
   'js/logic/fotos.js',
+  'js/logic/dadis-scoring.js',
   'js/phva/planificar.js',
   'js/phva/personalizar.js',
   'js/phva/hacer.js',
   'js/phva/verificar.js',
   'js/phva/actuar.js',
+  'js/screens/dadis-simulador.js',
+  'data/dadis-config.json',
   'sw.js',
 ];
 

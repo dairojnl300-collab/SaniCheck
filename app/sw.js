@@ -1,7 +1,7 @@
 // Service Worker — SaniCheck — Offline-first completo
 
-const APP_VERSION = '4.11.2';
-const BUILD_HASH = 'portal-reset-btn';
+const APP_VERSION = '4.12.0';
+const BUILD_HASH = '193ecbbf5ebb';
 const CACHE = 'sanicheck-' + BUILD_HASH;
 
 const ASSETS = [
@@ -28,11 +28,14 @@ const ASSETS = [
   './js/logic/scores.js',
   './js/logic/hallazgos.js',
   './js/logic/fotos.js',
+  './js/logic/dadis-scoring.js',
   './js/phva/planificar.js',
   './js/phva/personalizar.js',
   './js/phva/hacer.js',
   './js/phva/verificar.js',
   './js/phva/actuar.js',
+  './js/screens/dadis-simulador.js',
+  './data/dadis-config.json',
   './assets/vendor/chart.umd.min.js',
   './assets/icons/favicon.png',
   './assets/icons/icon-192.png',
