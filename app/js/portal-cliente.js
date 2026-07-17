@@ -59,6 +59,19 @@ const PortalCliente = (() => {
     return getPortalMeta().activo;
   }
 
+  /** Limpia el vínculo local con el Portal. No borra datos de SaniCheck ni filas en Supabase. */
+  function restablecer() {
+    try {
+      localStorage.removeItem(LS_ID);
+      localStorage.removeItem(LS_CODIGO);
+      localStorage.removeItem(LS_NOMBRE);
+      localStorage.removeItem(LS_NIT);
+      localStorage.removeItem(LS_QUEUE);
+    } catch (e) {
+      console.warn('[PortalCliente] restablecer', e);
+    }
+  }
+
   function generarCodigoAcceso() {
     const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin I/O/0/1
     let out = '';
@@ -310,6 +323,7 @@ const PortalCliente = (() => {
     generarCodigoAcceso,
     resolverEstablecimientoLocal,
     activar,
+    restablecer,
     syncVencimientos,
     buildSnapshots,
     flushQueue,

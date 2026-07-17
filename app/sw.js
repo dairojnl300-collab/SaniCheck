@@ -1,7 +1,7 @@
 // Service Worker — SaniCheck — Offline-first completo
 
-const APP_VERSION = '4.11.1';
-const BUILD_HASH = 'portal-ajustes-btn';
+const APP_VERSION = '4.11.2';
+const BUILD_HASH = 'portal-reset-btn';
 const CACHE = 'sanicheck-' + BUILD_HASH;
 
 const ASSETS = [

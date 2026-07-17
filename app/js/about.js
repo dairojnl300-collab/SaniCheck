@@ -138,6 +138,10 @@ const About = (() => {
         </p>
         <button type="button" class="btn btn-primary" style="width:100%;" onclick="About.copiarCodigoPortal()">
           Copiar código
+        </button>
+        <button type="button" class="btn btn-outline" style="width:100%;margin-top:10px;"
+          onclick="About.restablecerPortal()">
+          Restablecer Portal
         </button>`;
       return;
     }
@@ -194,6 +198,22 @@ const About = (() => {
     }
   }
 
+  function restablecerPortal() {
+    if (typeof PortalCliente === 'undefined' || !PortalCliente.isActivo()) return;
+
+    const ok = window.confirm(
+      '¿Restablecer el vínculo con el Portal? Se generará un nuevo código de acceso.\n\n' +
+      'Esto NO borra tus datos de SaniCheck (diagnósticos, vencimientos).'
+    );
+    if (!ok) return;
+
+    PortalCliente.restablecer();
+    if (typeof Router !== 'undefined' && Router.toast) {
+      Router.toast('Portal restablecido');
+    }
+    _renderPortal();
+  }
+
   async function copiarCodigoPortal() {
     const codigo = typeof PortalCliente !== 'undefined' ? PortalCliente.getCodigoAcceso() : '';
     if (!codigo) return;
@@ -229,5 +249,12 @@ const About = (() => {
     return _esc(s).replace(/"/g, '&quot;');
   }
 
-  return { render, attach, buscarActualizacion, activarPortal, copiarCodigoPortal };
+  return {
+    render,
+    attach,
+    buscarActualizacion,
+    activarPortal,
+    restablecerPortal,
+    copiarCodigoPortal,
+  };
 })();
