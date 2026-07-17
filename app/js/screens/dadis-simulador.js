@@ -23,6 +23,41 @@ const DadisSimulador = (() => {
       .replace(/"/g, '&quot;');
   }
 
+  /* Formato tipo Microsoft Word: párrafos, justificado, interlineado 1.5 */
+  const PROSE_P =
+    'margin:0 0 0.75em;text-align:justify;text-justify:inter-word;' +
+    'hyphens:auto;-webkit-hyphens:auto;line-height:1.5;word-spacing:normal;' +
+    'overflow-wrap:break-word;';
+
+  function _normalizeSpaces(s) {
+    return String(s || '').replace(/[ \t\u00A0]+/g, ' ').trim();
+  }
+
+  /** Convierte texto plano del instructivo en párrafos HTML justificados (estilo Word). */
+  function _proseHtml(raw, opts) {
+    const fontSize = (opts && opts.fontSize) || '11px';
+    const color = (opts && opts.color) || 'inherit';
+    const text = String(raw || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+    if (!text) return '';
+
+    const blocks = text.split(/\n\s*\n+/).map(b => b.trim()).filter(Boolean);
+    if (!blocks.length) return '';
+
+    return blocks.map((block, idx) => {
+      const lines = block.split('\n').map(l => _normalizeSpaces(l)).filter(Boolean);
+      const parts = lines.map(line => {
+        // Subtítulo corto tipo "Paredes y pisos: resto…" → negrita en la etiqueta
+        const m = line.match(/^([^:]{2,48}):\s+(.+)$/);
+        if (m && !/[.;]$/.test(m[1]) && m[1].split(' ').length <= 8) {
+          return `<strong>${_esc(m[1])}:</strong> ${_esc(m[2])}`;
+        }
+        return _esc(line);
+      });
+      const mb = idx === blocks.length - 1 ? 'margin:0;' : '';
+      return `<p style="${PROSE_P}${mb}font-size:${fontSize};color:${color};">${parts.join(' ')}</p>`;
+    }).join('');
+  }
+
   function _hoy() {
     const d = new Date();
     return d.toISOString().slice(0, 10);
@@ -200,7 +235,7 @@ const DadisSimulador = (() => {
           <span style="margin-left:6px;"><b>A</b> ${ _esc(leyenda.A || 'Aceptable') }</span> ·
           <span><b>AR</b> ${ _esc(leyenda.AR || 'Aceptable con requerimiento') }</span> ·
           <span><b>I</b> ${ _esc(leyenda.I || 'Inaceptable') }</span>
-          ${leyenda.NA_nota ? `<div style="margin-top:6px;font-size:11px;color:var(--color-ink3);">${_esc(leyenda.NA_nota)}</div>` : ''}
+          ${leyenda.NA_nota ? `<div style="margin-top:8px;">${_proseHtml(leyenda.NA_nota, { fontSize: '11px', color: 'var(--color-ink3)' })}</div>` : ''}
         </div>
 
         <div style="display:flex;gap:8px;margin-bottom:var(--sp-md);">
@@ -277,12 +312,12 @@ const DadisSimulador = (() => {
               Ver criterio / normativa</button>
           </div>
         </div>
-        <div id="dadis-desc-${it.id.replace('.', '_')}" style="display:none;margin-top:8px;padding:10px;background:rgba(27,67,50,0.04);
-          border-radius:8px;font-size:11px;color:var(--color-ink2);line-height:1.5;white-space:pre-wrap;">
-          <div style="font-weight:700;color:var(--color-brand);margin-bottom:4px;">Normativa</div>
-          ${_esc(it.normativa)}
-          <div style="font-weight:700;color:var(--color-brand);margin:10px 0 4px;">Criterio de evaluación</div>
-          ${_esc(it.descripcion)}
+        <div id="dadis-desc-${it.id.replace('.', '_')}" style="display:none;margin-top:8px;padding:12px 14px;background:rgba(27,67,50,0.04);
+          border-radius:8px;">
+          <div style="font-weight:700;color:var(--color-brand);margin-bottom:6px;font-size:11px;letter-spacing:0.04em;text-transform:uppercase;">Normativa</div>
+          ${_proseHtml(it.normativa, { fontSize: '11px', color: 'var(--color-ink2)' })}
+          <div style="font-weight:700;color:var(--color-brand);margin:14px 0 6px;font-size:11px;letter-spacing:0.04em;text-transform:uppercase;">Criterio de evaluación</div>
+          ${_proseHtml(it.descripcion, { fontSize: '12px', color: 'var(--color-ink2)' })}
         </div>
         <div style="display:flex;gap:6px;margin-top:10px;">
           ${btn('A', 'A', '#065F46')}
@@ -331,8 +366,8 @@ const DadisSimulador = (() => {
           <div style="font-size:12px;font-weight:700;color:var(--color-ink);">${_esc(it.id)} · ${_esc(it.nombre)}
             <span style="margin-left:6px;font-size:10px;padding:2px 6px;border-radius:6px;background:${it.respuesta === 'I' ? '#FEE2E2' : '#FEF3C7'};color:${it.respuesta === 'I' ? '#991B1B' : '#92400E'};">${it.respuesta}</span>
           </div>
-          <div style="font-size:12px;color:var(--color-ink2);margin-top:4px;">${_esc(_hallazgos[it.id] || '')}</div>
-          <div style="font-size:10px;color:var(--color-ink3);margin-top:4px;">${_esc(it.normativa)}</div>
+          <div style="margin-top:6px;">${_proseHtml(_hallazgos[it.id] || '', { fontSize: '12px', color: 'var(--color-ink2)' })}</div>
+          <div style="margin-top:6px;">${_proseHtml(it.normativa, { fontSize: '10px', color: 'var(--color-ink3)' })}</div>
         </div>`).join('')
       : `<div style="font-size:12px;color:#065F46;padding:8px 0;">Sin hallazgos AR/I registrados.</div>`;
 
@@ -525,8 +560,8 @@ const DadisSimulador = (() => {
         <tr>
           <td><strong>${_esc(it.id)}</strong> ${_esc(it.nombre)}<br>
             <span class="chip chip-${it.respuesta === 'I' ? 'i' : 'ar'}">${it.respuesta}</span></td>
-          <td>${_esc(_hallazgos[it.id] || '')}</td>
-          <td style="font-size:9px;color:#4B5563;">${_esc(it.normativa)}</td>
+          <td class="prose">${_proseHtml(_hallazgos[it.id] || '', { fontSize: '10px', color: '#374151' })}</td>
+          <td class="prose">${_proseHtml(it.normativa, { fontSize: '9px', color: '#4B5563' })}</td>
         </tr>`).join('')
       : `<tr><td colspan="3" style="text-align:center;color:#065F46;padding:14px;">Sin hallazgos AR/I</td></tr>`;
 
@@ -606,6 +641,8 @@ const DadisSimulador = (() => {
         th{text-align:left;font-size:9px;color:#6B7280;text-transform:uppercase;padding:6px;border-bottom:1px solid #E5E7EB;}
         td{padding:8px 6px;border-bottom:1px solid #F3F4F6;vertical-align:top;font-size:11px;}
         td.num{text-align:right;font-weight:700;white-space:nowrap;}
+        .prose p{margin:0 0 0.65em;text-align:justify;text-justify:inter-word;hyphens:auto;-webkit-hyphens:auto;line-height:1.5;overflow-wrap:break-word;}
+        .prose p:last-child{margin-bottom:0;}
         .chip{display:inline-block;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:800;}
         .chip-ar{background:#FEF3C7;color:#92400E;}
         .chip-i{background:#FEE2E2;color:#991B1B;}
