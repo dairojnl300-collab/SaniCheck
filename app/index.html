@@ -92,13 +92,26 @@
   <!-- App shell -->
   <div id="app">
     <header class="phva-topbar">
-      <div class="phva-logo">
+      <button type="button" class="phva-logo" onclick="Router.go('home')" title="Ir al inicio"
+        style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;gap:8px;color:inherit;">
         <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 3l7 3v6c0 5-3.5 8-7 9c-3.5-1-7-4-7-9V6l7-3z"/>
           <path d="M9.2 12.2l1.9 1.9l3.7-4.3"/>
         </svg>
         <span class="phva-logo-text">SaniCheck</span>
-      </div>
+      </button>
+      <button type="button" id="btn-ajustes-top" onclick="Router.go('about')" title="Ajustes · Portal Cliente"
+        aria-label="Ajustes"
+        style="margin-left:auto;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.22);
+          color:#fff;border-radius:10px;padding:8px 10px;cursor:pointer;display:inline-flex;
+          align-items:center;gap:6px;font-size:12px;font-weight:600;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        Ajustes
+      </button>
     </header>
     <main id="screen-area"></main>
     <nav class="tab-bar">
@@ -143,6 +156,8 @@
   <script src="js/logic/checklist-config.js"></script>
   <script src="js/logic/diagnostico-inicial.js"></script>
   <script src="js/logic/vencimientos.js"></script>
+  <script src="js/portal-config.js"></script>
+  <script src="js/portal-cliente.js"></script>
   <script src="js/store.js"></script>
   <script src="js/router.js"></script>
   <script src="js/motion.js"></script>

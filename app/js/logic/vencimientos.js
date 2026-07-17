@@ -277,6 +277,14 @@ const Vencimientos = (() => {
     });
     out[_archivoKey(CEDULA_DOC.id)] = d[_archivoKey(CEDULA_DOC.id)] || null;
     localStorage.setItem(_key(est), JSON.stringify(out));
+    // Sync Portal Cliente (Supabase) en background — nunca bloquea el guardado local
+    try {
+      if (typeof PortalCliente !== 'undefined' && PortalCliente.isActivo()) {
+        PortalCliente.syncVencimientos(est, out);
+      }
+    } catch (e) {
+      console.warn('[Vencimientos] portal sync', e);
+    }
     return out;
   }
 

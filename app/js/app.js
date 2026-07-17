@@ -256,6 +256,7 @@
     Store.bindLifecycleFlush();
     await Store.recoverFromIdb();
     SwUpdate.init();
+    if (typeof PortalCliente !== 'undefined') PortalCliente.bindOnlineRetry();
     _ensureDeleteModal();
     if (Licencias.esValida()) {
       const ui = Store.get().ui || {};
