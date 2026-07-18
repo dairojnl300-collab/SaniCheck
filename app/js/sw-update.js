@@ -12,6 +12,8 @@ const SwUpdate = (() => {
   let _reloading      = false;
   let _pollTimer      = null;
   let _registration   = null;
+  let _hadController  = !!((typeof navigator !== 'undefined' && navigator.serviceWorker)
+    ? navigator.serviceWorker.controller : null);
 
   async function _fetchManifest() {
     const res = await fetch('./version.json?_=' + Date.now(), { cache: 'no-store' });
@@ -205,10 +207,45 @@ const SwUpdate = (() => {
     return { version: info.version || _manifest.version, build: info.build || '' };
   }
 
+  function _autoActivateWaiting(worker) {
+    if (!worker) return;
+    _waitingWorker = worker;
+    try {
+      worker.postMessage('SKIP_WAITING');
+    } catch (e) {
+      console.warn('SwUpdate: auto skipWaiting', e);
+    }
+  }
+
+  /** Recarga UNA vez cuando un SW nuevo toma control (no en la primera instalación). */
+  function _onControllerChange() {
+    if (!_hadController) {
+      _hadController = true;
+      return;
+    }
+    if (_reloading) return;
+    _reloading = true;
+
+    (async () => {
+      try {
+        if (typeof Store !== 'undefined' && Store.flush) {
+          await Store.flush();
+        }
+      } catch (e) {
+        console.warn('SwUpdate: flush before auto-reload', e);
+      }
+      window.location.reload();
+    })();
+  }
+
   function _handleWaiting(worker) {
     if (!worker || !navigator.serviceWorker.controller) return;
+    _waitingWorker = worker;
     _resolveWorkerVersion(worker).then(info => {
-      showBanner(info.version, worker, info.build);
+      _pendingVersion = info.version;
+      _pendingBuild   = info.build;
+      hideBanner();
+      _autoActivateWaiting(worker);
     });
   }
 
@@ -238,7 +275,7 @@ const SwUpdate = (() => {
       if (reg) await reg.update();
 
       if (reg?.waiting) {
-        showBanner(remote.version, reg.waiting, remote.build);
+        _handleWaiting(reg.waiting);
         return { updated: true, version: remote.version, build: remote.build };
       }
 
@@ -258,7 +295,7 @@ const SwUpdate = (() => {
       await reg.update();
       if (reg.waiting && navigator.serviceWorker.controller) {
         const info = await _resolveWorkerVersion(reg.waiting);
-        showBanner(info.version, reg.waiting, info.build);
+        _handleWaiting(reg.waiting);
         return { updated: true, version: info.version, build: info.build };
       }
     }
@@ -302,15 +339,11 @@ const SwUpdate = (() => {
         hideBanner();
       }
       if (e.data.type === 'UPDATE_AVAILABLE') {
-        showBanner(e.data.version, null, e.data.build);
+        _checkRemoteUpdate().catch(() => {});
       }
     });
 
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (_reloading) return;
-      _reloading = true;
-      location.reload();
-    });
+    navigator.serviceWorker.addEventListener('controllerchange', _onControllerChange);
 
     document.addEventListener('visibilitychange', _onVisible);
     window.addEventListener('pageshow', e => {
