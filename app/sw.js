@@ -1,7 +1,7 @@
 // Service Worker — SaniCheck — Offline-first completo
 
-const APP_VERSION = '4.12.4';
-const BUILD_HASH = 'b2b87ad7d98c';
+const APP_VERSION = '4.12.5';
+const BUILD_HASH = '0514b00cf5e3';
 const CACHE = 'sanicheck-' + BUILD_HASH;
 
 const ASSETS = [
@@ -65,11 +65,39 @@ function _notifyClients(msg) {
     .then(clients => { clients.forEach(c => c.postMessage(msg)); });
 }
 
+/** Quita flag redirected (Safari iOS rechaza respondWith con Response.redirected). */
+async function _cleanResponse(response) {
+  if (!response || !response.redirected) return response;
+  const body = await response.clone().blob();
+  return new Response(body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+}
+
+async function _safeCachePut(cache, request, response) {
+  if (!response || !response.ok) return;
+  if (response.redirected) {
+    const body = await response.clone().blob();
+    const cleanResponse = new Response(body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    });
+    return cache.put(request, cleanResponse);
+  }
+  return cache.put(request, response.clone());
+}
+
 /** Garantiza que respondWith reciba SIEMPRE un Response válido (Safari falla con null). */
 function _respond(event, promise) {
   event.respondWith(
     Promise.resolve(promise)
-      .then(res => (res instanceof Response ? res : _fallbackResponse(event.request)))
+      .then(async res => {
+        if (!(res instanceof Response)) return _fallbackResponse(event.request);
+        return _cleanResponse(res);
+      })
       .catch(() => _fallbackResponse(event.request))
   );
 }
@@ -104,10 +132,10 @@ function _emptyJson() {
 
 async function _matchCached(request) {
   let hit = await caches.match(request);
-  if (hit) return hit;
+  if (hit) return _cleanResponse(hit);
 
   hit = await caches.match(request, { ignoreSearch: true });
-  if (hit) return hit;
+  if (hit) return _cleanResponse(hit);
 
   try {
     const url = new URL(request.url);
@@ -117,7 +145,10 @@ async function _matchCached(request) {
     const path = url.pathname.replace(/\/$/, '') || '/';
     for (const req of keys) {
       const p = new URL(req.url).pathname.replace(/\/$/, '') || '/';
-      if (p === path) return cache.match(req);
+      if (p === path) {
+        hit = await cache.match(req);
+        if (hit) return _cleanResponse(hit);
+      }
     }
   } catch (_) { /* ignore */ }
 
@@ -125,15 +156,18 @@ async function _matchCached(request) {
 }
 
 async function _shellDocument() {
-  const candidates = ['./index.html', 'index.html', '/index.html'];
+  const candidates = ['./index.html', 'index.html', '/index.html', './'];
   for (const u of candidates) {
     const hit = await caches.match(u);
-    if (hit) return hit;
+    if (hit) return _cleanResponse(hit);
   }
   const cache = await caches.open(CACHE);
   const keys = await cache.keys();
   for (const req of keys) {
-    if (req.url.includes('index.html')) return cache.match(req);
+    if (req.url.includes('index.html') || req.url.endsWith('/')) {
+      const hit = await cache.match(req);
+      if (hit) return _cleanResponse(hit);
+    }
   }
   return _offlinePage();
 }
@@ -157,10 +191,15 @@ async function _fallbackResponse(request) {
   return _offlinePage();
 }
 
-function _cacheOne(cache, url) {
-  return cache.add(url).catch(err => {
+async function _cacheOne(cache, url) {
+  try {
+    const res = await fetch(url, { cache: 'reload' });
+    if (res && res.ok) {
+      await _safeCachePut(cache, url, res);
+    }
+  } catch (err) {
     console.warn('[SW] No se pudo cachear:', url, err);
-  });
+  }
 }
 
 self.addEventListener('install', e => {
@@ -239,8 +278,9 @@ self.addEventListener('fetch', e => {
     return fetch(e.request).then(res => {
       if (!res || !res.ok) return _fallbackResponse(e.request);
       if (res.type === 'basic' || res.type === 'cors') {
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone)).catch(() => {});
+        caches.open(CACHE)
+          .then(c => _safeCachePut(c, e.request, res))
+          .catch(() => {});
       }
       return res;
     });
