@@ -53,6 +53,16 @@ const About = (() => {
         <div class="card" style="padding:var(--sp-md);margin-bottom:var(--sp-md);">
           <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);
             text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--sp-sm);">
+            Diagnóstico Service Worker</div>
+          <pre id="about-sw-diagnostic" style="margin:0;font-family:var(--font-mono,monospace);font-size:11px;
+            line-height:1.55;color:var(--color-ink2);white-space:pre-wrap;word-break:break-word;
+            background:var(--wash-a,#EFF9F5);padding:12px;border-radius:var(--radius-md);
+            border:1px solid var(--color-border);">Consultando…</pre>
+        </div>
+
+        <div class="card" style="padding:var(--sp-md);margin-bottom:var(--sp-md);">
+          <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);
+            text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--sp-sm);">
             Soporte</div>
           <div style="font-size:var(--text-sm);color:var(--color-ink2);line-height:1.7;">
             ECODESA Ecología Desarrollo e Ingeniería S.A.S<br>
@@ -110,6 +120,60 @@ const About = (() => {
     }
 
     _renderPortal();
+    _renderSwDiagnostic();
+  }
+
+  async function _renderSwDiagnostic() {
+    const el = document.getElementById('about-sw-diagnostic');
+    if (!el) return;
+
+    const lines = [];
+    const hasSw = 'serviceWorker' in navigator;
+
+    lines.push('API serviceWorker disponible: ' + (hasSw ? 'sí' : 'no'));
+    lines.push('SW controlando la página: ' + (hasSw && navigator.serviceWorker.controller ? 'sí' : 'no'));
+
+    if (window.__SW_REGISTER_ERROR__) {
+      lines.push('Error de registro: ' + window.__SW_REGISTER_ERROR__);
+    }
+
+    if (hasSw) {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        lines.push('Registros SW encontrados: ' + regs.length);
+        regs.forEach((reg, i) => {
+          const estados = [];
+          if (reg.installing) estados.push('installing');
+          if (reg.waiting) estados.push('waiting');
+          if (reg.active) estados.push('active');
+          lines.push('  Registro #' + (i + 1) + ': scope=' + (reg.scope || '—') +
+            ' · estados=' + (estados.length ? estados.join(', ') : 'ninguno'));
+        });
+      } catch (err) {
+        lines.push('getRegistrations() error: ' + (err && err.message ? err.message : String(err)));
+      }
+    }
+
+    if ('caches' in window) {
+      try {
+        const info = await SwUpdate.getActiveInfo();
+        const cacheName = info.cache || '—';
+        lines.push('Nombre caché activa: ' + cacheName);
+        if (cacheName && cacheName !== '—') {
+          const cache = await caches.open(cacheName);
+          const keys = await cache.keys();
+          lines.push('Archivos en caché: ' + keys.length);
+        } else {
+          lines.push('Archivos en caché: —');
+        }
+      } catch (err) {
+        lines.push('CacheStorage error: ' + (err && err.message ? err.message : String(err)));
+      }
+    } else {
+      lines.push('CacheStorage no disponible');
+    }
+
+    el.textContent = lines.join('\n');
   }
 
   function _renderPortal() {

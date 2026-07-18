@@ -2,7 +2,7 @@
   "name": "SaniCheck · ECODESA",
   "short_name": "SaniCheck",
   "description": "Inspección PSB móvil con normativa colombiana — ECODESA Ing. S.A.S",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -37,7 +37,7 @@
       "name": "Nueva Inspección",
       "short_name": "Nueva",
       "description": "Iniciar inspección PSB",
-      "url": "./index.html"
+      "url": "./"
     }
   ],
   "prefer_related_applications": false

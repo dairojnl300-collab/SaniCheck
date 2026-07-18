@@ -289,7 +289,10 @@ const SwUpdate = (() => {
         _watchRegistration(reg);
         reg.update().catch(() => {});
       })
-      .catch(() => {});
+      .catch(err => {
+        console.error('[SW] Error de registro:', err);
+        window.__SW_REGISTER_ERROR__ = String(err && err.message || err);
+      });
 
     navigator.serviceWorker.addEventListener('message', e => {
       if (!e.data) return;
