@@ -24,10 +24,12 @@ const PortalCliente = (() => {
 
   function _headers(prefer) {
     const { SUPABASE_ANON_KEY } = _cfg();
+    const codigo = getCodigoAcceso();
     const h = {
       apikey: SUPABASE_ANON_KEY,
       Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
       'Content-Type': 'application/json',
+      'x-sanicheck-codigo-acceso': codigo ? String(codigo).trim().toUpperCase() : '',
     };
     if (prefer) h.Prefer = prefer;
     return h;
