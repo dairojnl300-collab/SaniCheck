@@ -329,9 +329,17 @@ const Verificar = (() => {
     return `<div class="coming-soon">
       <div class="coming-soon-icon" style="display:flex;justify-content:center;color:var(--color-ink3);">${AppIcons.block('circleAlert', 40)}</div>
       <div class="coming-soon-title">Sin inspección activa</div>
-      <div class="coming-soon-desc">Complete el checklist PSB en HACER primero.</div>
-      <button class="btn btn-primary mt-md" style="width:auto;padding:12px 24px"
+      <div class="coming-soon-desc" style="max-width:320px;margin:0 auto;line-height:1.5;">
+        El dashboard de cumplimiento PSB requiere una inspección iniciada (Planificar → HACER).
+        La configuración INVIMA no depende del checklist y está disponible abajo.
+      </div>
+      <div style="padding:0 var(--sp-md);width:100%;max-width:400px;margin:0 auto;">
+        ${_renderInvimaBlock()}
+      </div>
+      <button class="btn btn-primary mt-md" style="width:auto;padding:12px 24px;margin-top:var(--sp-md);"
         onclick="Router.go('planificar')">Ir a Planificar</button>
+      <button class="btn btn-outline mt-sm" style="width:auto;padding:12px 24px;margin-top:var(--sp-sm);"
+        onclick="Router.go('hacer')">Ir a HACER</button>
     </div>`;
   }
 
