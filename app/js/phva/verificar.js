@@ -42,8 +42,6 @@ const Verificar = (() => {
         ${hallazgos.length ? _renderHallazgos(hallazgos) : ''}
         ${historico ? _renderHistorico(historico, inspeccion) : ''}
 
-        ${_renderInvimaBlock()}
-
         <button class="btn btn-primary" style="margin-top:var(--sp-lg);display:inline-flex;align-items:center;justify-content:center;gap:6px;"
           onclick="Router.go('actuar')">
           ${AppIcons.row('fileText', 'GENERAR ACTA PSB', 14)}
@@ -302,41 +300,15 @@ const Verificar = (() => {
     return mismo.sort((a, b) => new Date(b.creado_en) - new Date(a.creado_en))[0];
   }
 
-  function _renderInvimaBlock() {
-    let resumen = 'INVIMA: 48 base + 0 custom';
-    try {
-      if (typeof InvimaCrud !== 'undefined') {
-        InvimaCrud.loadBaseChecklist().catch(() => {});
-        const r = InvimaCrud.resumen();
-        resumen = `INVIMA: ${r.base || 48} base + ${r.custom} custom`;
-      }
-    } catch (_) { /* offline */ }
-    return `
-      <div style="margin-top:var(--sp-md);padding:var(--sp-md);background:var(--color-white);
-        border-radius:var(--radius-lg);border:1px solid var(--color-border);box-shadow:var(--shadow-sm);">
-        <div style="font-size:13px;font-weight:700;color:var(--color-brand);margin-bottom:6px;">
-          Checklist INVIMA (Res. 2674/2013)
-        </div>
-        <div style="font-size:12px;color:var(--color-ink3);margin-bottom:var(--sp-sm);" id="invima-resumen-verificar">${_esc(resumen)}</div>
-        <button type="button" class="btn btn-outline" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
-          onclick="ConfigurarInvima.abrir()">
-          ⚙️ Configurar INVIMA
-        </button>
-      </div>`;
-  }
-
   function _sinInspeccion() {
     return `<div class="coming-soon">
       <div class="coming-soon-icon" style="display:flex;justify-content:center;color:var(--color-ink3);">${AppIcons.block('circleAlert', 40)}</div>
       <div class="coming-soon-title">Sin inspección activa</div>
       <div class="coming-soon-desc" style="max-width:320px;margin:0 auto;line-height:1.5;">
         El dashboard PSB requiere una inspección iniciada (Planificar → Iniciar ciclo → HACER).
-        El Control de Vencimientos v2 y la configuración INVIMA no dependen del checklist.
+        El Control de Vencimientos v2 no depende del checklist.
       </div>
       ${_renderVencimientosSinInspBlock()}
-      <div style="padding:0 var(--sp-md);width:100%;max-width:400px;margin:0 auto;">
-        ${_renderInvimaBlock()}
-      </div>
       <button class="btn btn-primary mt-md" style="width:auto;padding:12px 24px;margin-top:var(--sp-md);"
         onclick="Router.go('planificar')">Ir a Planificar</button>
       <button class="btn btn-outline mt-sm" style="width:auto;padding:12px 24px;margin-top:var(--sp-sm);"
