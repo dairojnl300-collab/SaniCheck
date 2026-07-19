@@ -25,6 +25,11 @@
     .por_vencer_30, .por_vencer_60 { background:#fef3c7; color:#92400e; }
     .vencido { background:#fee2e2; color:#991b1b; }
     #chart-wrap { background:#fff; border-radius:10px; padding:12px; margin:16px 0; }
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:flex-end; justify-content:center; padding:16px; z-index:100; }
+    .modal { background:#fff; border-radius:12px; width:100%; max-width:480px; max-height:90vh; overflow:auto; padding:16px; }
+    .modal label { display:block; font-size:12px; font-weight:600; margin:8px 0 4px; }
+    .modal .row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .err { color:var(--red); font-size:12px; margin-top:8px; }
   </style>
 </head>
 <body>
@@ -43,16 +48,34 @@
     <div class="kpis" id="kpis"></div>
     <div id="chart-wrap"><canvas id="chart-estados" height="120"></canvas></div>
     <table>
-      <thead><tr><th>Nombre</th><th>Categoría</th><th>Tipo</th><th>Vencimiento</th><th>Estado</th><th></th></tr></thead>
+      <thead><tr><th>Nombre</th><th>Categoría</th><th>Tipo</th><th>Vencimiento</th><th>Estado</th><th>Acciones</th></tr></thead>
       <tbody id="tbody"></tbody>
     </table>
   </main>
+  <div id="modal-root"></div>
   <script src="../../app/js/portal-config.js"></script>
-  <script src="../../app/js/portal-cliente.js"></script>
   <script src="../services/vencimientos-service.js"></script>
   <script>
+    const TIPOS = {
+      personal: [
+        { id: 'manipulacion', label: 'Manipulación de alimentos' },
+        { id: 'medico', label: 'Examen médico ocupacional' },
+        { id: 'sst', label: 'Inducción SST' },
+      ],
+      equipos: [
+        { id: 'calibracion', label: 'Calibración' },
+        { id: 'mantenimiento', label: 'Mantenimiento' },
+      ],
+      establecimiento: [
+        { id: 'plagas', label: 'Fumigación / plagas' },
+        { id: 'analisis_agua', label: 'Análisis de agua' },
+        { id: 'custom', label: 'Personalizado' },
+      ],
+    };
+
     let _chart = null;
     let _items = [];
+    let _editId = null;
 
     function codigo() {
       const c = document.getElementById('codigo').value.trim().toUpperCase();
@@ -62,6 +85,14 @@
 
     function fmt(d) {
       return d ? new Date(d + 'T00:00:00').toLocaleDateString('es-CO') : '—';
+    }
+
+    function validarArchivo(file) {
+      if (!file) return null;
+      if (file.size > 10 * 1024 * 1024) throw new Error('Archivo debe ser ≤10MB');
+      const ok = ['application/pdf','image/jpeg','image/png','image/webp'];
+      if (!ok.includes(file.type)) throw new Error('Formato no permitido');
+      return file;
     }
 
     function renderKpis(counts) {
@@ -85,16 +116,28 @@
       const tb = document.getElementById('tbody');
       tb.innerHTML = items.map(it => `<tr>
         <td>${it.nombre}</td><td>${it.categoria}</td><td>${it.tipo_label||it.tipo}</td>
-        <td>${fmt(it.fecha_vencimiento)}</td>
-        <td><span class="badge ${it.estado}">${it.estado}</span></td>
-        <td>${it.documento_storage_path ? `<button data-path="${it.documento_storage_path}">Descargar</button>` : ''}</td>
+        <td>${fmt(it.fecha_vencimiento)}</td><td><span class="badge ${it.estado}">${it.estado}</span></td>
+        <td>
+          ${it.documento_storage_path ? `<button data-dl="${it.documento_storage_path}">Descargar</button>` : ''}
+          <button data-ed="${it.id}">Editar</button>
+          <button data-del="${it.id}">Eliminar</button>
+        </td>
       </tr>`).join('');
-      tb.querySelectorAll('button[data-path]').forEach(btn => {
+      tb.querySelectorAll('[data-dl]').forEach(btn => {
         btn.onclick = async () => {
           try {
-            const url = await VencimientosService.getSignedUrl(codigo(), btn.dataset.path);
+            const url = await VencimientosService.getSignedUrl(codigo(), btn.dataset.dl);
             window.open(url, '_blank');
           } catch (e) { alert(e.message); }
+        };
+      });
+      tb.querySelectorAll('[data-ed]').forEach(btn => {
+        btn.onclick = () => abrirModal(btn.dataset.ed);
+      });
+      tb.querySelectorAll('[data-del]').forEach(btn => {
+        btn.onclick = async () => {
+          if (!confirm('¿Eliminar documento?')) return;
+          alert('Eliminación desde Portal: use SaniCheck app o integrar DELETE REST.');
         };
       });
     }
@@ -111,8 +154,109 @@
       renderTable(_items);
     }
 
+    function populateTipos(cat, selected) {
+      const sel = document.getElementById('m-tipo');
+      sel.innerHTML = (TIPOS[cat] || []).map(t =>
+        `<option value="${t.id}" ${t.id === selected ? 'selected' : ''}>${t.label}</option>`
+      ).join('');
+    }
+
+    function abrirModal(editId) {
+      _editId = editId || null;
+      const item = editId ? _items.find(x => x.id === editId) : null;
+      document.getElementById('modal-root').innerHTML = `
+        <div class="modal-overlay" id="modal">
+          <div class="modal">
+            <h3 style="margin:0 0 12px;">${editId ? 'Editar documento' : 'Agregar documento'}</h3>
+            <label>Categoría</label>
+            <select id="m-cat" ${editId ? 'disabled' : ''}>
+              <option value="personal">Personal</option>
+              <option value="equipos">Equipos</option>
+              <option value="establecimiento">Establecimiento</option>
+            </select>
+            <label>Tipo</label>
+            <select id="m-tipo" ${editId ? 'disabled' : ''}></select>
+            <label>Nombre</label>
+            <input id="m-nombre" type="text" style="width:100%">
+            <div class="row">
+              <div><label>Fecha emisión</label><input id="m-emision" type="date" style="width:100%"></div>
+              <div><label>Fecha vencimiento</label><input id="m-venc" type="date" style="width:100%"></div>
+            </div>
+            <label>Frecuencia</label>
+            <select id="m-frec"><option value="anual">Anual</option><option value="semestral">Semestral</option><option value="trimestral">Trimestral</option><option value="custom">Personalizada</option></select>
+            <label>Archivo (PDF/JPG/PNG/WEBP, max 10MB)</label>
+            <input id="m-archivo" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp">
+            <p id="m-err" class="err"></p>
+            <div style="display:flex;gap:8px;margin-top:12px;">
+              <button class="primary" id="m-guardar" style="flex:1">Guardar</button>
+              <button id="m-cancelar">Cancelar</button>
+            </div>
+          </div>
+        </div>`;
+      const cat = item?.categoria || document.getElementById('filtro-cat').value || 'establecimiento';
+      document.getElementById('m-cat').value = cat;
+      populateTipos(cat, item?.tipo);
+      if (item) {
+        document.getElementById('m-nombre').value = item.nombre || '';
+        document.getElementById('m-emision').value = item.fecha_emision || '';
+        document.getElementById('m-venc').value = item.fecha_vencimiento || '';
+        document.getElementById('m-frec').value = item.frecuencia || 'anual';
+      }
+      document.getElementById('m-cat').onchange = e => populateTipos(e.target.value);
+      document.getElementById('m-cancelar').onclick = () => { document.getElementById('modal-root').innerHTML = ''; };
+      document.getElementById('m-guardar').onclick = () => guardarModal().catch(e => {
+        document.getElementById('m-err').textContent = e.message;
+      });
+    }
+
+    async function guardarModal() {
+      const c = codigo();
+      if (c.length !== 6) throw new Error('Código inválido');
+      const cat = document.getElementById('m-cat').value;
+      const tipo = document.getElementById('m-tipo').value;
+      const tipoLabel = (TIPOS[cat] || []).find(t => t.id === tipo)?.label || tipo;
+      const payload = {
+        categoria: cat,
+        tipo,
+        tipo_label: tipoLabel,
+        nombre: document.getElementById('m-nombre').value.trim() || tipoLabel,
+        fecha_emision: document.getElementById('m-emision').value || null,
+        fecha_vencimiento: document.getElementById('m-venc').value,
+        frecuencia: document.getElementById('m-frec').value,
+        custom: tipo === 'custom',
+        creado_por: 'Portal Cliente',
+      };
+      if (!payload.fecha_vencimiento) throw new Error('Indique fecha de vencimiento');
+      const em = payload.fecha_emision ? new Date(payload.fecha_emision) : null;
+      const ve = new Date(payload.fecha_vencimiento);
+      if (em && em >= ve) throw new Error('Emisión debe ser anterior al vencimiento');
+      const file = validarArchivo(document.getElementById('m-archivo').files[0]);
+      let row;
+      if (_editId) {
+        row = _items.find(x => x.id === _editId);
+        if (!row) throw new Error('Documento no encontrado');
+      } else {
+        row = await VencimientosService.crearVencimiento(c, payload);
+      }
+      if (file && row?.id && row?.establecimiento_id) {
+        const path = await VencimientosService.uploadArchivo(c, file, row.establecimiento_id, row.id);
+        await fetch(window.SANICHECK_PORTAL_CONFIG.SUPABASE_URL.replace(/\/$/, '') + '/rest/v1/vencimientos?id=eq.' + row.id, {
+          method: 'PATCH',
+          headers: {
+            apikey: window.SANICHECK_PORTAL_CONFIG.SUPABASE_ANON_KEY,
+            Authorization: 'Bearer ' + window.SANICHECK_PORTAL_CONFIG.SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json',
+            'x-sanicheck-codigo-acceso': c,
+          },
+          body: JSON.stringify({ documento_storage_path: path }),
+        });
+      }
+      document.getElementById('modal-root').innerHTML = '';
+      await cargar();
+    }
+
     document.getElementById('btn-cargar').onclick = () => cargar().catch(e => alert(e.message));
-    document.getElementById('btn-nuevo').onclick = () => alert('Use SaniCheck app para cargar documentos con archivo; o integrar formulario POST aquí.');
+    document.getElementById('btn-nuevo').onclick = () => abrirModal(null);
     document.getElementById('codigo').value = sessionStorage.getItem('portal_codigo') || '';
   </script>
 </body>

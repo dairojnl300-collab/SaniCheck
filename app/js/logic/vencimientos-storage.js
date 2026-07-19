@@ -45,11 +45,11 @@ const VencimientosStorage = (() => {
   function validarArchivo(file) {
     if (!file) return { ok: false, error: 'No se seleccionó archivo.' };
     if (file.size > MAX_BYTES) {
-      return { ok: false, error: 'El archivo supera 10 MB. Máximo permitido: 10 MB.' };
+      return { ok: false, error: 'Archivo debe ser ≤10MB' };
     }
     const mime = (file.type || '').toLowerCase();
     if (!MIME_WHITELIST.has(mime)) {
-      return { ok: false, error: 'Tipo no permitido. Use PDF, JPG, PNG o WEBP.' };
+      return { ok: false, error: 'Formato no permitido' };
     }
     return { ok: true, mime };
   }
