@@ -276,6 +276,10 @@
       VencimientosV2.loadCatalog().catch(() => {});
       VencimientosV2.bindOnlineRetry();
     }
+    if (typeof InvimaCrud !== 'undefined') {
+      InvimaCrud.loadBaseChecklist().catch(() => {});
+      InvimaCrud.bindOnlineRetry();
+    }
     _ensureDeleteModal();
     if (Licencias.esValida()) {
       const ui = Store.get().ui || {};

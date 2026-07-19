@@ -1,0 +1,382 @@
+{
+  "categorias": [
+    {
+      "id": "cat_01",
+      "nombre": "EDIFICACIÓN E INSTALACIONES",
+      "peso": 10,
+      "items": [
+        {
+          "id": "item_1.1",
+          "codigo": "1.1",
+          "nombre": "Localización y diseño",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_1.2",
+          "codigo": "1.2",
+          "nombre": "Materiales de construcción",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_1.3",
+          "codigo": "1.3",
+          "nombre": "Ventilación e iluminación",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_1.4",
+          "codigo": "1.4",
+          "nombre": "Pisos y paredes",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_1.5",
+          "codigo": "1.5",
+          "nombre": "Techos y cielos rasos",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_1.6",
+          "codigo": "1.6",
+          "nombre": "Instalaciones eléctricas",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_1.7",
+          "codigo": "1.7",
+          "nombre": "Abastecimiento de agua",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_1.8",
+          "codigo": "1.8",
+          "nombre": "Evacuación de aguas",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        }
+      ]
+    },
+    {
+      "id": "cat_02",
+      "nombre": "SANEAMIENTO",
+      "peso": 10,
+      "items": [
+        {
+          "id": "item_2.1",
+          "codigo": "2.1",
+          "nombre": "Limpieza y desinfección",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_2.2",
+          "codigo": "2.2",
+          "nombre": "Control de plagas",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_2.3",
+          "codigo": "2.3",
+          "nombre": "Manejo de residuos sólidos",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_2.4",
+          "codigo": "2.4",
+          "nombre": "Manejo de residuos líquidos",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_2.5",
+          "codigo": "2.5",
+          "nombre": "Dotación baños y vestieres",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_2.6",
+          "codigo": "2.6",
+          "nombre": "Programa de limpieza documentado",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_2.7",
+          "codigo": "2.7",
+          "nombre": "Desinfección de superficies",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_2.8",
+          "codigo": "2.8",
+          "nombre": "Control microbiológico ambiental",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        }
+      ]
+    },
+    {
+      "id": "cat_03",
+      "nombre": "PERSONAL",
+      "peso": 10,
+      "items": [
+        {
+          "id": "item_3.1",
+          "codigo": "3.1",
+          "nombre": "Higiene del manipulador",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_3.2",
+          "codigo": "3.2",
+          "nombre": "Examen médico ocupacional",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_3.3",
+          "codigo": "3.3",
+          "nombre": "Capacitación BPM",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_3.4",
+          "codigo": "3.4",
+          "nombre": "Inducción SST",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_3.5",
+          "codigo": "3.5",
+          "nombre": "Uniformes y EPP",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_3.6",
+          "codigo": "3.6",
+          "nombre": "Control de enfermedades transmisibles",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_3.7",
+          "codigo": "3.7",
+          "nombre": "Prácticas de lavado de manos",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_3.8",
+          "codigo": "3.8",
+          "nombre": "Registro de capacitaciones",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        }
+      ]
+    },
+    {
+      "id": "cat_04",
+      "nombre": "EQUIPOS Y UTENSILIOS",
+      "peso": 10,
+      "items": [
+        {
+          "id": "item_4.1",
+          "codigo": "4.1",
+          "nombre": "Material compatible alimentos",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_4.2",
+          "codigo": "4.2",
+          "nombre": "Estado de conservación",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_4.3",
+          "codigo": "4.3",
+          "nombre": "Calibración termómetros",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_4.4",
+          "codigo": "4.4",
+          "nombre": "Mantenimiento equipos",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_4.5",
+          "codigo": "4.5",
+          "nombre": "Utensilios en buen estado",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_4.6",
+          "codigo": "4.6",
+          "nombre": "Lavado y desinfección equipos",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_4.7",
+          "codigo": "4.7",
+          "nombre": "Identificación equipos críticos",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_4.8",
+          "codigo": "4.8",
+          "nombre": "Programa mantenimiento preventivo",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        }
+      ]
+    },
+    {
+      "id": "cat_05",
+      "nombre": "ALMACENAMIENTO",
+      "peso": 10,
+      "items": [
+        {
+          "id": "item_5.1",
+          "codigo": "5.1",
+          "nombre": "Rotación PEPS/FIFO",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_5.2",
+          "codigo": "5.2",
+          "nombre": "Separación crudos y cocidos",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_5.3",
+          "codigo": "5.3",
+          "nombre": "Temperatura almacenamiento",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_5.4",
+          "codigo": "5.4",
+          "nombre": "Protección contra contaminación",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_5.5",
+          "codigo": "5.5",
+          "nombre": "Identificación y rotulado",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_5.6",
+          "codigo": "5.6",
+          "nombre": "Almacenamiento químicos",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_5.7",
+          "codigo": "5.7",
+          "nombre": "Control de vencimientos",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_5.8",
+          "codigo": "5.8",
+          "nombre": "Condiciones de humedad",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        }
+      ]
+    },
+    {
+      "id": "cat_06",
+      "nombre": "VERIFICACIÓN",
+      "peso": 10,
+      "items": [
+        {
+          "id": "item_6.1",
+          "codigo": "6.1",
+          "nombre": "Plan de autocontrol",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_6.2",
+          "codigo": "6.2",
+          "nombre": "Registros de monitoreo",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_6.3",
+          "codigo": "6.3",
+          "nombre": "Acciones correctivas",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_6.4",
+          "codigo": "6.4",
+          "nombre": "Verificación interna",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_6.5",
+          "codigo": "6.5",
+          "nombre": "Trazabilidad",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_6.6",
+          "codigo": "6.6",
+          "nombre": "Retiro y recuperación producto",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_6.7",
+          "codigo": "6.7",
+          "nombre": "Auditorías documentadas",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        },
+        {
+          "id": "item_6.8",
+          "codigo": "6.8",
+          "nombre": "Revisión por la dirección",
+          "normativa": "Res. 2674/2013",
+          "custom": false
+        }
+      ]
+    }
+  ]
+}
