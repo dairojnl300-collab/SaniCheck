@@ -83,6 +83,9 @@ const Planificar = (() => {
   let _draftTimer     = null;
   let _diagSaveTimer  = null;
 
+  /** v1 oculto — mantener por compatibilidad de datos existentes, ver ETAPA futura de migración v1→v2 */
+  const _VENC_V1_UI = false;
+
   const FORM_IDS = [
     'inp-nombre', 'inp-nit', 'inp-direccion', 'inp-barrio', 'inp-ciudad', 'inp-telefono',
     'inp-correo', 'inp-representante', 'inp-ciiu', 'inp-tipo', 'inp-turnos', 'inp-raciones',
@@ -1004,12 +1007,13 @@ const Planificar = (() => {
         Disponible sin inspección activa. Opcional: complete <strong>Datos Generales</strong> para identificar el establecimiento.
       </div>
       ${_renderVencimientosV2Section()}
+      ${_VENC_V1_UI ? `
       <details style="margin-bottom:var(--sp-md);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:8px 12px;">
         <summary style="cursor:pointer;font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);">Control v1 (trabajadores y equipos legacy)</summary>
         ${_renderVencimientosBodyLegacy(v)}
       </details>
       <button type="button" class="btn btn-primary" style="margin-top:var(--sp-sm);" data-p-act="guardarVencimientos">
-        Guardar vencimientos v1</button>`;
+        Guardar vencimientos v1</button>` : ''}`;
   }
 
   function _renderVencimientosBodyLegacy() {
