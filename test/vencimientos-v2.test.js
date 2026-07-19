@@ -57,7 +57,7 @@ function assert(cond, msg) {
 // Upload > 10MB rechaza
 const big = { size: 11 * 1024 * 1024, type: 'application/pdf', name: 'big.pdf' };
 const valBig = Storage.validarArchivo(big);
-assert(!valBig.ok && valBig.error.includes('10 MB'), 'PDF > 10MB rechazado');
+assert(!valBig.ok && valBig.error.includes('≤10MB'), 'PDF > 10MB rechazado');
 
 // MIME inválido
 const badMime = { size: 1000, type: 'application/zip', name: 'x.zip' };
@@ -110,7 +110,7 @@ try {
   });
   assert(false, 'duplicado debe fallar');
 } catch (e) {
-  assert(String(e.message).includes('tipo'), 'tipo duplicado rechazado');
+  assert(String(e.message).includes('Ya existe'), 'tipo duplicado rechazado');
 }
 
 if (failed) {

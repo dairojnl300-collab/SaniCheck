@@ -330,9 +330,10 @@ const Verificar = (() => {
       <div class="coming-soon-icon" style="display:flex;justify-content:center;color:var(--color-ink3);">${AppIcons.block('circleAlert', 40)}</div>
       <div class="coming-soon-title">Sin inspección activa</div>
       <div class="coming-soon-desc" style="max-width:320px;margin:0 auto;line-height:1.5;">
-        El dashboard de cumplimiento PSB requiere una inspección iniciada (Planificar → HACER).
-        La configuración INVIMA no depende del checklist y está disponible abajo.
+        El dashboard PSB requiere una inspección iniciada (Planificar → Iniciar ciclo → HACER).
+        El Control de Vencimientos v2 y la configuración INVIMA no dependen del checklist.
       </div>
+      ${_renderVencimientosSinInspBlock()}
       <div style="padding:0 var(--sp-md);width:100%;max-width:400px;margin:0 auto;">
         ${_renderInvimaBlock()}
       </div>
@@ -341,6 +342,21 @@ const Verificar = (() => {
       <button class="btn btn-outline mt-sm" style="width:auto;padding:12px 24px;margin-top:var(--sp-sm);"
         onclick="Router.go('hacer')">Ir a HACER</button>
     </div>`;
+  }
+
+  function _renderVencimientosSinInspBlock() {
+    return `
+      <div style="margin:var(--sp-md) auto;padding:var(--sp-md);max-width:400px;background:var(--color-white);
+        border-radius:var(--radius-lg);border:1px solid var(--color-border);text-align:left;">
+        <div style="font-size:13px;font-weight:700;color:var(--color-brand);margin-bottom:6px;">Control de Vencimientos v2</div>
+        <div style="font-size:12px;color:var(--color-ink3);margin-bottom:var(--sp-sm);">
+          Disponible en Planificar sin completar HACER. Agregue documentos, fechas y archivos adjuntos.
+        </div>
+        <button type="button" class="btn btn-accent" style="width:100%;"
+          onclick="Router.go('planificar');setTimeout(function(){Planificar.openSection('vencimientos');},200);">
+          Ir a Control de Vencimientos
+        </button>
+      </div>`;
   }
 
   function _esc(s) {

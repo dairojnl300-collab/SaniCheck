@@ -6,7 +6,7 @@ const VencimientosV2 = (() => {
   'use strict';
 
   const LS_KEY = 'sanicheck_vencimientos_v2';
-  const LS_QUEUE = 'sanicheck_vencimientos_v2_sync_queue';
+  const LS_QUEUE = 'sanicheck_vencimientos_pending_v2';
 
   let _catalog = null;
   let _syncing = false;
@@ -144,35 +144,43 @@ const VencimientosV2 = (() => {
     return items.sort((a, b) => (a.fecha_vencimiento || '').localeCompare(b.fecha_vencimiento || ''));
   }
 
-  function _tipoDuplicado(estId, tipo, excludeId) {
+  function _tipoDuplicado(estId, tipo, categoria, excludeId) {
     if (!tipo || tipo === 'custom') return false;
     return _loadStore().items.some(it =>
       it.establecimiento_id === estId &&
+      it.categoria === categoria &&
       it.tipo === tipo &&
       !it.custom &&
       it.id !== excludeId
     );
   }
 
-  function _validarPayload(payload, isUpdate, excludeId) {
+  function _validarPayload(payload, isUpdate, excludeId, file) {
     if (!payload.nombre || !String(payload.nombre).trim()) {
       throw new Error('Indique el nombre del documento.');
     }
     if (!payload.fecha_vencimiento) {
       throw new Error('Indique la fecha de vencimiento.');
     }
-    if (!isUpdate) {
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      const venc = new Date(String(payload.fecha_vencimiento).slice(0, 10) + 'T00:00:00');
-      if (venc < hoy) {
-        throw new Error('La fecha de vencimiento debe ser futura.');
+    if (payload.fecha_emision && payload.fecha_vencimiento) {
+      const em = new Date(String(payload.fecha_emision).slice(0, 10) + 'T00:00:00');
+      const ve = new Date(String(payload.fecha_vencimiento).slice(0, 10) + 'T00:00:00');
+      if (!Number.isNaN(em.getTime()) && !Number.isNaN(ve.getTime()) && em >= ve) {
+        throw new Error('La fecha de emisión debe ser anterior al vencimiento.');
       }
     }
-    const estId = payload.establecimiento_id || _establecimientoId();
-    if (_tipoDuplicado(estId, payload.tipo, excludeId)) {
-      throw new Error('Ya existe un documento de este tipo para el establecimiento.');
+    const estId = payload.establecimiento_id || _establecimientoId() || 'local-pending';
+    if (_tipoDuplicado(estId, payload.tipo, payload.categoria, excludeId)) {
+      throw new Error('Ya existe este documento');
     }
+    if (file) {
+      const val = VencimientosStorage.validarArchivo(file);
+      if (!val.ok) throw new Error(val.error);
+    }
+  }
+
+  function validateData(payload, file, isUpdate, excludeId) {
+    _validarPayload(payload, isUpdate, excludeId, file);
   }
 
   function _rowToSupabase(item) {
@@ -196,7 +204,7 @@ const VencimientosV2 = (() => {
   }
 
   function guardarVencimiento(payload, file) {
-    const estId = payload.establecimiento_id || _establecimientoId();
+    const estId = payload.establecimiento_id || _establecimientoId() || 'local-pending';
 
     const now = new Date().toISOString();
     const item = {
@@ -224,13 +232,11 @@ const VencimientosV2 = (() => {
     };
 
     if (file) {
-      const val = VencimientosStorage.validarArchivo(file);
-      if (!val.ok) throw new Error(val.error);
       item._local_file = { name: file.name, type: file.type, size: file.size };
       item._pending_file = true;
     }
 
-    _validarPayload(item, false);
+    _validarPayload(item, false, null, file);
 
     const store = _loadStore();
     store.items.push(item);
@@ -260,13 +266,11 @@ const VencimientosV2 = (() => {
     item.custom = item.tipo === 'custom' || !!item.custom;
 
     if (file) {
-      const val = VencimientosStorage.validarArchivo(file);
-      if (!val.ok) throw new Error(val.error);
       item._pending_file = true;
       item._local_file = { name: file.name, type: file.type, size: file.size };
     }
 
-    _validarPayload(item, true, id);
+    _validarPayload(item, true, id, file);
     store.items[idx] = item;
     _saveStore(store);
 
@@ -571,6 +575,7 @@ const VencimientosV2 = (() => {
             <label class="form-label">Archivo (PDF/JPG/PNG/WEBP, max 10MB)</label>
             <input class="form-input" type="file" id="v2-archivo" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp">
           </div>
+          <div id="v2-modal-error" style="font-size:12px;color:var(--color-deficiente);min-height:18px;margin-bottom:8px;"></div>
           <div style="display:flex;gap:8px;margin-top:12px;">
             <button type="button" class="btn btn-primary" style="flex:1;" data-p-act="v2GuardarModal" data-p-edit="${esc(editId || '')}">Guardar</button>
             <button type="button" class="btn btn-outline" data-p-act="v2CerrarModal">Cancelar</button>
@@ -613,6 +618,36 @@ const VencimientosV2 = (() => {
     };
   }
 
+  function editarVencimiento(id, cambios, file) {
+    return actualizarVencimiento(id, cambios, file);
+  }
+
+  async function fetchFromSupabase(establecimientoId) {
+    if (!_portalActivo() || !establecimientoId) return [];
+    const res = await fetch(
+      _rest('vencimientos?establecimiento_id=eq.' + encodeURIComponent(establecimientoId) + '&order=fecha_vencimiento.asc'),
+      { headers: _headers() }
+    );
+    if (!res.ok) return [];
+    const remote = await res.json();
+    if (!Array.isArray(remote) || !remote.length) return remote;
+    const store = _loadStore();
+    const byId = new Map(store.items.map(it => [it.id, it]));
+    remote.forEach(row => {
+      const local = byId.get(row.id) || {};
+      byId.set(row.id, {
+        ...local,
+        ...row,
+        estado: calcularEstado(row.fecha_vencimiento),
+        sincronizado_en: local.sincronizado_en || new Date().toISOString(),
+        sync_pending: false,
+      });
+    });
+    store.items = Array.from(byId.values());
+    _saveStore(store);
+    return remote;
+  }
+
   async function descargarDocumento(id) {
     const item = _loadStore().items.find(it => it.id === id);
     if (!item || !item.documento_storage_path) {
@@ -628,6 +663,9 @@ const VencimientosV2 = (() => {
     getCatalog,
     calcularEstado,
     obtenerVencimientos,
+    validateData,
+    editarVencimiento,
+    fetchFromSupabase,
     guardarVencimiento,
     actualizarVencimiento,
     eliminarVencimiento,
