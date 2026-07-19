@@ -211,6 +211,8 @@ const Planificar = (() => {
       ${_renderAccordionCard('marco', 'Marco Normativo y Legal de Referencia',
         'scale', 'var(--azure)', _marcoBadgeInfo(), _marcoOpen, _renderMarcoBody())}
 
+      ${_renderVencimientosQuickBlock()}
+
       ${_renderAccordionCard('vencimientos', 'Control de Vencimientos',
         'calendarTime', 'var(--amber)', _vencBadgeInfo(), _vencOpen, _renderVencimientosBody())}
 
@@ -237,6 +239,18 @@ const Planificar = (() => {
   function _chevron() {
     return `<svg class="acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;
+  }
+
+  function _renderVencimientosQuickBlock() {
+    return `
+      <div class="card" style="margin:0 var(--sp-md) var(--sp-md);padding:var(--sp-md);">
+        <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-brand);">Control de Vencimientos v2</div>
+        <div style="font-size:var(--text-xs);color:var(--color-ink3);margin:6px 0 var(--sp-sm);">
+          No requiere inspección PSB activa · Expanda el acordeón o use acceso directo
+        </div>
+        <button type="button" class="btn btn-outline" style="width:100%;"
+          onclick="Planificar.openSection('vencimientos')">📅 Abrir Control de Vencimientos</button>
+      </div>`;
   }
 
   function _renderAccordionCard(key, title, iconName, iconColor, badge, isOpen, bodyHtml, disabled) {
@@ -273,6 +287,24 @@ const Planificar = (() => {
     if (_vencOpen) _initVencDashboard();
     _syncAccordion();
     _schedulePlanificarDraft();
+  }
+
+  function openSection(key) {
+    if (key === 'resultados' && !_resultadosData().rated.length) {
+      Router.toast('Guarda el diagnóstico con al menos 1 ítem calificado primero');
+      return;
+    }
+    _generalOpen    = key === 'general';
+    _diagOpen       = key === 'diagnostico';
+    _resultadosOpen = key === 'resultados';
+    _marcoOpen      = key === 'marco';
+    _vencOpen       = key === 'vencimientos';
+    if (_vencOpen) _initVencDashboard();
+    _syncAccordion();
+    _schedulePlanificarDraft();
+    requestAnimationFrame(() => {
+      document.getElementById(`acc-header-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   function _syncAccordion() {
@@ -962,11 +994,30 @@ const Planificar = (() => {
       </div>`;
   }
 
+  function _renderVencimientosV2Section() {
+    if (typeof VencimientosDashboard !== 'undefined') {
+      return VencimientosDashboard.renderSection();
+    }
+    const esc = _escAttr;
+    const v2Tab = _vencV2Tab || 'personal';
+    const cat = VencimientosV2.getCatalog();
+    return `
+      ${VencimientosV2.renderDashboard(esc)}
+      <div style="font-size:var(--text-xs);color:var(--color-deficiente);margin-bottom:8px;">
+        Módulo dashboard no cargado — recargue la app. Tabla básica abajo.
+      </div>
+      <div style="overflow-x:auto;">${VencimientosV2.renderTabla(v2Tab, esc)}</div>`;
+  }
+
   function _renderVencimientosBody() {
     if (!_venc) _venc = Vencimientos.getVencimientos(_currentEst());
     const v = _venc;
     return `
-      ${VencimientosDashboard.renderSection()}
+      <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:var(--sp-sm);padding:8px 10px;
+        background:var(--color-surface);border-radius:var(--radius-md);">
+        Disponible sin inspección activa. Opcional: complete <strong>Datos Generales</strong> para identificar el establecimiento.
+      </div>
+      ${_renderVencimientosV2Section()}
       <details style="margin-bottom:var(--sp-md);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:8px 12px;">
         <summary style="cursor:pointer;font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);">Control v1 (trabajadores y equipos legacy)</summary>
         ${_renderVencimientosBodyLegacy(v)}
@@ -2286,7 +2337,7 @@ const Planificar = (() => {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  return { render, attach, toggle, actualizarDiagItem, guardarDiagnostico, diagEvaluar, diagNavegar, marcoSub,
+  return { render, attach, toggle, openSection, actualizarDiagItem, guardarDiagnostico, diagEvaluar, diagNavegar, marcoSub,
     abrirDiagItemModal, cerrarDiagItemModal, setDiagItemModalMode, diagModalEvaluar, guardarDiagItemModal,
     actualizarVenc, guardarVencimientos, vencTab, vencFiltro, subirSoporteVenc, eliminarSoporteVenc, verSoporteVenc,
     agregarTrabajador, actualizarTrabajador, agregarEquipo, actualizarEquipo, exportarDashboardPDF,
