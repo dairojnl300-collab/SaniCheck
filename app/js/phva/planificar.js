@@ -214,6 +214,8 @@ const Planificar = (() => {
       ${_renderAccordionCard('marco', 'Marco Normativo y Legal de Referencia',
         'scale', 'var(--azure)', _marcoBadgeInfo(), _marcoOpen, _renderMarcoBody())}
 
+      ${_renderInvimaPlanificarBlock()}
+
       ${_renderAccordionCard('vencimientos', 'Control de Vencimientos',
         'calendarTime', 'var(--amber)', _vencBadgeInfo(), _vencOpen, _renderVencimientosBody())}
 
@@ -240,6 +242,29 @@ const Planificar = (() => {
   function _chevron() {
     return `<svg class="acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;
+  }
+
+  function _renderInvimaPlanificarBlock() {
+    if (typeof ConfigurarInvima === 'undefined') return '';
+    let resumen = 'INVIMA: 48 base + 0 custom';
+    try {
+      if (typeof InvimaCrud !== 'undefined') {
+        InvimaCrud.loadBaseChecklist().catch(() => {});
+        const r = InvimaCrud.resumen();
+        resumen = `INVIMA: ${r.base || 48} base + ${r.custom} custom`;
+      }
+    } catch (_) { /* offline */ }
+    return `
+      <div class="card" style="margin:0 var(--sp-md) var(--sp-md);padding:var(--sp-md);">
+        <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-brand);margin-bottom:4px;">
+          Checklist INVIMA (Res. 2674/2013)
+        </div>
+        <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:var(--sp-sm);">
+          ${_escAttr(resumen)} · No requiere inspección PSB activa
+        </div>
+        <button type="button" class="btn btn-outline" style="width:100%;"
+          onclick="ConfigurarInvima.abrir()">⚙️ Configurar INVIMA</button>
+      </div>`;
   }
 
   function _renderAccordionCard(key, title, iconName, iconColor, badge, isOpen, bodyHtml, disabled) {

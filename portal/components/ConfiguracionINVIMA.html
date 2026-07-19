@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaniCheck Portal — Configuración INVIMA</title>
+  <style>
+    :root { --primary:#1B4332; --accent:#52B788; --bg:#f8faf9; --ink:#1e293b; --custom:#F57C00; }
+    * { box-sizing:border-box; }
+    body { font-family: Inter, system-ui, sans-serif; margin:0; background:var(--bg); color:var(--ink); }
+    header { background:var(--primary); color:#fff; padding:16px 20px; }
+    main { max-width:960px; margin:0 auto; padding:16px; }
+    .filters { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
+    input, select, button { padding:8px 10px; border-radius:8px; border:1px solid #cbd5e1; }
+    button.primary { background:var(--accent); color:#fff; border:none; font-weight:700; cursor:pointer; }
+    .summary { background:#fff; border-radius:10px; padding:12px 16px; margin:12px 0; border:1px solid #e2e8f0; }
+    .cat-block { background:#fff; border-radius:10px; margin:12px 0; overflow:hidden; border:1px solid #e2e8f0; }
+    .cat-head { background:var(--primary); color:#fff; padding:10px 14px; font-weight:700; font-size:14px; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:10px; border-bottom:1px solid #e2e8f0; font-size:13px; text-align:left; }
+    th { background:#f1f5f9; color:var(--ink); font-size:12px; }
+    tr.custom td { background:#fff7ed; }
+    .badge-custom { background:#ffedd5; color:#9a3412; padding:2px 8px; border-radius:99px; font-size:11px; font-weight:700; }
+    .readonly-note { font-size:12px; color:#64748b; margin:8px 0 16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 style="margin:0;font-size:18px;">Portal Cliente — Configuración INVIMA</h1>
+    <p style="margin:4px 0 0;opacity:0.85;font-size:12px;">Solo lectura · Edición desde SaniCheck app</p>
+  </header>
+  <main>
+    <div class="filters">
+      <input id="codigo" placeholder="Código acceso 6 chars" maxlength="6" style="text-transform:uppercase;">
+      <select id="filtro-cat">
+        <option value="">Todas las categorías</option>
+        <option value="cat_01">Edificación</option>
+        <option value="cat_02">Saneamiento</option>
+        <option value="cat_03">Personal</option>
+        <option value="cat_04">Equipos</option>
+        <option value="cat_05">Almacenamiento</option>
+        <option value="cat_06">Verificación</option>
+      </select>
+      <button class="primary" id="btn-cargar">Cargar</button>
+    </div>
+    <p class="readonly-note">Los ítems normativos (Res. 2674/2013) no se editan desde el portal. Los ítems custom aparecen destacados.</p>
+    <div class="summary" id="summary">Ingrese código de acceso y pulse Cargar.</div>
+    <div id="cats"></div>
+  </main>
+  <script src="../../app/js/portal-config.js"></script>
+  <script src="../../app/js/portal-cliente.js"></script>
+  <script src="../services/invima-service.js"></script>
+  <script>
+    const CAT = InvimaService.CAT_LABELS;
+
+    function codigo() {
+      const c = document.getElementById('codigo').value.trim().toUpperCase();
+      sessionStorage.setItem('portal_codigo', c);
+      return c;
+    }
+
+    function groupByCat(items) {
+      const g = {};
+      items.forEach(it => {
+        if (!g[it.categoria_id]) g[it.categoria_id] = [];
+        g[it.categoria_id].push(it);
+      });
+      return g;
+    }
+
+    function render(items) {
+      const r = InvimaService.resumen(items);
+      document.getElementById('summary').innerHTML =
+        `<strong>${r.base}</strong> ítems normativos + <strong>${r.custom}</strong> ítems custom · Total ${r.total}`;
+
+      const grouped = groupByCat(items);
+      const filtro = document.getElementById('filtro-cat').value;
+      const cats = filtro ? [filtro] : Object.keys(CAT);
+
+      document.getElementById('cats').innerHTML = cats.map(catId => {
+        const rows = grouped[catId] || [];
+        return `
+          <div class="cat-block">
+            <div class="cat-head">${CAT[catId] || catId} (${rows.length})</div>
+            <table>
+              <thead><tr><th>Código</th><th>Nombre</th><th>Normativa</th><th>Tipo</th></tr></thead>
+              <tbody>
+                ${rows.length ? rows.map(it => `
+                  <tr class="${it.custom ? 'custom' : ''}">
+                    <td><strong>${it.codigo}</strong></td>
+                    <td>${it.nombre}</td>
+                    <td style="font-size:12px;">${it.normativa || '—'}</td>
+                    <td>${it.custom ? '<span class="badge-custom">Custom</span>' : 'Normativo'}</td>
+                  </tr>`).join('') : '<tr><td colspan="4" style="color:#94a3b8;">Sin ítems</td></tr>'}
+              </tbody>
+            </table>
+          </div>`;
+      }).join('');
+    }
+
+    async function cargar() {
+      const c = codigo();
+      if (!c || c.length < 4) { alert('Ingrese código de acceso válido'); return; }
+      try {
+        const filtro = document.getElementById('filtro-cat').value;
+        const items = await InvimaService.listarConfig(c, filtro ? { categoria_id: filtro } : null);
+        render(items);
+      } catch (e) {
+        document.getElementById('summary').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    document.getElementById('btn-cargar').addEventListener('click', cargar);
+    const saved = sessionStorage.getItem('portal_codigo');
+    if (saved) document.getElementById('codigo').value = saved;
+  </script>
+</body>
+</html>
