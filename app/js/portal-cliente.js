@@ -332,3 +332,5 @@ const PortalCliente = (() => {
     bindOnlineRetry,
   };
 })();
+
+window.getCodigoAcceso = () => PortalCliente.getCodigoAcceso();

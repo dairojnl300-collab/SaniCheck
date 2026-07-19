@@ -90,3 +90,6 @@ const VencimientosService = (() => {
     calcKpis,
   };
 })();
+
+window.VencimientosV2 = VencimientosService;
+window.VencimientosService = VencimientosService;
