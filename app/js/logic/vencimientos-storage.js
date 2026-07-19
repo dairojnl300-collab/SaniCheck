@@ -42,12 +42,25 @@ const VencimientosStorage = (() => {
     return _cfg().SUPABASE_URL.replace(/\/$/, '');
   }
 
+  function _mimeFromName(name) {
+    const ext = String(name || '').split('.').pop().toLowerCase();
+    const map = {
+      pdf: 'application/pdf',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      webp: 'image/webp',
+    };
+    return map[ext] || '';
+  }
+
   function validarArchivo(file) {
     if (!file) return { ok: false, error: 'No se seleccionó archivo.' };
     if (file.size > MAX_BYTES) {
       return { ok: false, error: 'Archivo debe ser ≤10MB' };
     }
-    const mime = (file.type || '').toLowerCase();
+    let mime = (file.type || '').toLowerCase();
+    if (!mime) mime = _mimeFromName(file.name);
     if (!MIME_WHITELIST.has(mime)) {
       return { ok: false, error: 'Formato no permitido' };
     }
@@ -67,7 +80,7 @@ const VencimientosStorage = (() => {
     const res = await fetch(`${_storageBase()}/object/vencimientos/${encodeURI(path)}`, {
       method: 'POST',
       headers: _headers({
-        'Content-Type': file.type || 'application/octet-stream',
+        'Content-Type': file.type || val.mime || 'application/octet-stream',
         'x-upsert': 'true',
       }),
       body: file,

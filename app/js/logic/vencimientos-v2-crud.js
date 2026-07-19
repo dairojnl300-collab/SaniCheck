@@ -169,14 +169,6 @@ const VencimientosV2 = (() => {
         throw new Error('La fecha de emisión debe ser anterior al vencimiento.');
       }
     }
-    if (!isUpdate) {
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      const venc = new Date(String(payload.fecha_vencimiento).slice(0, 10) + 'T00:00:00');
-      if (venc < hoy) {
-        throw new Error('La fecha de vencimiento debe ser futura.');
-      }
-    }
     const estId = payload.establecimiento_id || _establecimientoId() || 'local-pending';
     if (_tipoDuplicado(estId, payload.tipo, payload.categoria, excludeId)) {
       throw new Error('Ya existe este documento');
@@ -583,6 +575,7 @@ const VencimientosV2 = (() => {
             <label class="form-label">Archivo (PDF/JPG/PNG/WEBP, max 10MB)</label>
             <input class="form-input" type="file" id="v2-archivo" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp">
           </div>
+          <div id="v2-modal-error" style="font-size:12px;color:var(--color-deficiente);min-height:18px;margin-bottom:8px;"></div>
           <div style="display:flex;gap:8px;margin-top:12px;">
             <button type="button" class="btn btn-primary" style="flex:1;" data-p-act="v2GuardarModal" data-p-edit="${esc(editId || '')}">Guardar</button>
             <button type="button" class="btn btn-outline" data-p-act="v2CerrarModal">Cancelar</button>

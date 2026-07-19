@@ -49,9 +49,13 @@ assert(Storage.validarArchivo(big).error === 'Archivo debe ser ≤10MB', 'PDF > 
 const zip = { size: 1000, type: 'application/zip', name: 'x.zip' };
 assert(Storage.validarArchivo(zip).error === 'Formato no permitido', 'ZIP MIME rechazado');
 
+const pngNoMime = { size: 1000, type: '', name: 'ecodesa-logo-transparent.png' };
+assert(Storage.validarArchivo(pngNoMime).ok === true, 'PNG sin MIME infiere por extension');
+
 const hoy = new Date();
 const futuro = new Date(hoy); futuro.setDate(futuro.getDate() + 90);
 const d60 = new Date(hoy); d60.setDate(d60.getDate() + 45);
+const pasado = new Date(hoy); pasado.setDate(pasado.getDate() - 30);
 
 store[V2.LS_KEY] = JSON.stringify({ items: [] });
 V2.guardarVencimiento({
@@ -60,6 +64,16 @@ V2.guardarVencimiento({
 });
 const saved = JSON.parse(store[V2.LS_KEY]);
 assert(saved.items.length === 1 && saved.items[0].sync_pending === true, 'offline guarda LS sync pendiente');
+
+V2.editarVencimiento(saved.items[0].id, { fecha_vencimiento: d60.toISOString().slice(0, 10) });
+const edited = V2.obtenerVencimientos().find(it => it.id === saved.items[0].id);
+assert(edited && edited.estado === 'por_vencer_60', 'editar fecha recalcula por_vencer_60');
+
+V2.guardarVencimiento({
+  categoria: 'personal', tipo: 'medico', nombre: 'Examen vencido',
+  fecha_vencimiento: pasado.toISOString().slice(0, 10),
+});
+assert(V2.obtenerVencimientos().some(it => it.tipo === 'medico'), 'fecha vencimiento pasada permitida');
 
 try {
   V2.guardarVencimiento({
@@ -70,10 +84,6 @@ try {
 } catch (e) {
   assert(String(e.message).includes('Ya existe'), 'tipo duplicado rechaza Ya existe');
 }
-
-V2.editarVencimiento(saved.items[0].id, { fecha_vencimiento: d60.toISOString().slice(0, 10) });
-const edited = V2.obtenerVencimientos()[0];
-assert(edited.estado === 'por_vencer_60', 'editar fecha recalcula por_vencer_60');
 
 if (failed) { console.error(`\n${failed} failed`); process.exit(1); }
 console.log('\nALL TESTS PASSED');

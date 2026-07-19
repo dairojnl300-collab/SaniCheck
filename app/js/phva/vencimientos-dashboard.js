@@ -91,24 +91,37 @@ const VencimientosDashboard = (() => {
     });
   }
 
+  function _showModalError(msg) {
+    const el = document.getElementById('v2-modal-error');
+    if (el) el.textContent = msg || '';
+    else if (msg && typeof Router !== 'undefined') Router.toast(msg);
+  }
+
   function cerrarModal() {
     document.getElementById('v2-modal-overlay')?.remove();
   }
 
   async function guardarModal(editId) {
-    const payload = VencimientosV2.readModalPayload();
-    const file = document.getElementById('v2-archivo')?.files?.[0] || null;
-    VencimientosV2.validateData(payload, file, !!editId, editId);
-    if (editId) {
-      VencimientosV2.editarVencimiento(editId, payload, file);
-      if (typeof Router !== 'undefined') Router.toast('Documento actualizado');
-    } else {
-      payload.establecimiento_id = _establecimientoId;
-      VencimientosV2.guardarVencimiento(payload, file);
-      if (typeof Router !== 'undefined') Router.toast('Documento guardado');
+    try {
+      _showModalError('');
+      const payload = VencimientosV2.readModalPayload();
+      const file = document.getElementById('v2-archivo')?.files?.[0] || null;
+      VencimientosV2.validateData(payload, file, !!editId, editId);
+      if (editId) {
+        VencimientosV2.editarVencimiento(editId, payload, file);
+        if (typeof Router !== 'undefined') Router.toast('Documento actualizado');
+      } else {
+        payload.establecimiento_id = _establecimientoId;
+        VencimientosV2.guardarVencimiento(payload, file);
+        if (typeof Router !== 'undefined') Router.toast('Documento guardado');
+      }
+      cerrarModal();
+      refresh();
+    } catch (e) {
+      _showModalError(e.message || 'Error al guardar');
+      if (typeof Router !== 'undefined') Router.toast(e.message || 'Error al guardar');
+      throw e;
     }
-    cerrarModal();
-    refresh();
   }
 
   async function descargar(id) {
