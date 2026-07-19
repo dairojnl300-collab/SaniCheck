@@ -304,10 +304,29 @@ const Verificar = (() => {
     return `<div class="coming-soon">
       <div class="coming-soon-icon" style="display:flex;justify-content:center;color:var(--color-ink3);">${AppIcons.block('circleAlert', 40)}</div>
       <div class="coming-soon-title">Sin inspección activa</div>
-      <div class="coming-soon-desc">Complete el checklist PSB en HACER primero.</div>
-      <button class="btn btn-primary mt-md" style="width:auto;padding:12px 24px"
+      <div class="coming-soon-desc" style="max-width:320px;margin:0 auto;line-height:1.5;">
+        El dashboard PSB requiere una inspección iniciada (Planificar → Iniciar ciclo → HACER).
+        El Control de Vencimientos v2 no depende del checklist.
+      </div>
+      ${_renderVencimientosSinInspBlock()}
+      <button class="btn btn-primary mt-md" style="width:auto;padding:12px 24px;margin-top:var(--sp-md);"
         onclick="Router.go('planificar')">Ir a Planificar</button>
     </div>`;
+  }
+
+  function _renderVencimientosSinInspBlock() {
+    return `
+      <div style="margin:var(--sp-md) auto;padding:var(--sp-md);max-width:400px;background:var(--color-white);
+        border-radius:var(--radius-lg);border:1px solid var(--color-border);text-align:left;">
+        <div style="font-size:13px;font-weight:700;color:var(--color-brand);margin-bottom:6px;">Control de Vencimientos v2</div>
+        <div style="font-size:12px;color:var(--color-ink3);margin-bottom:var(--sp-sm);">
+          Disponible en Planificar sin completar HACER. Agregue documentos, fechas y archivos adjuntos.
+        </div>
+        <button type="button" class="btn btn-accent" style="width:100%;"
+          onclick="Router.go('planificar');setTimeout(function(){Planificar.openSection('vencimientos');},200);">
+          Ir a Control de Vencimientos
+        </button>
+      </div>`;
   }
 
   function _esc(s) {
