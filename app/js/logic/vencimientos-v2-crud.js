@@ -181,6 +181,7 @@ const VencimientosV2 = (() => {
     if (_tipoDuplicado(estId, payload.tipo, payload.categoria, excludeId)) {
       throw new Error('Ya existe este documento');
     }
+    if (file) {
       const val = VencimientosStorage.validarArchivo(file);
       if (!val.ok) throw new Error(val.error);
     }
