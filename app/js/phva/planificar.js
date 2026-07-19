@@ -211,8 +211,6 @@ const Planificar = (() => {
       ${_renderAccordionCard('marco', 'Marco Normativo y Legal de Referencia',
         'scale', 'var(--azure)', _marcoBadgeInfo(), _marcoOpen, _renderMarcoBody())}
 
-      ${_renderVencimientosQuickBlock()}
-
       ${_renderAccordionCard('vencimientos', 'Control de Vencimientos',
         'calendarTime', 'var(--amber)', _vencBadgeInfo(), _vencOpen, _renderVencimientosBody())}
 
@@ -239,18 +237,6 @@ const Planificar = (() => {
   function _chevron() {
     return `<svg class="acc-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;
-  }
-
-  function _renderVencimientosQuickBlock() {
-    return `
-      <div class="card" style="margin:0 var(--sp-md) var(--sp-md);padding:var(--sp-md);">
-        <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-brand);">Control de Vencimientos v2</div>
-        <div style="font-size:var(--text-xs);color:var(--color-ink3);margin:6px 0 var(--sp-sm);">
-          No requiere inspección PSB activa · Expanda el acordeón o use acceso directo
-        </div>
-        <button type="button" class="btn btn-outline" style="width:100%;"
-          onclick="Planificar.openSection('vencimientos')">📅 Abrir Control de Vencimientos</button>
-      </div>`;
   }
 
   function _renderAccordionCard(key, title, iconName, iconColor, badge, isOpen, bodyHtml, disabled) {
