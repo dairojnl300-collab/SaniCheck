@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaniCheck Portal — Vencimientos v2</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root { --primary:#1B4332; --accent:#52B788; --alert:#F57C00; --red:#A32D2D; --bg:#f8faf9; --ink:#1e293b; }
+    * { box-sizing:border-box; }
+    body { font-family: Inter, system-ui, sans-serif; margin:0; background:var(--bg); color:var(--ink); }
+    header { background:var(--primary); color:#fff; padding:16px 20px; }
+    main { max-width:960px; margin:0 auto; padding:16px; }
+    .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0; }
+    .kpi { background:#fff; border-radius:10px; padding:12px; text-align:center; border:1px solid #e2e8f0; }
+    .kpi strong { display:block; font-size:22px; }
+    table { width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden; }
+    th, td { padding:10px; border-bottom:1px solid #e2e8f0; font-size:13px; text-align:left; }
+    th { background:var(--primary); color:#fff; }
+    .filters { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }
+    select, button, input { padding:8px 10px; border-radius:8px; border:1px solid #cbd5e1; }
+    button.primary { background:var(--accent); color:#fff; border:none; font-weight:700; cursor:pointer; }
+    .badge { padding:3px 8px; border-radius:99px; font-size:11px; font-weight:700; }
+    .vigente { background:#d1fae5; color:#065f46; }
+    .por_vencer_30, .por_vencer_60 { background:#fef3c7; color:#92400e; }
+    .vencido { background:#fee2e2; color:#991b1b; }
+    #chart-wrap { background:#fff; border-radius:10px; padding:12px; margin:16px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 style="margin:0;font-size:18px;">Portal Cliente — Control de Vencimientos v2</h1>
+    <p style="margin:4px 0 0;opacity:0.85;font-size:12px;">ECODESA · SaniCheck</p>
+  </header>
+  <main>
+    <div class="filters">
+      <input id="codigo" placeholder="Código acceso 6 chars" maxlength="6" style="text-transform:uppercase;">
+      <select id="filtro-cat"><option value="">Todas categorías</option><option value="personal">Personal</option><option value="equipos">Equipos</option><option value="establecimiento">Establecimiento</option></select>
+      <select id="filtro-estado"><option value="">Todos estados</option><option value="vigente">Vigente</option><option value="por_vencer_60">Por vencer 60d</option><option value="por_vencer_30">Por vencer 30d</option><option value="vencido">Vencido</option></select>
+      <button class="primary" id="btn-cargar">Cargar</button>
+      <button id="btn-nuevo">+ Nuevo documento</button>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div id="chart-wrap"><canvas id="chart-estados" height="120"></canvas></div>
+    <table>
+      <thead><tr><th>Nombre</th><th>Categoría</th><th>Tipo</th><th>Vencimiento</th><th>Estado</th><th></th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </main>
+  <script src="../app/js/portal-config.js"></script>
+  <script src="services/vencimientos-service.js"></script>
+  <script>
+    let _chart = null;
+    let _items = [];
+
+    function codigo() {
+      const c = document.getElementById('codigo').value.trim().toUpperCase();
+      sessionStorage.setItem('portal_codigo', c);
+      return c;
+    }
+
+    function fmt(d) {
+      return d ? new Date(d + 'T00:00:00').toLocaleDateString('es-CO') : '—';
+    }
+
+    function renderKpis(counts) {
+      document.getElementById('kpis').innerHTML = ['vigente','por_vencer_60','por_vencer_30','vencido'].map(k =>
+        `<div class="kpi"><strong>${counts[k]||0}</strong><span>${k.replace(/_/g,' ')}</span></div>`
+      ).join('');
+      const ctx = document.getElementById('chart-estados');
+      if (_chart) _chart.destroy();
+      _chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Vigente','60d','30d','Vencido'],
+          datasets: [{ data: [counts.vigente||0, counts.por_vencer_60||0, counts.por_vencer_30||0, counts.vencido||0],
+            backgroundColor: ['#52B788','#FBBF24','#F57C00','#A32D2D'] }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+      });
+    }
+
+    function renderTable(items) {
+      const tb = document.getElementById('tbody');
+      tb.innerHTML = items.map(it => `<tr>
+        <td>${it.nombre}</td><td>${it.categoria}</td><td>${it.tipo_label||it.tipo}</td>
+        <td>${fmt(it.fecha_vencimiento)}</td>
+        <td><span class="badge ${it.estado}">${it.estado}</span></td>
+        <td>${it.documento_storage_path ? `<button data-path="${it.documento_storage_path}">Descargar</button>` : ''}</td>
+      </tr>`).join('');
+      tb.querySelectorAll('button[data-path]').forEach(btn => {
+        btn.onclick = async () => {
+          try {
+            const url = await VencimientosService.getSignedUrl(codigo(), btn.dataset.path);
+            window.open(url, '_blank');
+          } catch (e) { alert(e.message); }
+        };
+      });
+    }
+
+    async function cargar() {
+      const c = codigo();
+      if (c.length !== 6) { alert('Código inválido'); return; }
+      const filtros = {
+        categoria: document.getElementById('filtro-cat').value,
+        estado: document.getElementById('filtro-estado').value,
+      };
+      _items = await VencimientosService.listarVencimientos(c, filtros);
+      renderKpis(VencimientosService.calcKpis(_items));
+      renderTable(_items);
+    }
+
+    document.getElementById('btn-cargar').onclick = () => cargar().catch(e => alert(e.message));
+    document.getElementById('btn-nuevo').onclick = () => alert('Use SaniCheck app para cargar documentos con archivo; o integrar formulario POST aquí.');
+    document.getElementById('codigo').value = sessionStorage.getItem('portal_codigo') || '';
+  </script>
+</body>
+</html>
