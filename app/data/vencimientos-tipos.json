@@ -1,0 +1,39 @@
+{
+  "categorias": {
+    "personal": {
+      "label": "Personal",
+      "tipos": [
+        { "id": "manipulacion", "label": "Manipulación de alimentos", "normativa": "Decreto 3075/1997, Art. 11" },
+        { "id": "medico", "label": "Examen médico ocupacional", "normativa": "Resolución 2674/2013" },
+        { "id": "sst", "label": "Inducción SST / capacitación", "normativa": "Decreto 1072/2015, Cap. 6" }
+      ]
+    },
+    "equipos": {
+      "label": "Equipos",
+      "tipos": [
+        { "id": "calibracion", "label": "Certificado de calibración", "normativa": "Decreto 1072/2015" },
+        { "id": "mantenimiento", "label": "Mantenimiento preventivo", "normativa": "Decreto 3075/1997" }
+      ]
+    },
+    "establecimiento": {
+      "label": "Establecimiento",
+      "tipos": [
+        { "id": "plagas", "label": "Fumigación / control de plagas", "normativa": "Resolución 2674/2013" },
+        { "id": "analisis_agua", "label": "Análisis de agua", "normativa": "Resolución 2115/2007" },
+        { "id": "custom", "label": "Documento personalizado", "normativa": "", "custom": true }
+      ]
+    }
+  },
+  "frecuencias": [
+    { "id": "anual", "label": "Anual", "meses": 12 },
+    { "id": "semestral", "label": "Semestral", "meses": 6 },
+    { "id": "trimestral", "label": "Trimestral", "meses": 3 },
+    { "id": "custom", "label": "Personalizada", "meses": 0 }
+  ],
+  "estados": {
+    "vigente": { "label": "Vigente", "color": "#065F46" },
+    "por_vencer_60": { "label": "Por vencer (60d)", "color": "#92400E" },
+    "por_vencer_30": { "label": "Por vencer (30d)", "color": "#F57C00" },
+    "vencido": { "label": "Vencido", "color": "#A32D2D" }
+  }
+}

@@ -64,6 +64,8 @@ const Planificar = (() => {
   let _resultadosOpen = false;
   let _marcoOpen      = false;
   let _vencOpen       = false;
+  let _vencV2Tab       = 'personal';
+  let _vencV2EditId    = '';
   let _vencTab            = 'personal';
   let _vencFiltroPersonal = '';
   let _vencFiltroEquipos  = '';
@@ -542,6 +544,16 @@ const Planificar = (() => {
   }
 
   function _vencBadgeInfo() {
+    const kpi = VencimientosV2.getKpis();
+    if (kpi.counts.vencido > 0) {
+      return { text: `${kpi.counts.vencido} vencido(s)`, cls: 'estado-chip estado-D', style: '' };
+    }
+    if (kpi.counts.por_vencer_30 > 0) {
+      return { text: `${kpi.counts.por_vencer_30} por vencer`, cls: 'estado-chip estado-R', style: '' };
+    }
+    if (kpi.total > 0) {
+      return { text: `${kpi.total} documento(s)`, cls: 'estado-chip estado-B', style: '' };
+    }
     const v = _venc || Vencimientos.getVencimientos(_currentEst());
     const dash = Vencimientos.getDashboard(v);
     if (dash.notificaciones.some(n => n.nivel === 'critico')) {
@@ -947,6 +959,48 @@ const Planificar = (() => {
   function _renderVencimientosBody() {
     if (!_venc) _venc = Vencimientos.getVencimientos(_currentEst());
     const v     = _venc;
+    const esc   = _escAttr;
+    const v2Tab = _vencV2Tab;
+    const cat   = VencimientosV2.getCatalog();
+
+    return `
+      ${VencimientosV2.renderDashboard(esc)}
+
+      <div style="display:flex;gap:8px;margin-bottom:var(--sp-md);flex-wrap:wrap;">
+        ${['personal', 'equipos', 'establecimiento'].map(g => {
+          const active = g === v2Tab;
+          const label = cat.categorias[g]?.label || g;
+          return `
+          <button type="button" data-p-act="vencV2Tab" data-p-tab="${g}"
+            style="flex:1;min-width:90px;padding:12px 10px;border-radius:var(--radius-md);cursor:pointer;
+              border:2px solid ${active ? 'var(--color-accent)' : 'var(--emerald-2)'};
+              background:${active ? 'var(--emerald-2)' : 'var(--emerald)'};
+              font-size:var(--text-sm);font-weight:${active ? 700 : 600};color:#fff;">
+            ${label}
+          </button>`;
+        }).join('')}
+      </div>
+
+      <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:var(--sp-md);">
+        <div style="background:var(--emerald-2);color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div style="font-size:var(--text-sm);font-weight:700;">Documentos · ${esc(cat.categorias[v2Tab]?.label || v2Tab)}</div>
+          <button type="button" data-p-act="v2AbrirModal" style="padding:6px 12px;border:none;border-radius:var(--radius-md);
+            background:#fff;color:var(--emerald-2);font-size:11px;font-weight:700;cursor:pointer;">+ Agregar Documento</button>
+        </div>
+        <div style="overflow-x:auto;">${VencimientosV2.renderTabla(v2Tab, esc)}</div>
+      </div>
+
+      <details style="margin-bottom:var(--sp-md);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:8px 12px;">
+        <summary style="cursor:pointer;font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);">Control v1 (trabajadores y equipos legacy)</summary>
+        ${_renderVencimientosBodyLegacy(v)}
+      </details>
+
+      <button type="button" class="btn btn-primary" style="margin-top:var(--sp-sm);" data-p-act="guardarVencimientos">
+        Guardar vencimientos v1</button>`;
+  }
+
+  function _renderVencimientosBodyLegacy() {
+    const v = _venc || Vencimientos.getVencimientos(_currentEst());
     const grupo = _vencTab;
     const meta  = Vencimientos.GRUPOS[grupo];
     const res   = Vencimientos.resumenGrupo(v, grupo);
@@ -955,51 +1009,109 @@ const Planificar = (() => {
     const filtroPh  = grupo === 'personal' ? 'Buscar por nombre o cédula…' : 'Buscar por código o tipo…';
 
     return `
-      ${_vencDashboardHtml(v)}
-
-      <div style="display:flex;gap:8px;margin-bottom:var(--sp-md);">
+      <div style="display:flex;gap:8px;margin:var(--sp-md) 0;">
         ${['personal', 'equipos'].map(g => {
           const active = g === grupo;
           const m = Vencimientos.GRUPOS[g];
           return `
           <button type="button" data-p-act="vencTab" data-p-tab="${g}"
-            style="flex:1;padding:12px 10px;border-radius:var(--radius-md);cursor:pointer;
-              border:2px solid ${active ? 'var(--color-accent)' : 'var(--emerald-2)'};
-              background:${active ? 'var(--emerald-2)' : 'var(--emerald)'};
-              font-size:var(--text-sm);font-weight:${active ? 700 : 600};color:#fff;">
+            style="flex:1;padding:10px;border-radius:var(--radius-md);cursor:pointer;
+              border:2px solid ${active ? 'var(--color-accent)' : 'var(--color-border)'};
+              background:${active ? 'var(--emerald-2)' : '#fff'};
+              font-size:var(--text-xs);font-weight:600;color:${active ? '#fff' : 'var(--color-ink)'};">
             ${m.label}
           </button>`;
         }).join('')}
       </div>
+      <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:8px;">${meta.desc}</div>
+      <input class="form-input" type="search" placeholder="${filtroPh}" value="${_escAttr(filtroVal)}"
+        data-p-input="vencFiltro" style="margin-bottom:8px;">
+      <div style="overflow-x:auto;">${grupo === 'personal' ? _vencPersonalTable(v) : _vencEquiposTable(v)}</div>
+      ${grupo === 'personal' ? _vencPersonalGestion(v) : _vencEquiposGestion(v)}`;
+  }
 
-      <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:var(--sp-md);">
-        <div style="background:var(--emerald-2);color:#fff;padding:10px 14px;">
-          <div style="font-size:10px;letter-spacing:0.08em;text-transform:uppercase;opacity:0.85;">
-            ${Vencimientos.NORMA_BASE}</div>
-          <div style="font-size:var(--text-sm);font-weight:700;margin-top:4px;">${meta.label}</div>
-        </div>
-        <div style="padding:10px 14px;background:var(--color-surface);border-bottom:1px solid var(--color-border);
-          display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;">
-          <span style="font-size:var(--text-xs);color:var(--color-ink3);">${meta.desc}</span>
-          <span class="estado-chip ${resSt.cls}">${resSt.label}</span>
-        </div>
-        <div style="padding:10px 14px;border-bottom:1px solid var(--color-border);">
-          <input class="form-input" type="search" placeholder="${filtroPh}" value="${_escAttr(filtroVal)}"
-            data-p-input="vencFiltro" style="margin:0;">
-        </div>
-        <div style="overflow-x:auto;">${grupo === 'personal' ? _vencPersonalTable(v) : _vencEquiposTable(v)}</div>
-      </div>
+  function vencV2Tab(tab) {
+    _vencV2Tab = tab || 'personal';
+    _refreshVencBody();
+    _schedulePlanificarDraft();
+  }
 
-      ${grupo === 'personal' ? `
-        <div style="margin-bottom:var(--sp-sm);font-size:var(--text-xs);color:var(--color-regular);padding:8px 12px;
-          background:rgba(245,124,0,0.1);border-radius:var(--radius-md);border:1px solid rgba(245,124,0,0.25);">
-          ${AppIcons.row('alertTriangle', 'Alerta automática 30 días antes del vencimiento de cada documento.', 12)}</div>
-        ${_vencPersonalGestion(v)}
-      ` : `
-        ${_vencEquiposGestion(v)}`}
+  function v2AbrirModal(editId) {
+    _vencV2EditId = editId || '';
+    const overlay = document.createElement('div');
+    overlay.innerHTML = VencimientosV2.renderModal(_escAttr, editId);
+    document.body.appendChild(overlay.firstElementChild);
+    const cat = document.getElementById('v2-categoria')?.value || _vencV2Tab;
+    const edit = editId ? VencimientosV2.obtenerVencimientos().find(it => it.id === editId) : null;
+    VencimientosV2.populateTipoSelect(cat, edit ? edit.tipo : null);
+    document.getElementById('v2-categoria')?.addEventListener('change', e => {
+      VencimientosV2.populateTipoSelect(e.target.value);
+    });
+  }
 
-      <button type="button" class="btn btn-primary" style="margin-top:var(--sp-md);" data-p-act="guardarVencimientos">
-        Guardar vencimientos</button>`;
+  function v2CerrarModal() {
+    document.getElementById('v2-modal-overlay')?.remove();
+    _vencV2EditId = '';
+  }
+
+  async function v2GuardarModal(editId) {
+    try {
+      const payload = VencimientosV2.readModalPayload();
+      const fileInput = document.getElementById('v2-archivo');
+      const file = fileInput?.files?.[0] || null;
+      if (editId) {
+        VencimientosV2.actualizarVencimiento(editId, payload, file);
+        Router.toast('Documento actualizado');
+      } else {
+        VencimientosV2.guardarVencimiento(payload, file);
+        Router.toast('Documento guardado');
+      }
+      v2CerrarModal();
+      _refreshVencBody();
+    } catch (e) {
+      Router.toast(e.message || 'Error al guardar');
+    }
+  }
+
+  async function v2Descargar(id) {
+    try {
+      await VencimientosV2.descargarDocumento(id);
+    } catch (e) {
+      Router.toast(e.message || 'No se pudo descargar');
+    }
+  }
+
+  function v2Editar(id) {
+    v2AbrirModal(id);
+  }
+
+  async function v2Eliminar(id) {
+    if (!confirm('¿Eliminar este documento y su archivo en Storage?')) return;
+    try {
+      await VencimientosV2.eliminarVencimiento(id);
+      Router.toast('Documento eliminado');
+      _refreshVencBody();
+    } catch (e) {
+      Router.toast(e.message || 'Error al eliminar');
+    }
+  }
+
+  function v2Reemplazar(id) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.jpg,.jpeg,.png,.webp';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      try {
+        VencimientosV2.actualizarVencimiento(id, {}, file);
+        Router.toast('Archivo reemplazado');
+        _refreshVencBody();
+      } catch (e) {
+        Router.toast(e.message || 'Error al reemplazar');
+      }
+    };
+    input.click();
   }
 
   function vencTab(tab) {
@@ -2161,6 +2273,30 @@ const Planificar = (() => {
           break;
         case 'agregarEquipo':
           agregarEquipo();
+          break;
+        case 'vencV2Tab':
+          vencV2Tab(el.getAttribute('data-p-tab') || '');
+          break;
+        case 'v2AbrirModal':
+          v2AbrirModal('');
+          break;
+        case 'v2CerrarModal':
+          v2CerrarModal();
+          break;
+        case 'v2GuardarModal':
+          v2GuardarModal(el.getAttribute('data-p-edit') || '');
+          break;
+        case 'v2Descargar':
+          v2Descargar(el.getAttribute('data-p-id') || '');
+          break;
+        case 'v2Editar':
+          v2Editar(el.getAttribute('data-p-id') || '');
+          break;
+        case 'v2Eliminar':
+          v2Eliminar(el.getAttribute('data-p-id') || '');
+          break;
+        case 'v2Reemplazar':
+          v2Reemplazar(el.getAttribute('data-p-id') || '');
           break;
         case 'vencTab':
           vencTab(el.getAttribute('data-p-tab') || '');
