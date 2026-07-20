@@ -24,6 +24,7 @@
 
   --color-primary:    var(--emerald);
   --color-primary-bg: var(--emerald-2);
+  --color-brand:      var(--emerald);
   --color-secondary:  var(--emerald-2);
   --color-accent:     var(--aqua);
   --color-topbar:     var(--emerald-2);
@@ -73,6 +74,16 @@
   --perspective-scene: 880px;
   --sticker-tilt: 10deg;
   --sticker-lift: 8px;
+  --sticker-highlight: rgba(255, 255, 255, 0.55);
+  --shadow-sticker:
+    0 1px 0 rgba(255, 255, 255, 0.65) inset,
+    0 4px 0 rgba(10, 46, 35, 0.08),
+    0 10px 22px -6px rgba(10, 46, 35, 0.16);
+  --shadow-sticker-active:
+    0 1px 0 rgba(255, 255, 255, 0.45) inset,
+    0 8px 0 rgba(10, 46, 35, 0.06),
+    0 18px 32px -8px rgba(12, 138, 95, 0.28),
+    0 8px 16px rgba(10, 46, 35, 0.14);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -283,11 +294,27 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   justify-content: center;
   transform-style: preserve-3d;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 3px 0 rgba(10, 46, 35, 0.06), 0 6px 12px rgba(10, 46, 35, 0.08);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease;
+  box-shadow: var(--shadow-sticker);
+  position: relative;
+  overflow: hidden;
+}
+.phva-tile-icon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 28% 22%, var(--sticker-highlight) 0%, transparent 52%);
+  pointer-events: none;
+  z-index: 1;
+}
+.phva-tile-icon svg {
+  position: relative;
+  z-index: 2;
 }
 .phva-tile:active .phva-tile-icon {
   transform: rotateY(-10deg) rotateX(8deg) translateZ(8px) scale(1.06);
+  box-shadow: var(--shadow-sticker-active);
 }
 .phva-tile-icon svg { width: 20px; height: 20px; stroke: currentColor; fill: none; }
 .phva-tile-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; align-items: center; }
@@ -793,10 +820,6 @@ a { color: inherit; text-decoration: none; }
   transform: scale(0.985) rotateX(-2deg);
   background: color-mix(in srgb, var(--wash-a) 65%, white);
 }
-.acc-header:active .acc-icon-wrap {
-  transform: rotateY(-12deg) rotateX(10deg) translateZ(var(--sticker-lift)) scale(1.06);
-  box-shadow: 0 8px 18px -6px rgba(10, 46, 35, 0.22);
-}
 
 .acc-chevron-wrap {
   position: absolute;
@@ -822,18 +845,43 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: var(--sp-sm);
   background: color-mix(in srgb, var(--acc-accent, var(--emerald)) 11%, white);
   border: 1px solid color-mix(in srgb, var(--acc-accent, var(--emerald)) 24%, transparent);
-  box-shadow:
-    0 3px 0 rgba(10, 46, 35, 0.07),
-    0 8px 16px rgba(10, 46, 35, 0.1);
+  box-shadow: var(--shadow-sticker);
   transform-style: preserve-3d;
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease;
   animation: stickerFlipIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  position: relative;
+  overflow: hidden;
 }
-.acc-icon-wrap svg {
+.acc-icon-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 26% 20%, var(--sticker-highlight) 0%, transparent 55%);
+  pointer-events: none;
+  z-index: 1;
+}
+.acc-icon-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 -4px 8px rgba(10, 46, 35, 0.07);
+  pointer-events: none;
+  z-index: 1;
+}
+.acc-header:active .acc-icon-wrap {
+  transform: rotateY(-12deg) rotateX(10deg) translateZ(var(--sticker-lift)) scale(1.06);
+  box-shadow: var(--shadow-sticker-active);
+}
+.acc-icon-wrap svg,
+.acc-icon-wrap .acc-icon-svg {
   width: 26px;
   height: 26px;
   flex-shrink: 0;
-  filter: drop-shadow(0 2px 3px rgba(10, 46, 35, 0.12));
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 1px 1px rgba(10, 46, 35, 0.12));
   transform-style: preserve-3d;
 }
 

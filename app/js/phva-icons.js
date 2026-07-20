@@ -102,8 +102,10 @@ const AppIcons = (() => {
   }
 
   function accordion(name, color) {
-    return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="${SW}" `
-      + `stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">${ICONS[name] || ICONS.info}</svg>`;
+    const paths = ICONS[name] || ICONS.info;
+    return `<svg class="acc-icon-svg sticker-3d-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" `
+      + `stroke="currentColor" stroke-width="${SW}" stroke-linecap="round" stroke-linejoin="round" `
+      + `style="color:${color};flex-shrink:0;display:block;">${paths}</svg>`;
   }
 
   return {
