@@ -182,24 +182,6 @@ const Planificar = (() => {
         <div class="screen-title">Nuevo Establecimiento</div>
         <div class="screen-subtitle">Complete los datos para iniciar la inspección PSB</div>
       </div>
-      <style>
-        .acc-card { padding: 0; overflow: hidden; margin: 0 var(--sp-md) var(--sp-md) var(--sp-md); }
-        .acc-header { display: flex; align-items: center; justify-content: space-between; gap: 8px;
-          padding: var(--sp-md); cursor: pointer; user-select: none;
-          transition: transform .15s cubic-bezier(0.16,1,0.3,1); }
-        .acc-header:active { transform: scale(0.97); }
-        .acc-chevron { flex-shrink: 0; color: var(--color-ink3);
-          transition: transform .4s cubic-bezier(0.16,1,0.3,1); }
-        .acc-header.open .acc-chevron { transform: rotate(180deg); }
-        .acc-body-wrap { max-height: 0; overflow: hidden; opacity: 0;
-          transition: max-height .4s cubic-bezier(0.16,1,0.3,1), opacity .3s ease; }
-        .acc-body-wrap.open { max-height: 10000px; opacity: 1; }
-        .acc-body-inner { padding: 0 var(--sp-md) var(--sp-md) var(--sp-md); }
-        .acc-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: var(--radius-full);
-          font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.04em;
-          background: var(--color-border); color: var(--color-ink3); }
-        .acc-header.disabled { opacity: 0.5; cursor: not-allowed; }
-      </style>
 
       ${_renderAccordionCard('general', 'Datos Generales del Establecimiento',
         'building', 'var(--color-planificar)', _generalBadgeInfo(), _generalOpen, _renderGeneralForm())}

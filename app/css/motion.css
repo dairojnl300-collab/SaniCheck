@@ -111,4 +111,29 @@
   .phva-step {
     transition: none !important;
   }
+  .card,
+  .inspeccion-card,
+  .phva-tile,
+  .acc-card,
+  .estado-chip,
+  .screen-fase-badge,
+  .kicker-pill,
+  .acc-header svg:not(.acc-chevron),
+  .phva-step .step-icon,
+  .phva-tile-icon,
+  .kpi,
+  #invima-config-body > div[style*="flex-wrap:wrap"] .btn {
+    animation: none !important;
+    transform: none !important;
+    transition: opacity 0.15s ease !important;
+  }
+  .card:active,
+  .phva-tile:active,
+  .acc-header:active,
+  .estado-chip:active,
+  .phva-step:active .step-icon,
+  .phva-tile:active .phva-tile-icon,
+  .kpi:active {
+    transform: none !important;
+  }
 }

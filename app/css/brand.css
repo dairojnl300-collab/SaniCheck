@@ -70,6 +70,9 @@
   --border-hair: 1px solid var(--color-border);
   --topbar-h: 56px;
   --tabbar-h: 68px;
+  --perspective-scene: 880px;
+  --sticker-tilt: 10deg;
+  --sticker-lift: 8px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -236,36 +239,58 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: var(--sp-sm);
 }
 
-/* PHVA quick-access grid (Home) */
+/* PHVA quick-access grid (Home) — tiles cuadrados tipo ficha */
 .phva-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--sp-sm);
   margin-bottom: var(--sp-lg);
+  perspective: var(--perspective-scene, 900px);
 }
 .phva-tile {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 14px;
-  border-radius: var(--radius-md);
+  justify-content: center;
+  gap: var(--sp-sm);
+  padding: var(--sp-md) var(--sp-sm);
+  aspect-ratio: 1;
+  border-radius: var(--r-md);
   background: var(--color-white);
   border: var(--border-hair);
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  text-align: center;
+  transform-style: preserve-3d;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease, border-color 0.2s ease;
+  box-shadow: var(--shadow-lum);
 }
-.phva-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+@media (hover: hover) {
+  .phva-tile:hover {
+    transform: translateY(-3px) rotateX(2deg);
+    box-shadow: var(--shadow-deep);
+  }
+}
+.phva-tile:active {
+  transform: rotateX(-6deg) rotateY(5deg) translateZ(6px) scale(0.97);
+  box-shadow: 0 14px 28px -10px rgba(12, 138, 95, 0.35), 0 6px 14px rgba(10, 46, 35, 0.12);
+}
 .phva-tile-icon {
   flex-shrink: 0;
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-sm);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
+  transform-style: preserve-3d;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 3px 0 rgba(10, 46, 35, 0.06), 0 6px 12px rgba(10, 46, 35, 0.08);
+}
+.phva-tile:active .phva-tile-icon {
+  transform: rotateY(-10deg) rotateX(8deg) translateZ(8px) scale(1.06);
 }
 .phva-tile-icon svg { width: 20px; height: 20px; stroke: currentColor; fill: none; }
-.phva-tile-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.phva-tile-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; align-items: center; }
 .phva-tile-fase { font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.8; }
 .phva-tile-label { font-size: var(--text-sm); font-weight: 700; color: var(--color-ink); }
 .phva-tile-P .phva-tile-icon { background: rgba(59,130,246,0.14); color: var(--color-planificar); }
@@ -616,22 +641,44 @@ a { color: inherit; text-decoration: none; }
 .card {
   background: var(--color-white);
   border: 1px solid var(--line);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-md);
   padding: var(--sp-md);
   box-shadow: var(--shadow-lum);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transform-style: preserve-3d;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease;
 }
-.card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-deep);
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-3px) rotateX(1deg);
+    box-shadow: var(--shadow-deep);
+  }
+}
+.card:active {
+  transform: rotateX(-3deg) rotateY(2deg) translateZ(4px) scale(0.995);
 }
 
 /* =============================================================
    MICROINTERACCIONES — estética 21st.dev (CSS vanilla, sin JS)
    ============================================================= */
 @keyframes cardFadeSlideUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(14px) rotateY(-7deg) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateY(0) scale(1);
+  }
+}
+@keyframes stickerFlipIn {
+  from {
+    opacity: 0;
+    transform: rotateY(-90deg) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: rotateY(0) scale(1);
+  }
 }
 @keyframes pulseDot {
   0%   { box-shadow: 0 0 0 0 rgba(255,255,255,0.55); }
@@ -707,3 +754,244 @@ a { color: inherit; text-decoration: none; }
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
   animation: shimmerSweep 1.4s ease-in-out infinite;
 }
+
+/* =============================================================
+   REDISEÑO CARDS + STICKERS 3D (jul-2026)
+   Tokens SaniCheck — sin paleta nueva
+   ============================================================= */
+
+/* ── Acordeón Planificar ───────────────────────────────────── */
+.acc-card {
+  padding: 0;
+  overflow: hidden;
+  margin: 0 var(--sp-md) var(--sp-md);
+  border-radius: var(--r-md);
+  transform-style: preserve-3d;
+}
+.acc-card:nth-child(1) { animation-delay: 0.04s; }
+.acc-card:nth-child(2) { animation-delay: 0.08s; }
+.acc-card:nth-child(3) { animation-delay: 0.12s; }
+.acc-card:nth-child(4) { animation-delay: 0.16s; }
+.acc-card:nth-child(5) { animation-delay: 0.20s; }
+.acc-card:nth-child(6) { animation-delay: 0.24s; }
+
+.acc-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--sp-sm);
+  padding: var(--sp-md);
+  min-height: 76px;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease;
+}
+.acc-header:active {
+  transform: scale(0.985) rotateX(-2deg);
+  background: color-mix(in srgb, var(--wash-a) 65%, white);
+}
+.acc-header > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  min-width: 0;
+}
+.acc-header > div:last-child {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  flex-shrink: 0;
+}
+.acc-chevron {
+  flex-shrink: 0;
+  color: var(--color-ink3);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.acc-header.open .acc-chevron { transform: rotate(180deg); }
+.acc-body-wrap {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+.acc-body-wrap.open { max-height: 10000px; opacity: 1; }
+.acc-body-inner { padding: 0 var(--sp-md) var(--sp-md); }
+.acc-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: var(--color-border);
+  color: var(--color-ink3);
+}
+.acc-header.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+/* Ícono acordeón — sticker 3D */
+.acc-header svg:not(.acc-chevron) {
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 3px rgba(10, 46, 35, 0.14));
+  transform-style: preserve-3d;
+  animation: stickerFlipIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.acc-header:active svg:not(.acc-chevron) {
+  transform: rotateY(-12deg) rotateX(10deg) translateZ(var(--sticker-lift)) scale(1.08);
+}
+
+/* ── KPI tiles (Vencimientos v1/v2, DADIS, PDF) ───────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-sm);
+  margin-bottom: var(--sp-md);
+}
+.kpi-grid-4,
+#screen-area div[style*="grid-template-columns:repeat(4,1fr)"] {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: var(--sp-sm) !important;
+}
+.kpi,
+#screen-area div[style*="grid-template-columns:repeat(4,1fr)"] > div,
+#screen-area div[style*="grid-template-columns:1fr 1fr"][style*="gap:10px"] > div[style*="text-align:center"] {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--sp-md) var(--sp-sm) !important;
+  background: var(--color-white);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lum);
+  transform-style: preserve-3d;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease;
+}
+.kpi:active,
+#screen-area div[style*="grid-template-columns:repeat(4,1fr)"] > div:active {
+  transform: rotateX(-5deg) rotateY(4deg) translateZ(6px) scale(0.98);
+  box-shadow: var(--shadow-deep);
+}
+.kpi-lbl {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink3);
+}
+.kpi-val {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  line-height: 1.1;
+  margin: var(--sp-xs) 0 2px;
+  font-family: var(--font-heading);
+}
+.kpi-sub { font-size: var(--text-xs); color: var(--color-ink3); }
+
+/* ── Grid categorías INVIMA (modal) — 2×3 fichas cuadradas ── */
+#invima-config-body > div[style*="flex-wrap:wrap"],
+#perfil-rapido-body > div[style*="flex-wrap:wrap"] {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-sm);
+  margin-bottom: var(--sp-sm);
+}
+#invima-config-body > div[style*="flex-wrap:wrap"] .btn,
+#perfil-rapido-body > div[style*="flex-wrap:wrap"] .btn {
+  aspect-ratio: 1;
+  min-width: 0 !important;
+  flex: none !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px !important;
+  line-height: 1.25;
+  padding: var(--sp-sm) !important;
+  border-radius: var(--r-md) !important;
+  transform-style: preserve-3d;
+  box-shadow: var(--shadow-lum);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease;
+}
+#invima-config-body > div[style*="flex-wrap:wrap"] .btn:active,
+#perfil-rapido-body > div[style*="flex-wrap:wrap"] .btn:active {
+  transform: rotateX(-6deg) rotateY(5deg) translateZ(6px) scale(0.97);
+  box-shadow: var(--shadow-deep);
+}
+
+/* ── Stickers 3D globales (badges, fase, tab bar, norma) ─── */
+.sticker-3d,
+.estado-chip,
+.screen-fase-badge,
+.norma-badge,
+.kicker-pill,
+.acc-badge,
+.badge-P, .badge-H, .badge-V, .badge-A,
+.chip, .chip-b, .chip-r, .chip-d {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.estado-chip,
+.screen-fase-badge,
+.kicker-pill {
+  box-shadow:
+    0 2px 0 rgba(10, 46, 35, 0.12),
+    0 4px 10px rgba(10, 46, 35, 0.1);
+  animation: stickerFlipIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
+}
+.estado-chip:active,
+.screen-fase-badge:active,
+.kicker-pill:active {
+  transform: rotateX(-8deg) rotateY(6deg) translateZ(4px) scale(0.96);
+  box-shadow: 0 1px 0 rgba(10, 46, 35, 0.1), 0 2px 6px rgba(10, 46, 35, 0.08);
+}
+.norma-badge {
+  box-shadow: 0 2px 0 rgba(10, 46, 35, 0.06);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.norma-badge:active {
+  transform: rotateY(-6deg) translateZ(3px);
+}
+
+/* Tab bar PHVA — íconos 3D */
+.phva-step {
+  transform-style: preserve-3d;
+  perspective: var(--perspective-scene);
+}
+.phva-step .step-icon {
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 1px 2px rgba(10, 46, 35, 0.12));
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.phva-step:active .step-icon {
+  transform: rotateY(-14deg) rotateX(8deg) translateZ(6px) scale(1.1);
+}
+.phva-step.active .step-icon {
+  animation: stickerFlipIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Inspección cards — proporción más compacta */
+.inspeccion-card {
+  border-radius: var(--r-md);
+  min-height: 88px;
+  transform-style: preserve-3d;
+}
+@media (hover: hover) {
+  .inspeccion-card:hover {
+    transform: translateY(-3px) rotateX(1deg);
+  }
+}
+.inspeccion-card:active {
+  transform: rotateX(-3deg) rotateY(2deg) translateZ(4px);
+}
+
+/* Stagger entrada stickers en acordeón */
+.acc-card .estado-chip,
+.acc-card .acc-badge { animation-delay: 0.15s; }
