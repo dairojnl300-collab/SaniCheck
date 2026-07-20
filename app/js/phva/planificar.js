@@ -299,7 +299,7 @@ const Planificar = (() => {
       }
     }
     return `
-      <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:var(--sp-sm);line-height:1.5;">
+      <div class="text-prose" style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:var(--sp-sm);">
         Evaluación rápida con ${n} ítems INVIMA seleccionados (editable). Escala A / AR / I / N·A.
       </div>
       ${scoreHtml}
@@ -344,7 +344,7 @@ const Planificar = (() => {
       ? `${base} ítems normativos base — sin ítems personalizados aún`
       : `${base} ítems base + ${custom} ítem${custom !== 1 ? 's' : ''} personalizado${custom !== 1 ? 's' : ''}`;
     return `
-      <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:var(--sp-md);line-height:1.5;">
+      <div class="text-prose" style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:var(--sp-md);">
         Configure el checklist INVIMA por categoría (6 grupos). No requiere inspección PSB activa.
       </div>
       <div style="padding:var(--sp-sm) var(--sp-md);background:var(--color-surface);border-radius:var(--radius-md);
@@ -704,7 +704,7 @@ const Planificar = (() => {
           <strong style="color:var(--color-ink);">Puntaje:</strong> ${score}% · ${ _escAttr(clasificacion) } ·
           <strong style="color:var(--color-ink);">Fecha:</strong> ${fecha}
         </div>
-        <div style="padding:12px 14px;font-size:var(--text-xs);color:var(--color-ink3);font-style:italic;
+        <div class="text-prose" style="padding:12px 14px;font-size:var(--text-xs);color:var(--color-ink3);font-style:italic;
           border-bottom:1px solid var(--color-border);">
           Resumen del perfil rápido INVIMA (ítems seleccionados). Los hallazgos I y AR requieren seguimiento según prioridad.</div>
         <div style="overflow-x:auto;">${_perfilResumenTable(i, ar, a)}</div>
@@ -717,6 +717,7 @@ const Planificar = (() => {
             <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-bueno);margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:6px;">
               ${AppIcons.icon('check', 14)} Sin hallazgos críticos
             </div>
+            <div class="text-prose" style="font-size:var(--text-xs);color:var(--color-bueno);">
               Mantener buenas prácticas y actualizar el perfil ante cambios en infraestructura o procesos.</div>
           </div>
         </div>`;
@@ -1583,7 +1584,7 @@ const Planificar = (() => {
           <strong style="color:#0A2E23;">Puntaje:</strong> ${score}% · ${_escAttr(clasificacion)} ·
           <strong style="color:#0A2E23;">Fecha:</strong> ${fecha}
         </div>
-        <div style="padding:12px 14px;font-size:10px;color:#6B7280;font-style:italic;
+        <div class="text-prose" style="padding:12px 14px;font-size:10px;color:#6B7280;font-style:italic;
           border-bottom:1px solid #E5E7EB;">
           Perfil rápido INVIMA. Los hallazgos I y AR requieren seguimiento según prioridad (Alta · Media · Baja).</div>
         <div style="overflow-x:auto;">${resumenTable}</div>
@@ -1594,7 +1595,7 @@ const Planificar = (() => {
         <div style="border:1px solid #065F46;border-radius:8px;overflow:hidden;">
           <div style="padding:14px 16px;background:#D1FAE5;text-align:center;">
             <div style="font-size:12px;font-weight:700;color:#065F46;margin-bottom:4px;">✓ Sin hallazgos críticos</div>
-            <div style="font-size:10px;color:#065F46;">
+            <div class="text-prose" style="font-size:10px;color:#065F46;">
               Mantener buenas prácticas y actualizar el perfil ante cambios en infraestructura o procesos.</div>
           </div>
         </div>`;
@@ -2093,7 +2094,7 @@ const Planificar = (() => {
       </div>
 
       <div class="aspecto-texto">${_escAttr(def?.texto || '')}</div>
-      <div style="font-size:var(--text-sm);color:var(--color-ink3);line-height:1.55;margin-bottom:var(--sp-sm);text-align:justify;">
+      <div class="text-prose" style="font-size:var(--text-sm);color:var(--color-ink3);margin-bottom:var(--sp-sm);">
         ${_escAttr(desc)}</div>
       <div class="norma-badge">${AppIcons.icon('scale', 12)} ${_escAttr(def?.norma || '')}</div>
 
@@ -2139,7 +2140,7 @@ const Planificar = (() => {
           ${idx === total - 1 ? AppIcons.row('check', 'Guardar', 14) : AppIcons.row('arrowRight', 'Siguiente', 14)}</button>
       </div>
 
-      <div style="margin-top:var(--sp-sm);font-size:var(--text-xs);color:var(--color-ink3);text-align:justify;">
+      <div class="text-prose" style="margin-top:var(--sp-sm);font-size:var(--text-xs);color:var(--color-ink3);">
         Este diagnóstico debe actualizarse anualmente o tras cambios significativos en infraestructura o procesos.
       </div>`;
   }

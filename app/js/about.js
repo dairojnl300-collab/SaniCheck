@@ -197,7 +197,7 @@ const About = (() => {
           <div id="about-portal-codigo" style="font-family:var(--font-mono);font-size:28px;font-weight:700;
             letter-spacing:0.28em;color:var(--emerald,#0C8A5F);">${_esc(meta.codigo)}</div>
         </div>
-        <p style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:12px;line-height:1.5;">
+        <p class="text-prose" style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:12px;">
           Comparte este código con el cliente para que consulte vencimientos en el Portal.
         </p>
         <button type="button" class="btn btn-primary" style="width:100%;" onclick="About.copiarCodigoPortal()">
@@ -212,7 +212,7 @@ const About = (() => {
 
     const local = PortalCliente.resolverEstablecimientoLocal();
     el.innerHTML = `
-      <p style="margin-bottom:12px;line-height:1.55;color:var(--color-ink2);">
+      <p class="text-prose" style="margin-bottom:12px;color:var(--color-ink2);">
         Activa el Portal para que el establecimiento consulte Personal y Equipos con un código de 6 caracteres.
       </p>
       <div class="form-group" style="margin-bottom:10px;">

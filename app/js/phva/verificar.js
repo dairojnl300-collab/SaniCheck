@@ -225,8 +225,7 @@ const Verificar = (() => {
             border-left:3px solid ${h.evaluacion==='D'?'var(--color-deficiente)':'var(--color-regular)'};">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;
               gap:8px;margin-bottom:4px;">
-              <span style="font-size:11px;font-weight:600;color:var(--color-ink2);
-                line-height:1.4;flex:1;">${_esc(h.texto)}</span>
+              <span class="text-prose hallazgo-texto" style="font-size:11px;font-weight:600;color:var(--color-ink2);flex:1;">${_esc(h.texto)}</span>
               <span style="flex-shrink:0;font-size:10px;font-weight:700;padding:2px 8px;
                 border-radius:var(--radius-full);color:#fff;
                 background:${h.evaluacion==='D'?'var(--color-deficiente)':'var(--color-regular)'};">

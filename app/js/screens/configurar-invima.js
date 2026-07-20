@@ -155,9 +155,9 @@ const ConfigurarInvima = (() => {
           <button type="button" onclick="ConfigurarInvima.toggleEvalDesc('${_esc(descKey)}')"
             style="margin-top:4px;background:none;border:0;padding:0;font-size:11px;color:var(--color-accent);cursor:pointer;font-weight:600;">
             ${descOpen ? 'Ocultar' : 'Ver'} criterio / normativa</button>
-          <div id="invima-desc-${_esc(descKey)}" style="display:${descOpen ? 'block' : 'none'};margin-top:8px;padding:10px 12px;background:rgba(27,67,50,0.04);border-radius:8px;font-size:11px;color:var(--color-ink2);line-height:1.5;">
-            ${it.normativa ? `<div style="font-weight:700;color:var(--color-brand);margin-bottom:4px;">Normativa</div><div>${_esc(it.normativa)}</div>` : ''}
-            ${desc ? `<div style="font-weight:700;color:var(--color-brand);margin:8px 0 4px;">Criterio</div><div style="white-space:pre-wrap;">${_esc(desc)}</div>` : ''}
+          <div id="invima-desc-${_esc(descKey)}" class="text-prose" style="display:${descOpen ? 'block' : 'none'};margin-top:8px;padding:10px 12px;background:rgba(27,67,50,0.04);border-radius:8px;font-size:11px;color:var(--color-ink2);">
+            ${it.normativa ? `<div style="font-weight:700;color:var(--color-brand);margin-bottom:4px;">Normativa</div><div class="text-prose">${_esc(it.normativa)}</div>` : ''}
+            ${desc ? `<div style="font-weight:700;color:var(--color-brand);margin:8px 0 4px;">Criterio</div><div class="text-prose" style="white-space:pre-wrap;">${_esc(desc)}</div>` : ''}
           </div>` : ''}
         <div style="display:flex;gap:5px;margin-top:10px;">
           ${_evalBtn(it.id, 'A', 'A', '#065F46', resp)}
@@ -181,8 +181,8 @@ const ConfigurarInvima = (() => {
     const cat = _cats.find(c => c.id === _tab);
     return `
       ${_renderScorePanel()}
-      <div style="background:rgba(82,183,136,0.1);border:1px solid rgba(82,183,136,0.35);border-radius:8px;
-        padding:10px 12px;margin-bottom:var(--sp-sm);font-size:11px;color:var(--color-ink2);line-height:1.5;">
+      <div class="text-prose" style="background:rgba(82,183,136,0.1);border:1px solid rgba(82,183,136,0.35);border-radius:8px;
+        padding:10px 12px;margin-bottom:var(--sp-sm);font-size:11px;color:var(--color-ink2);">
         <strong style="color:var(--color-brand);">Escala:</strong>
         <b>A</b> ${_esc(leyenda.A || 'Aceptable')} ·
         <b>AR</b> ${_esc(leyenda.AR || 'Aceptable con requerimiento')} ·

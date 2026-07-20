@@ -50,8 +50,8 @@ const Personalizar = (() => {
         <div class="screen-subtitle">${_esc(insp.establecimiento.nombre)}</div>
       </div>
 
-      <div style="font-size:12px;color:var(--color-ink3);margin-bottom:14px;padding:0 2px;
-        line-height:1.5;">
+      <div style="font-size:12px;color:var(--color-ink3);margin-bottom:14px;padding:0 2px;"
+        class="text-prose">
         Active o desactive ítems según aplique. Los desactivados no aparecen en HACER ni en el acta.
         <strong style="color:var(--color-primary);">${totalActivos} ítems activos.</strong>
       </div>
