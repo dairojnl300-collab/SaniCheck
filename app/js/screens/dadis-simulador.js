@@ -229,8 +229,8 @@ const DadisSimulador = (() => {
             oninput="DadisSimulador.setMeta('fecha', this.value)">
         </div>
 
-        <div style="background:rgba(82,183,136,0.1);border:1px solid rgba(82,183,136,0.35);border-radius:10px;
-          padding:12px 14px;margin-bottom:var(--sp-md);font-size:12px;color:var(--color-ink2);line-height:1.55;">
+        <div class="text-prose" style="background:rgba(82,183,136,0.1);border:1px solid rgba(82,183,136,0.35);border-radius:10px;
+          padding:12px 14px;margin-bottom:var(--sp-md);font-size:12px;color:var(--color-ink2);">
           <strong style="color:var(--color-brand);">Escala:</strong>
           <span style="margin-left:6px;"><b>A</b> ${ _esc(leyenda.A || 'Aceptable') }</span> ·
           <span><b>AR</b> ${ _esc(leyenda.AR || 'Aceptable con requerimiento') }</span> ·

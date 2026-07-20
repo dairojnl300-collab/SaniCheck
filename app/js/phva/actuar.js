@@ -527,7 +527,7 @@ const Actuar = (() => {
         break-inside:avoid;page-break-inside:avoid;">
         <div style="display:flex;gap:8px;align-items:flex-start;">
           <span style="flex-shrink:0;margin-top:1px;color:${C.gris};">${AppIcons.icon('info', 14)}</span>
-          <div style="font-size:9px;color:#374151;line-height:1.5;text-align:justify;hyphens:auto;">
+          <div class="text-prose" style="font-size:9px;color:#374151;">
             <strong style="font-size:9.5px;color:${C.verde};display:block;margin-bottom:3px;">
               METODOLOGÍA DE EVALUACIÓN
             </strong>
@@ -563,7 +563,7 @@ const Actuar = (() => {
             break-inside:avoid;page-break-inside:avoid;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
               <div style="flex:1;">
-                <div style="font-size:11px;font-weight:700;color:#111827;margin-bottom:3px;">
+                <div class="text-prose hallazgo-texto" style="font-size:11px;font-weight:700;color:#111827;margin-bottom:3px;">
                   ${idx+1}. ${_esc(h.texto)}</div>
                 <div style="font-size:10px;color:#6B7280;display:flex;align-items:center;gap:4px;">
                   ${AppIcons.icon('scale', 10)} ${_esc(h.norma)} · ${_esc(h.programa_nombre)}</div>
@@ -647,7 +647,7 @@ const Actuar = (() => {
               return `
                 <tr style="border-bottom:1px solid #E5E7EB;background:${idx%2===0?'#fff':'#F9FAFB'};">
                   <td style="padding:6px 8px;font-weight:600;">${_esc(prog)}</td>
-                  <td style="padding:6px 8px;text-align:justify;hyphens:auto;">${ACCIONES[prog]||'Implementar correcciones según normativa vigente.'}</td>
+                  <td class="text-prose" style="padding:6px 8px;">${ACCIONES[prog]||'Implementar correcciones según normativa vigente.'}</td>
                   <td style="padding:6px 8px;text-align:center;font-weight:700;color:${c};
                     white-space:nowrap;">${plazo}</td>
                 </tr>`;
@@ -681,9 +681,9 @@ const Actuar = (() => {
                     border-bottom:1px dotted #E5E7EB;font-size:11px;">
                     <span style="font-weight:800;color:${c};flex-shrink:0;">[${a.evaluacion}]</span>
                     <div>
-                      <div style="color:#111827;">${_esc(a.texto)}</div>
+                      <div class="text-prose" style="color:#111827;">${_esc(a.texto)}</div>
                       ${obsTexto
-                        ? `<div style="color:#6B7280;font-size:10px;margin-top:1px;text-align:justify;hyphens:auto;">${_esc(obsTexto)}</div>`
+                        ? `<div class="text-prose" style="color:#6B7280;font-size:10px;margin-top:1px;">${_esc(obsTexto)}</div>`
                         : ''}
                     </div>
                   </div>`;
@@ -753,7 +753,7 @@ const Actuar = (() => {
   function _renderFooter() {
     return `
       <div style="border-top:1.5px solid ${C.verde};padding-top:10px;text-align:center;margin-top:16px;">
-        <div style="font-size:9px;color:#6B7280;line-height:1.7;text-align:justify;">
+        <div class="text-prose" style="font-size:9px;color:#6B7280;line-height:1.7;">
           Normativa aplicada: Ley 9/1979 (Código Sanitario) · Decreto 3075/1997 (BPM) ·
           Resolución 2674/2013 · Decreto 1575/2007 (Agua) · Resolución 2115/2007 ·
           Resolución 2184/2019 (Residuos)
