@@ -342,22 +342,18 @@ const Planificar = (() => {
   function _renderAccordionCard(key, title, iconName, iconColor, badge, isOpen, bodyHtml, disabled, subtitle) {
     const openEff = isOpen && !disabled;
     const titleBlock = subtitle
-      ? `<div style="min-width:0;">
-          <div style="font-size:var(--text-base);font-weight:700;color:var(--color-ink);">${title}</div>
-          <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-top:2px;">${subtitle}</div>
-        </div>`
-      : `<div style="font-size:var(--text-base);font-weight:700;color:var(--color-ink);">${title}</div>`;
+      ? `<div class="acc-title">${title}</div>
+         <div class="acc-subtitle">${subtitle}</div>`
+      : `<div class="acc-title">${title}</div>`;
     return `
       <div class="card acc-card">
         <div class="acc-header${openEff ? ' open' : ''}${disabled ? ' disabled' : ''}" id="acc-header-${key}"
-          data-p-act="toggle" data-p-key="${key}">
-          <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-            ${_icon(iconName, iconColor)}
-            ${titleBlock}
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-            <span id="acc-badge-${key}" class="${badge.cls}" style="${badge.style}">${badge.text}</span>
-            ${_chevron()}
+          data-p-act="toggle" data-p-key="${key}" style="--acc-accent:${iconColor}">
+          <div class="acc-chevron-wrap">${_chevron()}</div>
+          <div class="acc-icon-wrap sticker-3d">${_icon(iconName, iconColor)}</div>
+          <div class="acc-title-block">${titleBlock}</div>
+          <div class="acc-badge-row">
+            <span id="acc-badge-${key}" class="${badge.cls || 'acc-badge'}" style="${badge.style}">${badge.text}</span>
           </div>
         </div>
         <div class="acc-body-wrap${openEff ? ' open' : ''}" id="acc-body-${key}">

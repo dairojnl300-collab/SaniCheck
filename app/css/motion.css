@@ -130,6 +130,7 @@
   .card:active,
   .phva-tile:active,
   .acc-header:active,
+  .acc-header:active .acc-icon-wrap,
   .estado-chip:active,
   .phva-step:active .step-icon,
   .phva-tile:active .phva-tile-icon,
