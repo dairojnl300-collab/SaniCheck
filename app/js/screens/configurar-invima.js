@@ -32,12 +32,14 @@ const ConfigurarInvima = (() => {
     InvimaCrud.getConfigINVIMA(_estId());
   }
 
-  function _catLabel(id) {
+  function _catLabel(id, idx) {
     const c = _cats.find(x => x.id === id);
     if (!c) return id;
     const short = { cat_01: 'Edificación', cat_02: 'Equipos', cat_03: 'Personal',
       cat_04: 'Req. higiénicos', cat_05: 'Saneamiento', cat_06: 'Verificación' };
-    return short[id] || c.nombre.slice(0, 14);
+    const name = short[id] || c.nombre.slice(0, 14);
+    const n = typeof idx === 'number' && idx >= 0 ? idx + 1 : _cats.findIndex(x => x.id === id) + 1;
+    return n + '. ' + name;
   }
 
   function _itemsTab(catId) {
@@ -79,10 +81,10 @@ const ConfigurarInvima = (() => {
   function _renderCatTabs() {
     return `
       <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:var(--sp-sm);">
-        ${_cats.map(c => `
+        ${_cats.map((c, i) => `
           <button type="button" class="btn ${ _tab === c.id ? 'btn-accent' : 'btn-outline' }"
             style="padding:6px 10px;font-size:11px;flex:1;min-width:90px;"
-            onclick="ConfigurarInvima.setTab('${_esc(c.id)}')">${_esc(_catLabel(c.id))}</button>
+            onclick="ConfigurarInvima.setTab('${_esc(c.id)}')">${_esc(_catLabel(c.id, i))}</button>
         `).join('')}
       </div>`;
   }
