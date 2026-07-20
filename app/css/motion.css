@@ -123,7 +123,7 @@
   .phva-step .step-icon,
   .phva-tile-icon,
   .kpi,
-  #invima-config-body > div[style*="flex-wrap:wrap"] .btn {
+  .invima-cat-grid .btn {
     animation: none !important;
     transform: none !important;
     transition: opacity 0.15s ease !important;

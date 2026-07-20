@@ -177,7 +177,7 @@ const ConfigurarPerfilRapido = (() => {
     return `
       <div style="font-size:12px;color:var(--color-ink3);margin-bottom:var(--sp-sm);padding:8px 12px;
         background:#ecfdf5;border-radius:8px;border:1px solid #a7f3d0;">
-        Perfil rápido: <strong>${n}</strong> ítem(s) seleccionado(s). Mínimo 1. Los ítems normativos quitados siguen en el checklist INVIMA completo.
+        Perfil rápido: <strong>${n}</strong> ítem(s) seleccionado(s). Mínimo 1. Los ítems normativos quitados siguen en el Simulador INVIMA completo.
       </div>
       <div id="perfil-tab-body">${_renderConfigTable()}</div>
       <button type="button" class="btn btn-outline" style="width:100%;margin-top:var(--sp-sm);"

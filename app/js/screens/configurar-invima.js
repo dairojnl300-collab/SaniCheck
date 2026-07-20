@@ -78,12 +78,15 @@ const ConfigurarInvima = (() => {
       </div>`;
   }
 
+  function _baseItemCount() {
+    return _cats.reduce((n, c) => n + ((c.items && c.items.length) || 0), 0);
+  }
+
   function _renderCatTabs() {
     return `
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:var(--sp-sm);">
+      <div class="invima-cat-grid">
         ${_cats.map((c, i) => `
-          <button type="button" class="btn ${ _tab === c.id ? 'btn-accent' : 'btn-outline' }"
-            style="padding:6px 10px;font-size:11px;flex:1;min-width:90px;"
+          <button type="button" class="btn invima-cat-btn ${ _tab === c.id ? 'btn-accent' : 'btn-outline' }"
             onclick="ConfigurarInvima.setTab('${_esc(c.id)}')">${_esc(_catLabel(c.id, i))}</button>
         `).join('')}
       </div>`;
@@ -198,10 +201,11 @@ const ConfigurarInvima = (() => {
 
   function _renderConfigBody() {
     const r = InvimaCrud.resumen(_estId());
+    const baseNorm = _baseItemCount() || 28;
     return `
       <div style="font-size:12px;color:var(--color-ink3);margin-bottom:var(--sp-sm);padding:8px 12px;
         background:#ecfdf5;border-radius:8px;border:1px solid #a7f3d0;">
-        <strong>${r.base}</strong> ítems normativos + <strong>${r.custom}</strong> ítems custom
+        <strong>${baseNorm}</strong> ítems normativos + <strong>${r.custom}</strong> ítems custom
       </div>
       ${_renderCatTabs()}
       <div id="invima-tab-body">${_renderTable(_tab)}</div>
@@ -223,7 +227,7 @@ const ConfigurarInvima = (() => {
       <div id="invima-config-panel" style="position:relative;width:100%;max-width:520px;background:var(--color-white);border-radius:var(--radius-md);
         box-shadow:var(--shadow-lg);padding:var(--sp-lg);border:1px solid var(--color-border);max-height:92vh;overflow-y:auto;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-sm);">
-          <div style="font-size:var(--text-md);font-weight:800;color:var(--color-brand);">Checklist INVIMA</div>
+          <div style="font-size:var(--text-md);font-weight:800;color:var(--color-brand);">Simulador INVIMA</div>
           <button type="button" class="btn btn-outline" style="padding:4px 10px;" onclick="ConfigurarInvima.cerrar()">✕</button>
         </div>
         <div id="invima-mode-switch"></div>
