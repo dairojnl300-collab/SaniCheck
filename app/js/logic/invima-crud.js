@@ -8,6 +8,9 @@ const InvimaCrud = (() => {
   const LS_KEY = 'sanicheck_invima_config';
   const LS_QUEUE = 'sanicheck_invima_pending';
 
+  /** Selección recomendada perfil rápido (8 ítems triage → códigos INVIMA instructivo) */
+  const PERFIL_RAPIDO_DEFAULT_CODIGOS = ['1.2', '1.3', '5.1', '5.2', '4.4', '2.1', '5.3', '5.4'];
+
   let _base = null;
 
   function _uuid() {
@@ -56,6 +59,44 @@ const InvimaCrud = (() => {
     localStorage.setItem(LS_KEY, JSON.stringify(all));
   }
 
+  function _defaultPerfilFlag(codigo) {
+    return PERFIL_RAPIDO_DEFAULT_CODIGOS.includes(String(codigo || ''));
+  }
+
+  function _ensurePerfilFlags(all, estId) {
+    const items = all[estId]?.items;
+    if (!items?.length) return;
+    const hasPerfil = items.some(it => it.en_perfil_rapido === true);
+    if (hasPerfil) return;
+    let changed = false;
+    items.forEach(it => {
+      if (it.en_perfil_rapido !== true && it.en_perfil_rapido !== false) {
+        it.en_perfil_rapido = _defaultPerfilFlag(it.codigo);
+        changed = true;
+      }
+    });
+    if (changed) _saveStore(all);
+  }
+
+  function _setPerfilFlag(itemId, value, estId) {
+    const all = _loadStore(estId);
+    const idx = all[estId].items.findIndex(it => it.id === itemId);
+    if (idx < 0) throw new Error('Ítem no encontrado');
+    if (!value) {
+      const count = all[estId].items.filter(it => it.estado !== 'inactivo' && it.en_perfil_rapido).length;
+      if (count <= 1) throw new Error('Debe quedar al menos 1 ítem en el perfil rápido');
+    }
+    all[estId].items[idx] = {
+      ...all[estId].items[idx],
+      en_perfil_rapido: !!value,
+      fecha_actualizacion: new Date().toISOString(),
+      sync_pending: true,
+    };
+    _saveStore(all);
+    _syncItem(all[estId].items[idx]).catch(() => _enqueue(itemId));
+    return all[estId].items[idx];
+  }
+
   async function loadBaseChecklist() {
     if (_base) return _base;
     try {
@@ -84,6 +125,7 @@ const InvimaCrud = (() => {
           descripcion: it.descripcion || '',
           peso: cat.peso || 1,
           custom: false,
+          en_perfil_rapido: _defaultPerfilFlag(it.codigo),
           estado: 'activo',
           creado_por: 'Sistema',
         });
@@ -99,7 +141,32 @@ const InvimaCrud = (() => {
     const all = _loadStore(estId);
     let items = all[estId].items;
     if (!items.length && _base) items = _seedBaseItems(estId);
-    return items.filter(it => it.estado !== 'inactivo');
+    _ensurePerfilFlags(all, estId);
+    return _loadStore(estId)[estId].items.filter(it => it.estado !== 'inactivo');
+  }
+
+  function getPerfilRapido(establecimientoId) {
+    return getConfigINVIMA(establecimientoId).filter(it => it.en_perfil_rapido);
+  }
+
+  function getDisponiblesPerfil(establecimientoId) {
+    return getConfigINVIMA(establecimientoId).filter(it => !it.en_perfil_rapido);
+  }
+
+  function agregarAlPerfil(itemId, establecimientoId) {
+    return _setPerfilFlag(itemId, true, _estId(establecimientoId));
+  }
+
+  function quitarDelPerfil(itemId, establecimientoId) {
+    const estId = _estId(establecimientoId);
+    const item = getConfigINVIMA(estId).find(it => it.id === itemId);
+    if (!item) throw new Error('Ítem no encontrado');
+    if (item.custom) {
+      const perfil = getPerfilRapido(estId);
+      if (perfil.length <= 1) throw new Error('Debe quedar al menos 1 ítem en el perfil rápido');
+      return eliminarItem(itemId, estId);
+    }
+    return _setPerfilFlag(itemId, false, estId);
   }
 
   function _codigoDuplicado(estId, codigo, excludeId) {
@@ -115,7 +182,7 @@ const InvimaCrud = (() => {
     return prefix + '.' + next;
   }
 
-  function agregarItem(categoriaId, nombre, normativa, frecuencia, establecimientoId, codigoOpt) {
+  function agregarItem(categoriaId, nombre, normativa, frecuencia, establecimientoId, codigoOpt, enPerfil) {
     const estId = _estId(establecimientoId);
     const nombreVal = String(nombre || '').trim();
     if (!nombreVal) throw new Error('Nombre requerido');
@@ -132,6 +199,7 @@ const InvimaCrud = (() => {
       normativa: normativa || 'Local/ECODESA/Específico',
       peso: 1,
       custom: true,
+      en_perfil_rapido: enPerfil !== false,
       estado: 'activo',
       creado_por: 'Profesional',
       frecuencia: frecuencia || null,
@@ -193,6 +261,7 @@ const InvimaCrud = (() => {
       normativa: item.normativa,
       peso: item.peso,
       custom: !!item.custom,
+      en_perfil_rapido: !!item.en_perfil_rapido,
       estado: item.estado || 'activo',
       creado_por: item.creado_por || 'Profesional',
     };
@@ -254,13 +323,19 @@ const InvimaCrud = (() => {
     const items = getConfigINVIMA(establecimientoId);
     const base = items.filter(it => !it.custom).length;
     const custom = items.filter(it => it.custom).length;
-    return { base, custom, total: items.length };
+    const perfil = items.filter(it => it.en_perfil_rapido).length;
+    return { base, custom, total: items.length, perfil };
   }
 
   return {
     LS_KEY,
+    PERFIL_RAPIDO_DEFAULT_CODIGOS,
     loadBaseChecklist,
     getConfigINVIMA,
+    getPerfilRapido,
+    getDisponiblesPerfil,
+    agregarAlPerfil,
+    quitarDelPerfil,
     agregarItem,
     editarItem,
     eliminarItem,

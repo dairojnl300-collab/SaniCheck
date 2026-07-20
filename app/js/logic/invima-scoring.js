@@ -106,11 +106,6 @@ const InvimaScoring = (() => {
     return order.filter(id => groups[id]).map(id => groups[id]);
   }
 
-  /**
-   * @param {Record<string,string>} respuestas — clave = id config (UUID)
-   * @param {object} meta — escala, clasificacion, categorias
-   * @param {string} estId
-   */
   function calcularPuntaje(respuestas, meta, estId) {
     const escala = meta?.escala || ESCALA_DEFAULT;
     const respuestasSafe = respuestas || {};
@@ -166,6 +161,64 @@ const InvimaScoring = (() => {
     return { puntajeTotal, puntajePorCategoria, clasificacion, itemsDetalle };
   }
 
+  function calcularPerfilRapido(respuestas, meta, estId) {
+    const escala = meta?.escala || ESCALA_DEFAULT;
+    const respuestasSafe = respuestas || {};
+    const items = InvimaCrud.getPerfilRapido(estId);
+    const n = items.length;
+    let puntajeTotal = 0;
+    const itemsDetalle = [];
+
+    items.forEach(it => {
+      const resp = respuestasSafe[it.id] || null;
+      const factor = _factor(resp, escala);
+      const pesoItem = n > 0 ? (100 / n) : 0;
+      const pts = factor === null ? 0 : pesoItem * factor;
+      if (factor !== null) puntajeTotal += pts;
+      itemsDetalle.push({
+        id: it.id,
+        codigo: it.codigo,
+        nombre: it.nombre,
+        categoriaId: it.categoria_id,
+        respuesta: resp,
+        pesoItem,
+        puntos: factor === null ? null : pts,
+        normativa: it.normativa,
+        descripcion: it.descripcion || '',
+        custom: !!it.custom,
+      });
+    });
+
+    puntajeTotal = Math.round(puntajeTotal * 100) / 100;
+    const clasificacion = _clasificar(puntajeTotal, meta?.clasificacion);
+    return { puntajeTotal, clasificacion, itemsDetalle, numItems: n };
+  }
+
+  function prioridadPerfil(resp) {
+    if (resp === 'I') return 'Alta';
+    if (resp === 'AR') return 'Media';
+    if (resp === 'A' || resp === 'NA') return 'Baja';
+    return '';
+  }
+
+  async function calcularPerfil(establecimientoId) {
+    const estId = _estId(establecimientoId);
+    const base = await InvimaCrud.loadBaseChecklist();
+    const meta = {
+      escala: base.escala || ESCALA_DEFAULT,
+      clasificacion: base.clasificacion || CLASIFICACION_DEFAULT,
+    };
+    InvimaCrud.getConfigINVIMA(estId);
+    const ev = getEvaluacion(estId);
+    const r = calcularPerfilRapido(ev.respuestas, meta, estId);
+    const hallazgos = ev.hallazgos || {};
+    r.itemsDetalle = (r.itemsDetalle || []).map(it => ({
+      ...it,
+      hallazgo: hallazgos[it.id] || '',
+    }));
+    return r;
+  }
+
   async function calcular(establecimientoId) {
     const estId = _estId(establecimientoId);
     const base = await InvimaCrud.loadBaseChecklist();
@@ -211,6 +264,9 @@ const InvimaScoring = (() => {
     setHallazgo,
     buildEvalGroups,
     calcularPuntaje,
+    calcularPerfilRapido,
+    calcularPerfil,
+    prioridadPerfil,
     calcular,
     semaforo,
     gaugeSvg,

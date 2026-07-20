@@ -169,11 +169,7 @@ const Planificar = (() => {
 
   function render() {
     _restoreUiFromDraft();
-    _diagEst   = _currentEst();
-    const diag = DiagnosticoInicial.getDiagnostico(_diagEst);
-    _diagItems   = diag.items;
-    _diagCatalog = diag.catalog;
-    _diagIdx     = Math.min(_diagIdx, Math.max(0, _diagCatalog.length - 1));
+    if (typeof InvimaCrud !== 'undefined') InvimaCrud.loadBaseChecklist().catch(() => {});
     if (!_venc) {
       _vencEst = _currentEst();
       _venc    = Vencimientos.getVencimientos(_vencEst);
@@ -208,8 +204,9 @@ const Planificar = (() => {
       ${_renderAccordionCard('general', 'Datos Generales del Establecimiento',
         'building', 'var(--color-planificar)', _generalBadgeInfo(), _generalOpen, _renderGeneralForm())}
 
-      ${_renderAccordionCard('diagnostico', 'Perfil Sanitario Inicial (Diagnóstico)',
-        'clipboardCheck', 'var(--color-accent)', _diagBadgeInfo(), _diagOpen, _renderDiagnosticoBody(_diagItems))}
+      ${_renderAccordionCard('diagnostico', 'Perfil Sanitario Inicial',
+        'clipboardCheck', 'var(--color-accent)', _perfilBadgeInfo(), _diagOpen, _renderPerfilBody(),
+        false, 'Triage A/AR/I · Res. 2674/2013')}
 
       ${_renderAccordionCard('resultados', 'Resultados del Diagnóstico Inicial',
         'listCheck', 'var(--emerald)', _resultadosBadgeInfo(), _resultadosOpen, _renderResultadosBody(),
@@ -250,14 +247,83 @@ const Planificar = (() => {
       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;
   }
 
+  function _estIdInvima() {
+    return (typeof PortalCliente !== 'undefined' && PortalCliente.getEstablecimientoId()) || 'local-pending';
+  }
+
+  function _perfilMeta() {
+    return {
+      escala: { A: 1.0, AR: 0.5, I: 0.0 },
+      clasificacion: [
+        { min: 80, max: 100, resultado: 'FAVORABLE' },
+        { min: 60, max: 79.9, resultado: 'FAVORABLE CON REQUERIMIENTO' },
+        { min: 0, max: 59.9, resultado: 'DESFAVORABLE' },
+      ],
+    };
+  }
+
+  function _perfilBadgeInfo() {
+    if (typeof InvimaCrud === 'undefined') {
+      return { text: 'Pendiente', cls: '', style: _pendienteStyle() };
+    }
+    const estId = _estIdInvima();
+    const total = InvimaCrud.getPerfilRapido(estId).length;
+    if (!total) return { text: 'Sin ítems', cls: '', style: _pendienteStyle() };
+    if (typeof InvimaScoring === 'undefined') {
+      return { text: `${total} ítems`, cls: '', style: _pendienteStyle() };
+    }
+    const ev = InvimaScoring.getEvaluacion(estId);
+    const r = InvimaScoring.calcularPerfilRapido(ev.respuestas, _perfilMeta(), estId);
+    const answered = (r.itemsDetalle || []).filter(it => it.respuesta).length;
+    if (answered === total && total > 0) {
+      return { text: `${r.puntajeTotal}% · ${r.clasificacion}`, cls: 'estado-chip estado-B', style: '' };
+    }
+    if (answered > 0) return { text: `${answered}/${total} evaluados`, cls: 'estado-chip estado-R', style: '' };
+    return { text: `${total} ítems sugeridos`, cls: '', style: _pendienteStyle() };
+  }
+
+  function _renderPerfilBody() {
+    const n = typeof InvimaCrud !== 'undefined' ? InvimaCrud.getPerfilRapido(_estIdInvima()).length : 8;
+    let scoreHtml = '';
+    if (typeof InvimaScoring !== 'undefined' && typeof InvimaCrud !== 'undefined') {
+      const ev = InvimaScoring.getEvaluacion(_estIdInvima());
+      const r = InvimaScoring.calcularPerfilRapido(ev.respuestas, _perfilMeta(), _estIdInvima());
+      const sem = InvimaScoring.semaforo(r.clasificacion);
+      const answered = (r.itemsDetalle || []).filter(it => it.respuesta).length;
+      if (answered > 0) {
+        scoreHtml = `
+          <div style="text-align:center;padding:var(--sp-sm) 0;margin-bottom:var(--sp-md);">
+            ${InvimaScoring.gaugeSvg(r.puntajeTotal, sem.color)}
+            <div style="margin-top:4px;font-size:11px;color:var(--color-ink3);">${answered}/${n} evaluados · ${_escAttr(r.clasificacion)}</div>
+          </div>`;
+      }
+    }
+    return `
+      <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:var(--sp-sm);line-height:1.5;">
+        Evaluación rápida con ${n} ítems INVIMA seleccionados (editable). Escala A / AR / I / N·A.
+      </div>
+      ${scoreHtml}
+      <button type="button" class="btn btn-primary" style="width:100%;margin-bottom:6px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+        onclick="ConfigurarPerfilRapido.abrir('eval')">📋 Evaluar perfil</button>
+      <button type="button" class="btn btn-outline" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+        onclick="ConfigurarPerfilRapido.abrir('config')">⚙️ Configurar selección</button>`;
+  }
+
+  function refreshPerfilCard() {
+    _setCardState('diagnostico', _diagOpen, _perfilBadgeInfo());
+    const inner = document.querySelector('#acc-body-diagnostico .acc-body-inner');
+    if (inner) inner.innerHTML = _renderPerfilBody();
+    _syncResultados();
+  }
+
   function _invimaResumenData() {
-    let base = 48;
+    let base = 28;
     let custom = 0;
     try {
       if (typeof InvimaCrud !== 'undefined') {
         InvimaCrud.loadBaseChecklist().catch(() => {});
         const r = InvimaCrud.resumen();
-        base = r.base || 48;
+        base = r.base || 28;
         custom = r.custom || 0;
       }
     } catch (_) { /* offline */ }
@@ -320,7 +386,7 @@ const Planificar = (() => {
 
   function toggle(key) {
     if (key === 'resultados' && !_resultadosData().rated.length) {
-      Router.toast('Guarda el diagnóstico con al menos 1 ítem calificado primero');
+      Router.toast('Evalúe el perfil sanitario con al menos 1 ítem A/AR/I/N·A primero');
       return;
     }
     _generalOpen    = key === 'general'      ? !_generalOpen    : false;
@@ -336,7 +402,7 @@ const Planificar = (() => {
 
   function openSection(key) {
     if (key === 'resultados' && !_resultadosData().rated.length) {
-      Router.toast('Guarda el diagnóstico con al menos 1 ítem calificado primero');
+      Router.toast('Evalúe el perfil sanitario con al menos 1 ítem A/AR/I/N·A primero');
       return;
     }
     _generalOpen    = key === 'general';
@@ -355,7 +421,7 @@ const Planificar = (() => {
 
   function _syncAccordion() {
     _setCardState('general', _generalOpen, _generalBadgeInfo());
-    _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
+    _setCardState('diagnostico', _diagOpen, _perfilBadgeInfo());
     _setCardState('marco', _marcoOpen, _marcoBadgeInfo());
     _setCardState('invima', _invimaOpen, _invimaBadgeInfo());
     _setCardState('vencimientos', _vencOpen, _vencBadgeInfo());
@@ -370,6 +436,61 @@ const Planificar = (() => {
 
   function _marcoBadgeInfo() {
     return { text: '10 categorías', cls: 'estado-chip estado-B', style: '' };
+  }
+
+  function _perfilResumenTable(i, ar, a) {
+    return `
+      <table style="width:100%;border-collapse:collapse;font-size:var(--text-xs);">
+        <thead><tr style="background:var(--emerald-2);color:#fff;">
+          <th style="padding:8px;text-align:left;">Indicador</th>
+          <th style="padding:8px;text-align:center;width:90px;">Cantidad</th>
+          <th style="padding:8px;text-align:left;">Estado</th>
+        </tr></thead>
+        <tbody>
+          <tr style="background:var(--color-white);">
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);font-weight:600;">Inaceptables (I)</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);text-align:center;font-weight:700;color:var(--color-deficiente);">${i.length}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);"><span class="estado-chip estado-D">Crítico</span></td>
+          </tr>
+          <tr style="background:var(--color-surface);">
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);font-weight:600;">Aceptables con requerimiento (AR)</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);text-align:center;font-weight:700;color:var(--color-regular);">${ar.length}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);"><span class="estado-chip estado-R">Por mejorar</span></td>
+          </tr>
+          <tr style="background:var(--color-white);">
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);font-weight:600;">Aceptables (A / N·A)</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);text-align:center;font-weight:700;color:var(--color-bueno);">${a.length}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);"><span class="estado-chip estado-B">Conforme</span></td>
+          </tr>
+        </tbody>
+      </table>`;
+  }
+
+  function _perfilHallazgosTable(rows) {
+    return `
+      <table style="width:100%;border-collapse:collapse;font-size:var(--text-xs);">
+        <thead><tr style="background:var(--emerald-2);color:#fff;">
+          <th style="padding:8px;text-align:left;width:28px;">#</th>
+          <th style="padding:8px;text-align:left;">Ítem evaluado</th>
+          <th style="padding:8px;text-align:left;width:88px;">Calificación</th>
+          <th style="padding:8px;text-align:left;width:72px;">Prioridad</th>
+          <th style="padding:8px;text-align:left;">Hallazgo / acción</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map((it, idx) => {
+            const cls   = it.calificacion === 'I' ? 'estado-D' : 'estado-R';
+            const label = it.calificacion === 'I' ? 'Inaceptable' : 'A/R';
+            return `
+          <tr style="background:${idx % 2 === 0 ? 'var(--color-white)' : 'var(--color-surface)'};">
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);font-weight:600;">${idx + 1}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);font-weight:600;">${_escAttr(it.codigo || '')} ${_escAttr(it.texto)}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);"><span class="estado-chip ${cls}">${label}</span></td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${_escAttr(it.prioridad || '—')}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink2);">${_escAttr(it.accion || '—')}</td>
+          </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
   }
 
   function _diagResumenTable(d, r, b) {
@@ -518,41 +639,50 @@ const Planificar = (() => {
   }
 
   function _resultadosData() {
-    const est     = _currentEst();
-    const diag    = DiagnosticoInicial.getDiagnostico(est);
-    const catMap  = Object.fromEntries(diag.catalog.map(c => [c.id, c]));
-    const rated   = diag.items
+    if (typeof InvimaCrud === 'undefined' || typeof InvimaScoring === 'undefined') {
+      return { rated: [], i: [], ar: [], a: [], critList: [], score: null, clasificacion: '' };
+    }
+    const estId = _estIdInvima();
+    InvimaCrud.getConfigINVIMA(estId);
+    const ev = InvimaScoring.getEvaluacion(estId);
+    const r = InvimaScoring.calcularPerfilRapido(ev.respuestas, _perfilMeta(), estId);
+    const hallazgos = ev.hallazgos || {};
+    const rated = (r.itemsDetalle || [])
+      .filter(it => it.respuesta)
       .map(it => ({
-        ...it,
-        texto: catMap[it.id]?.texto || '',
-        norma: catMap[it.id]?.norma || '',
-      }))
-      .filter(it => it.calificacion && it.texto);
-    const d = rated.filter(it => it.calificacion === 'D');
-    const r = rated.filter(it => it.calificacion === 'R');
-    const b = rated.filter(it => it.calificacion === 'B');
+        id: it.id,
+        texto: it.nombre,
+        norma: it.normativa,
+        calificacion: it.respuesta,
+        prioridad: InvimaScoring.prioridadPerfil(it.respuesta),
+        accion: hallazgos[it.id] || '',
+        codigo: it.codigo,
+      }));
+    const i = rated.filter(it => it.calificacion === 'I');
+    const ar = rated.filter(it => it.calificacion === 'AR');
+    const a = rated.filter(it => it.calificacion === 'A' || it.calificacion === 'NA');
     const prioW = { Alta: 2, Media: 1, Baja: 0 };
-    const critList = [...d, ...r].sort((x, y) => {
-      const wx = (x.calificacion === 'D' ? 10 : 0) + (prioW[x.prioridad] ?? -1);
-      const wy = (y.calificacion === 'D' ? 10 : 0) + (prioW[y.prioridad] ?? -1);
+    const critList = [...i, ...ar].sort((x, y) => {
+      const wx = (x.calificacion === 'I' ? 10 : 0) + (prioW[x.prioridad] ?? -1);
+      const wy = (y.calificacion === 'I' ? 10 : 0) + (prioW[y.prioridad] ?? -1);
       return wy - wx;
     });
-    return { rated, d, r, b, critList };
+    return { rated, i, ar, a, critList, score: r.puntajeTotal, clasificacion: r.clasificacion };
   }
 
   function _resultadosBadgeInfo() {
-    const { rated, d, r } = _resultadosData();
-    if (!rated.length) return { text: 'Sin diagnóstico aún', cls: '', style: _pendienteStyle() };
-    if (d.length) return { text: `${d.length} crítico${d.length !== 1 ? 's' : ''}`, cls: 'estado-chip estado-D', style: '' };
-    if (r.length) return { text: `${r.length} por mejorar`, cls: 'estado-chip estado-R', style: '' };
-    return { text: 'Todo en orden', cls: 'estado-chip estado-B', style: '' };
+    const { rated, i, ar, score, clasificacion } = _resultadosData();
+    if (!rated.length) return { text: 'Sin evaluación aún', cls: '', style: _pendienteStyle() };
+    if (i.length) return { text: `${i.length} inaceptable${i.length !== 1 ? 's' : ''}`, cls: 'estado-chip estado-D', style: '' };
+    if (ar.length) return { text: `${score}% · ${clasificacion}`, cls: 'estado-chip estado-R', style: '' };
+    return { text: `${score}% · Favorable`, cls: 'estado-chip estado-B', style: '' };
   }
 
   function _renderResultadosBody() {
-    const { rated, d, r, b, critList } = _resultadosData();
+    const { rated, i, ar, a, critList, score, clasificacion } = _resultadosData();
     if (!rated.length) {
       return `<div style="font-size:var(--text-sm);color:var(--color-ink3);text-align:center;padding:var(--sp-md) 0;">
-        Aún no hay ítems calificados. Guarda el diagnóstico con al menos una calificación para ver resultados aquí.</div>`;
+        Aún no hay ítems calificados. Evalúe el perfil sanitario inicial con al menos una calificación A/AR/I/N·A.</div>`;
     }
 
     const estNombre = _escAttr(_val('inp-nombre') || 'Establecimiento');
@@ -565,19 +695,19 @@ const Planificar = (() => {
           <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.85;">
             ECODESA · SaniCheck · Documento oficial</div>
           <div style="font-size:var(--text-base);font-weight:700;margin-top:4px;letter-spacing:-0.01em;">
-            Resultados del Diagnóstico Inicial</div>
+            Resultados del Perfil Sanitario Inicial</div>
         </div>
         <div style="padding:10px 14px;background:var(--color-surface);border-bottom:1px solid var(--color-border);
           font-size:var(--text-xs);color:var(--color-ink3);line-height:1.6;">
           <strong style="color:var(--color-ink);">Establecimiento:</strong> ${estNombre}<br>
           <strong style="color:var(--color-ink);">NIT:</strong> ${estNit} ·
-          <strong style="color:var(--color-ink);">Fecha de consulta:</strong> ${fecha}
+          <strong style="color:var(--color-ink);">Puntaje:</strong> ${score}% · ${ _escAttr(clasificacion) } ·
+          <strong style="color:var(--color-ink);">Fecha:</strong> ${fecha}
         </div>
         <div style="padding:12px 14px;font-size:var(--text-xs);color:var(--color-ink3);font-style:italic;
           border-bottom:1px solid var(--color-border);">
-          Resumen consolidado del perfil sanitario inicial. Los hallazgos deficientes y regulares requieren seguimiento
-          según prioridad automática asignada (Alta · Media · Baja).</div>
-        <div style="overflow-x:auto;">${_diagResumenTable(d, r, b)}</div>
+          Resumen del perfil rápido INVIMA (ítems seleccionados). Los hallazgos I y AR requieren seguimiento según prioridad.</div>
+        <div style="overflow-x:auto;">${_perfilResumenTable(i, ar, a)}</div>
       </div>`;
 
     if (!critList.length) {
@@ -587,7 +717,7 @@ const Planificar = (() => {
             <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-bueno);margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:6px;">
               ${AppIcons.icon('check', 14)} Sin hallazgos críticos
             </div>
-              Mantener buenas prácticas y actualizar el diagnóstico ante cambios en infraestructura o procesos.</div>
+              Mantener buenas prácticas y actualizar el perfil ante cambios en infraestructura o procesos.</div>
           </div>
         </div>`;
     }
@@ -599,9 +729,9 @@ const Planificar = (() => {
           <span style="font-size:var(--text-sm);font-weight:700;color:var(--color-ink);">
             Hallazgos Prioritarios (${critList.length})</span>
           <span style="font-size:var(--text-xs);color:var(--color-ink3);">
-            ${d.length} crítico${d.length !== 1 ? 's' : ''} · ${r.length} por mejorar</span>
+            ${i.length} inaceptable${i.length !== 1 ? 's' : ''} · ${ar.length} con requerimiento</span>
         </div>
-        <div style="overflow-x:auto;">${_diagHallazgosTable(critList)}</div>
+        <div style="overflow-x:auto;">${_perfilHallazgosTable(critList)}</div>
       </div>`;
   }
 
@@ -1331,6 +1461,41 @@ const Planificar = (() => {
     }).join('');
   }
 
+  function _buildDonutPerfil(counts) {
+    const segs = [
+      { k: 'A', color: '#065F46', label: 'Aceptable' },
+      { k: 'AR', color: '#D97706', label: 'A/R' },
+      { k: 'I', color: '#991B1B', label: 'Inaceptable' },
+      { k: 'NA', color: '#9CA3AF', label: 'N/A' },
+    ].filter(s => counts[s.k] > 0);
+    const total = segs.reduce((n, s) => n + counts[s.k], 0);
+    if (!total) return '<div style="font-size:11px;color:#6B7280;text-align:center;padding:24px;">Sin ítems evaluados</div>';
+    let angle = -90;
+    const paths = segs.map(s => {
+      const sweep = (counts[s.k] / total) * 360;
+      const d = _arcSegment(70, 70, 56, 34, angle, angle + sweep - 0.2);
+      angle += sweep;
+      return `<path d="${d}" fill="${s.color}"/>`;
+    }).join('');
+    const legend = segs.map(s => `
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:10px;">
+        <span style="width:10px;height:10px;border-radius:2px;background:${s.color};flex-shrink:0;"></span>
+        <span style="flex:1;color:#374151;">${s.label}</span>
+        <strong style="color:#0A2E23;">${counts[s.k]}</strong>
+        <span style="color:#6B7280;">(${Math.round(counts[s.k] / total * 100)}%)</span>
+      </div>`).join('');
+    return `
+      <div style="display:flex;align-items:center;gap:20px;">
+        <svg width="140" height="140" viewBox="0 0 140 140" style="flex-shrink:0;">
+          ${paths}
+          <circle cx="70" cy="70" r="34" fill="#fff"/>
+          <text x="70" y="66" text-anchor="middle" font-size="18" font-weight="800" fill="#0A2E23">${total}</text>
+          <text x="70" y="82" text-anchor="middle" font-size="9" fill="#6B7280">ítems</text>
+        </svg>
+        <div style="flex:1;">${legend}</div>
+      </div>`;
+  }
+
   function _buildDonutSvg(counts) {
     const segs = [
       { k: 'B', color: '#065F46', label: 'Bueno' },
@@ -1367,10 +1532,10 @@ const Planificar = (() => {
   }
 
   function _buildPdfResultadosDiagnostico() {
-    const { rated, d, r, b, critList } = _resultadosData();
+    const { rated, i, ar, a, critList, score, clasificacion } = _resultadosData();
     if (!rated.length) {
       return `<div style="border:1px solid #E5E7EB;border-radius:8px;padding:16px;text-align:center;color:#6B7280;font-size:11px;">
-        Aún no hay ítems calificados. Guarda el diagnóstico con al menos una calificación para ver resultados aquí.</div>`;
+        Aún no hay ítems calificados. Evalúe el perfil sanitario con al menos una calificación A/AR/I/N·A.</div>`;
     }
 
     const estNombre = _escAttr(_draftVal('inp-nombre') || 'Establecimiento');
@@ -1386,18 +1551,18 @@ const Planificar = (() => {
         </tr></thead>
         <tbody>
           <tr style="background:#fff;">
-            <td style="padding:8px;border-bottom:1px solid #E5E7EB;font-weight:600;">Aspectos deficientes</td>
-            <td style="padding:8px;border-bottom:1px solid #E5E7EB;text-align:center;font-weight:700;color:#991B1B;">${d.length}</td>
+            <td style="padding:8px;border-bottom:1px solid #E5E7EB;font-weight:600;">Inaceptables (I)</td>
+            <td style="padding:8px;border-bottom:1px solid #E5E7EB;text-align:center;font-weight:700;color:#991B1B;">${i.length}</td>
             <td style="padding:8px;border-bottom:1px solid #E5E7EB;"><span class="chip chip-d">Crítico</span></td>
           </tr>
           <tr style="background:#F9FAFB;">
-            <td style="padding:8px;border-bottom:1px solid #E5E7EB;font-weight:600;">Aspectos regulares</td>
-            <td style="padding:8px;border-bottom:1px solid #E5E7EB;text-align:center;font-weight:700;color:#D97706;">${r.length}</td>
+            <td style="padding:8px;border-bottom:1px solid #E5E7EB;font-weight:600;">Aceptables con requerimiento (AR)</td>
+            <td style="padding:8px;border-bottom:1px solid #E5E7EB;text-align:center;font-weight:700;color:#D97706;">${ar.length}</td>
             <td style="padding:8px;border-bottom:1px solid #E5E7EB;"><span class="chip chip-r">Por mejorar</span></td>
           </tr>
           <tr style="background:#fff;">
-            <td style="padding:8px;border-bottom:1px solid #E5E7EB;font-weight:600;">Aspectos en buen estado</td>
-            <td style="padding:8px;border-bottom:1px solid #E5E7EB;text-align:center;font-weight:700;color:#065F46;">${b.length}</td>
+            <td style="padding:8px;border-bottom:1px solid #E5E7EB;font-weight:600;">Aceptables (A / N·A)</td>
+            <td style="padding:8px;border-bottom:1px solid #E5E7EB;text-align:center;font-weight:700;color:#065F46;">${a.length}</td>
             <td style="padding:8px;border-bottom:1px solid #E5E7EB;"><span class="chip chip-b">Conforme</span></td>
           </tr>
         </tbody>
@@ -1409,18 +1574,18 @@ const Planificar = (() => {
           <div style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;opacity:0.85;">
             ECODESA · SaniCheck · Documento oficial</div>
           <div style="font-size:14px;font-weight:700;margin-top:4px;letter-spacing:-0.01em;">
-            Resultado del Diagnóstico Inicial</div>
+            Resultado del Perfil Sanitario Inicial</div>
         </div>
         <div style="padding:10px 14px;background:#F9FAFB;border-bottom:1px solid #E5E7EB;
           font-size:10px;color:#6B7280;line-height:1.6;">
           <strong style="color:#0A2E23;">Establecimiento:</strong> ${estNombre}<br>
           <strong style="color:#0A2E23;">NIT:</strong> ${estNit} ·
-          <strong style="color:#0A2E23;">Fecha de consulta:</strong> ${fecha}
+          <strong style="color:#0A2E23;">Puntaje:</strong> ${score}% · ${_escAttr(clasificacion)} ·
+          <strong style="color:#0A2E23;">Fecha:</strong> ${fecha}
         </div>
         <div style="padding:12px 14px;font-size:10px;color:#6B7280;font-style:italic;
           border-bottom:1px solid #E5E7EB;">
-          Resumen consolidado del perfil sanitario inicial. Los hallazgos deficientes y regulares requieren seguimiento
-          según prioridad automática asignada (Alta · Media · Baja).</div>
+          Perfil rápido INVIMA. Los hallazgos I y AR requieren seguimiento según prioridad (Alta · Media · Baja).</div>
         <div style="overflow-x:auto;">${resumenTable}</div>
       </div>`;
 
@@ -1430,22 +1595,22 @@ const Planificar = (() => {
           <div style="padding:14px 16px;background:#D1FAE5;text-align:center;">
             <div style="font-size:12px;font-weight:700;color:#065F46;margin-bottom:4px;">✓ Sin hallazgos críticos</div>
             <div style="font-size:10px;color:#065F46;">
-              Mantener buenas prácticas y actualizar el diagnóstico ante cambios en infraestructura o procesos.</div>
+              Mantener buenas prácticas y actualizar el perfil ante cambios en infraestructura o procesos.</div>
           </div>
         </div>`;
     }
 
-    const hallazgosRows = critList.map((it, i) => {
-      const isD   = it.calificacion === 'D';
-      const chip  = isD ? 'chip-d' : 'chip-r';
-      const label = isD ? 'Deficiente' : 'Regular';
+    const hallazgosRows = critList.map((it, idx) => {
+      const isI   = it.calificacion === 'I';
+      const chip  = isI ? 'chip-d' : 'chip-r';
+      const label = isI ? 'Inaceptable' : 'A/R';
       return `
-        <tr style="background:${i % 2 === 0 ? '#fff' : '#F9FAFB'};">
-          <td style="padding:8px;border-bottom:1px solid #E5E7EB;color:#6B7280;font-weight:600;">${i + 1}</td>
-          <td style="padding:8px;border-bottom:1px solid #E5E7EB;font-weight:600;">${_escAttr(it.texto)}</td>
+        <tr style="background:${idx % 2 === 0 ? '#fff' : '#F9FAFB'};">
+          <td style="padding:8px;border-bottom:1px solid #E5E7EB;color:#6B7280;font-weight:600;">${idx + 1}</td>
+          <td style="padding:8px;border-bottom:1px solid #E5E7EB;font-weight:600;">${_escAttr(it.codigo || '')} ${_escAttr(it.texto)}</td>
           <td style="padding:8px;border-bottom:1px solid #E5E7EB;"><span class="chip ${chip}">${label}</span></td>
           <td style="padding:8px;border-bottom:1px solid #E5E7EB;color:#6B7280;">${_escAttr(it.prioridad || '—')}</td>
-          <td style="padding:8px;border-bottom:1px solid #E5E7EB;color:#374151;">${_escAttr(it.accion || it.condicion || '—')}</td>
+          <td style="padding:8px;border-bottom:1px solid #E5E7EB;color:#374151;">${_escAttr(it.accion || '—')}</td>
         </tr>`;
     }).join('');
 
@@ -1453,10 +1618,10 @@ const Planificar = (() => {
       <table style="width:100%;border-collapse:collapse;font-size:10px;">
         <thead><tr style="background:#0A7350;color:#fff;">
           <th style="padding:8px;text-align:left;width:28px;">#</th>
-          <th style="padding:8px;text-align:left;">Aspecto evaluado</th>
+          <th style="padding:8px;text-align:left;">Ítem evaluado</th>
           <th style="padding:8px;text-align:left;width:88px;">Calificación</th>
           <th style="padding:8px;text-align:left;width:72px;">Prioridad</th>
-          <th style="padding:8px;text-align:left;">Acción requerida</th>
+          <th style="padding:8px;text-align:left;">Hallazgo</th>
         </tr></thead>
         <tbody>${hallazgosRows}</tbody>
       </table>`;
@@ -1468,7 +1633,7 @@ const Planificar = (() => {
           <span style="font-size:12px;font-weight:700;color:#0A2E23;">
             Hallazgos Prioritarios (${critList.length})</span>
           <span style="font-size:10px;color:#6B7280;">
-            ${d.length} crítico${d.length !== 1 ? 's' : ''} · ${r.length} por mejorar</span>
+            ${i.length} inaceptable${i.length !== 1 ? 's' : ''} · ${ar.length} con requerimiento</span>
         </div>
         <div style="overflow-x:auto;">${hallazgosTable}</div>
       </div>`;
@@ -1481,22 +1646,16 @@ const Planificar = (() => {
     const ciudad  = _draftVal('inp-ciudad') || '';
     const fechaGen = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-    const saved   = DiagnosticoInicial.getDiagnostico(est);
-    const catalog = saved.catalog;
-    const catMap  = Object.fromEntries(catalog.map(c => [c.id, c]));
-    const rated   = saved.items
-      .map(it => ({
-        ...it,
-        texto: catMap[it.id]?.texto || '',
-        norma: catMap[it.id]?.norma || '',
-      }))
-      .filter(it => it.calificacion);
-    const b  = rated.filter(it => it.calificacion === 'B').length;
-    const r  = rated.filter(it => it.calificacion === 'R').length;
-    const d  = rated.filter(it => it.calificacion === 'D').length;
-    const na = rated.filter(it => it.calificacion === 'NA').length;
-    const pct = _calcDiagPct(rated);
-    const estG = _estadoGeneral(pct);
+    const perfilData = _resultadosData();
+    const rated   = perfilData.rated;
+    const aCnt  = rated.filter(it => it.calificacion === 'A').length;
+    const arCnt = rated.filter(it => it.calificacion === 'AR').length;
+    const iCnt  = rated.filter(it => it.calificacion === 'I').length;
+    const naCnt = rated.filter(it => it.calificacion === 'NA').length;
+    const pct = perfilData.score || 0;
+    const estG = { label: perfilData.clasificacion || '—' };
+    const perfilTotal = typeof InvimaCrud !== 'undefined'
+      ? InvimaCrud.getPerfilRapido(_estIdInvima()).length : 8;
 
     const v    = _venc || Vencimientos.getVencimientos(est);
     const dash = Vencimientos.getDashboard(v);
@@ -1527,25 +1686,25 @@ const Planificar = (() => {
       </div>
 
       <div class="main-section">
-        <div class="main-section-title">Sección 1 · Resultados del Diagnóstico Inicial</div>
+        <div class="main-section-title">Sección 1 · Perfil Sanitario Inicial (INVIMA)</div>
         <div class="main-section-body">
           <div class="sub-section-h">Indicadores clave</div>
           <div class="kpi-grid kpi-grid-2">
             <div class="kpi" style="border-top:3px solid #0A7350;">
-              <div class="kpi-lbl">Cumplimiento general</div>
+              <div class="kpi-lbl">Puntaje perfil rápido</div>
               <div class="kpi-val" style="color:#0A7350;">${pct}%</div>
               <div class="kpi-sub">${estG.label}</div>
             </div>
             <div class="kpi" style="border-top:3px solid #0E86C8;">
-              <div class="kpi-lbl">Aspectos evaluados</div>
+              <div class="kpi-lbl">Ítems evaluados</div>
               <div class="kpi-val" style="color:#0E86C8;">${rated.length}</div>
-              <div class="kpi-sub">de ${catalog.length} ítems diagnóstico</div>
+              <div class="kpi-sub">de ${perfilTotal} ítems en perfil</div>
             </div>
           </div>
 
-          <div class="sub-section-h">Distribución B / R / D / N·A</div>
+          <div class="sub-section-h">Distribución A / AR / I / N·A</div>
           <div class="panel">
-            ${_buildDonutSvg({ B: b, R: r, D: d, NA: na })}
+            ${_buildDonutPerfil({ A: aCnt, AR: arCnt, I: iCnt, NA: naCnt })}
           </div>
 
           <div class="sub-section-h">Cuadro de resultados</div>
@@ -2002,7 +2161,7 @@ const Planificar = (() => {
       it.accion    = '';
     }
     it.prioridad = DiagnosticoInicial.prioridadAuto(valor);
-    _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
+    _setCardState('diagnostico', _diagOpen, _perfilBadgeInfo());
     _syncResultados();
     _refreshDiagnosticoBody();
     _scheduleDiagSave();
@@ -2178,7 +2337,7 @@ const Planificar = (() => {
 
     cerrarDiagItemModal();
     _persistDiagnostico();
-    _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
+    _setCardState('diagnostico', _diagOpen, _perfilBadgeInfo());
     _syncResultados();
     _refreshDiagnosticoBody();
     _schedulePlanificarDraft();
@@ -2385,8 +2544,7 @@ const Planificar = (() => {
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  return { render, attach, toggle, openSection, actualizarDiagItem, guardarDiagnostico, diagEvaluar, diagNavegar, marcoSub,
-    abrirDiagItemModal, cerrarDiagItemModal, setDiagItemModalMode, diagModalEvaluar, guardarDiagItemModal,
+  return { render, attach, toggle, openSection, refreshPerfilCard, marcoSub,
     actualizarVenc, guardarVencimientos, vencTab, vencFiltro, subirSoporteVenc, eliminarSoporteVenc, verSoporteVenc,
     agregarTrabajador, actualizarTrabajador, agregarEquipo, actualizarEquipo, exportarDashboardPDF,
     toggleReqForm, cancelarRequerimiento, crearRequerimiento, actualizarRequerimiento, eliminarRequerimiento, toggleReqSinVencNuevo };
