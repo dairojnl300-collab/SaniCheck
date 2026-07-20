@@ -65,6 +65,13 @@ function assert(cond, msg) {
   const perfil = IC.getPerfilRapido(EST);
   assert(perfil.length === 8, 'seed perfil rápido = 8 ítems default');
   assert(IC.PERFIL_RAPIDO_DEFAULT_CODIGOS.length === 8, '8 códigos default definidos');
+  const codigos = perfil.map(it => it.codigo).sort();
+  const expected = [...IC.PERFIL_RAPIDO_DEFAULT_CODIGOS].sort();
+  assert(JSON.stringify(codigos) === JSON.stringify(expected), 'códigos default coinciden con seed');
+  const byCat = {};
+  perfil.forEach(it => { byCat[it.categoria_id] = (byCat[it.categoria_id] || 0) + 1; });
+  assert(byCat.cat_03 >= 1, 'categoría Personal representada');
+  assert(byCat.cat_06 >= 1, 'categoría Verificación representada');
 
   const first = perfil[0];
   try {
