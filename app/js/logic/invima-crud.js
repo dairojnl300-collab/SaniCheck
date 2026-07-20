@@ -81,6 +81,7 @@ const InvimaCrud = (() => {
           codigo: it.codigo,
           nombre: it.nombre,
           normativa: it.normativa,
+          descripcion: it.descripcion || '',
           peso: cat.peso || 1,
           custom: false,
           estado: 'activo',
