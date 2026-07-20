@@ -35,8 +35,8 @@ const ConfigurarInvima = (() => {
   function _catLabel(id) {
     const c = _cats.find(x => x.id === id);
     if (!c) return id;
-    const short = { cat_01: 'Edificación', cat_02: 'Saneamiento', cat_03: 'Personal',
-      cat_04: 'Equipos', cat_05: 'Almacenamiento', cat_06: 'Verificación' };
+    const short = { cat_01: 'Edificación', cat_02: 'Equipos', cat_03: 'Personal',
+      cat_04: 'Req. higiénicos', cat_05: 'Saneamiento', cat_06: 'Verificación' };
     return short[id] || c.nombre.slice(0, 14);
   }
 

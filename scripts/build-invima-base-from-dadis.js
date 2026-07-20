@@ -1,6 +1,7 @@
 /**
  * Genera app/data/invima-checklist-base-v1.0.json desde dadis-config.json
- * + categoría 6 completada con ítems de verificación INVIMA legacy.
+ * reordenado según hoja Instructivo (orden literal) + pesos por tema (Tablas)
+ * + categoría 6 verificación INVIMA legacy.
  * Run: node scripts/build-invima-base-from-dadis.js
  */
 const fs = require('fs');
@@ -9,7 +10,38 @@ const path = require('path');
 const root = path.join(__dirname, '..');
 const dadis = JSON.parse(fs.readFileSync(path.join(root, 'app/data/dadis-config.json'), 'utf8'));
 
-const CAT_IDS = ['cat_01', 'cat_02', 'cat_03', 'cat_04', 'cat_05', 'cat_06'];
+const INSTRUCTIVO_CATS = [
+  {
+    id: 'cat_01',
+    nombre: 'EDIFICACIÓN E INSTALACIONES',
+    peso: 10,
+    codigos: ['1.1', '1.2', '1.3', '1.4'],
+  },
+  {
+    id: 'cat_02',
+    nombre: 'EQUIPOS Y UTENSILIOS',
+    peso: 10,
+    codigos: ['2.1', '2.2'],
+  },
+  {
+    id: 'cat_03',
+    nombre: 'PERSONAL MANIPULADOR DE ALIMENTOS',
+    peso: 20,
+    codigos: ['3.1', '3.2', '3.3', '3.4'],
+  },
+  {
+    id: 'cat_04',
+    nombre: 'REQUISITOS HIGIÉNICOS',
+    peso: 20,
+    codigos: ['4.1', '4.2', '4.3', '4.4'],
+  },
+  {
+    id: 'cat_05',
+    nombre: 'SANEAMIENTO',
+    peso: 30,
+    codigos: ['5.1', '5.2', '5.3', '5.4', '5.5', '5.6'],
+  },
+];
 
 const CAT6_LEGACY = [
   { codigo: '6.1', nombre: 'Plan de autocontrol', normativa: 'Res. 2674/2013 — Programa de autocontrol y verificación del cumplimiento sanitario' },
@@ -27,9 +59,10 @@ function itemId(codigo) {
 }
 
 function mapItem(it) {
+  const codigo = it.id || it.codigo;
   return {
-    id: itemId(it.id || it.codigo),
-    codigo: it.id || it.codigo,
+    id: itemId(codigo),
+    codigo,
     nombre: it.nombre,
     normativa: it.normativa,
     descripcion: it.descripcion || '',
@@ -37,31 +70,41 @@ function mapItem(it) {
   };
 }
 
-const categorias = (dadis.categorias || []).map((cat, idx) => {
-  const catId = CAT_IDS[idx] || ('cat_' + String(idx + 1).padStart(2, '0'));
-  let items = (cat.items || []).map(mapItem);
-  if (Number(cat.id) === 6 && !items.length) {
-    items = CAT6_LEGACY.map(it => ({
-      id: itemId(it.codigo),
-      codigo: it.codigo,
-      nombre: it.nombre,
-      normativa: it.normativa,
-      descripcion: '',
-      custom: false,
-    }));
-  }
-  return {
-    id: catId,
-    nombre: cat.nombre,
-    peso: cat.peso,
-    items,
-  };
+const byCodigo = {};
+(dadis.categorias || []).forEach(cat => {
+  (cat.items || []).forEach(it => {
+    const codigo = it.id || it.codigo;
+    byCodigo[codigo] = mapItem(it);
+  });
+});
+
+const categorias = INSTRUCTIVO_CATS.map(def => {
+  const items = def.codigos.map(cod => {
+    const it = byCodigo[cod];
+    if (!it) throw new Error('Ítem no encontrado en dadis-config: ' + cod);
+    return it;
+  });
+  return { id: def.id, nombre: def.nombre, peso: def.peso, items };
+});
+
+categorias.push({
+  id: 'cat_06',
+  nombre: 'VERIFICACION SOBRE LOS ALIMENTOS',
+  peso: 10,
+  items: CAT6_LEGACY.map(it => ({
+    id: itemId(it.codigo),
+    codigo: it.codigo,
+    nombre: it.nombre,
+    normativa: it.normativa,
+    descripcion: '',
+    custom: false,
+  })),
 });
 
 const out = {
   meta: {
-    version: '1.1',
-    fuente: 'Fusión dadis-config.json (Instructivo Dadys.xls) + cat. 6 verificación INVIMA',
+    version: '1.2',
+    fuente: 'Orden literal hoja Instructivo (Dadys.xls) + pesos por tema hoja Tablas + cat. 6 verificación',
     escala_leyenda: dadis.meta?.escala_leyenda || {},
   },
   categorias,
