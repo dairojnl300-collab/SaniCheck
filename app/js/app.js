@@ -152,11 +152,11 @@
 
     const phvaGrid = `<div class="phva-grid">${['P', 'H', 'V', 'A'].map(k => {
       const m = FASE_META[k];
-      return `<div class="phva-tile phva-tile-${k}" onclick="Router.go('${m.screen}')">
+      return `<div class="phva-tile phva-tile-${k} card-fixed-tile" onclick="Router.go('${m.screen}')">
         <div class="phva-tile-icon">${FASE_ICONS[k]}</div>
         <div class="phva-tile-text">
           <span class="phva-tile-fase">${m.fase}</span>
-          <span class="phva-tile-label">${m.label}</span>
+          <span class="phva-tile-label card-text-clamp card-text-clamp-2">${m.label}</span>
         </div>
       </div>`;
     }).join('')}</div>`;
@@ -173,9 +173,9 @@
           const pct   = total ? Math.round((ev.length / total) * 100) : 0;
           const est   = ins.estado_general;
           const barColor = ESTADO_COLOR[est] || 'var(--color-border)';
-          return `<div class="inspeccion-card" style="border-left-color:${barColor}" onclick="_abrirInsp('${ins.id}')">
+          return `<div class="inspeccion-card card-fixed-md" style="border-left-color:${barColor}" onclick="_abrirInsp('${ins.id}')">
             <div class="inspeccion-card-header">
-              <div class="inspeccion-card-nombre">${_esc(ins.establecimiento.nombre)}</div>
+              <div class="inspeccion-card-nombre card-text-clamp card-text-clamp-2">${_esc(ins.establecimiento.nombre)}</div>
               <div class="inspeccion-card-fecha">${ins.inspeccion.fecha}</div>
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -217,7 +217,7 @@
           style="display:inline-flex;align-items:center;justify-content:center;gap:8px;${topeFull ? 'opacity:0.5;cursor:not-allowed;' : ''}">
           ${AppIcons.row('plus', 'Nueva Inspección PSB', 16)}
         </button>
-        <button type="button" onclick="Router.go('dadis')"
+        <button type="button" class="home-sim-card card-fixed-row" onclick="Router.go('dadis')"
           style="margin-top:10px;width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;
             background:linear-gradient(135deg,rgba(27,67,50,0.08),rgba(82,183,136,0.12));
             border:1px solid rgba(82,183,136,0.35);border-radius:var(--radius-md);cursor:pointer;text-align:left;">
@@ -225,9 +225,9 @@
             display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
             ${AppIcons.icon('shieldCheck', 20)}
           </span>
-          <span style="flex:1;min-width:0;">
-            <span style="display:block;font-size:14px;font-weight:800;color:var(--color-brand);">Simulador DADIS</span>
-            <span style="display:block;font-size:11px;color:var(--color-ink3);margin-top:2px;">Simulación técnica · inspección sanitaria con enfoque de riesgo</span>
+          <span class="home-sim-card-text" style="flex:1;min-width:0;">
+            <span class="home-sim-card-title card-text-clamp card-text-clamp-1" style="display:block;font-size:14px;font-weight:800;color:var(--color-brand);">Simulador INVIMA</span>
+            <span class="home-sim-card-sub card-text-clamp card-text-clamp-1" style="display:block;font-size:11px;color:var(--color-ink3);margin-top:2px;">Evaluación rápida</span>
           </span>
           <span style="color:var(--color-ink3);">${AppIcons.icon('clipboardCheck', 18)}</span>
         </button>

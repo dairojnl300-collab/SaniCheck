@@ -171,7 +171,7 @@ const DadisSimulador = (() => {
       const root = document.getElementById('dadis-root');
       if (root) {
         root.innerHTML = `<div style="padding:var(--sp-lg);">
-          <div class="screen-title">Simulador DADIS</div>
+          <div class="screen-title">Simulador INVIMA</div>
           <p style="color:var(--color-deficiente);margin-top:12px;">No se pudo cargar la configuración: ${_esc(e.message)}</p>
           <button class="btn btn-outline" onclick="Router.go('home')">Volver</button>
         </div>`;
@@ -202,8 +202,8 @@ const DadisSimulador = (() => {
       <div class="screen-header">
         <div class="screen-fase-badge" style="background:rgba(27,67,50,0.12);color:var(--color-brand);display:inline-flex;align-items:center;gap:6px;">
           ${AppIcons.icon('shieldCheck', 12)} SIMULACIÓN TÉCNICA</div>
-        <div class="screen-title">Simulador DADIS</div>
-        <div class="screen-subtitle">${_esc(sub || 'Inspección sanitaria con enfoque de riesgo')}</div>
+        <div class="screen-title">Simulador INVIMA</div>
+        <div class="screen-subtitle">${_esc(sub || 'Simulación técnica · evaluación rápida')}</div>
       </div>`;
   }
 
@@ -211,7 +211,7 @@ const DadisSimulador = (() => {
     const leyenda = _cfg.meta?.escala_leyenda || {};
     const cats = (_cfg.categorias || []).map(cat => _renderCat(cat)).join('');
     return `
-      ${_header('Acta de inspección sanitaria · Enfoque DADIS')}
+      ${_header('Simulación técnica · evaluación rápida')}
       <div style="padding:0 var(--sp-md) var(--sp-lg);">
         <div class="card" style="padding:var(--sp-md);margin-bottom:var(--sp-md);">
           <div style="font-size:11px;font-weight:700;color:var(--color-ink3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">
@@ -568,7 +568,7 @@ const DadisSimulador = (() => {
     const body = `
       <div class="hdr">
         <div class="hdr-kicker">SaniCheck · ECODESA</div>
-        <div class="hdr-title">Simulación de Inspección Sanitaria — Enfoque DADIS</div>
+        <div class="hdr-title">Simulador INVIMA — Simulación de Inspección Sanitaria</div>
         <div class="hdr-sub">${_esc(_meta.establecimiento || 'Establecimiento')} · ${_esc(_meta.fecha || '')}</div>
         <div class="hdr-date">Generado ${fechaGen}</div>
       </div>
@@ -618,7 +618,7 @@ const DadisSimulador = (() => {
       </div>`;
 
     win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
-      <title>Simulación DADIS — ${_esc(_meta.establecimiento || 'SaniCheck')}</title>
+      <title>Simulador INVIMA — ${_esc(_meta.establecimiento || 'SaniCheck')}</title>
       <style>
         *{box-sizing:border-box;margin:0;padding:0;}
         body{font-family:'Segoe UI',Arial,sans-serif;padding:20px;color:#0A2E23;background:#F8FAFC;font-size:11px;}

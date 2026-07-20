@@ -183,25 +183,23 @@ const Planificar = (() => {
         <div class="screen-subtitle">Complete los datos para iniciar la inspección PSB</div>
       </div>
 
-      ${_renderAccordionCard('general', 'Datos Generales del Establecimiento',
+      ${_renderAccordionCard('general', 'Datos Generales',
         'building', 'var(--color-planificar)', _generalBadgeInfo(), _generalOpen, _renderGeneralForm())}
 
-      ${_renderAccordionCard('diagnostico', 'Perfil Sanitario Inicial',
-        'clipboardCheck', 'var(--color-accent)', _perfilBadgeInfo(), _diagOpen, _renderPerfilBody(),
-        false, 'Triage A/AR/I · Res. 2674/2013')}
+      ${_renderAccordionCard('diagnostico', 'Perfil Sanitario',
+        'clipboardCheck', 'var(--color-accent)', _perfilBadgeInfo(), _diagOpen, _renderPerfilBody())}
 
-      ${_renderAccordionCard('resultados', 'Resultados del Diagnóstico Inicial',
+      ${_renderAccordionCard('resultados', 'Resultados Diagnóstico',
         'listCheck', 'var(--emerald)', _resultadosBadgeInfo(), _resultadosOpen, _renderResultadosBody(),
         !_resultadosData().rated.length)}
 
-      ${_renderAccordionCard('marco', 'Marco Normativo y Legal de Referencia',
+      ${_renderAccordionCard('marco', 'Marco Normativo',
         'scale', 'var(--azure)', _marcoBadgeInfo(), _marcoOpen, _renderMarcoBody())}
 
-      ${typeof ConfigurarInvima !== 'undefined' ? _renderAccordionCard('invima', 'Checklist INVIMA',
-        'shieldCheck', 'var(--color-brand)', _invimaBadgeInfo(), _invimaOpen, _renderInvimaBody(),
-        false, 'Res. 2674/2013') : ''}
+      ${typeof ConfigurarInvima !== 'undefined' ? _renderAccordionCard('invima', 'Simulador INVIMA',
+        'shieldCheck', 'var(--color-brand)', _invimaBadgeInfo(), _invimaOpen, _renderInvimaBody()) : ''}
 
-      ${_renderAccordionCard('vencimientos', 'Control de Vencimientos',
+      ${_renderAccordionCard('vencimientos', 'Vencimientos',
         'calendarTime', 'var(--amber)', _vencBadgeInfo(), _vencOpen, _renderVencimientosBody())}
 
       <div style="margin:0 var(--sp-md) var(--sp-sm);">
@@ -282,7 +280,7 @@ const Planificar = (() => {
     }
     return `
       <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:var(--sp-sm);line-height:1.5;">
-        Evaluación rápida con ${n} ítems INVIMA seleccionados (editable). Escala A / AR / I / N·A.
+        Triage A/AR/I · Res. 2674/2013. Evaluación rápida con ${n} ítems INVIMA seleccionados (editable). Escala A / AR / I / N·A.
       </div>
       ${scoreHtml}
       <button type="button" class="btn btn-primary" style="width:100%;margin-bottom:6px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
@@ -327,7 +325,7 @@ const Planificar = (() => {
       : `${base} ítems base + ${custom} ítem${custom !== 1 ? 's' : ''} personalizado${custom !== 1 ? 's' : ''}`;
     return `
       <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:var(--sp-md);line-height:1.5;">
-        Configure el checklist INVIMA por categoría (6 grupos). No requiere inspección PSB activa.
+        Res. 2674/2013 · Configure el checklist INVIMA por categoría (6 grupos). No requiere inspección PSB activa.
       </div>
       <div style="padding:var(--sp-sm) var(--sp-md);background:var(--color-surface);border-radius:var(--radius-md);
         border:1px solid var(--color-border);margin-bottom:var(--sp-md);">
@@ -339,21 +337,19 @@ const Planificar = (() => {
         onclick="ConfigurarInvima.abrir()">⚙️ Configurar INVIMA</button>`;
   }
 
-  function _renderAccordionCard(key, title, iconName, iconColor, badge, isOpen, bodyHtml, disabled, subtitle) {
+  function _renderAccordionCard(key, title, iconName, iconColor, badge, isOpen, bodyHtml, disabled) {
     const openEff = isOpen && !disabled;
-    const titleBlock = subtitle
-      ? `<div class="acc-title">${title}</div>
-         <div class="acc-subtitle">${subtitle}</div>`
-      : `<div class="acc-title">${title}</div>`;
     return `
-      <div class="card acc-card">
+      <div class="card acc-card card-fixed-acc">
         <div class="acc-header${openEff ? ' open' : ''}${disabled ? ' disabled' : ''}" id="acc-header-${key}"
           data-p-act="toggle" data-p-key="${key}" style="--acc-accent:${iconColor}">
           <div class="acc-chevron-wrap">${_chevron()}</div>
           <div class="acc-icon-wrap sticker-3d">${_icon(iconName, iconColor)}</div>
-          <div class="acc-title-block">${titleBlock}</div>
+          <div class="acc-title-block">
+            <div class="acc-title card-text-clamp card-text-clamp-2">${title}</div>
+          </div>
           <div class="acc-badge-row">
-            <span id="acc-badge-${key}" class="${badge.cls || 'acc-badge'}" style="${badge.style}">${badge.text}</span>
+            <span id="acc-badge-${key}" class="${badge.cls || 'acc-badge'} card-text-clamp card-text-clamp-1" style="${badge.style}">${badge.text}</span>
           </div>
         </div>
         <div class="acc-body-wrap${openEff ? ' open' : ''}" id="acc-body-${key}">
