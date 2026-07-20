@@ -8,6 +8,7 @@ const Planificar = (() => {
     listCheck: 'listCheck',
     scale: 'scale',
     calendarTime: 'calendarClock',
+    shieldCheck: 'shieldCheck',
   };
 
   const MARCO_GENERAL = [
@@ -63,6 +64,7 @@ const Planificar = (() => {
   let _diagOpen       = false;
   let _resultadosOpen = false;
   let _marcoOpen      = false;
+  let _invimaOpen     = false;
   let _vencOpen       = false;
   let _vencV2Tab       = 'personal';
   let _vencV2EditId    = '';
@@ -110,6 +112,7 @@ const Planificar = (() => {
     if (typeof u.diagOpen === 'boolean')       _diagOpen       = u.diagOpen;
     if (typeof u.resultadosOpen === 'boolean') _resultadosOpen = u.resultadosOpen;
     if (typeof u.marcoOpen === 'boolean')      _marcoOpen      = u.marcoOpen;
+    if (typeof u.invimaOpen === 'boolean')     _invimaOpen     = u.invimaOpen;
     if (typeof u.vencOpen === 'boolean')       _vencOpen       = u.vencOpen;
     if (u.vencTab)                             _vencTab        = u.vencTab;
     if (typeof u.vencFiltroPersonal === 'string') _vencFiltroPersonal = u.vencFiltroPersonal;
@@ -131,6 +134,7 @@ const Planificar = (() => {
         diagOpen: _diagOpen,
         resultadosOpen: _resultadosOpen,
         marcoOpen: _marcoOpen,
+        invimaOpen: _invimaOpen,
         vencOpen: _vencOpen,
         vencTab: _vencTab,
         vencFiltroPersonal: _vencFiltroPersonal,
@@ -214,7 +218,9 @@ const Planificar = (() => {
       ${_renderAccordionCard('marco', 'Marco Normativo y Legal de Referencia',
         'scale', 'var(--azure)', _marcoBadgeInfo(), _marcoOpen, _renderMarcoBody())}
 
-      ${_renderInvimaPlanificarBlock()}
+      ${typeof ConfigurarInvima !== 'undefined' ? _renderAccordionCard('invima', 'Checklist INVIMA',
+        'shieldCheck', 'var(--color-brand)', _invimaBadgeInfo(), _invimaOpen, _renderInvimaBody(),
+        false, 'Res. 2674/2013') : ''}
 
       ${_renderAccordionCard('vencimientos', 'Control de Vencimientos',
         'calendarTime', 'var(--amber)', _vencBadgeInfo(), _vencOpen, _renderVencimientosBody())}
@@ -244,38 +250,62 @@ const Planificar = (() => {
       stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;
   }
 
-  function _renderInvimaPlanificarBlock() {
-    if (typeof ConfigurarInvima === 'undefined') return '';
-    let resumen = 'INVIMA: 48 base + 0 custom';
+  function _invimaResumenData() {
+    let base = 48;
+    let custom = 0;
     try {
       if (typeof InvimaCrud !== 'undefined') {
         InvimaCrud.loadBaseChecklist().catch(() => {});
         const r = InvimaCrud.resumen();
-        resumen = `INVIMA: ${r.base || 48} base + ${r.custom} custom`;
+        base = r.base || 48;
+        custom = r.custom || 0;
       }
     } catch (_) { /* offline */ }
-    return `
-      <div class="card" style="margin:0 var(--sp-md) var(--sp-md);padding:var(--sp-md);">
-        <div style="font-size:var(--text-sm);font-weight:700;color:var(--color-brand);margin-bottom:4px;">
-          Checklist INVIMA (Res. 2674/2013)
-        </div>
-        <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:var(--sp-sm);">
-          ${_escAttr(resumen)} · No requiere inspección PSB activa
-        </div>
-        <button type="button" class="btn btn-outline" style="width:100%;"
-          onclick="ConfigurarInvima.abrir()">⚙️ Configurar INVIMA</button>
-      </div>`;
+    return { base, custom };
   }
 
-  function _renderAccordionCard(key, title, iconName, iconColor, badge, isOpen, bodyHtml, disabled) {
+  function _invimaBadgeInfo() {
+    const { base, custom } = _invimaResumenData();
+    if (custom === 0) {
+      return { text: 'Pendiente', cls: '', style: _pendienteStyle() };
+    }
+    return { text: `${base} base + ${custom} custom`, cls: 'estado-chip estado-B', style: '' };
+  }
+
+  function _renderInvimaBody() {
+    const { base, custom } = _invimaResumenData();
+    const resumen = custom === 0
+      ? `${base} ítems normativos base — sin ítems personalizados aún`
+      : `${base} ítems base + ${custom} ítem${custom !== 1 ? 's' : ''} personalizado${custom !== 1 ? 's' : ''}`;
+    return `
+      <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:var(--sp-md);line-height:1.5;">
+        Configure el checklist INVIMA por categoría (6 grupos). No requiere inspección PSB activa.
+      </div>
+      <div style="padding:var(--sp-sm) var(--sp-md);background:var(--color-surface);border-radius:var(--radius-md);
+        border:1px solid var(--color-border);margin-bottom:var(--sp-md);">
+        <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);text-transform:uppercase;
+          letter-spacing:0.06em;margin-bottom:4px;">Resumen</div>
+        <div style="font-size:var(--text-sm);color:var(--color-ink);" id="invima-resumen-planificar">${_escAttr(resumen)}</div>
+      </div>
+      <button type="button" class="btn btn-primary" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+        onclick="ConfigurarInvima.abrir()">⚙️ Configurar INVIMA</button>`;
+  }
+
+  function _renderAccordionCard(key, title, iconName, iconColor, badge, isOpen, bodyHtml, disabled, subtitle) {
     const openEff = isOpen && !disabled;
+    const titleBlock = subtitle
+      ? `<div style="min-width:0;">
+          <div style="font-size:var(--text-base);font-weight:700;color:var(--color-ink);">${title}</div>
+          <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-top:2px;">${subtitle}</div>
+        </div>`
+      : `<div style="font-size:var(--text-base);font-weight:700;color:var(--color-ink);">${title}</div>`;
     return `
       <div class="card acc-card">
         <div class="acc-header${openEff ? ' open' : ''}${disabled ? ' disabled' : ''}" id="acc-header-${key}"
           data-p-act="toggle" data-p-key="${key}">
           <div style="display:flex;align-items:center;gap:10px;min-width:0;">
             ${_icon(iconName, iconColor)}
-            <div style="font-size:var(--text-base);font-weight:700;color:var(--color-ink);">${title}</div>
+            ${titleBlock}
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
             <span id="acc-badge-${key}" class="${badge.cls}" style="${badge.style}">${badge.text}</span>
@@ -297,6 +327,7 @@ const Planificar = (() => {
     _diagOpen       = key === 'diagnostico'  ? !_diagOpen       : false;
     _resultadosOpen = key === 'resultados'   ? !_resultadosOpen : false;
     _marcoOpen      = key === 'marco'        ? !_marcoOpen      : false;
+    _invimaOpen     = key === 'invima'       ? !_invimaOpen     : false;
     _vencOpen       = key === 'vencimientos' ? !_vencOpen       : false;
     if (_vencOpen) _initVencDashboard();
     _syncAccordion();
@@ -312,6 +343,7 @@ const Planificar = (() => {
     _diagOpen       = key === 'diagnostico';
     _resultadosOpen = key === 'resultados';
     _marcoOpen      = key === 'marco';
+    _invimaOpen     = key === 'invima';
     _vencOpen       = key === 'vencimientos';
     if (_vencOpen) _initVencDashboard();
     _syncAccordion();
@@ -325,6 +357,7 @@ const Planificar = (() => {
     _setCardState('general', _generalOpen, _generalBadgeInfo());
     _setCardState('diagnostico', _diagOpen, _diagBadgeInfo());
     _setCardState('marco', _marcoOpen, _marcoBadgeInfo());
+    _setCardState('invima', _invimaOpen, _invimaBadgeInfo());
     _setCardState('vencimientos', _vencOpen, _vencBadgeInfo());
     _syncResultados();
   }
