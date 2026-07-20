@@ -8,8 +8,17 @@ const InvimaCrud = (() => {
   const LS_KEY = 'sanicheck_invima_config';
   const LS_QUEUE = 'sanicheck_invima_pending';
 
-  /** Selección recomendada perfil rápido (8 ítems triage → códigos INVIMA instructivo) */
-  const PERFIL_RAPIDO_DEFAULT_CODIGOS = ['1.2', '1.3', '5.1', '5.2', '4.4', '2.1', '5.3', '5.4'];
+  /** Selección recomendada perfil rápido — 8 ítems, las 6 categorías representadas */
+  const PERFIL_RAPIDO_DEFAULT_CODIGOS = [
+    '1.2', // Edificación — Pisos y paredes
+    '2.2', // Equipos — Superficies contacto alimento
+    '3.2', // Personal — Reconocimiento médico
+    '3.3', // Personal — Prácticas higiénicas
+    '4.3', // Req. higiénicos — Manejo temperaturas
+    '5.1', // Saneamiento — Agua potable
+    '5.4', // Saneamiento — Control plagas
+    '6.1', // Verificación — Plan de autocontrol
+  ];
 
   let _base = null;
 
