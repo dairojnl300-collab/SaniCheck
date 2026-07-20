@@ -93,11 +93,9 @@
   <div id="app">
     <header class="phva-topbar">
       <button type="button" class="phva-logo" onclick="Router.go('home')" title="Ir al inicio"
-        style="background:none;border:none;cursor:pointer;padding:0;display:flex;align-items:center;gap:8px;color:inherit;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 3l7 3v6c0 5-3.5 8-7 9c-3.5-1-7-4-7-9V6l7-3z"/>
-          <path d="M9.2 12.2l1.9 1.9l3.7-4.3"/>
-        </svg>
+        aria-label="Ir al inicio SaniCheck">
+        <img src="assets/icons/logotipo-sanicheck.png" alt="" class="phva-logo-img"
+          width="32" height="32" decoding="async">
         <span class="phva-logo-text">SaniCheck</span>
       </button>
       <button type="button" id="btn-ajustes-top" onclick="Router.go('about')" title="Ajustes · Portal Cliente"

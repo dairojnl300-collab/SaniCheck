@@ -130,13 +130,26 @@ a { color: inherit; text-decoration: none; }
 .phva-logo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-sm);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: inherit;
+  min-height: 0;
 }
 
-.phva-logo img,
-.phva-logo svg { height: 28px; width: 28px; }
-.phva-logo svg,
-.phva-logo svg path { stroke: #FFFFFF; }
+.phva-logo-img {
+  height: 32px;
+  width: auto;
+  max-width: 36px;
+  flex-shrink: 0;
+  display: block;
+  object-fit: contain;
+  /* Isotipo verde oscuro → blanco sobre topbar --emerald-2 (mismo patrón que landing) */
+  filter: brightness(0) invert(1);
+}
+
 .phva-logo-text {
   font-family: var(--font-heading);
   font-size: 18px;
