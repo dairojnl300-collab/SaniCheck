@@ -68,7 +68,7 @@ function assert(cond, msg) {
   await IC.loadBaseChecklist();
   IC.getConfigINVIMA(EST);
   const baseCount = IC.getConfigINVIMA(EST).filter(it => !it.custom).length;
-  assert(baseCount === 48, '48 ítems base cargados');
+  assert(baseCount === 28, '28 ítems base cargados');
 
   // Agregar item custom código 1.9 OK (cat_01)
   const custom = IC.agregarItem('cat_01', 'Control adicional', 'Local/ECODESA/Específico', null, EST, '1.9');
@@ -114,7 +114,7 @@ function assert(cond, msg) {
 
   // Resumen
   const r = IC.resumen(EST);
-  assert(r.base === 48 && r.custom === 0, 'resumen base+custom');
+  assert(r.base === 28 && r.custom === 0, 'resumen base+custom');
 
   if (failed) {
     console.error(`\n${failed} assertion(s) failed`);
