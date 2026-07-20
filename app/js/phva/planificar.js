@@ -325,7 +325,7 @@ const Planificar = (() => {
       : `${base} ítems base + ${custom} ítem${custom !== 1 ? 's' : ''} personalizado${custom !== 1 ? 's' : ''}`;
     return `
       <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:var(--sp-md);line-height:1.5;">
-        Res. 2674/2013 · Configure el checklist INVIMA por categoría (6 grupos). No requiere inspección PSB activa.
+        Res. 2674/2013 · Configure el Simulador INVIMA por categoría (6 grupos). No requiere inspección PSB activa.
       </div>
       <div style="padding:var(--sp-sm) var(--sp-md);background:var(--color-surface);border-radius:var(--radius-md);
         border:1px solid var(--color-border);margin-bottom:var(--sp-md);">

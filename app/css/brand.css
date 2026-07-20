@@ -1091,38 +1091,40 @@ a { color: inherit; text-decoration: none; }
 }
 .kpi-sub { font-size: var(--text-xs); color: var(--color-ink3); }
 
-/* ── Grid categorías INVIMA (modal) — 2×3 fichas cuadradas ── */
-#invima-config-body > div[style*="flex-wrap:wrap"],
-#perfil-rapido-body > div[style*="flex-wrap:wrap"] {
-  display: grid !important;
+/* ── Grid categorías INVIMA (modal) — 2×3 compacto ── */
+.invima-cat-grid {
+  display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--sp-sm);
   margin-bottom: var(--sp-sm);
 }
-#invima-config-body > div[style*="flex-wrap:wrap"] .btn,
-#perfil-rapido-body > div[style*="flex-wrap:wrap"] .btn {
-  aspect-ratio: 1;
+.invima-cat-grid .invima-cat-btn,
+.invima-cat-grid .btn {
+  aspect-ratio: unset;
   min-width: 0 !important;
   flex: none !important;
   width: 100% !important;
+  min-height: 88px;
+  max-height: 88px;
+  height: 88px;
   display: flex !important;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 10px !important;
+  font-size: 11px !important;
   line-height: 1.25;
-  padding: var(--sp-sm) !important;
+  padding: var(--sp-xs) var(--sp-sm) !important;
   border-radius: var(--r-md) !important;
-  transform-style: preserve-3d;
-  box-shadow: var(--shadow-lum);
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   overflow: hidden;
   text-align: center;
+  white-space: normal;
 }
-#invima-config-body > div[style*="flex-wrap:wrap"] .btn:active,
-#perfil-rapido-body > div[style*="flex-wrap:wrap"] .btn:active {
-  transform: rotateX(-6deg) rotateY(5deg) translateZ(6px) scale(0.97);
-  box-shadow: var(--shadow-deep);
+.invima-cat-grid .invima-cat-btn:active,
+.invima-cat-grid .btn:active {
+  transform: scale(0.98);
+  box-shadow: var(--shadow-md);
 }
 
 /* ── Stickers 3D globales (badges, fase, tab bar, norma) ─── */
