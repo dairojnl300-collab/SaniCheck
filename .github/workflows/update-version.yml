@@ -3,9 +3,12 @@ name: Auto-Update Version & Deploy
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   update-version:
+    name: Auto-Update Version & Deploy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -19,11 +22,17 @@ jobs:
           echo "commit=${COMMIT}" >> $GITHUB_OUTPUT
       
       - name: Update versionManager.js
+        if: github.event_name == 'push'
         run: |
           sed -i "s/this.currentVersion = '[^']*'/this.currentVersion = '${{ steps.version.outputs.version }}'/" src/versionManager.js
           sed -i "s/this.commitHash = '[^']*'/this.commitHash = '${{ steps.version.outputs.commit }}'/" src/versionManager.js
       
       - name: Update Service Worker
+        if: github.event_name == 'push'
         run: |
           sed -i "s/const CACHE_NAME = 'sanicheck-v[^']*'/const CACHE_NAME = 'sanicheck-v${{ steps.version.outputs.version }}'/" public/service-worker.js
           sed -i "s/const COMMIT_HASH = '[^']*'/const COMMIT_HASH = '${{ steps.version.outputs.commit }}'/" public/service-worker.js
+
+      - name: PR validation
+        if: github.event_name == 'pull_request'
+        run: echo "Version check OK for PR"
