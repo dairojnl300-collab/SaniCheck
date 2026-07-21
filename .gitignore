@@ -1,6 +1,7 @@
 ﻿node_modules/
 .env
 .env.local
+app/js/portal-config.secrets.js
 *.log
 .DS_Store
 .vscode/

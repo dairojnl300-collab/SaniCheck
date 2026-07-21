@@ -33,6 +33,13 @@ jobs:
           sed -i "s/const CACHE_NAME = 'sanicheck-v[^']*'/const CACHE_NAME = 'sanicheck-v${{ steps.version.outputs.version }}'/" public/service-worker.js
           sed -i "s/const COMMIT_HASH = '[^']*'/const COMMIT_HASH = '${{ steps.version.outputs.commit }}'/" public/service-worker.js
 
+      - name: Generate portal-config.secrets.js
+        if: github.event_name == 'push' && secrets.SUPABASE_ANON_KEY != ''
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: node scripts/generate-portal-config-secrets.js
+
       - name: PR validation
         if: github.event_name == 'pull_request'
         run: echo "Version check OK for PR"
