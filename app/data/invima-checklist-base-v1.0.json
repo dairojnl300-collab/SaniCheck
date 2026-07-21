@@ -1,13 +1,14 @@
 {
   "meta": {
-    "version": "1.2",
+    "version": "1.3",
     "fuente": "Orden literal hoja Instructivo (Dadys.xls) + pesos por tema hoja Tablas + cat. 6 verificación",
     "escala_leyenda": {
       "A": "Aceptable — cumple la totalidad de los requisitos",
       "AR": "Aceptable con requerimiento — cumple parcialmente",
       "I": "Inaceptable — no cumple ninguno de los requisitos",
       "NA_nota": "Si un aspecto no aplica, calificar A y justificar en hallazgos."
-    }
+    },
+    "nota_criterio": "criterio + normativa por subCategoría (Res. 2674/2013 instructivo)"
   },
   "categorias": [
     {
@@ -21,7 +22,9 @@
           "nombre": "Localización y diseño",
           "normativa": "Resolución 2674/2013, Artículo 6, Numerales 1.1, 1.2, 1.3, 2.1, 2,3 y 2.6,; Artículo 32, Numerales 1, 2, 3, 4, 6 y 7. Artículo 33, Numeral 8.",
           "descripcion": "El establecimiento está ubicado en un lugar alejado de focos de insalubridad como: basuras, agua estancada, sitios de anidamiento de plagas u otros que puedan contaminar el alimento; en todo caso la construcción debe ser resistente al medio ambiente y que impida el ingreso de  plagas y animales domésticos.  El establecimiento no debe ser  usado como dormitorio, en caso que el servicio se preste en una edificación que  también sea vivienda, debe estar separado físicamente de ésta.  Las operaciones propias del establecimiento no deben poner en riesgo la salud y bienestar de la comunidad.  La diferentes áreas del establecimiento deben permiter un flujo adecuado de materia prima, producto y personal.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "El establecimiento está ubicado en un lugar alejado de focos de insalubridad como: basuras, agua estancada, sitios de anidamiento de plagas u otros que puedan contaminar el alimento; en todo caso la construcción debe ser resistente al medio ambiente y que impida el ingreso de plagas y animales domé…",
+          "esComplementaria": false
         },
         {
           "id": "item_1_2",
@@ -29,7 +32,9 @@
           "nombre": "Condiciones de Pisos y Paredes",
           "normativa": "Resolución 2674/2013, Artículo 7, Numeral 1, 2. Artículo 33, Numerales 1, 2 y 3.",
           "descripcion": "En las áreas de preparación de alimentos y en otras áreas que puedan afectar la higiene del proceso e inocuidad del producto, las Paredes, pisos y drenajes deben contar con:\n\nParedes y pisos:  Sin grietas, rugosidades, asperezas o  falta de continuidad que facilite la acumulación de suciedad y/o afecte su limpieza. En las áreas de preparación y almacenamiento de alimentos las uniones entre paredes, entre estas y con el piso deben ser redondeadas. Las superficies deben ser de color claro, impermeables, lavables y no absorbentes, esto es, que no permita el paso de ningún tipo de líquido y que  fácilmente permita la eliminación de residuos. Los pisos deben comtar con la pendiente necesaria para efectos de drenaje.\n\nDrenajes: Debe contar con las tuberías y drenajes, debidamente protegidos por  rejillas  para la conducción y recolección de aguas residuales; en caso de que se cuente con drenajes al interior de cavas o cuartos fríos, estos deben contar con mecanismo de sellado que puedan ser removidos para facilitar las labores de limpieza y desinfección.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "En las áreas de preparación de alimentos y en otras áreas que puedan afectar la higiene del proceso e inocuidad del producto, las Paredes, pisos y drenajes deben contar con: Paredes y pisos: Sin grietas, rugosidades, asperezas o falta de continuidad que facilite la acumulación de suciedad y/o afect…",
+          "esComplementaria": false
         },
         {
           "id": "item_1_3",
@@ -37,7 +42,9 @@
           "nombre": "Techos, iluminación y ventilación",
           "normativa": "Resolución 2674/2013, Artículo 7, Numeral 3, 4, 5, 7, 8. Artículo 33, Numeral 4.",
           "descripcion": "En las áreas de preparación de alimentos y en otras áreas que puedan afectar la higiene del proceso e inocuidad del producto, los techos, ventilación, puertas e iluminación deben contar con las siguientes características:\n\nTechos: No tener  cortes ni grietas que acumulen polvo o suciedad ,que no  favorezcan  el crecimiento de hongos, ni que permita el ingreso de plagas al establecimiento. En caso de contar con falsos techos, estos de deben ser de material impermeable, resistente, liso y con acceso a la cámara superior para labores de limpieza, desinfección y desinsectación.\n\nVentilación: Las Ventanas y aberturas no deben tener deterioro, como grietas. Aquellas que lo requieran deberán contar con una malla de facil limpieza y que evite el ingreso plagas. El flujo de aire debe ser unidireccional (De una zona limpia a una sucia). La ventilación debe facilitar la remoción del calor y no debe generar condensación de vapores y acúmulo de polvo . Las estructuras elevadas como sistemas de extracción y/o extractores de aire, deben ser de fácil limpiezay  debe encontrarse en buen estado de mantenimiento para evitar la caída de materias extrañas. \n\nPuertas: Deben ser resistentes, de superficie lisa y no absorbente, su diseño debe impedir el ingreso de plagas al establecimiento.\n\nIluminación: La iluminación puede ser natural o artificial, las lámparas deben encontrarse en buen estado de mantenimiento, ser de fácil limpieza y estar protegidas para evitar la caída de partículas extrañas sobre las superficies que entran en contacto con el alimento, sobre el alimento y sobre los manipuladores.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "En las áreas de preparación de alimentos y en otras áreas que puedan afectar la higiene del proceso e inocuidad del producto, los techos, ventilación, puertas e iluminación deben contar con las siguientes características: Techos: No tener cortes ni grietas que acumulen polvo o suciedad ,que no favo…",
+          "esComplementaria": false
         },
         {
           "id": "item_1_4",
@@ -45,7 +52,75 @@
           "nombre": "Instalaciones sanitarias",
           "normativa": "Resolución 2674/2013, Artículo 6, Numeral 6.1, 6.2, 6.3, 6.4; Artículo 32, Numeral 9 y 11.",
           "descripcion": "El establecimiento dispone de servicios sanitarios en material higiénico sanitario, vestidores y casilleros en cantidad suficiente con respecto a la cantidad de personal que labora en él, independientes para cada sexo y separados de las áreas de elaboración. En caso de no contar con más de seis (6) manipuladores, dispone de un baño mixto. \n\nDebe contar con servicios sanitarios suficientes para el público separados por sexo, si el establecimiento se encuentra ubicado en un centro comercial el público podrá hacer uso de los baños del centro comercial.                                                            Los servicios sanitarios se deben encontrar en funcionamiento, ser mantenidos limpios y estar dotados de los implementos requeridos para la higiene personal como: Papel higiénico, dispensador con jabón desinfectante, implementos desechables o equipos automáticos para el secado de manos y papeleras de accionamiento no manual. \n\nEn las áreas de preparación de alimentos o cercano a éstas se debe contar con lavamanos de accionamiento no manual, dotados con dispensador que contenga jabón desinfectante, implementos desechables o equipos automáticos para secado de manos para la higiene del personal manipulador de alimentos. Los lavamanos no deben ser usados  para fines diferentes. \n\nDeben instalarse avisos que indiquen al personal manipulador la necesidad del lavado de manos luego de usar los servicios sanitarios, después de cualquier cambio de actividad y antes de iniciar las labores diarias.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "El establecimiento dispone de servicios sanitarios en material higiénico sanitario, vestidores y casilleros en cantidad suficiente con respecto a la cantidad de personal que labora en él, independientes para cada sexo y separados de las áreas de elaboración. En caso de no contar con más de seis (6)…",
+          "esComplementaria": false
+        }
+      ],
+      "subCategorias": [
+        {
+          "subCategoria": "1.1 • Localización y diseño",
+          "normativa": "Resolución 2674/2013, Artículo 6, Numerales 1.1, 1.2, 1.3, 2.1, 2,3 y 2.6,; Artículo 32, Numerales 1, 2, 3, 4, 6 y 7. Artículo 33, Numeral 8.",
+          "criterio": "El establecimiento está ubicado en un lugar alejado de focos de insalubridad como: basuras, agua estancada, sitios de anidamiento de plagas u otros que puedan contaminar el alimento; en todo caso la construcción debe ser resistente al medio ambiente y que impida el ingreso de plagas y animales domé…",
+          "items": [
+            {
+              "id": "item_1_1",
+              "codigo": "1.1",
+              "nombre": "Localización y diseño",
+              "criterio": "El establecimiento está ubicado en un lugar alejado de focos de insalubridad como: basuras, agua estancada, sitios de anidamiento de plagas u otros que puedan contaminar el alimento; en todo caso la construcción debe ser resistente al medio ambiente y que impida el ingreso de plagas y animales domé…",
+              "normativa": "Resolución 2674/2013, Artículo 6, Numerales 1.1, 1.2, 1.3, 2.1, 2,3 y 2.6,; Artículo 32, Numerales 1, 2, 3, 4, 6 y 7. Artículo 33, Numeral 8.",
+              "descripcion": "El establecimiento está ubicado en un lugar alejado de focos de insalubridad como: basuras, agua estancada, sitios de anidamiento de plagas u otros que puedan contaminar el alimento; en todo caso la construcción debe ser resistente al medio ambiente y que impida el ingreso de  plagas y animales domésticos.  El establecimiento no debe ser  usado como dormitorio, en caso que el servicio se preste en una edificación que  también sea vivienda, debe estar separado físicamente de ésta.  Las operaciones propias del establecimiento no deben poner en riesgo la salud y bienestar de la comunidad.  La diferentes áreas del establecimiento deben permiter un flujo adecuado de materia prima, producto y personal.",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "1.2 • Condiciones de Pisos y Paredes",
+          "normativa": "Resolución 2674/2013, Artículo 7, Numeral 1, 2. Artículo 33, Numerales 1, 2 y 3.",
+          "criterio": "En las áreas de preparación de alimentos y en otras áreas que puedan afectar la higiene del proceso e inocuidad del producto, las Paredes, pisos y drenajes deben contar con: Paredes y pisos: Sin grietas, rugosidades, asperezas o falta de continuidad que facilite la acumulación de suciedad y/o afect…",
+          "items": [
+            {
+              "id": "item_1_2",
+              "codigo": "1.2",
+              "nombre": "Condiciones de Pisos y Paredes",
+              "criterio": "En las áreas de preparación de alimentos y en otras áreas que puedan afectar la higiene del proceso e inocuidad del producto, las Paredes, pisos y drenajes deben contar con: Paredes y pisos: Sin grietas, rugosidades, asperezas o falta de continuidad que facilite la acumulación de suciedad y/o afect…",
+              "normativa": "Resolución 2674/2013, Artículo 7, Numeral 1, 2. Artículo 33, Numerales 1, 2 y 3.",
+              "descripcion": "En las áreas de preparación de alimentos y en otras áreas que puedan afectar la higiene del proceso e inocuidad del producto, las Paredes, pisos y drenajes deben contar con:\n\nParedes y pisos:  Sin grietas, rugosidades, asperezas o  falta de continuidad que facilite la acumulación de suciedad y/o afecte su limpieza. En las áreas de preparación y almacenamiento de alimentos las uniones entre paredes, entre estas y con el piso deben ser redondeadas. Las superficies deben ser de color claro, impermeables, lavables y no absorbentes, esto es, que no permita el paso de ningún tipo de líquido y que  fácilmente permita la eliminación de residuos. Los pisos deben comtar con la pendiente necesaria para efectos de drenaje.\n\nDrenajes: Debe contar con las tuberías y drenajes, debidamente protegidos por  rejillas  para la conducción y recolección de aguas residuales; en caso de que se cuente con drenajes al interior de cavas o cuartos fríos, estos deben contar con mecanismo de sellado que puedan ser removidos para facilitar las labores de limpieza y desinfección.",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "1.3 • Techos, iluminación y ventilación",
+          "normativa": "Resolución 2674/2013, Artículo 7, Numeral 3, 4, 5, 7, 8. Artículo 33, Numeral 4.",
+          "criterio": "En las áreas de preparación de alimentos y en otras áreas que puedan afectar la higiene del proceso e inocuidad del producto, los techos, ventilación, puertas e iluminación deben contar con las siguientes características: Techos: No tener cortes ni grietas que acumulen polvo o suciedad ,que no favo…",
+          "items": [
+            {
+              "id": "item_1_3",
+              "codigo": "1.3",
+              "nombre": "Techos, iluminación y ventilación",
+              "criterio": "En las áreas de preparación de alimentos y en otras áreas que puedan afectar la higiene del proceso e inocuidad del producto, los techos, ventilación, puertas e iluminación deben contar con las siguientes características: Techos: No tener cortes ni grietas que acumulen polvo o suciedad ,que no favo…",
+              "normativa": "Resolución 2674/2013, Artículo 7, Numeral 3, 4, 5, 7, 8. Artículo 33, Numeral 4.",
+              "descripcion": "En las áreas de preparación de alimentos y en otras áreas que puedan afectar la higiene del proceso e inocuidad del producto, los techos, ventilación, puertas e iluminación deben contar con las siguientes características:\n\nTechos: No tener  cortes ni grietas que acumulen polvo o suciedad ,que no  favorezcan  el crecimiento de hongos, ni que permita el ingreso de plagas al establecimiento. En caso de contar con falsos techos, estos de deben ser de material impermeable, resistente, liso y con acceso a la cámara superior para labores de limpieza, desinfección y desinsectación.\n\nVentilación: Las Ventanas y aberturas no deben tener deterioro, como grietas. Aquellas que lo requieran deberán contar con una malla de facil limpieza y que evite el ingreso plagas. El flujo de aire debe ser unidireccional (De una zona limpia a una sucia). La ventilación debe facilitar la remoción del calor y no debe generar condensación de vapores y acúmulo de polvo . Las estructuras elevadas como sistemas de extracción y/o extractores de aire, deben ser de fácil limpiezay  debe encontrarse en buen estado de mantenimiento para evitar la caída de materias extrañas. \n\nPuertas: Deben ser resistentes, de superficie lisa y no absorbente, su diseño debe impedir el ingreso de plagas al establecimiento.\n\nIluminación: La iluminación puede ser natural o artificial, las lámparas deben encontrarse en buen estado de mantenimiento, ser de fácil limpieza y estar protegidas para evitar la caída de partículas extrañas sobre las superficies que entran en contacto con el alimento, sobre el alimento y sobre los manipuladores.",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "1.4 • Instalaciones sanitarias",
+          "normativa": "Resolución 2674/2013, Artículo 6, Numeral 6.1, 6.2, 6.3, 6.4; Artículo 32, Numeral 9 y 11.",
+          "criterio": "El establecimiento dispone de servicios sanitarios en material higiénico sanitario, vestidores y casilleros en cantidad suficiente con respecto a la cantidad de personal que labora en él, independientes para cada sexo y separados de las áreas de elaboración. En caso de no contar con más de seis (6)…",
+          "items": [
+            {
+              "id": "item_1_4",
+              "codigo": "1.4",
+              "nombre": "Instalaciones sanitarias",
+              "criterio": "El establecimiento dispone de servicios sanitarios en material higiénico sanitario, vestidores y casilleros en cantidad suficiente con respecto a la cantidad de personal que labora en él, independientes para cada sexo y separados de las áreas de elaboración. En caso de no contar con más de seis (6)…",
+              "normativa": "Resolución 2674/2013, Artículo 6, Numeral 6.1, 6.2, 6.3, 6.4; Artículo 32, Numeral 9 y 11.",
+              "descripcion": "El establecimiento dispone de servicios sanitarios en material higiénico sanitario, vestidores y casilleros en cantidad suficiente con respecto a la cantidad de personal que labora en él, independientes para cada sexo y separados de las áreas de elaboración. En caso de no contar con más de seis (6) manipuladores, dispone de un baño mixto. \n\nDebe contar con servicios sanitarios suficientes para el público separados por sexo, si el establecimiento se encuentra ubicado en un centro comercial el público podrá hacer uso de los baños del centro comercial.                                                            Los servicios sanitarios se deben encontrar en funcionamiento, ser mantenidos limpios y estar dotados de los implementos requeridos para la higiene personal como: Papel higiénico, dispensador con jabón desinfectante, implementos desechables o equipos automáticos para el secado de manos y papeleras de accionamiento no manual. \n\nEn las áreas de preparación de alimentos o cercano a éstas se debe contar con lavamanos de accionamiento no manual, dotados con dispensador que contenga jabón desinfectante, implementos desechables o equipos automáticos para secado de manos para la higiene del personal manipulador de alimentos. Los lavamanos no deben ser usados  para fines diferentes. \n\nDeben instalarse avisos que indiquen al personal manipulador la necesidad del lavado de manos luego de usar los servicios sanitarios, después de cualquier cambio de actividad y antes de iniciar las labores diarias.",
+              "esComplementaria": false
+            }
+          ]
         }
       ]
     },
@@ -60,15 +135,53 @@
           "nombre": "Condiciones de equipos y utensilios",
           "normativa": "Resolución 2674/2013, Artículo 8, Artículo 9, Numerales 1, 6, 8 y 9, Artículo 10, Numerales 2 y 3. Artículo 34.",
           "descripcion": "Debe contar con los equipos y utensilios de fácil limpieza y desinfección, en cantidad necesaria para desarrollar las actividades propias del establecimiento. Estos deben estar diseñados, construidos, instalados y mantenidos de forma que se evita la contaminación del alimento. Los materiales en que esten construidos los equipos y utensilios deben ser resistentes al uso y a la corrosión, así como al contacto con productos empleados de limpieza y desinfección.\n\nEl establecimiento debe contar con instrumentos o accesorios que permitan la medición de las temperaturas, durante la cocción, refrigeración y congelación de alimentos o materias primas.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "Debe contar con los equipos y utensilios de fácil limpieza y desinfección, en cantidad necesaria para desarrollar las actividades propias del establecimiento. Estos deben estar diseñados, construidos, instalados y mantenidos de forma que se evita la contaminación del alimento. Los materiales en que…",
+          "esComplementaria": false
         },
         {
           "id": "item_2_2",
           "codigo": "2.2",
           "nombre": "Superficies de contacto con el alimento",
-          "normativa": "Resolución 2674/2013, Artículo 8; Artículo 9, Numerales 2, 3, 4, 5, 7 y 10; Artículo 34. Artículo 35, Numeral 8 y 10. Resoluciones 683, 4142 y 4143 de 2012; 834 y 835 de 2013.",
+          "normativa": "Resolución 2674/2013, Artículo 8; Artículo 9, Numerales 2, 3, 4, 5, 7 y 10; Artículo 34. Artículo 35, Numeral 8 y 10. Resoluciones 683, 4142 y 4143 d…",
           "descripcion": "Las superficies que tengan contacto directo con el alimento deben cumplir con lo establecido en las Resoluciones 683, 4142, 4143 de 2012 y 834, 835 de 2013 o las normas que las modifiquen, adicionen o sustituyan.\n\nLas superficies de los equipos y utensilios que estarán  en contacto directo con los alimentos deben ser de acabado liso, no poroso, no absorbente y no tener defectos, grietas o espacios donde puedan acumularse partículas de alimentos, además, deben ser de fácil acceso para realizar las actividades de limpieza y desinfección necesarias; Por otra parte, las superficies que entren en contacto directo con el alimento y que no sean de fácil acceso, deben ser desmontables para garantizar procesos de limpieza y desinfección. Estas superficies no deben desprender residuos o cuerpos extraños que puedan adherirse al alimento y afectar su inocuidad. Finalmente. las superficies donde se corten o fraccionen los alimentos deben ser  de material sanitario y mantenerse en buen estado de conservación.\n\nEn caso de usar utensilios en material desechable, estos deben ser de primer y único uso.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "Las superficies que tengan contacto directo con el alimento deben cumplir con lo establecido en las Resoluciones 683, 4142, 4143 de 2012 y 834, 835 de 2013 o las normas que las modifiquen, adicionen o sustituyan. Las superficies de los equipos y utensilios que estarán en contacto directo con los al…",
+          "esComplementaria": false
+        }
+      ],
+      "subCategorias": [
+        {
+          "subCategoria": "2.1 • Condiciones de equipos y utensilios",
+          "normativa": "Resolución 2674/2013, Artículo 8, Artículo 9, Numerales 1, 6, 8 y 9, Artículo 10, Numerales 2 y 3. Artículo 34.",
+          "criterio": "Debe contar con los equipos y utensilios de fácil limpieza y desinfección, en cantidad necesaria para desarrollar las actividades propias del establecimiento. Estos deben estar diseñados, construidos, instalados y mantenidos de forma que se evita la contaminación del alimento. Los materiales en que…",
+          "items": [
+            {
+              "id": "item_2_1",
+              "codigo": "2.1",
+              "nombre": "Condiciones de equipos y utensilios",
+              "criterio": "Debe contar con los equipos y utensilios de fácil limpieza y desinfección, en cantidad necesaria para desarrollar las actividades propias del establecimiento. Estos deben estar diseñados, construidos, instalados y mantenidos de forma que se evita la contaminación del alimento. Los materiales en que…",
+              "normativa": "Resolución 2674/2013, Artículo 8, Artículo 9, Numerales 1, 6, 8 y 9, Artículo 10, Numerales 2 y 3. Artículo 34.",
+              "descripcion": "Debe contar con los equipos y utensilios de fácil limpieza y desinfección, en cantidad necesaria para desarrollar las actividades propias del establecimiento. Estos deben estar diseñados, construidos, instalados y mantenidos de forma que se evita la contaminación del alimento. Los materiales en que esten construidos los equipos y utensilios deben ser resistentes al uso y a la corrosión, así como al contacto con productos empleados de limpieza y desinfección.\n\nEl establecimiento debe contar con instrumentos o accesorios que permitan la medición de las temperaturas, durante la cocción, refrigeración y congelación de alimentos o materias primas.",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "2.2 • Superficies de contacto con el alimento",
+          "normativa": "Resolución 2674/2013, Artículo 8; Artículo 9, Numerales 2, 3, 4, 5, 7 y 10; Artículo 34. Artículo 35, Numeral 8 y 10. Resoluciones 683, 4142 y 4143 d…",
+          "criterio": "Las superficies que tengan contacto directo con el alimento deben cumplir con lo establecido en las Resoluciones 683, 4142, 4143 de 2012 y 834, 835 de 2013 o las normas que las modifiquen, adicionen o sustituyan. Las superficies de los equipos y utensilios que estarán en contacto directo con los al…",
+          "items": [
+            {
+              "id": "item_2_2",
+              "codigo": "2.2",
+              "nombre": "Superficies de contacto con el alimento",
+              "criterio": "Las superficies que tengan contacto directo con el alimento deben cumplir con lo establecido en las Resoluciones 683, 4142, 4143 de 2012 y 834, 835 de 2013 o las normas que las modifiquen, adicionen o sustituyan. Las superficies de los equipos y utensilios que estarán en contacto directo con los al…",
+              "normativa": "Resolución 2674/2013, Artículo 8; Artículo 9, Numerales 2, 3, 4, 5, 7 y 10; Artículo 34. Artículo 35, Numeral 8 y 10. Resoluciones 683, 4142 y 4143 d…",
+              "descripcion": "Las superficies que tengan contacto directo con el alimento deben cumplir con lo establecido en las Resoluciones 683, 4142, 4143 de 2012 y 834, 835 de 2013 o las normas que las modifiquen, adicionen o sustituyan.\n\nLas superficies de los equipos y utensilios que estarán  en contacto directo con los alimentos deben ser de acabado liso, no poroso, no absorbente y no tener defectos, grietas o espacios donde puedan acumularse partículas de alimentos, además, deben ser de fácil acceso para realizar las actividades de limpieza y desinfección necesarias; Por otra parte, las superficies que entren en contacto directo con el alimento y que no sean de fácil acceso, deben ser desmontables para garantizar procesos de limpieza y desinfección. Estas superficies no deben desprender residuos o cuerpos extraños que puedan adherirse al alimento y afectar su inocuidad. Finalmente. las superficies donde se corten o fraccionen los alimentos deben ser  de material sanitario y mantenerse en buen estado de conservación.\n\nEn caso de usar utensilios en material desechable, estos deben ser de primer y único uso.",
+              "esComplementaria": false
+            }
+          ]
         }
       ]
     },
@@ -83,7 +196,9 @@
           "nombre": "Estado de salud (signos/lesiones)",
           "normativa": "Resolución 2674/2013, Artículo 11; Numeral 1, 2, 4, 5. Artículo 14, Numeral 12.",
           "descripcion": "El establecimiento debe implementar las medidas preventivas y correctivas necesarias, como cambio de actividad o envío del manipulador a reconocimiento médico para ser evaluado, con el fin de evitar que un manipulador de alimentos que padece o es portador de una enfermedad susceptible de transmitirse por los alimentos, o tenga heridas infectadas, irritaciones cutáneas o diarrea, trabaje en las zonas o áreas de manipulación de alimentos con probabilidad de contaminar las materias primas, alimentos en proceso, alimentos terminados, envases de alimentos o material de envase o embalaje, superficies de equipos y utensilios con microorganismos patógenos.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "El establecimiento debe implementar las medidas preventivas y correctivas necesarias, como cambio de actividad o envío del manipulador a reconocimiento médico para ser evaluado, con el fin de evitar que un manipulador de alimentos que padece o es portador de una enfermedad susceptible de transmitir…",
+          "esComplementaria": false
         },
         {
           "id": "item_3_2",
@@ -91,7 +206,9 @@
           "nombre": "Reconocimiento Médico",
           "normativa": "Resolución 2674 de 2013, Artículo 11, Numeral 1, 2, 3, 4",
           "descripcion": "El establecimiento debe contar con los certificados médicos de los manipuladores, en los cuales consta la aptitud de éstos para manipular alimentos. Estos certificados deben tener una vigencia máxima de un año a partir de su realización.\n\nSegún la valoración del médico al manipulador, en caso de ser necesario se debe contar con resultados de laboratorio clínico u otros que sean necesarios para establecer la aptitud del manipulador en caso de que se sospeche de enfermedad trasmisible a los alimentos.\n\nEn caso que el médico ordenase un tratamiento al manipulador, el establecimiento debe contar con certificado en el cual conste la aptitud para la manipulación de alimentos una vez finalizado el tratamiento.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "El establecimiento debe contar con los certificados médicos de los manipuladores, en los cuales consta la aptitud de éstos para manipular alimentos. Estos certificados deben tener una vigencia máxima de un año a partir de su realización. Según la valoración del médico al manipulador, en caso de ser…",
+          "esComplementaria": false
         },
         {
           "id": "item_3_3",
@@ -99,7 +216,9 @@
           "nombre": "Prácticas higiénicas",
           "normativa": "Resolución 2674/2013, Artículo 14, Numerales 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13 y 14. Artículo 36. Artículo 35, Numeral 5 y 7.",
           "descripcion": "Higiene personal: Todos los manipuladores de alimentos deben cumplir con las buenas prácticas higiénicas en sus sitios de trabajo, a fin de evitar la contaminación de los alimentos, superficies de contacto, materiales de envase y embalaje. Las uñas se deben mantener cortas, limpias y sin esmalte. Los manipuladores de alimentos no deben  consumir alimentos o bebidas, ni fumar ni escupir en las áreas donde se manipulen alimentos. Las personas encargadas de la preparación o el servido de los alimentos, no deben manipular dinero simultáneamente. El servido los alimentos se debe realizar con utensilios de material sanitario y en ningún momento las manos del manipulador deben tener contacto con el alimento..\n\nDotación: El establecimiento debera entregar la dotación y vestimenta de trabajo al personal manipulador acorde con la actividad que realice. El Cabellos debe estar  cubierto. Cuando sea necesario se deberá usar tapabocas (Dependiendo del riesgo de contaminación del alimento). La vestimenta debe ser de color claro, con cierre, cremallera o broche (no botones). El calzado debe ser cerrado, de material resistente e impermeable. , según la actividad que realiza. El manipulador de alimentos no debe salir ni ingresar al establecimiento con la vestimenta de trabajo durante la jornada laboral. Previo al inicio de sus actividades, se deben retirar todos los objetos que puedan caer en los alimentos, equipos o utensilios, como joyas, relojes u otros accesorios. De usarse guantes para manipular los alimentos, estos deben ser de material impermeable, mantenerse limpios y en buen estado y ser sometidos al mismo cuidado higiénico de las manos (lavado y desinfección).\n\nLavado de manos: Antes de iniciar sus labores, después de retirarse del área de trabajo y en cualquier ocasión donde las manos se puedan ensuciar o contaminar, los manipuladores de alimentos se las deben lavar con agua y jabón desinfectante .",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "Higiene personal: Todos los manipuladores de alimentos deben cumplir con las buenas prácticas higiénicas en sus sitios de trabajo, a fin de evitar la contaminación de los alimentos, superficies de contacto, materiales de envase y embalaje. Las uñas se deben mantener cortas, limpias y sin esmalte. L…",
+          "esComplementaria": false
         },
         {
           "id": "item_3_4",
@@ -107,7 +226,75 @@
           "nombre": "Educación y Capacitación",
           "normativa": "Resolución 2674/2013, Artículos 12 y 13. Artículo 36.",
           "descripcion": "El establecimiento debe contar con un plan de capacitación, acorde con la actividad que realiza. para el personal manipulador de alimentos para que se implemente de manera continua y permanente  desde el momento de la contratación del manipulador  y luego ser reforzado mediante charlas, cursos u otros medios efectivos de actualización Esta capacitación estará bajo la responsabilidad de la empresa y podrá ser efectuada por esta, por personas naturales o jurídicas contratadas y por las autoridades sanitarias. Cuando el plan de capacitación se realice a través de personas naturales o jurídicas diferentes a la empresa, estas deben demostrar su idoneidad técnica y científica y su formación y experiencia específica en las áreas de higiene de los alimentos, Buenas Prácticas de Manufactura y sistemas preventivos de aseguramiento de la inocuidad.\nEl plan debe tener una duración de por lo menos 10 horas anuales y contener temas relacionados con buenas prácticas de manufactura y prácticas higiénicas (Manipulación higiénica de los alimentos, Higiene personal, Higiene de las instalaciones, Control de plagas, prevención de la contaminación cruzada, control de proveedores, control de temperatura, Almacenamiento y transporte de alimentos, entre otras). Contener al menos los siguientes aspectos: Metodología, duración, responsables, cronograma, temas a tratar y evaluación del impacto.  Como evidencia del cumplimiento del plan se debe contar con registros de asistencia y evaluación de cada uno de los participantes. \nLos manipuladores de alimentos deben comprender los puntos del proceso que esten bajo su responsabilidad y las acciones correctivas a tomar cuando existan desviaciones. Lo anterior lo evidenciará el Profesional  a través de  entrevistas a manipuladores y/o a traves de la observación.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "El establecimiento debe contar con un plan de capacitación, acorde con la actividad que realiza. para el personal manipulador de alimentos para que se implemente de manera continua y permanente desde el momento de la contratación del manipulador y luego ser reforzado mediante charlas, cursos u otro…",
+          "esComplementaria": false
+        }
+      ],
+      "subCategorias": [
+        {
+          "subCategoria": "3.1 • Estado de salud (signos/lesiones)",
+          "normativa": "Resolución 2674/2013, Artículo 11; Numeral 1, 2, 4, 5. Artículo 14, Numeral 12.",
+          "criterio": "El establecimiento debe implementar las medidas preventivas y correctivas necesarias, como cambio de actividad o envío del manipulador a reconocimiento médico para ser evaluado, con el fin de evitar que un manipulador de alimentos que padece o es portador de una enfermedad susceptible de transmitir…",
+          "items": [
+            {
+              "id": "item_3_1",
+              "codigo": "3.1",
+              "nombre": "Estado de salud (signos/lesiones)",
+              "criterio": "El establecimiento debe implementar las medidas preventivas y correctivas necesarias, como cambio de actividad o envío del manipulador a reconocimiento médico para ser evaluado, con el fin de evitar que un manipulador de alimentos que padece o es portador de una enfermedad susceptible de transmitir…",
+              "normativa": "Resolución 2674/2013, Artículo 11; Numeral 1, 2, 4, 5. Artículo 14, Numeral 12.",
+              "descripcion": "El establecimiento debe implementar las medidas preventivas y correctivas necesarias, como cambio de actividad o envío del manipulador a reconocimiento médico para ser evaluado, con el fin de evitar que un manipulador de alimentos que padece o es portador de una enfermedad susceptible de transmitirse por los alimentos, o tenga heridas infectadas, irritaciones cutáneas o diarrea, trabaje en las zonas o áreas de manipulación de alimentos con probabilidad de contaminar las materias primas, alimentos en proceso, alimentos terminados, envases de alimentos o material de envase o embalaje, superficies de equipos y utensilios con microorganismos patógenos.",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "3.2 • Reconocimiento Médico",
+          "normativa": "Resolución 2674 de 2013, Artículo 11, Numeral 1, 2, 3, 4",
+          "criterio": "El establecimiento debe contar con los certificados médicos de los manipuladores, en los cuales consta la aptitud de éstos para manipular alimentos. Estos certificados deben tener una vigencia máxima de un año a partir de su realización. Según la valoración del médico al manipulador, en caso de ser…",
+          "items": [
+            {
+              "id": "item_3_2",
+              "codigo": "3.2",
+              "nombre": "Reconocimiento Médico",
+              "criterio": "El establecimiento debe contar con los certificados médicos de los manipuladores, en los cuales consta la aptitud de éstos para manipular alimentos. Estos certificados deben tener una vigencia máxima de un año a partir de su realización. Según la valoración del médico al manipulador, en caso de ser…",
+              "normativa": "Resolución 2674 de 2013, Artículo 11, Numeral 1, 2, 3, 4",
+              "descripcion": "El establecimiento debe contar con los certificados médicos de los manipuladores, en los cuales consta la aptitud de éstos para manipular alimentos. Estos certificados deben tener una vigencia máxima de un año a partir de su realización.\n\nSegún la valoración del médico al manipulador, en caso de ser necesario se debe contar con resultados de laboratorio clínico u otros que sean necesarios para establecer la aptitud del manipulador en caso de que se sospeche de enfermedad trasmisible a los alimentos.\n\nEn caso que el médico ordenase un tratamiento al manipulador, el establecimiento debe contar con certificado en el cual conste la aptitud para la manipulación de alimentos una vez finalizado el tratamiento.",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "3.3 • Prácticas higiénicas",
+          "normativa": "Resolución 2674/2013, Artículo 14, Numerales 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13 y 14. Artículo 36. Artículo 35, Numeral 5 y 7.",
+          "criterio": "Higiene personal: Todos los manipuladores de alimentos deben cumplir con las buenas prácticas higiénicas en sus sitios de trabajo, a fin de evitar la contaminación de los alimentos, superficies de contacto, materiales de envase y embalaje. Las uñas se deben mantener cortas, limpias y sin esmalte. L…",
+          "items": [
+            {
+              "id": "item_3_3",
+              "codigo": "3.3",
+              "nombre": "Prácticas higiénicas",
+              "criterio": "Higiene personal: Todos los manipuladores de alimentos deben cumplir con las buenas prácticas higiénicas en sus sitios de trabajo, a fin de evitar la contaminación de los alimentos, superficies de contacto, materiales de envase y embalaje. Las uñas se deben mantener cortas, limpias y sin esmalte. L…",
+              "normativa": "Resolución 2674/2013, Artículo 14, Numerales 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13 y 14. Artículo 36. Artículo 35, Numeral 5 y 7.",
+              "descripcion": "Higiene personal: Todos los manipuladores de alimentos deben cumplir con las buenas prácticas higiénicas en sus sitios de trabajo, a fin de evitar la contaminación de los alimentos, superficies de contacto, materiales de envase y embalaje. Las uñas se deben mantener cortas, limpias y sin esmalte. Los manipuladores de alimentos no deben  consumir alimentos o bebidas, ni fumar ni escupir en las áreas donde se manipulen alimentos. Las personas encargadas de la preparación o el servido de los alimentos, no deben manipular dinero simultáneamente. El servido los alimentos se debe realizar con utensilios de material sanitario y en ningún momento las manos del manipulador deben tener contacto con el alimento..\n\nDotación: El establecimiento debera entregar la dotación y vestimenta de trabajo al personal manipulador acorde con la actividad que realice. El Cabellos debe estar  cubierto. Cuando sea necesario se deberá usar tapabocas (Dependiendo del riesgo de contaminación del alimento). La vestimenta debe ser de color claro, con cierre, cremallera o broche (no botones). El calzado debe ser cerrado, de material resistente e impermeable. , según la actividad que realiza. El manipulador de alimentos no debe salir ni ingresar al establecimiento con la vestimenta de trabajo durante la jornada laboral. Previo al inicio de sus actividades, se deben retirar todos los objetos que puedan caer en los alimentos, equipos o utensilios, como joyas, relojes u otros accesorios. De usarse guantes para manipular los alimentos, estos deben ser de material impermeable, mantenerse limpios y en buen estado y ser sometidos al mismo cuidado higiénico de las manos (lavado y desinfección).\n\nLavado de manos: Antes de iniciar sus labores, después de retirarse del área de trabajo y en cualquier ocasión donde las manos se puedan ensuciar o contaminar, los manipuladores de alimentos se las deben lavar con agua y jabón desinfectante .",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "3.4 • Educación y Capacitación",
+          "normativa": "Resolución 2674/2013, Artículos 12 y 13. Artículo 36.",
+          "criterio": "El establecimiento debe contar con un plan de capacitación, acorde con la actividad que realiza. para el personal manipulador de alimentos para que se implemente de manera continua y permanente desde el momento de la contratación del manipulador y luego ser reforzado mediante charlas, cursos u otro…",
+          "items": [
+            {
+              "id": "item_3_4",
+              "codigo": "3.4",
+              "nombre": "Educación y Capacitación",
+              "criterio": "El establecimiento debe contar con un plan de capacitación, acorde con la actividad que realiza. para el personal manipulador de alimentos para que se implemente de manera continua y permanente desde el momento de la contratación del manipulador y luego ser reforzado mediante charlas, cursos u otro…",
+              "normativa": "Resolución 2674/2013, Artículos 12 y 13. Artículo 36.",
+              "descripcion": "El establecimiento debe contar con un plan de capacitación, acorde con la actividad que realiza. para el personal manipulador de alimentos para que se implemente de manera continua y permanente  desde el momento de la contratación del manipulador  y luego ser reforzado mediante charlas, cursos u otros medios efectivos de actualización Esta capacitación estará bajo la responsabilidad de la empresa y podrá ser efectuada por esta, por personas naturales o jurídicas contratadas y por las autoridades sanitarias. Cuando el plan de capacitación se realice a través de personas naturales o jurídicas diferentes a la empresa, estas deben demostrar su idoneidad técnica y científica y su formación y experiencia específica en las áreas de higiene de los alimentos, Buenas Prácticas de Manufactura y sistemas preventivos de aseguramiento de la inocuidad.\nEl plan debe tener una duración de por lo menos 10 horas anuales y contener temas relacionados con buenas prácticas de manufactura y prácticas higiénicas (Manipulación higiénica de los alimentos, Higiene personal, Higiene de las instalaciones, Control de plagas, prevención de la contaminación cruzada, control de proveedores, control de temperatura, Almacenamiento y transporte de alimentos, entre otras). Contener al menos los siguientes aspectos: Metodología, duración, responsables, cronograma, temas a tratar y evaluación del impacto.  Como evidencia del cumplimiento del plan se debe contar con registros de asistencia y evaluación de cada uno de los participantes. \nLos manipuladores de alimentos deben comprender los puntos del proceso que esten bajo su responsabilidad y las acciones correctivas a tomar cuando existan desviaciones. Lo anterior lo evidenciará el Profesional  a través de  entrevistas a manipuladores y/o a traves de la observación.",
+              "esComplementaria": false
+            }
+          ]
         }
       ]
     },
@@ -120,9 +307,11 @@
           "id": "item_4_1",
           "codigo": "4.1",
           "nombre": "Control de materias primas e insumos",
-          "normativa": "Decreto 561 de 1984, Art. 89. Resolución 2674/2013, Artículo 16, Numerales 1, 3, 4 y 5 ; Artículo 35, Numerales 1, 2 y 3. Resolución 5109 de 2005. Resolución 1506 de 2011. Resoluciones 683, 4142 y 4143 de 2012; 834 y 835 de 2013.",
+          "normativa": "Decreto 561 de 1984, Art. 89. Resolución 2674/2013, Artículo 16, Numerales 1, 3, 4 y 5 ; Artículo 35, Numerales 1, 2 y 3. Resolución 5109 de 2005. Re…",
           "descripcion": "Durante la recepción de las materias primas e insumos (incluido el hielo) se debe evitar su contaminación, alteración o daños físicos y de requerirse se deberán encontrar debidamente rotuladas según la normatividad sanitaria vigente. El establecimiento debe contar con los documentos que soporten el origen de las materias primas. Tanto en la recepción, como previo al uso se deben inspeccionar las materias primas e insumos en cuanto a características organolépticas, temperaturas, condiciones de envase, entre otros, para garantizar su calidad e inocuidad. \n\nLas materias primas lo requieran, deben ser  lavadas con agua potable y desinfectadas previo al uso. Aquellas conservadas mediante congelación, deben ser descongeladas gradualmente previo al uso y no ser recongeladas.\n\nLos productos de la pesca deben ser  descargados y almacenados de manera rapida evitando al perdida de temperatura y contaminación de estos.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "Durante la recepción de las materias primas e insumos (incluido el hielo) se debe evitar su contaminación, alteración o daños físicos y de requerirse se deberán encontrar debidamente rotuladas según la normatividad sanitaria vigente. El establecimiento debe contar con los documentos que soporten el…",
+          "esComplementaria": false
         },
         {
           "id": "item_4_2",
@@ -130,7 +319,9 @@
           "nombre": "Contaminación cruzada",
           "normativa": "Resolución 2674/2013, Artículo 16, Numeral 7; Artículo 18, Numeral 7; Artículo 20, Numeral 5; Artículo 35, Numeral 4.",
           "descripcion": "Los procedimientos como lavar, pelar, cortar, clasificar, desmenuzar, extraer, batir, secar, entre otros, se deben realizar de manera tal que se protejan los alimentos y las materias primas de la contaminación. Durante las etapas de refrigeración, congelación y cocción se  debe garantizar que los tiempos de espera y las variaciones de temperatura no alteren  o contaminen los alimentos.\n\nEl establecimiento debe prevenir la contaminación de los alimentos precocidos o aquellos que esten listos para ser servidos (crudos o cocinados), por contacto directo o indirecto con materias primas crudas que no hayan sido lavadas y desinfectadas. En caso de emplear hielo que entre en contacto directo con los alimentos, este debe ser elaborado con agua potable.\n\nLos equipos y utensilios que entren en contacto con materias primas o elementos contaminados, se deben lavar y desinfectar antes de ser usados nuevamente.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "Los procedimientos como lavar, pelar, cortar, clasificar, desmenuzar, extraer, batir, secar, entre otros, se deben realizar de manera tal que se protejan los alimentos y las materias primas de la contaminación. Durante las etapas de refrigeración, congelación y cocción se debe garantizar que los ti…",
+          "esComplementaria": false
         },
         {
           "id": "item_4_3",
@@ -138,7 +329,9 @@
           "nombre": "Manejo de temperaturas",
           "normativa": "Ley 9 de 1979, Artículo 293, 425. Resolución 2674/2013, Artículo 18, Numeral 3.1, 3.2, 3.3 y 5.",
           "descripcion": "Los alimentos que requieran cocción deben alcanzar una temperatura mayor de 60°C. La cocción de alimentos por contacto directo con la llama no debe producir contaminación del alimento.\n\nLos alimentos que requieran refrigeración y/o congelación se deben mantener a las temperaturas exigidas por la normatividad sanitaria vigente según el tipo de producto. Una vez que se descongele un alimento, estos no deben ser recongelados o refrigerados.\n\nCuando se requiera esperar, entre una actividad y otra, el alimento se debe mantener protegido garantizando que se conserve a temperaturas mayores a 60°C o no mayores de 4°C +/- 2, según el tipo de alimento.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "Los alimentos que requieran cocción deben alcanzar una temperatura mayor de 60°C. La cocción de alimentos por contacto directo con la llama no debe producir contaminación del alimento. Los alimentos que requieran refrigeración y/o congelación se deben mantener a las temperaturas exigidas por la nor…",
+          "esComplementaria": false
         },
         {
           "id": "item_4_4",
@@ -146,7 +339,75 @@
           "nombre": "Condiciones de almacenamiento",
           "normativa": "Resoluciones 683/2012, 2674/2013 Artículo 16, Numeral 5 y 6. Artículo 33, Numeral 9.",
           "descripcion": "Los envases que entren en contacto con el alimento se deben almacenar en un sitio exclusivo para este fin en condiciones higiénicas y protegidos de manera que se evite su contaminación.\n\nLas materias primas e insumos que requieran ser almacenados, antes de ser usados para la preparación, se deben almacenr en sitios que aseguren su protección de la contaminación y alteración. No se deben  almacenar sustancias peligrosas en la cocina, en áreas de preparación de alimentos, ni en áreas de almacenamiento de las materias primas.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "Los envases que entren en contacto con el alimento se deben almacenar en un sitio exclusivo para este fin en condiciones higiénicas y protegidos de manera que se evite su contaminación. Las materias primas e insumos que requieran ser almacenados, antes de ser usados para la preparación, se deben al…",
+          "esComplementaria": false
+        }
+      ],
+      "subCategorias": [
+        {
+          "subCategoria": "4.1 • Control de materias primas e insumos",
+          "normativa": "Decreto 561 de 1984, Art. 89. Resolución 2674/2013, Artículo 16, Numerales 1, 3, 4 y 5 ; Artículo 35, Numerales 1, 2 y 3. Resolución 5109 de 2005. Re…",
+          "criterio": "Durante la recepción de las materias primas e insumos (incluido el hielo) se debe evitar su contaminación, alteración o daños físicos y de requerirse se deberán encontrar debidamente rotuladas según la normatividad sanitaria vigente. El establecimiento debe contar con los documentos que soporten el…",
+          "items": [
+            {
+              "id": "item_4_1",
+              "codigo": "4.1",
+              "nombre": "Control de materias primas e insumos",
+              "criterio": "Durante la recepción de las materias primas e insumos (incluido el hielo) se debe evitar su contaminación, alteración o daños físicos y de requerirse se deberán encontrar debidamente rotuladas según la normatividad sanitaria vigente. El establecimiento debe contar con los documentos que soporten el…",
+              "normativa": "Decreto 561 de 1984, Art. 89. Resolución 2674/2013, Artículo 16, Numerales 1, 3, 4 y 5 ; Artículo 35, Numerales 1, 2 y 3. Resolución 5109 de 2005. Re…",
+              "descripcion": "Durante la recepción de las materias primas e insumos (incluido el hielo) se debe evitar su contaminación, alteración o daños físicos y de requerirse se deberán encontrar debidamente rotuladas según la normatividad sanitaria vigente. El establecimiento debe contar con los documentos que soporten el origen de las materias primas. Tanto en la recepción, como previo al uso se deben inspeccionar las materias primas e insumos en cuanto a características organolépticas, temperaturas, condiciones de envase, entre otros, para garantizar su calidad e inocuidad. \n\nLas materias primas lo requieran, deben ser  lavadas con agua potable y desinfectadas previo al uso. Aquellas conservadas mediante congelación, deben ser descongeladas gradualmente previo al uso y no ser recongeladas.\n\nLos productos de la pesca deben ser  descargados y almacenados de manera rapida evitando al perdida de temperatura y contaminación de estos.",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "4.2 • Contaminación cruzada",
+          "normativa": "Resolución 2674/2013, Artículo 16, Numeral 7; Artículo 18, Numeral 7; Artículo 20, Numeral 5; Artículo 35, Numeral 4.",
+          "criterio": "Los procedimientos como lavar, pelar, cortar, clasificar, desmenuzar, extraer, batir, secar, entre otros, se deben realizar de manera tal que se protejan los alimentos y las materias primas de la contaminación. Durante las etapas de refrigeración, congelación y cocción se debe garantizar que los ti…",
+          "items": [
+            {
+              "id": "item_4_2",
+              "codigo": "4.2",
+              "nombre": "Contaminación cruzada",
+              "criterio": "Los procedimientos como lavar, pelar, cortar, clasificar, desmenuzar, extraer, batir, secar, entre otros, se deben realizar de manera tal que se protejan los alimentos y las materias primas de la contaminación. Durante las etapas de refrigeración, congelación y cocción se debe garantizar que los ti…",
+              "normativa": "Resolución 2674/2013, Artículo 16, Numeral 7; Artículo 18, Numeral 7; Artículo 20, Numeral 5; Artículo 35, Numeral 4.",
+              "descripcion": "Los procedimientos como lavar, pelar, cortar, clasificar, desmenuzar, extraer, batir, secar, entre otros, se deben realizar de manera tal que se protejan los alimentos y las materias primas de la contaminación. Durante las etapas de refrigeración, congelación y cocción se  debe garantizar que los tiempos de espera y las variaciones de temperatura no alteren  o contaminen los alimentos.\n\nEl establecimiento debe prevenir la contaminación de los alimentos precocidos o aquellos que esten listos para ser servidos (crudos o cocinados), por contacto directo o indirecto con materias primas crudas que no hayan sido lavadas y desinfectadas. En caso de emplear hielo que entre en contacto directo con los alimentos, este debe ser elaborado con agua potable.\n\nLos equipos y utensilios que entren en contacto con materias primas o elementos contaminados, se deben lavar y desinfectar antes de ser usados nuevamente.",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "4.3 • Manejo de temperaturas",
+          "normativa": "Ley 9 de 1979, Artículo 293, 425. Resolución 2674/2013, Artículo 18, Numeral 3.1, 3.2, 3.3 y 5.",
+          "criterio": "Los alimentos que requieran cocción deben alcanzar una temperatura mayor de 60°C. La cocción de alimentos por contacto directo con la llama no debe producir contaminación del alimento. Los alimentos que requieran refrigeración y/o congelación se deben mantener a las temperaturas exigidas por la nor…",
+          "items": [
+            {
+              "id": "item_4_3",
+              "codigo": "4.3",
+              "nombre": "Manejo de temperaturas",
+              "criterio": "Los alimentos que requieran cocción deben alcanzar una temperatura mayor de 60°C. La cocción de alimentos por contacto directo con la llama no debe producir contaminación del alimento. Los alimentos que requieran refrigeración y/o congelación se deben mantener a las temperaturas exigidas por la nor…",
+              "normativa": "Ley 9 de 1979, Artículo 293, 425. Resolución 2674/2013, Artículo 18, Numeral 3.1, 3.2, 3.3 y 5.",
+              "descripcion": "Los alimentos que requieran cocción deben alcanzar una temperatura mayor de 60°C. La cocción de alimentos por contacto directo con la llama no debe producir contaminación del alimento.\n\nLos alimentos que requieran refrigeración y/o congelación se deben mantener a las temperaturas exigidas por la normatividad sanitaria vigente según el tipo de producto. Una vez que se descongele un alimento, estos no deben ser recongelados o refrigerados.\n\nCuando se requiera esperar, entre una actividad y otra, el alimento se debe mantener protegido garantizando que se conserve a temperaturas mayores a 60°C o no mayores de 4°C +/- 2, según el tipo de alimento.",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "4.4 • Condiciones de almacenamiento",
+          "normativa": "Resoluciones 683/2012, 2674/2013 Artículo 16, Numeral 5 y 6. Artículo 33, Numeral 9.",
+          "criterio": "Los envases que entren en contacto con el alimento se deben almacenar en un sitio exclusivo para este fin en condiciones higiénicas y protegidos de manera que se evite su contaminación. Las materias primas e insumos que requieran ser almacenados, antes de ser usados para la preparación, se deben al…",
+          "items": [
+            {
+              "id": "item_4_4",
+              "codigo": "4.4",
+              "nombre": "Condiciones de almacenamiento",
+              "criterio": "Los envases que entren en contacto con el alimento se deben almacenar en un sitio exclusivo para este fin en condiciones higiénicas y protegidos de manera que se evite su contaminación. Las materias primas e insumos que requieran ser almacenados, antes de ser usados para la preparación, se deben al…",
+              "normativa": "Resoluciones 683/2012, 2674/2013 Artículo 16, Numeral 5 y 6. Artículo 33, Numeral 9.",
+              "descripcion": "Los envases que entren en contacto con el alimento se deben almacenar en un sitio exclusivo para este fin en condiciones higiénicas y protegidos de manera que se evite su contaminación.\n\nLas materias primas e insumos que requieran ser almacenados, antes de ser usados para la preparación, se deben almacenr en sitios que aseguren su protección de la contaminación y alteración. No se deben  almacenar sustancias peligrosas en la cocina, en áreas de preparación de alimentos, ni en áreas de almacenamiento de las materias primas.",
+              "esComplementaria": false
+            }
+          ]
         }
       ]
     },
@@ -159,9 +420,11 @@
           "id": "item_5_1",
           "codigo": "5.1",
           "nombre": "Suministro y calidad de agua potable",
-          "normativa": "Resolución 2674/2013, Artículo 6, Numeral 3.1, 3.2, 3.3, 3.5.1, 3.5.2 y 3.5.3, Artículo 26, Numeral 4. Artículo 32, Numeral 8. Resolución 2115 de 2007, Artículo 9.",
+          "normativa": "Resolución 2674/2013, Artículo 6, Numeral 3.1, 3.2, 3.3, 3.5.1, 3.5.2 y 3.5.3, Artículo 26, Numeral 4. Artículo 32, Numeral 8. Resolución 2115 de 200…",
           "descripcion": "El establecimiento debe disponer de suministro de agua potable en cantidad suficiente para las actividades que se realicen, así como para las operaciones de limpieza y desinfección.\n\nEn caso de contar con un sistema de almacenamiento de agua, éste debe ser de fácil acceso, garantizar la potabilidad del agua, estar construido con materiales sanitarios resistentes, no porosos, impermeables, no absorbentes y con acabados libres de grietas o defectos que dificulten su limpieza y desinfección.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "El establecimiento debe disponer de suministro de agua potable en cantidad suficiente para las actividades que se realicen, así como para las operaciones de limpieza y desinfección. En caso de contar con un sistema de almacenamiento de agua, éste debe ser de fácil acceso, garantizar la potabilidad…",
+          "esComplementaria": false
         },
         {
           "id": "item_5_2",
@@ -169,7 +432,9 @@
           "nombre": "Residuos líquidos",
           "normativa": "Resolución 2674/2013 Artículo 6, Numeral 4, Artículo 32, Numerales 5 y 10.",
           "descripcion": "El establecimiento debe contar con los sistemas de desagüe que permita la evacuación rápida y eficiente de los residuos líquidos, evitando el acúmulo de éstos, la contaminación de los alimentos y las superficies que entren en contacto con éstos últimos. El sistema debe garantizar que no exista devolución de las aguas servidas. La presencia de olores desagradables en el establecimiento pueden indicar un mal funcionamiento del sistema de desagüe.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "El establecimiento debe contar con los sistemas de desagüe que permita la evacuación rápida y eficiente de los residuos líquidos, evitando el acúmulo de éstos, la contaminación de los alimentos y las superficies que entren en contacto con éstos últimos. El sistema debe garantizar que no exista devo…",
+          "esComplementaria": false
         },
         {
           "id": "item_5_3",
@@ -177,7 +442,9 @@
           "nombre": "Residuos sólidos",
           "normativa": "Resolución 2674/2013 Artículo 6, Numerales 5.1, 5.2 y 5.3. Artículo 33, Numerales 5, 6 y 7. Artículo 18, Numeral 11.",
           "descripcion": "El establecimiento debe tener implementadas las medidas necesarias para la disposición adecuada y el retiro oportuno de los residuos sólidos, de manera que no se acumulen en las áreas de preparación, almacenamiento y servido de los alimentos (Incluye sobras, descartes, envases, material de embalaje, entre otros). Debe cuenta con los recipientes para la disposición temporal de los residuos sólidos, de material sanitario debidamente tapados y se deben encontrar alejados del lugar donde se preparan, almacenan o se sirven los alimentos.\n\nLos residuos sólidos se deben disponer de forma que se impide el acceso y proliferación de plagas.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "El establecimiento debe tener implementadas las medidas necesarias para la disposición adecuada y el retiro oportuno de los residuos sólidos, de manera que no se acumulen en las áreas de preparación, almacenamiento y servido de los alimentos (Incluye sobras, descartes, envases, material de embalaje…",
+          "esComplementaria": false
         },
         {
           "id": "item_5_4",
@@ -185,7 +452,9 @@
           "nombre": "Control integral de plagas",
           "normativa": "Resolución 2674/2013 Artículo 26, Numeral 3.",
           "descripcion": "En el establecimiento no se deben hallar evidencia la presencia de plagas o daños ocasionados por éstas y se debe contar con medidas de control integral de tipo preventivo, para evitar su aparición.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "En el establecimiento no se deben hallar evidencia la presencia de plagas o daños ocasionados por éstas y se debe contar con medidas de control integral de tipo preventivo, para evitar su aparición.",
+          "esComplementaria": false
         },
         {
           "id": "item_5_5",
@@ -193,7 +462,9 @@
           "nombre": "Limpieza y desinfección de áreas, equipos y utensilios",
           "normativa": "Resolución 2674/2013 Artículo 6 Numeral 6.5; Artículo 26 Numeral 1",
           "descripcion": "El establecimiento debe implementar medidas para evitar la contaminación de equipos y utensilios después que éstos se limpien y desinfecten. Los productos químicos para la limpieza y desinfección se deben almacenar en sitios diferentes a las áreas de almacenamiento, preparación y servido de alimentos, y estar debidamente rotulados e identificados. Los implementos empleados en las labores de limpieza y desinfección se deben mantener en buen estado y no deben representar riesgo de contaminación para el alimento, ni para las áreas, equipos y utensilios en contacto estos. Las labores de limpieza y desinfección de los implementos de aseo se  deben realizar en un sitio diferente a las áreas de manipulación de alimentos. \n\nLos agentes químicos utilizados para las operaciones de limpieza y desinfección deben ser preparados de acuerdo con las indicaciones y en las concentraciones definidas por el fabricante o proveedor.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "El establecimiento debe implementar medidas para evitar la contaminación de equipos y utensilios después que éstos se limpien y desinfecten. Los productos químicos para la limpieza y desinfección se deben almacenar en sitios diferentes a las áreas de almacenamiento, preparación y servido de aliment…",
+          "esComplementaria": false
         },
         {
           "id": "item_5_6",
@@ -201,7 +472,107 @@
           "nombre": "Soportes documentales de saneamiento",
           "normativa": "Decreto 1575 de 2007, Artículo 10. Resolución 2674/2013 Artículo 26;",
           "descripcion": "El establecimientodebe contar con un plan de saneamiento escrito, acorde con su actividad, el cual debe contener como mínimo los siguientes programas:\na. Limpieza y desinfección: Debe incluir las sustancias empleadas, concentración y forma de uso; \nb. Desechos sólidos: Debe incluir el procedimiento de recolección, conducción, manejo, almacenamiento interno, clasificación y disposición final;\nc. Control de plagas: Debe incluir las diferentes medidas de control preventivo necesarias para el establecimiento;\nd. Abastecimiento o suministro de agua potable: Debe incluir  las fuentes de captación y los tratamientos realizados para garantizar la potabilidad del agua. \n\nEl establecimiento debe contar con los registros que soportan el cumplimiento del plan de saneamiento, incluidos aquellos que permitan evidenciar que los sistemas de almacenamiento de agua potable sean lavados y desinfectados de acuerdo a lo establecido en la normatividad sanitaria vigente en la materia.",
-          "personalizado": false
+          "personalizado": false,
+          "criterio": "El establecimientodebe contar con un plan de saneamiento escrito, acorde con su actividad, el cual debe contener como mínimo los siguientes programas: a. Limpieza y desinfección: Debe incluir las sustancias empleadas, concentración y forma de uso; b. Desechos sólidos: Debe incluir el procedimiento…",
+          "esComplementaria": false
+        }
+      ],
+      "subCategorias": [
+        {
+          "subCategoria": "5.1 • Suministro y calidad de agua potable",
+          "normativa": "Resolución 2674/2013, Artículo 6, Numeral 3.1, 3.2, 3.3, 3.5.1, 3.5.2 y 3.5.3, Artículo 26, Numeral 4. Artículo 32, Numeral 8. Resolución 2115 de 200…",
+          "criterio": "El establecimiento debe disponer de suministro de agua potable en cantidad suficiente para las actividades que se realicen, así como para las operaciones de limpieza y desinfección. En caso de contar con un sistema de almacenamiento de agua, éste debe ser de fácil acceso, garantizar la potabilidad…",
+          "items": [
+            {
+              "id": "item_5_1",
+              "codigo": "5.1",
+              "nombre": "Suministro y calidad de agua potable",
+              "criterio": "El establecimiento debe disponer de suministro de agua potable en cantidad suficiente para las actividades que se realicen, así como para las operaciones de limpieza y desinfección. En caso de contar con un sistema de almacenamiento de agua, éste debe ser de fácil acceso, garantizar la potabilidad…",
+              "normativa": "Resolución 2674/2013, Artículo 6, Numeral 3.1, 3.2, 3.3, 3.5.1, 3.5.2 y 3.5.3, Artículo 26, Numeral 4. Artículo 32, Numeral 8. Resolución 2115 de 200…",
+              "descripcion": "El establecimiento debe disponer de suministro de agua potable en cantidad suficiente para las actividades que se realicen, así como para las operaciones de limpieza y desinfección.\n\nEn caso de contar con un sistema de almacenamiento de agua, éste debe ser de fácil acceso, garantizar la potabilidad del agua, estar construido con materiales sanitarios resistentes, no porosos, impermeables, no absorbentes y con acabados libres de grietas o defectos que dificulten su limpieza y desinfección.",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "5.2 • Residuos líquidos",
+          "normativa": "Resolución 2674/2013 Artículo 6, Numeral 4, Artículo 32, Numerales 5 y 10.",
+          "criterio": "El establecimiento debe contar con los sistemas de desagüe que permita la evacuación rápida y eficiente de los residuos líquidos, evitando el acúmulo de éstos, la contaminación de los alimentos y las superficies que entren en contacto con éstos últimos. El sistema debe garantizar que no exista devo…",
+          "items": [
+            {
+              "id": "item_5_2",
+              "codigo": "5.2",
+              "nombre": "Residuos líquidos",
+              "criterio": "El establecimiento debe contar con los sistemas de desagüe que permita la evacuación rápida y eficiente de los residuos líquidos, evitando el acúmulo de éstos, la contaminación de los alimentos y las superficies que entren en contacto con éstos últimos. El sistema debe garantizar que no exista devo…",
+              "normativa": "Resolución 2674/2013 Artículo 6, Numeral 4, Artículo 32, Numerales 5 y 10.",
+              "descripcion": "El establecimiento debe contar con los sistemas de desagüe que permita la evacuación rápida y eficiente de los residuos líquidos, evitando el acúmulo de éstos, la contaminación de los alimentos y las superficies que entren en contacto con éstos últimos. El sistema debe garantizar que no exista devolución de las aguas servidas. La presencia de olores desagradables en el establecimiento pueden indicar un mal funcionamiento del sistema de desagüe.",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "5.3 • Residuos sólidos",
+          "normativa": "Resolución 2674/2013 Artículo 6, Numerales 5.1, 5.2 y 5.3. Artículo 33, Numerales 5, 6 y 7. Artículo 18, Numeral 11.",
+          "criterio": "El establecimiento debe tener implementadas las medidas necesarias para la disposición adecuada y el retiro oportuno de los residuos sólidos, de manera que no se acumulen en las áreas de preparación, almacenamiento y servido de los alimentos (Incluye sobras, descartes, envases, material de embalaje…",
+          "items": [
+            {
+              "id": "item_5_3",
+              "codigo": "5.3",
+              "nombre": "Residuos sólidos",
+              "criterio": "El establecimiento debe tener implementadas las medidas necesarias para la disposición adecuada y el retiro oportuno de los residuos sólidos, de manera que no se acumulen en las áreas de preparación, almacenamiento y servido de los alimentos (Incluye sobras, descartes, envases, material de embalaje…",
+              "normativa": "Resolución 2674/2013 Artículo 6, Numerales 5.1, 5.2 y 5.3. Artículo 33, Numerales 5, 6 y 7. Artículo 18, Numeral 11.",
+              "descripcion": "El establecimiento debe tener implementadas las medidas necesarias para la disposición adecuada y el retiro oportuno de los residuos sólidos, de manera que no se acumulen en las áreas de preparación, almacenamiento y servido de los alimentos (Incluye sobras, descartes, envases, material de embalaje, entre otros). Debe cuenta con los recipientes para la disposición temporal de los residuos sólidos, de material sanitario debidamente tapados y se deben encontrar alejados del lugar donde se preparan, almacenan o se sirven los alimentos.\n\nLos residuos sólidos se deben disponer de forma que se impide el acceso y proliferación de plagas.",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "5.4 • Control integral de plagas",
+          "normativa": "Resolución 2674/2013 Artículo 26, Numeral 3.",
+          "criterio": "En el establecimiento no se deben hallar evidencia la presencia de plagas o daños ocasionados por éstas y se debe contar con medidas de control integral de tipo preventivo, para evitar su aparición.",
+          "items": [
+            {
+              "id": "item_5_4",
+              "codigo": "5.4",
+              "nombre": "Control integral de plagas",
+              "criterio": "En el establecimiento no se deben hallar evidencia la presencia de plagas o daños ocasionados por éstas y se debe contar con medidas de control integral de tipo preventivo, para evitar su aparición.",
+              "normativa": "Resolución 2674/2013 Artículo 26, Numeral 3.",
+              "descripcion": "En el establecimiento no se deben hallar evidencia la presencia de plagas o daños ocasionados por éstas y se debe contar con medidas de control integral de tipo preventivo, para evitar su aparición.",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "5.5 • Limpieza y desinfección de áreas, equipos y utensilios",
+          "normativa": "Resolución 2674/2013 Artículo 6 Numeral 6.5; Artículo 26 Numeral 1",
+          "criterio": "El establecimiento debe implementar medidas para evitar la contaminación de equipos y utensilios después que éstos se limpien y desinfecten. Los productos químicos para la limpieza y desinfección se deben almacenar en sitios diferentes a las áreas de almacenamiento, preparación y servido de aliment…",
+          "items": [
+            {
+              "id": "item_5_5",
+              "codigo": "5.5",
+              "nombre": "Limpieza y desinfección de áreas, equipos y utensilios",
+              "criterio": "El establecimiento debe implementar medidas para evitar la contaminación de equipos y utensilios después que éstos se limpien y desinfecten. Los productos químicos para la limpieza y desinfección se deben almacenar en sitios diferentes a las áreas de almacenamiento, preparación y servido de aliment…",
+              "normativa": "Resolución 2674/2013 Artículo 6 Numeral 6.5; Artículo 26 Numeral 1",
+              "descripcion": "El establecimiento debe implementar medidas para evitar la contaminación de equipos y utensilios después que éstos se limpien y desinfecten. Los productos químicos para la limpieza y desinfección se deben almacenar en sitios diferentes a las áreas de almacenamiento, preparación y servido de alimentos, y estar debidamente rotulados e identificados. Los implementos empleados en las labores de limpieza y desinfección se deben mantener en buen estado y no deben representar riesgo de contaminación para el alimento, ni para las áreas, equipos y utensilios en contacto estos. Las labores de limpieza y desinfección de los implementos de aseo se  deben realizar en un sitio diferente a las áreas de manipulación de alimentos. \n\nLos agentes químicos utilizados para las operaciones de limpieza y desinfección deben ser preparados de acuerdo con las indicaciones y en las concentraciones definidas por el fabricante o proveedor.",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "5.6 • Soportes documentales de saneamiento",
+          "normativa": "Decreto 1575 de 2007, Artículo 10. Resolución 2674/2013 Artículo 26;",
+          "criterio": "El establecimientodebe contar con un plan de saneamiento escrito, acorde con su actividad, el cual debe contener como mínimo los siguientes programas: a. Limpieza y desinfección: Debe incluir las sustancias empleadas, concentración y forma de uso; b. Desechos sólidos: Debe incluir el procedimiento…",
+          "items": [
+            {
+              "id": "item_5_6",
+              "codigo": "5.6",
+              "nombre": "Soportes documentales de saneamiento",
+              "criterio": "El establecimientodebe contar con un plan de saneamiento escrito, acorde con su actividad, el cual debe contener como mínimo los siguientes programas: a. Limpieza y desinfección: Debe incluir las sustancias empleadas, concentración y forma de uso; b. Desechos sólidos: Debe incluir el procedimiento…",
+              "normativa": "Decreto 1575 de 2007, Artículo 10. Resolución 2674/2013 Artículo 26;",
+              "descripcion": "El establecimientodebe contar con un plan de saneamiento escrito, acorde con su actividad, el cual debe contener como mínimo los siguientes programas:\na. Limpieza y desinfección: Debe incluir las sustancias empleadas, concentración y forma de uso; \nb. Desechos sólidos: Debe incluir el procedimiento de recolección, conducción, manejo, almacenamiento interno, clasificación y disposición final;\nc. Control de plagas: Debe incluir las diferentes medidas de control preventivo necesarias para el establecimiento;\nd. Abastecimiento o suministro de agua potable: Debe incluir  las fuentes de captación y los tratamientos realizados para garantizar la potabilidad del agua. \n\nEl establecimiento debe contar con los registros que soportan el cumplimiento del plan de saneamiento, incluidos aquellos que permitan evidenciar que los sistemas de almacenamiento de agua potable sean lavados y desinfectados de acuerdo a lo establecido en la normatividad sanitaria vigente en la materia.",
+              "esComplementaria": false
+            }
+          ]
         }
       ]
     },
@@ -215,64 +586,210 @@
           "codigo": "6.1",
           "nombre": "Plan de autocontrol",
           "normativa": "Res. 2674/2013 — Programa de autocontrol y verificación del cumplimiento sanitario",
-          "descripcion": "",
-          "personalizado": false
+          "descripcion": "Plan de autocontrol",
+          "personalizado": false,
+          "criterio": "Plan de autocontrol",
+          "esComplementaria": false
         },
         {
           "id": "item_6_2",
           "codigo": "6.2",
           "nombre": "Registros de monitoreo",
           "normativa": "Res. 2674/2013 — Registros de monitoreo de puntos críticos y controles operacionales",
-          "descripcion": "",
-          "personalizado": false
+          "descripcion": "Registros de monitoreo",
+          "personalizado": false,
+          "criterio": "Registros de monitoreo",
+          "esComplementaria": false
         },
         {
           "id": "item_6_3",
           "codigo": "6.3",
           "nombre": "Acciones correctivas",
           "normativa": "Res. 2674/2013 — Procedimientos documentados de acciones correctivas y preventivas",
-          "descripcion": "",
-          "personalizado": false
+          "descripcion": "Acciones correctivas",
+          "personalizado": false,
+          "criterio": "Acciones correctivas",
+          "esComplementaria": false
         },
         {
           "id": "item_6_4",
           "codigo": "6.4",
           "nombre": "Verificación interna",
           "normativa": "Res. 2674/2013 — Verificación interna periódica del sistema de autocontrol",
-          "descripcion": "",
-          "personalizado": false
+          "descripcion": "Verificación interna",
+          "personalizado": false,
+          "criterio": "Verificación interna",
+          "esComplementaria": false
         },
         {
           "id": "item_6_5",
           "codigo": "6.5",
           "nombre": "Trazabilidad",
           "normativa": "Res. 2674/2013 · Dec. 3075/1997 — Trazabilidad de materias primas y productos terminados",
-          "descripcion": "",
-          "personalizado": false
+          "descripcion": "Trazabilidad",
+          "personalizado": false,
+          "criterio": "Trazabilidad",
+          "esComplementaria": false
         },
         {
           "id": "item_6_6",
           "codigo": "6.6",
           "nombre": "Retiro y recuperación producto",
           "normativa": "Res. 2674/2013 — Procedimiento de retiro o recuperación de producto cuando aplique",
-          "descripcion": "",
-          "personalizado": false
+          "descripcion": "Retiro y recuperación producto",
+          "personalizado": false,
+          "criterio": "Retiro y recuperación producto",
+          "esComplementaria": false
         },
         {
           "id": "item_6_7",
           "codigo": "6.7",
           "nombre": "Auditorías documentadas",
           "normativa": "Res. 2674/2013 — Registros de auditorías internas o externas al sistema sanitario",
-          "descripcion": "",
-          "personalizado": false
+          "descripcion": "Auditorías documentadas",
+          "personalizado": false,
+          "criterio": "Auditorías documentadas",
+          "esComplementaria": false
         },
         {
           "id": "item_6_8",
           "codigo": "6.8",
           "nombre": "Revisión por la dirección",
           "normativa": "Res. 2674/2013 — Revisión periódica por la dirección del desempeño del plan sanitario",
-          "descripcion": "",
-          "personalizado": false
+          "descripcion": "Revisión por la dirección",
+          "personalizado": false,
+          "criterio": "Revisión por la dirección",
+          "esComplementaria": false
+        }
+      ],
+      "subCategorias": [
+        {
+          "subCategoria": "6.1 • Plan de autocontrol",
+          "normativa": "Res. 2674/2013 — Programa de autocontrol y verificación del cumplimiento sanitario",
+          "criterio": "Plan de autocontrol",
+          "items": [
+            {
+              "id": "item_6_1",
+              "codigo": "6.1",
+              "nombre": "Plan de autocontrol",
+              "criterio": "Plan de autocontrol",
+              "normativa": "Res. 2674/2013 — Programa de autocontrol y verificación del cumplimiento sanitario",
+              "descripcion": "Plan de autocontrol",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "6.2 • Registros de monitoreo",
+          "normativa": "Res. 2674/2013 — Registros de monitoreo de puntos críticos y controles operacionales",
+          "criterio": "Registros de monitoreo",
+          "items": [
+            {
+              "id": "item_6_2",
+              "codigo": "6.2",
+              "nombre": "Registros de monitoreo",
+              "criterio": "Registros de monitoreo",
+              "normativa": "Res. 2674/2013 — Registros de monitoreo de puntos críticos y controles operacionales",
+              "descripcion": "Registros de monitoreo",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "6.3 • Acciones correctivas",
+          "normativa": "Res. 2674/2013 — Procedimientos documentados de acciones correctivas y preventivas",
+          "criterio": "Acciones correctivas",
+          "items": [
+            {
+              "id": "item_6_3",
+              "codigo": "6.3",
+              "nombre": "Acciones correctivas",
+              "criterio": "Acciones correctivas",
+              "normativa": "Res. 2674/2013 — Procedimientos documentados de acciones correctivas y preventivas",
+              "descripcion": "Acciones correctivas",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "6.4 • Verificación interna",
+          "normativa": "Res. 2674/2013 — Verificación interna periódica del sistema de autocontrol",
+          "criterio": "Verificación interna",
+          "items": [
+            {
+              "id": "item_6_4",
+              "codigo": "6.4",
+              "nombre": "Verificación interna",
+              "criterio": "Verificación interna",
+              "normativa": "Res. 2674/2013 — Verificación interna periódica del sistema de autocontrol",
+              "descripcion": "Verificación interna",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "6.5 • Trazabilidad",
+          "normativa": "Res. 2674/2013 · Dec. 3075/1997 — Trazabilidad de materias primas y productos terminados",
+          "criterio": "Trazabilidad",
+          "items": [
+            {
+              "id": "item_6_5",
+              "codigo": "6.5",
+              "nombre": "Trazabilidad",
+              "criterio": "Trazabilidad",
+              "normativa": "Res. 2674/2013 · Dec. 3075/1997 — Trazabilidad de materias primas y productos terminados",
+              "descripcion": "Trazabilidad",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "6.6 • Retiro y recuperación producto",
+          "normativa": "Res. 2674/2013 — Procedimiento de retiro o recuperación de producto cuando aplique",
+          "criterio": "Retiro y recuperación producto",
+          "items": [
+            {
+              "id": "item_6_6",
+              "codigo": "6.6",
+              "nombre": "Retiro y recuperación producto",
+              "criterio": "Retiro y recuperación producto",
+              "normativa": "Res. 2674/2013 — Procedimiento de retiro o recuperación de producto cuando aplique",
+              "descripcion": "Retiro y recuperación producto",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "6.7 • Auditorías documentadas",
+          "normativa": "Res. 2674/2013 — Registros de auditorías internas o externas al sistema sanitario",
+          "criterio": "Auditorías documentadas",
+          "items": [
+            {
+              "id": "item_6_7",
+              "codigo": "6.7",
+              "nombre": "Auditorías documentadas",
+              "criterio": "Auditorías documentadas",
+              "normativa": "Res. 2674/2013 — Registros de auditorías internas o externas al sistema sanitario",
+              "descripcion": "Auditorías documentadas",
+              "esComplementaria": false
+            }
+          ]
+        },
+        {
+          "subCategoria": "6.8 • Revisión por la dirección",
+          "normativa": "Res. 2674/2013 — Revisión periódica por la dirección del desempeño del plan sanitario",
+          "criterio": "Revisión por la dirección",
+          "items": [
+            {
+              "id": "item_6_8",
+              "codigo": "6.8",
+              "nombre": "Revisión por la dirección",
+              "criterio": "Revisión por la dirección",
+              "normativa": "Res. 2674/2013 — Revisión periódica por la dirección del desempeño del plan sanitario",
+              "descripcion": "Revisión por la dirección",
+              "esComplementaria": false
+            }
+          ]
         }
       ]
     }

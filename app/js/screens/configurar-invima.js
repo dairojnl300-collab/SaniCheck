@@ -9,6 +9,7 @@ const ConfigurarInvima = (() => {
   let _tab = 'cat_01';
   let _mode = 'config';
   let _editCompId = null;
+  let _openCriterio = {};
 
   function _esc(s) {
     if (s == null) return '';
@@ -147,6 +148,67 @@ const ConfigurarInvima = (() => {
       </div>`;
   }
 
+  function _subCriterioKey(catId, subCategoria) {
+    return catId + '::' + subCategoria;
+  }
+
+  function _resolveNormItems(groupItems, normRows) {
+    return (groupItems || []).map(baseIt =>
+      normRows.find(r => r.item_id === baseIt.id || r.codigo === baseIt.codigo)
+    ).filter(Boolean);
+  }
+
+  function _renderSubCategoria(subCategoria, items, catId, opts = {}) {
+    if (!items.length) return '';
+    const isComp = !!opts.isComplementaria;
+    const key = _subCriterioKey(catId, subCategoria);
+    const open = !!_openCriterio[key];
+    const norm = opts.normativa || items[0]?.normativa || '';
+    const crit = opts.criterio || items[0]?.criterio || items[0]?.descripcion || '';
+    const toggleLabel = open ? 'Ocultar criterio / normativa' : 'Mostrar criterio / normativa';
+    const itemsHtml = items.map(it =>
+      isComp ? _renderEvalComplementariaItem(it) : _renderEvalNormativaItem(it)
+    ).join('');
+
+    return `
+      <div class="subcategoria-wrapper${isComp ? ' subcategoria-complementaria' : ''}">
+        <div class="subcategoria-header">
+          <h4>${_esc(subCategoria)}</h4>
+          ${norm || crit ? `<a href="#" class="toggle-criterio" onclick="event.preventDefault();ConfigurarInvima.toggleCriterio('${_esc(catId)}','${_esc(subCategoria)}')">${toggleLabel}</a>` : ''}
+        </div>
+        ${norm || crit ? `
+        <div class="criterio-section${open ? '' : ' collapsed'}">
+          ${norm ? `<div class="normativa-box"><strong>✓ Normativa</strong><p>${_esc(norm)}</p></div>` : ''}
+          ${crit ? `<div class="criterio-box"><strong>✓ Criterio</strong><p>${_esc(crit)}</p></div>` : ''}
+        </div>` : ''}
+        <div class="items-evaluables">${itemsHtml}</div>
+      </div>`;
+  }
+
+  function _evalGroupsForCat(catId) {
+    const cat = _cats.find(c => c.id === catId);
+    const normRows = _normativaItems(catId);
+    if (cat?.subCategorias?.length) {
+      return cat.subCategorias.map(group => ({
+        subCategoria: group.subCategoria,
+        normativa: group.normativa || '',
+        criterio: group.criterio || '',
+        items: _resolveNormItems(group.items, normRows),
+        isComplementaria: false,
+      })).filter(g => g.items.length);
+    }
+    if (normRows.length) {
+      return [{
+        subCategoria: _catLabel(catId) + ' — General',
+        normativa: normRows[0]?.normativa || '',
+        criterio: normRows[0]?.criterio || normRows[0]?.descripcion || '',
+        items: normRows,
+        isComplementaria: false,
+      }];
+    }
+    return [];
+  }
+
   function _evalBtn(itemId, val, label, color, current, isComp) {
     const fn = isComp
       ? `ConfigurarInvima.setCompEval('${_esc(_tab)}','${_esc(itemId)}','${val}')`
@@ -165,8 +227,8 @@ const ConfigurarInvima = (() => {
     const hall = ev.hallazgos[it.id] || '';
     const needHall = InvimaScoring.requiereHallazgo(resp);
     return `
-      <div style="padding:12px 0;border-bottom:1px dashed var(--color-border);">
-        <div style="font-size:13px;font-weight:700;color:var(--color-ink);">🔒 ${_esc(it.codigo)} · ${_esc(it.nombre)}</div>
+      <div class="item-evaluable">
+        <div class="item-nombre">🔒 ${_esc(it.codigo)} · ${_esc(it.nombre)}</div>
         <div style="display:flex;gap:5px;margin-top:10px;">
           ${_evalBtn(it.id, 'A', 'A', '#065F46', resp, false)}
           ${_evalBtn(it.id, 'AR', 'AR', '#B45309', resp, false)}
@@ -183,12 +245,13 @@ const ConfigurarInvima = (() => {
 
   function _renderEvalComplementariaItem(it) {
     const resp = InvimaComplementaria.getEvaluacionCat(_tab, _estId())[it.id] || '';
+    const detalle = it.criterio || it.descripcion || '';
     return `
-      <div style="padding:12px 0;border-bottom:1px dashed #bbf7d0;">
-        <div style="font-size:13px;font-weight:700;color:var(--color-brand);">
+      <div class="item-evaluable complementaria">
+        <div class="item-nombre">
           ✏️ ${_esc(it.nombre)}${it.critico ? ' <span class="invima-eval-comp-badge">Crítico</span>' : ''}
         </div>
-        ${it.descripcion ? `<div style="font-size:11px;color:var(--color-ink3);margin-top:4px;">${_esc(it.descripcion)}</div>` : ''}
+        ${detalle ? `<div class="item-descripcion">📋 ${_esc(detalle)}</div>` : ''}
         <div style="display:flex;gap:5px;margin-top:10px;">
           ${_evalBtn(it.id, 'A', 'A', '#065F46', resp, true)}
           ${_evalBtn(it.id, 'AR', 'AR', '#B45309', resp, true)}
@@ -200,13 +263,26 @@ const ConfigurarInvima = (() => {
 
   function _renderEvalBody() {
     const leyenda = _meta?.leyenda || {};
-    const normRows = _normativaItems(_tab);
     const compRows = InvimaComplementaria.listByCatId(_tab, _estId());
+    const groups = _evalGroupsForCat(_tab);
     const cat = _cats.find(c => c.id === _tab);
+    const normCount = groups.reduce((n, g) => n + g.items.length, 0);
     const crit = InvimaComplementaria.countCriticosCumplidos(_tab, _estId());
     const catSummary = cat
-      ? `${normRows.length} ítems normativos${crit.total ? ` + ${crit.cumplidos}/${crit.total} complementarios críticos cumplidos` : ''}`
+      ? `${normCount} ítems normativos${crit.total ? ` + ${crit.cumplidos}/${crit.total} complementarios críticos cumplidos` : ''}`
       : '';
+    const listHtml = [
+      ...groups.map(g => _renderSubCategoria(g.subCategoria, g.items, _tab, {
+        normativa: g.normativa,
+        criterio: g.criterio,
+        isComplementaria: false,
+      })),
+      compRows.length ? _renderSubCategoria('✏️ VERIFICACIÓN COMPLEMENTARIA', compRows, _tab, {
+        isComplementaria: true,
+        normativa: compRows[0]?.normativa || '',
+        criterio: compRows[0]?.criterio || compRows[0]?.descripcion || '',
+      }) : '',
+    ].join('');
     return `
       ${_renderScorePanel()}
       <div style="background:rgba(82,183,136,0.1);border:1px solid rgba(82,183,136,0.35);border-radius:8px;
@@ -220,10 +296,7 @@ const ConfigurarInvima = (() => {
       ${_renderCatTabs()}
       ${cat ? `<div style="font-size:11px;color:var(--color-ink3);margin-bottom:8px;">Peso categoría: <strong>${cat.peso}%</strong> · ${catSummary}</div>` : ''}
       <div id="invima-eval-list">
-        ${normRows.map(it => _renderEvalNormativaItem(it)).join('')}
-        ${compRows.length ? `<div class="invima-seccion-titulo" style="margin-top:12px;"><span class="badge-complementaria-invima">✏️ COMPLEMENTARIA</span></div>` : ''}
-        ${compRows.map(it => _renderEvalComplementariaItem(it)).join('')}
-        ${!normRows.length && !compRows.length ? '<p style="font-size:12px;color:var(--color-ink3);">Sin ítems.</p>' : ''}
+        ${listHtml || '<p style="font-size:12px;color:var(--color-ink3);">Sin ítems.</p>'}
       </div>`;
   }
 
@@ -324,6 +397,12 @@ const ConfigurarInvima = (() => {
     _refresh();
   }
 
+  function toggleCriterio(catId, subCategoria) {
+    const key = _subCriterioKey(catId, subCategoria);
+    _openCriterio[key] = !_openCriterio[key];
+    _refresh();
+  }
+
   function setEvalResp(itemId, resp) {
     InvimaScoring.setRespuesta(itemId, resp, _estId());
     _refresh();
@@ -409,7 +488,7 @@ const ConfigurarInvima = (() => {
   }
 
   return {
-    abrir, cerrar, setMode, setTab, resumenTexto,
+    abrir, cerrar, setMode, setTab, toggleCriterio, resumenTexto,
     addComplementaria, editComplementaria, removeComplementaria,
     cerrarCompModal, guardarComplementaria,
     setEvalResp, setCompEval, setEvalHallazgo,

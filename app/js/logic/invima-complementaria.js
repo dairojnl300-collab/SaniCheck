@@ -111,12 +111,17 @@ const InvimaComplementaria = (() => {
     const nombre = String(data.nombre || '').trim();
     if (!nombre) throw new Error('Nombre requerido');
     if (nombre.length > 100) throw new Error('Nombre máximo 100 caracteres');
-    const descripcion = String(data.descripcion || '').trim().slice(0, 200);
+    const descripcion = String(data.descripcion || data.criterio || '').trim().slice(0, 200);
+    const criterio = String(data.criterio || data.descripcion || '').trim().slice(0, 300);
+    const normativa = String(data.normativa || '').trim().slice(0, 150);
     const item = {
       id: _uuid(),
       nombre,
       descripcion,
+      criterio,
+      normativa,
       critico: !!data.critico,
+      esComplementaria: true,
       timestamp: Date.now(),
     };
     const all = _loadConfig(id);
@@ -136,7 +141,9 @@ const InvimaComplementaria = (() => {
     all[id][key][idx] = {
       ...all[id][key][idx],
       nombre: nombre.slice(0, 100),
-      descripcion: String(data.descripcion || '').trim().slice(0, 200),
+      descripcion: String(data.descripcion || data.criterio || '').trim().slice(0, 200),
+      criterio: String(data.criterio || data.descripcion || all[id][key][idx].criterio || '').trim().slice(0, 300),
+      normativa: String(data.normativa || all[id][key][idx].normativa || '').trim().slice(0, 150),
       critico: !!data.critico,
     };
     _saveConfig(all);
