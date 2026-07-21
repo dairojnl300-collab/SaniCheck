@@ -11,11 +11,6 @@ const ConfigurarInvima = (() => {
   let _editCompId = null;
   let _openCriterio = {};
 
-  function _esc(s) {
-    if (s == null) return '';
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
   function _estId() {
     return (typeof PortalCliente !== 'undefined' && PortalCliente.getEstablecimientoId()) || 'local-pending';
   }

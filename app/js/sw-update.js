@@ -355,9 +355,6 @@ const SwUpdate = (() => {
     setTimeout(() => { _checkRemoteUpdate().catch(() => {}); }, 4000);
   }
 
-  function _esc(s) {
-    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
 
   return {
     get APP_VERSION() { return _manifest.version; },

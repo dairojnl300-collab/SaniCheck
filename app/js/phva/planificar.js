@@ -2513,11 +2513,6 @@ const Planificar = (() => {
     return document.getElementById(id)?.value.trim() || '';
   }
 
-  function _escAttr(s) {
-    return String(s || '')
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
   return { render, attach, toggle, openSection, refreshPerfilCard, marcoSub,
     actualizarVenc, guardarVencimientos, vencTab, vencFiltro, subirSoporteVenc, eliminarSoporteVenc, verSoporteVenc,
     agregarTrabajador, actualizarTrabajador, agregarEquipo, actualizarEquipo, exportarDashboardPDF,

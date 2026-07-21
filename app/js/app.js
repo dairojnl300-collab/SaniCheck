@@ -261,10 +261,6 @@
     Router.go('hacer');
   };
 
-  function _esc(s) {
-    if (!s) return '';
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
 
   async function init() {
     if (typeof window.SaniCheckVersionInit === 'function') {

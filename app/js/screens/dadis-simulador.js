@@ -14,15 +14,6 @@ const DadisSimulador = (() => {
   let _resultado = null;
   let _vista = 'form'; // form | resultado | historial
 
-  function _esc(s) {
-    if (s == null) return '';
-    return String(s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
-
   /* Formato tipo Microsoft Word: párrafos, justificado, interlineado 1.5 */
   const PROSE_P =
     'margin:0 0 0.75em;text-align:justify;text-justify:inter-word;' +

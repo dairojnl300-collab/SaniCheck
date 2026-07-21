@@ -588,9 +588,11 @@ const VencimientosV2 = (() => {
     const sel = document.getElementById('v2-tipo');
     if (!sel) return;
     const tipos = getCatalog().categorias[categoria]?.tipos || [];
-    sel.innerHTML = tipos.map(t =>
-      `<option value="${t.id}" ${selectedTipo === t.id ? 'selected' : ''}>${t.label}</option>`
-    ).join('');
+    sel.innerHTML = tipos.map(t => {
+      const id = (typeof _esc === 'function' ? _esc : String)(t.id);
+      const label = (typeof _esc === 'function' ? _esc : String)(t.label);
+      return `<option value="${id}" ${selectedTipo === t.id ? 'selected' : ''}>${label}</option>`;
+    }).join('');
     const personalizadoWrap = document.getElementById('v2-personalizado-fields');
     const showPersonalizado = sel.value === 'personalizado';
     if (personalizadoWrap) personalizadoWrap.style.display = showPersonalizado ? 'block' : 'none';

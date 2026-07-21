@@ -280,11 +280,6 @@ const Hacer = (() => {
     if (area) { area.innerHTML = render(); attach(); }
   }
 
-  function _esc(s) {
-    if (!s) return '';
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-
   function attach() {}
 
   return { render, attach, evaluar, navegar, guardarObs, seleccionarPrograma, refresh };
