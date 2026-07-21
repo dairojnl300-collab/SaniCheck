@@ -34,11 +34,16 @@ jobs:
           sed -i "s/const COMMIT_HASH = '[^']*'/const COMMIT_HASH = '${{ steps.version.outputs.commit }}'/" public/service-worker.js
 
       - name: Generate portal-config.secrets.js
-        if: github.event_name == 'push' && secrets.SUPABASE_ANON_KEY != ''
+        if: github.event_name == 'push'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: node scripts/generate-portal-config-secrets.js
+        run: |
+          if [ -n "$SUPABASE_ANON_KEY" ]; then
+            node scripts/generate-portal-config-secrets.js
+          else
+            echo "Skip: SUPABASE_ANON_KEY secret not configured"
+          fi
 
       - name: PR validation
         if: github.event_name == 'pull_request'
