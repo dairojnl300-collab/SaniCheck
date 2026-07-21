@@ -1,0 +1,29 @@
+name: Auto-Update Version & Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Get version from package.json
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          COMMIT=$(git rev-parse --short HEAD)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "commit=${COMMIT}" >> $GITHUB_OUTPUT
+      
+      - name: Update versionManager.js
+        run: |
+          sed -i "s/this.currentVersion = '[^']*'/this.currentVersion = '${{ steps.version.outputs.version }}'/" src/versionManager.js
+          sed -i "s/this.commitHash = '[^']*'/this.commitHash = '${{ steps.version.outputs.commit }}'/" src/versionManager.js
+      
+      - name: Update Service Worker
+        run: |
+          sed -i "s/const CACHE_NAME = 'sanicheck-v[^']*'/const CACHE_NAME = 'sanicheck-v${{ steps.version.outputs.version }}'/" public/service-worker.js
+          sed -i "s/const COMMIT_HASH = '[^']*'/const COMMIT_HASH = '${{ steps.version.outputs.commit }}'/" public/service-worker.js

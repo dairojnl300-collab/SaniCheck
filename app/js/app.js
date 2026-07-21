@@ -267,6 +267,9 @@
   }
 
   async function init() {
+    if (typeof window.SaniCheckVersionInit === 'function') {
+      await window.SaniCheckVersionInit();
+    }
     Store.load();
     Store.bindLifecycleFlush();
     await Store.recoverFromIdb();
