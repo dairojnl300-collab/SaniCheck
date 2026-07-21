@@ -31,7 +31,7 @@ const Observaciones = (() => {
 
   function getObs(programaId, valor, aspecto) {
     if (valor === 'NA') return 'No aplica a este establecimiento';
-    if (aspecto && aspecto._custom) {
+    if (aspecto && aspecto._esComplementario) {
       const estado = valor === 'B' ? 'Bueno' : valor === 'R' ? 'Regular' : 'Deficiente';
       return `${aspecto.texto}: estado ${estado}. ${aspecto.norma || 'Sin norma especificada'}`;
     }

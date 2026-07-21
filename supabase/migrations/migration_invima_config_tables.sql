@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS public.invima_config (
   nombre              text NOT NULL,
   normativa           varchar(255),
   peso                numeric(5,2) DEFAULT 1,
-  custom              boolean NOT NULL DEFAULT false,
+  es_complementaria boolean NOT NULL DEFAULT false,
   estado              varchar(16) NOT NULL DEFAULT 'activo' CHECK (estado IN ('activo', 'inactivo')),
   creado_por          varchar(64),
   fecha_creacion      timestamptz NOT NULL DEFAULT now(),
@@ -27,7 +27,7 @@ CREATE INDEX IF NOT EXISTS invima_config_est_item_idx
   ON public.invima_config (establecimiento_id, item_id);
 
 COMMENT ON TABLE public.invima_config IS
-  'Checklist INVIMA personalizable: ítems base (custom=false) + custom por establecimiento.';
+  'Checklist INVIMA personalizable: ítems base (es_complementaria=false) + complementaria por establecimiento.';
 
 ALTER TABLE public.invima_config ENABLE ROW LEVEL SECURITY;
 

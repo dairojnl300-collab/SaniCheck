@@ -81,19 +81,19 @@ const ConfigurarPerfilRapido = (() => {
               <th style="padding:8px;text-align:left;">Código</th>
               <th style="padding:8px;text-align:left;">Nombre</th>
               <th style="padding:8px;text-align:left;">Normativa</th>
-              <th style="padding:8px;text-align:center;">Custom</th>
+              <th style="padding:8px;text-align:center;">Complementaria</th>
               <th style="padding:8px;text-align:right;">Acciones</th>
             </tr>
           </thead>
           <tbody>
             ${rows.map(it => `
-              <tr style="border-bottom:1px solid var(--color-border);${it.custom ? '' : 'background:#f3f4f6;color:#6b7280;'}">
+              <tr style="border-bottom:1px solid var(--color-border);${it.esComplementaria ? '' : 'background:#f3f4f6;color:#6b7280;'}">
                 <td style="padding:8px;font-weight:700;">${_esc(it.codigo)}</td>
                 <td style="padding:8px;">${_esc(it.nombre)}</td>
                 <td style="padding:8px;font-size:11px;">${_esc(it.normativa)}</td>
-                <td style="padding:8px;text-align:center;">${it.custom ? '✓' : '—'}</td>
+                <td style="padding:8px;text-align:center;">${it.esComplementaria ? '✓' : '—'}</td>
                 <td style="padding:8px;text-align:right;white-space:nowrap;">
-                  ${it.custom ? `
+                  ${it.esComplementaria ? `
                     <button type="button" class="btn btn-outline" style="padding:4px 8px;font-size:11px;margin-left:4px;"
                       onclick="ConfigurarPerfilRapido.editar('${_esc(it.id)}')">✏️</button>` : ''}
                   <button type="button" class="btn btn-outline" style="padding:4px 8px;font-size:11px;margin-left:4px;color:var(--color-deficiente);"
@@ -125,7 +125,7 @@ const ConfigurarPerfilRapido = (() => {
     return `
       <div style="padding:12px 0;border-bottom:1px dashed var(--color-border);">
         <div style="font-size:13px;font-weight:700;color:var(--color-ink);">${_esc(it.codigo)} · ${_esc(it.nombre)}
-          ${it.custom ? '<span style="font-size:10px;color:var(--color-accent);margin-left:4px;">custom</span>' : ''}
+          ${it.esComplementaria ? '<span class="badge-complementaria-invima">Complementaria</span>' : ''}
         </div>
         ${desc || it.normativa ? `
           <button type="button" onclick="ConfigurarPerfilRapido.toggleEvalDesc('${_esc(descKey)}')"
@@ -183,7 +183,7 @@ const ConfigurarPerfilRapido = (() => {
       <button type="button" class="btn btn-outline" style="width:100%;margin-top:var(--sp-sm);"
         onclick="ConfigurarPerfilRapido.abrirPicker()">➕ Agregar desde checklist</button>
       <button type="button" class="btn btn-accent" style="width:100%;margin-top:6px;"
-        onclick="ConfigurarPerfilRapido.agregarCustom()">➕ Agregar custom</button>`;
+        onclick="ConfigurarPerfilRapido.agregarComplementaria()">➕ Agregar verificación complementaria</button>`;
   }
 
   function _renderBody() {
@@ -218,7 +218,7 @@ const ConfigurarPerfilRapido = (() => {
       <div onclick="ConfigurarPerfilRapido.cerrarSub()" style="position:absolute;inset:0;background:rgba(10,46,35,0.55);"></div>
       <div style="position:relative;width:100%;max-width:400px;background:var(--color-white);border-radius:var(--radius-md);
         padding:var(--sp-lg);border:1px solid var(--color-border);">
-        <div id="perfil-sub-title" style="font-weight:700;margin-bottom:var(--sp-md);">Agregar ítem custom</div>
+        <div id="perfil-sub-title" style="font-weight:700;margin-bottom:var(--sp-md);">Agregar verificación complementaria</div>
         <div class="form-group">
           <label class="form-label" for="perfil-sub-codigo">Código</label>
           <input class="form-input" id="perfil-sub-codigo" type="text" placeholder="Auto">
@@ -343,10 +343,10 @@ const ConfigurarPerfilRapido = (() => {
     }
   }
 
-  function agregarCustom() {
+  function agregarComplementaria() {
     _editId = null;
     _ensureSubmodal();
-    document.getElementById('perfil-sub-title').textContent = 'Agregar ítem custom al perfil';
+    document.getElementById('perfil-sub-title').textContent = 'Agregar verificación complementaria al perfil';
     document.getElementById('perfil-sub-codigo').value = '';
     document.getElementById('perfil-sub-codigo').readOnly = false;
     document.getElementById('perfil-sub-nombre').value = '';
@@ -357,10 +357,10 @@ const ConfigurarPerfilRapido = (() => {
 
   function editar(itemId) {
     const item = InvimaCrud.getConfigINVIMA(_estId()).find(it => it.id === itemId);
-    if (!item || !item.custom) return;
+    if (!item || !item.esComplementaria) return;
     _editId = itemId;
     _ensureSubmodal();
-    document.getElementById('perfil-sub-title').textContent = 'Editar ítem custom';
+    document.getElementById('perfil-sub-title').textContent = 'Editar verificación complementaria';
     document.getElementById('perfil-sub-codigo').value = item.codigo;
     document.getElementById('perfil-sub-codigo').readOnly = true;
     document.getElementById('perfil-sub-nombre').value = item.nombre;
@@ -386,7 +386,7 @@ const ConfigurarPerfilRapido = (() => {
         Router.toast('Ítem actualizado');
       } else {
         InvimaCrud.agregarItem('cat_01', nombre, norma, null, _estId(), codigo || undefined, true);
-        Router.toast('Ítem custom agregado al perfil');
+        Router.toast('Ítem complementaria agregada al perfil');
       }
       cerrarSub();
       _refresh();
@@ -402,7 +402,7 @@ const ConfigurarPerfilRapido = (() => {
   }
 
   return {
-    abrir, cerrar, setMode, quitar, editar, agregarCustom, abrirPicker, cerrarPicker, elegirPicker,
+    abrir, cerrar, setMode, quitar, editar, agregarComplementaria, abrirPicker, cerrarPicker, elegirPicker,
     cerrarSub, guardarSub, resumenTexto, setEvalResp, setEvalHallazgo, toggleEvalDesc,
   };
 })();

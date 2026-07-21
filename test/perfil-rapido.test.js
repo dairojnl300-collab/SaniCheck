@@ -91,9 +91,9 @@ function assert(cond, msg) {
     assert(String(e.message).includes('al menos 1'), 'min 1 ítem validado');
   }
 
-  const custom = IC.agregarItem('cat_01', 'Extra perfil', 'Local test', null, EST, '1.9', true);
-  assert(custom.en_perfil_rapido === true, 'custom agregado al perfil');
-  assert(IC.getPerfilRapido(EST).some(it => it.id === custom.id), 'custom visible en perfil');
+  const esComplementaria = IC.agregarItem('cat_01', 'Extra perfil', 'Local test', null, EST, '1.9', true);
+  assert(esComplementaria.en_perfil_rapido === true, 'complementaria agregada al perfil');
+  assert(IC.getPerfilRapido(EST).some(it => it.id === esComplementaria.id), 'complementaria visible en perfil');
 
   const meta = { escala: baseJson.escala, clasificacion: baseJson.clasificacion };
   const resp = {};

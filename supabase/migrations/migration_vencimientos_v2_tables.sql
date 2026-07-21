@@ -31,20 +31,20 @@ CREATE TABLE IF NOT EXISTS public.vencimientos (
   categoria               text NOT NULL CHECK (categoria IN ('personal', 'equipos', 'establecimiento')),
   tipo                    text NOT NULL CHECK (tipo IN (
     'manipulacion', 'medico', 'sst', 'calibracion', 'mantenimiento',
-    'plagas', 'analisis_agua', 'custom'
+    'plagas', 'analisis_agua', 'personalizado'
   )),
   tipo_label              text,
   nombre                  text NOT NULL,
   fecha_emision           date,
   fecha_vencimiento       date NOT NULL,
-  frecuencia              text CHECK (frecuencia IN ('anual', 'semestral', 'trimestral', 'custom')),
+  frecuencia              text CHECK (frecuencia IN ('anual', 'semestral', 'trimestral', 'personalizado')),
   proveedor               text,
   normativa               text,
   estado                  text NOT NULL DEFAULT 'vigente' CHECK (estado IN (
     'vigente', 'por_vencer_30', 'por_vencer_60', 'vencido'
   )),
   documento_storage_path  text,
-  custom                  boolean NOT NULL DEFAULT false,
+  es_complementaria boolean NOT NULL DEFAULT false,
   creado_por              text,
   fecha_creacion          timestamptz NOT NULL DEFAULT now(),
   fecha_actualizacion     timestamptz NOT NULL DEFAULT now()
@@ -58,7 +58,7 @@ CREATE INDEX IF NOT EXISTS vencimientos_est_fecha_idx
 
 CREATE UNIQUE INDEX IF NOT EXISTS vencimientos_est_tipo_unique_idx
   ON public.vencimientos (establecimiento_id, tipo)
-  WHERE custom = false AND tipo <> 'custom';
+  WHERE es_personalizado = false AND tipo <> 'personalizado';
 
 COMMENT ON TABLE public.vencimientos IS
   'Documentos de vencimiento ETAPA 1 — CRUD completo con Storage privado.';

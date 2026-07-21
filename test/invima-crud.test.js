@@ -67,12 +67,12 @@ function assert(cond, msg) {
 (async () => {
   await IC.loadBaseChecklist();
   IC.getConfigINVIMA(EST);
-  const baseCount = IC.getConfigINVIMA(EST).filter(it => !it.custom).length;
+  const baseCount = IC.getConfigINVIMA(EST).filter(it => !it.esComplementaria).length;
   assert(baseCount === 28, '28 ítems base cargados');
 
-  // Agregar item custom código 1.9 OK (cat_01)
-  const custom = IC.agregarItem('cat_01', 'Control adicional', 'Local/ECODESA/Específico', null, EST, '1.9');
-  assert(custom.codigo === '1.9' && custom.custom === true, 'agregar custom 1.9 OK');
+  // Agregar item esComplementaria código 1.9 OK (cat_01)
+  const esComplementaria = IC.agregarItem('cat_01', 'Control adicional', 'Local/ECODESA/Específico', null, EST, '1.9');
+  assert(esComplementaria.codigo === '1.9' && esComplementaria.esComplementaria === true, 'agregar esComplementaria 1.9 OK');
 
   // Código duplicado
   try {
@@ -83,7 +83,7 @@ function assert(cond, msg) {
   }
 
   // Eliminar normativo rechaza
-  const norm = IC.getConfigINVIMA(EST).find(it => !it.custom);
+  const norm = IC.getConfigINVIMA(EST).find(it => !it.esComplementaria);
   try {
     IC.eliminarItem(norm.id, EST);
     assert(false, 'eliminar normativo debe fallar');
@@ -99,22 +99,22 @@ function assert(cond, msg) {
     assert(String(e.message).includes('No editable'), 'editar normativo rechazado');
   }
 
-  // Editar custom OK
-  IC.editarItem(custom.id, 'Control adicional v2', 'ECODESA local', EST);
-  const edited = IC.getConfigINVIMA(EST).find(it => it.id === custom.id);
-  assert(edited.nombre === 'Control adicional v2', 'editar nombre custom OK');
-  assert(edited.normativa === 'ECODESA local', 'editar normativa custom OK');
+  // Editar esComplementaria OK
+  IC.editarItem(esComplementaria.id, 'Control adicional v2', 'ECODESA local', EST);
+  const edited = IC.getConfigINVIMA(EST).find(it => it.id === esComplementaria.id);
+  assert(edited.nombre === 'Control adicional v2', 'editar nombre complementaria OK');
+  assert(edited.normativa === 'ECODESA local', 'editar normativa complementaria OK');
 
   // Offline: sync pending
   assert(edited.sync_pending === true, 'offline marca sync_pending');
 
-  // Delete custom OK
-  IC.eliminarItem(custom.id, EST);
-  assert(!IC.getConfigINVIMA(EST).find(it => it.id === custom.id), 'delete custom OK');
+  // Delete esComplementaria OK
+  IC.eliminarItem(esComplementaria.id, EST);
+  assert(!IC.getConfigINVIMA(EST).find(it => it.id === esComplementaria.id), 'eliminar complementaria OK');
 
   // Resumen
   const r = IC.resumen(EST);
-  assert(r.base === 28 && r.custom === 0, 'resumen base+custom');
+  assert(r.base === 28 && r.complementaria === 0, 'resumen base+complementaria');
 
   if (failed) {
     console.error(`\n${failed} assertion(s) failed`);

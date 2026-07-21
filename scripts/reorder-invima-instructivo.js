@@ -63,7 +63,7 @@ const categorias = INSTRUCTIVO_CATS.map(def => {
       nombre: it.nombre,
       normativa: it.normativa,
       descripcion: it.descripcion || '',
-      custom: false,
+      esComplementaria: false,
     };
   });
   return { id: def.id, nombre: def.nombre, peso: def.peso, items };

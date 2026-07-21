@@ -381,7 +381,7 @@ const Vencimientos = (() => {
           cedula: tr.cedula,
           documento: req.nombre,
           itemId: req.id,
-          custom: true,
+          esPersonalizado: true,
           expedicion: req.exp || '',
           vencimiento: req.venc || '',
           vigencia: req.sinVencimiento ? (req.exp || '') : (e.proximo || req.venc || ''),

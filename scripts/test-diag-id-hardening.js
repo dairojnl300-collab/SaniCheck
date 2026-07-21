@@ -33,7 +33,7 @@ store[key] = JSON.stringify({
     { id: 'di_01', texto: 'OK base', norma: 'N1', descripcion: 'ok' },
     { id: "di_xss');alert(1)//", texto: 'MALO', norma: 'X', descripcion: 'x' },
     { id: 'evil<script>', texto: 'MALO2', norma: 'X', descripcion: 'x' },
-    { id: 'di_c_abc123', texto: 'Custom válido', norma: 'Res. 1', descripcion: 'custom' },
+    { id: 'di_c_abc123', texto: 'Complementaria válido', norma: 'Res. 1', descripcion: 'personalizado' },
     { id: '../../../etc', texto: 'path', norma: 'X', descripcion: 'x' },
   ],
   items: [
@@ -64,7 +64,7 @@ assert(!D.isValidId('evil<script>'), 'isValidId rechaza HTML en id');
 assert(!D.isValidId('../../../etc'), 'isValidId rechaza path traversal');
 
 assert(ids.includes('di_01'), 'catálogo conserva di_01 válido');
-assert(ids.includes('di_c_abc123'), 'catálogo conserva custom válido');
+assert(ids.includes('di_c_abc123'), 'catálogo conserva complementaria válido');
 assert(!ids.some(id => id.includes("'") || id.includes('<') || id.includes('/')),
   'catálogo sin IDs corruptos');
 assert(loaded.items.every(it => D.isValidId(it.id)), 'todos los items tienen ID válido');

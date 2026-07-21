@@ -33,7 +33,7 @@ const VencimientosV2 = (() => {
         tipos: [
           { id: 'plagas', label: 'Fumigación / control de plagas', normativa: 'Resolución 2674/2013' },
           { id: 'analisis_agua', label: 'Análisis de agua', normativa: 'Resolución 2115/2007' },
-          { id: 'custom', label: 'Documento personalizado', normativa: '', custom: true },
+          { id: 'personalizado', label: 'Documento personalizado', normativa: '', esPersonalizado: true },
         ],
       },
     },
@@ -41,7 +41,7 @@ const VencimientosV2 = (() => {
       { id: 'anual', label: 'Anual' },
       { id: 'semestral', label: 'Semestral' },
       { id: 'trimestral', label: 'Trimestral' },
-      { id: 'custom', label: 'Personalizada' },
+      { id: 'personalizado', label: 'Personalizada' },
     ],
     estados: {
       vigente: { label: 'Vigente', cls: 'estado-B' },
@@ -145,12 +145,12 @@ const VencimientosV2 = (() => {
   }
 
   function _tipoDuplicado(estId, tipo, categoria, excludeId) {
-    if (!tipo || tipo === 'custom') return false;
+    if (!tipo || tipo === 'personalizado') return false;
     return _loadStore().items.some(it =>
       it.establecimiento_id === estId &&
       it.categoria === categoria &&
       it.tipo === tipo &&
-      !it.custom &&
+      !it.esPersonalizado &&
       it.id !== excludeId
     );
   }
@@ -198,7 +198,7 @@ const VencimientosV2 = (() => {
       normativa: item.normativa || null,
       estado: calcularEstado(item.fecha_vencimiento),
       documento_storage_path: item.documento_storage_path || null,
-      custom: !!item.custom,
+      esPersonalizado: !!item.esPersonalizado,
       creado_por: item.creado_por || 'Profesional',
     };
   }
@@ -211,7 +211,7 @@ const VencimientosV2 = (() => {
       id: _uuid(),
       establecimiento_id: estId || 'local-pending',
       categoria: payload.categoria || 'establecimiento',
-      tipo: payload.tipo || 'custom',
+      tipo: payload.tipo || 'personalizado',
       tipo_label: payload.tipo_label || '',
       nombre: String(payload.nombre).trim(),
       fecha_emision: payload.fecha_emision || '',
@@ -221,7 +221,7 @@ const VencimientosV2 = (() => {
       normativa: payload.normativa || '',
       estado: calcularEstado(payload.fecha_vencimiento),
       documento_storage_path: '',
-      custom: payload.tipo === 'custom' || !!payload.custom,
+      esPersonalizado: payload.tipo === 'personalizado' || !!payload.esPersonalizado,
       creado_por: 'Profesional',
       fecha_creacion: now,
       fecha_actualizacion: now,
@@ -263,7 +263,7 @@ const VencimientosV2 = (() => {
       sync_pending: true,
     };
     item.estado = calcularEstado(item.fecha_vencimiento);
-    item.custom = item.tipo === 'custom' || !!item.custom;
+    item.esPersonalizado = item.tipo === 'personalizado' || !!item.esPersonalizado;
 
     if (file) {
       item._pending_file = true;
@@ -556,7 +556,7 @@ const VencimientosV2 = (() => {
             <label class="form-label">Tipo</label>
             <select class="form-input" id="v2-tipo"></select>
           </div>
-          <div id="v2-custom-fields" style="display:none;">
+          <div id="v2-personalizado-fields" style="display:none;">
             <div class="form-group"><label class="form-label">Normativa</label><input class="form-input" id="v2-normativa" value="${esc(edit && edit.normativa || '')}"></div>
             <div class="form-group"><label class="form-label">Proveedor</label><input class="form-input" id="v2-proveedor" value="${esc(edit && edit.proveedor || '')}"></div>
           </div>
@@ -591,17 +591,17 @@ const VencimientosV2 = (() => {
     sel.innerHTML = tipos.map(t =>
       `<option value="${t.id}" ${selectedTipo === t.id ? 'selected' : ''}>${t.label}</option>`
     ).join('');
-    const customWrap = document.getElementById('v2-custom-fields');
-    const showCustom = sel.value === 'custom';
-    if (customWrap) customWrap.style.display = showCustom ? 'block' : 'none';
+    const personalizadoWrap = document.getElementById('v2-personalizado-fields');
+    const showPersonalizado = sel.value === 'personalizado';
+    if (personalizadoWrap) personalizadoWrap.style.display = showPersonalizado ? 'block' : 'none';
     sel.onchange = () => {
-      if (customWrap) customWrap.style.display = sel.value === 'custom' ? 'block' : 'none';
+      if (personalizadoWrap) personalizadoWrap.style.display = sel.value === 'personalizado' ? 'block' : 'none';
     };
   }
 
   function readModalPayload() {
     const categoria = document.getElementById('v2-categoria')?.value || 'establecimiento';
-    const tipo = document.getElementById('v2-tipo')?.value || 'custom';
+    const tipo = document.getElementById('v2-tipo')?.value || 'personalizado';
     const cat = getCatalog();
     const tipoMeta = (cat.categorias[categoria]?.tipos || []).find(t => t.id === tipo);
     return {
@@ -614,7 +614,7 @@ const VencimientosV2 = (() => {
       frecuencia: document.getElementById('v2-frecuencia')?.value || 'anual',
       normativa: document.getElementById('v2-normativa')?.value || tipoMeta?.normativa || '',
       proveedor: document.getElementById('v2-proveedor')?.value || '',
-      custom: tipo === 'custom',
+      esPersonalizado: tipo === 'personalizado',
     };
   }
 

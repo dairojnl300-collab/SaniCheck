@@ -105,19 +105,19 @@ const ConfigurarInvima = (() => {
               <th style="padding:8px;text-align:left;">Código</th>
               <th style="padding:8px;text-align:left;">Nombre</th>
               <th style="padding:8px;text-align:left;">Normativa</th>
-              <th style="padding:8px;text-align:center;">Custom</th>
+              <th style="padding:8px;text-align:center;">Complementaria</th>
               <th style="padding:8px;text-align:right;">Acciones</th>
             </tr>
           </thead>
           <tbody>
             ${rows.map(it => {
-              const ro = !it.custom;
+              const ro = !it.esComplementaria;
               const bg = ro ? 'background:#f3f4f6;color:#6b7280;' : '';
               return `<tr style="border-bottom:1px solid var(--color-border);${bg}">
                 <td style="padding:8px;font-weight:700;">${_esc(it.codigo)}</td>
                 <td style="padding:8px;">${_esc(it.nombre)}</td>
                 <td style="padding:8px;font-size:11px;">${_esc(it.normativa)}</td>
-                <td style="padding:8px;text-align:center;">${it.custom ? '✓' : '—'}</td>
+                <td style="padding:8px;text-align:center;">${it.esComplementaria ? '✓' : '—'}</td>
                 <td style="padding:8px;text-align:right;white-space:nowrap;">
                   ${ro ? '' : `
                     <button type="button" class="btn btn-outline" style="padding:4px 8px;font-size:11px;margin-left:4px;"
@@ -152,7 +152,7 @@ const ConfigurarInvima = (() => {
     return `
       <div style="padding:12px 0;border-bottom:1px dashed var(--color-border);">
         <div style="font-size:13px;font-weight:700;color:var(--color-ink);">${_esc(it.codigo)} · ${_esc(it.nombre)}
-          ${it.custom ? '<span style="font-size:10px;color:var(--color-accent);margin-left:4px;">custom</span>' : ''}
+          ${it.esComplementaria ? '<span class="badge-complementaria-invima">Complementaria</span>' : ''}
         </div>
         ${desc || it.normativa ? `
           <button type="button" onclick="ConfigurarInvima.toggleEvalDesc('${_esc(descKey)}')"
@@ -205,12 +205,12 @@ const ConfigurarInvima = (() => {
     return `
       <div style="font-size:12px;color:var(--color-ink3);margin-bottom:var(--sp-sm);padding:8px 12px;
         background:#ecfdf5;border-radius:8px;border:1px solid #a7f3d0;">
-        <strong>${baseNorm}</strong> ítems normativos + <strong>${r.custom}</strong> ítems custom
+        <strong>${baseNorm}</strong> ítems normativos + <strong>${r.complementaria}</strong> verificaciones complementarias
       </div>
       ${_renderCatTabs()}
       <div id="invima-tab-body">${_renderTable(_tab)}</div>
       <button type="button" class="btn btn-accent" style="width:100%;margin-top:var(--sp-sm);"
-        onclick="ConfigurarInvima.agregar('${_esc(_tab)}')">➕ Agregar Custom</button>`;
+        onclick="ConfigurarInvima.agregar('${_esc(_tab)}')">➕ Agregar verificación complementaria</button>`;
   }
 
   function _renderBody() {
@@ -245,7 +245,7 @@ const ConfigurarInvima = (() => {
       <div onclick="ConfigurarInvima.cerrarSub()" style="position:absolute;inset:0;background:rgba(10,46,35,0.55);"></div>
       <div style="position:relative;width:100%;max-width:400px;background:var(--color-white);border-radius:var(--radius-md);
         padding:var(--sp-lg);border:1px solid var(--color-border);">
-        <div id="invima-sub-title" style="font-weight:700;margin-bottom:var(--sp-md);">Agregar ítem custom</div>
+        <div id="invima-sub-title" style="font-weight:700;margin-bottom:var(--sp-md);">Agregar verificación complementaria</div>
         <div class="form-group">
           <label class="form-label" for="invima-sub-codigo">Código</label>
           <input class="form-input" id="invima-sub-codigo" type="text" placeholder="Auto">
@@ -318,7 +318,7 @@ const ConfigurarInvima = (() => {
     _editId = null;
     _tab = catId || _tab;
     _ensureSubmodal();
-    document.getElementById('invima-sub-title').textContent = 'Agregar ítem custom';
+    document.getElementById('invima-sub-title').textContent = 'Agregar verificación complementaria';
     document.getElementById('invima-sub-codigo').value = '';
     document.getElementById('invima-sub-codigo').readOnly = false;
     document.getElementById('invima-sub-nombre').value = '';
@@ -329,11 +329,11 @@ const ConfigurarInvima = (() => {
 
   function editar(itemId) {
     const item = InvimaCrud.getConfigINVIMA(_estId()).find(it => it.id === itemId);
-    if (!item || !item.custom) return;
+    if (!item || !item.esComplementaria) return;
     _editId = itemId;
     _tab = item.categoria_id;
     _ensureSubmodal();
-    document.getElementById('invima-sub-title').textContent = 'Editar ítem custom';
+    document.getElementById('invima-sub-title').textContent = 'Editar verificación complementaria';
     document.getElementById('invima-sub-codigo').value = item.codigo;
     document.getElementById('invima-sub-codigo').readOnly = true;
     document.getElementById('invima-sub-nombre').value = item.nombre;
@@ -359,7 +359,7 @@ const ConfigurarInvima = (() => {
         Router.toast('Ítem actualizado');
       } else {
         InvimaCrud.agregarItem(_tab, nombre, norma, null, _estId(), codigo || undefined);
-        Router.toast('Ítem custom agregado');
+        Router.toast('Ítem complementaria agregada');
       }
       cerrarSub();
       _refresh();
@@ -371,7 +371,7 @@ const ConfigurarInvima = (() => {
   function eliminar(itemId) {
     const item = InvimaCrud.getConfigINVIMA(_estId()).find(it => it.id === itemId);
     if (!item) return;
-    if (!confirm('¿Eliminar ítem custom "' + item.nombre + '"?')) return;
+    if (!confirm('¿Eliminar verificación complementaria "' + item.nombre + '"?')) return;
     try {
       InvimaCrud.eliminarItem(itemId, _estId());
       Router.toast('Ítem eliminado');
@@ -383,7 +383,7 @@ const ConfigurarInvima = (() => {
 
   function resumenTexto() {
     const r = InvimaCrud.resumen(_estId());
-    return `INVIMA: ${r.base} base + ${r.custom} custom`;
+    return `INVIMA: ${r.base} normativos + ${r.complementaria} complementarias`;
   }
 
   return {

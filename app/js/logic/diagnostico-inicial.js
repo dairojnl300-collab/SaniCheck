@@ -99,7 +99,7 @@ const DiagnosticoInicial = (() => {
     return ITEMS.map(it => ({ ...it }));
   }
 
-  function newCustomId() {
+  function newComplementariaId() {
     return 'di_c_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
   }
 
@@ -126,7 +126,7 @@ const DiagnosticoInicial = (() => {
         texto: _clip(entry.texto, 500),
         norma: _clip(entry.norma, 200),
         descripcion: _clip(entry.descripcion || entry.texto, 1000),
-        custom: !!entry.custom,
+        esComplementaria: !!entry.esComplementaria,
       });
     });
     return cleaned.length ? cleaned : _defaultCatalog();
@@ -187,6 +187,6 @@ const DiagnosticoInicial = (() => {
 
   return {
     ITEMS, ID_RE, isValidId, getDiagnostico, getCatalog, saveDiagnostico,
-    contarCompletados, prioridadAuto, newCustomId,
+    contarCompletados, prioridadAuto, newComplementariaId,
   };
 })();

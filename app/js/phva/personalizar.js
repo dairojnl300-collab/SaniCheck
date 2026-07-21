@@ -16,7 +16,7 @@ const Personalizar = (() => {
 
   // Estado de sesión (se inicializa en render() desde localStorage)
   let _disabled = new Set();
-  let _custom   = [];
+  let _complementarios   = [];
 
   /* ────────────────────────────── render ──────────────────────────────── */
   function render() {
@@ -32,13 +32,13 @@ const Personalizar = (() => {
 
     const cfg  = ChecklistConfig.getConfig(insp.establecimiento);
     _disabled  = cfg.disabled;
-    _custom    = cfg.custom;
+    _complementarios = cfg.complementarios;
 
     const base = getPSBPrograms();
     const totalActivos = base.reduce((n, p) => {
       const activos = p.aspectos.filter(a => !_disabled.has(a.id)).length;
-      const custom  = _custom.filter(c => c.programaId === p.id).length;
-      return n + activos + custom;
+      const compProg = _complementarios.filter(c => c.programaId === p.id).length;
+      return n + activos + compProg;
     }, 0);
 
     return `
@@ -58,7 +58,7 @@ const Personalizar = (() => {
 
       ${base.map(prog => _renderPrograma(prog)).join('')}
 
-      ${_renderFormCustom()}
+      ${_renderFormComplementario()}
 
       <button onclick="Personalizar.comenzar()" class="btn btn-primary"
         style="width:100%;padding:14px;font-size:15px;font-weight:700;margin-top:6px;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
@@ -68,7 +68,7 @@ const Personalizar = (() => {
   }
 
   function _renderPrograma(prog) {
-    const custProg = _custom.filter(c => c.programaId === prog.id);
+    const custProg = _complementarios.filter(c => c.programaId === prog.id);
     const activos  = prog.aspectos.filter(a => !_disabled.has(a.id)).length + custProg.length;
     return `
       <div style="margin-bottom:14px;border-radius:var(--radius-md);
@@ -110,7 +110,7 @@ const Personalizar = (() => {
                 ${_esc(c.nombre)}</div>
               ${c.norma ? `<div style="font-size:10px;color:#9CA3AF;margin-top:1px;">${_esc(c.norma)}</div>` : ''}
             </div>
-            <button onclick="Personalizar.eliminarCustom('${c.id}')"
+            <button onclick="Personalizar.eliminarComplementaria('${c.id}')"
               style="border:none;background:none;cursor:pointer;color:#EF4444;
                 line-height:1;padding:0 0 0 8px;flex-shrink:0;display:inline-flex;align-items:center;">
               ${AppIcons.icon('x', 16)}</button>
@@ -118,7 +118,7 @@ const Personalizar = (() => {
       </div>`;
   }
 
-  function _renderFormCustom() {
+  function _renderFormComplementario() {
     return `
       <div style="background:var(--color-surface);border-radius:var(--radius-md);
         border:1.5px dashed var(--color-border);padding:14px;margin-bottom:10px;">
@@ -141,7 +141,7 @@ const Personalizar = (() => {
           <input class="form-input" id="cust-norma" type="text"
             placeholder="Norma (opcional)" style="font-size:13px;">
         </div>
-        <button onclick="Personalizar.agregarCustom()"
+        <button onclick="Personalizar.agregarComplementaria()"
           class="btn btn-accent" style="width:100%;padding:10px;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:6px;">
           ${AppIcons.row('plus', 'Agregar ítem', 14)}
         </button>
@@ -155,7 +155,7 @@ const Personalizar = (() => {
     _saveAndRefresh();
   }
 
-  function agregarCustom() {
+  function agregarComplementaria() {
     const nombre     = document.getElementById('cust-nombre')?.value.trim();
     const programaId = document.getElementById('cust-programa')?.value;
     const norma      = document.getElementById('cust-norma')?.value.trim();
@@ -163,12 +163,12 @@ const Personalizar = (() => {
       Router.toast('Complete descripción y programa');
       return;
     }
-    _custom.push({ id: 'cust_' + Date.now(), nombre, programaId, norma });
+    _complementarios.push({ id: 'cust_' + Date.now(), nombre, programaId, norma });
     _saveAndRefresh();
   }
 
-  function eliminarCustom(id) {
-    _custom = _custom.filter(c => c.id !== id);
+  function eliminarComplementaria(id) {
+    _complementarios = _complementarios.filter(c => c.id !== id);
     _saveAndRefresh();
   }
 
@@ -187,7 +187,7 @@ const Personalizar = (() => {
   function _saveAndRefresh() {
     const insp = Store.getCurrentInspeccion();
     if (!insp) return;
-    ChecklistConfig.saveConfig(insp.establecimiento, _disabled, _custom);
+    ChecklistConfig.saveConfig(insp.establecimiento, _disabled, _complementarios);
     _refresh();
   }
 
@@ -203,5 +203,5 @@ const Personalizar = (() => {
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  return { render, attach, toggleItem, agregarCustom, eliminarCustom, comenzar };
+  return { render, attach, toggleItem, agregarComplementaria, eliminarComplementaria, comenzar };
 })();

@@ -66,7 +66,7 @@ function mapItem(it) {
     nombre: it.nombre,
     normativa: it.normativa,
     descripcion: it.descripcion || '',
-    custom: false,
+    esComplementaria: false,
   };
 }
 
@@ -97,7 +97,7 @@ categorias.push({
     nombre: it.nombre,
     normativa: it.normativa,
     descripcion: '',
-    custom: false,
+    esComplementaria: false,
   })),
 });
 

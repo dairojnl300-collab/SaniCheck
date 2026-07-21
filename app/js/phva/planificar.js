@@ -298,31 +298,31 @@ const Planificar = (() => {
 
   function _invimaResumenData() {
     let base = 28;
-    let custom = 0;
+    let complementaria = 0;
     try {
       if (typeof InvimaCrud !== 'undefined') {
         InvimaCrud.loadBaseChecklist().catch(() => {});
         const r = InvimaCrud.resumen();
         base = r.base || 28;
-        custom = r.custom || 0;
+        complementaria = r.complementaria || 0;
       }
     } catch (_) { /* offline */ }
-    return { base, custom };
+    return { base, complementaria };
   }
 
   function _invimaBadgeInfo() {
-    const { base, custom } = _invimaResumenData();
-    if (custom === 0) {
+    const { base, complementaria } = _invimaResumenData();
+    if (complementaria === 0) {
       return { text: 'Pendiente', cls: '', style: _pendienteStyle() };
     }
-    return { text: `${base} base + ${custom} custom`, cls: 'estado-chip estado-B', style: '' };
+    return { text: `${base} base + ${complementaria} complementaria`, cls: 'estado-chip estado-B', style: '' };
   }
 
   function _renderInvimaBody() {
-    const { base, custom } = _invimaResumenData();
-    const resumen = custom === 0
-      ? `${base} ítems normativos base — sin ítems personalizados aún`
-      : `${base} ítems base + ${custom} ítem${custom !== 1 ? 's' : ''} personalizado${custom !== 1 ? 's' : ''}`;
+    const { base, complementaria } = _invimaResumenData();
+    const resumen = complementaria === 0
+      ? `${base} ítems normativos — sin verificaciones complementarias aún`
+      : `${base} ítems normativos + ${complementaria} verificación${complementaria !== 1 ? 'es' : ''} complementaria${complementaria !== 1 ? 's' : ''}`;
     return `
       <div style="font-size:var(--text-xs);color:var(--color-ink3);margin-bottom:var(--sp-md);line-height:1.5;">
         Res. 2674/2013 · Configure el Simulador INVIMA por categoría (6 grupos). No requiere inspección PSB activa.
@@ -2282,8 +2282,8 @@ const Planificar = (() => {
     if (!_diagItems) _diagItems = DiagnosticoInicial.getDiagnostico(_currentEst()).items;
 
     if (_diagModalMode === 'add') {
-      const id = DiagnosticoInicial.newCustomId();
-      _diagCatalog.push({ id, texto, norma, descripcion: texto, custom: true });
+      const id = DiagnosticoInicial.newComplementariaId();
+      _diagCatalog.push({ id, texto, norma, descripcion: texto, esComplementaria: true });
       _diagItems.push({
         id,
         condicion: '',
@@ -2297,7 +2297,7 @@ const Planificar = (() => {
       if (!def || !DiagnosticoInicial.isValidId(def.id)) return;
       def.texto = texto;
       def.norma = norma;
-      if (!def.descripcion || def.custom) def.descripcion = texto;
+      if (!def.descripcion || def.esComplementaria) def.descripcion = texto;
       const it = _diagItems.find(x => x.id === def.id);
       if (it && _diagModalCal) {
         it.calificacion = _diagModalCal;

@@ -124,7 +124,7 @@ const InvimaCrud = (() => {
           normativa: it.normativa,
           descripcion: it.descripcion || '',
           peso: cat.peso || 1,
-          custom: false,
+          esComplementaria: false,
           en_perfil_rapido: _defaultPerfilFlag(it.codigo),
           estado: 'activo',
           creado_por: 'Sistema',
@@ -161,7 +161,7 @@ const InvimaCrud = (() => {
     const estId = _estId(establecimientoId);
     const item = getConfigINVIMA(estId).find(it => it.id === itemId);
     if (!item) throw new Error('Ítem no encontrado');
-    if (item.custom) {
+    if (item.esComplementaria) {
       const perfil = getPerfilRapido(estId);
       if (perfil.length <= 1) throw new Error('Debe quedar al menos 1 ítem en el perfil rápido');
       return eliminarItem(itemId, estId);
@@ -193,12 +193,12 @@ const InvimaCrud = (() => {
       id: _uuid(),
       establecimiento_id: estId,
       categoria_id: categoriaId,
-      item_id: 'item_custom_' + codigo.replace('.', '_'),
+      item_id: 'item_complementaria_' + codigo.replace('.', '_'),
       codigo,
       nombre: nombreVal,
       normativa: normativa || 'Local/ECODESA/Específico',
       peso: 1,
-      custom: true,
+      esComplementaria: true,
       en_perfil_rapido: enPerfil !== false,
       estado: 'activo',
       creado_por: 'Profesional',
@@ -219,7 +219,7 @@ const InvimaCrud = (() => {
     const all = _loadStore(estId);
     const idx = all[estId].items.findIndex(it => it.id === itemId);
     if (idx < 0) throw new Error('Ítem no encontrado');
-    if (!all[estId].items[idx].custom) throw new Error('No editable');
+    if (!all[estId].items[idx].esComplementaria) throw new Error('No editable');
 
     all[estId].items[idx] = {
       ...all[estId].items[idx],
@@ -238,7 +238,7 @@ const InvimaCrud = (() => {
     const all = _loadStore(estId);
     const item = all[estId].items.find(it => it.id === itemId);
     if (!item) return false;
-    if (!item.custom) throw new Error('No editable');
+    if (!item.esComplementaria) throw new Error('No editable');
 
     all[estId].items = all[estId].items.filter(it => it.id !== itemId);
     _saveStore(all);
@@ -260,7 +260,7 @@ const InvimaCrud = (() => {
       nombre: item.nombre,
       normativa: item.normativa,
       peso: item.peso,
-      custom: !!item.custom,
+      esComplementaria: !!item.esComplementaria,
       en_perfil_rapido: !!item.en_perfil_rapido,
       estado: item.estado || 'activo',
       creado_por: item.creado_por || 'Profesional',
@@ -321,10 +321,10 @@ const InvimaCrud = (() => {
 
   function resumen(establecimientoId) {
     const items = getConfigINVIMA(establecimientoId);
-    const base = items.filter(it => !it.custom).length;
-    const custom = items.filter(it => it.custom).length;
+    const base = items.filter(it => !it.esComplementaria).length;
+    const complementaria = items.filter(it => it.esComplementaria).length;
     const perfil = items.filter(it => it.en_perfil_rapido).length;
-    return { base, custom, total: items.length, perfil };
+    return { base, complementaria, total: items.length, perfil };
   }
 
   return {

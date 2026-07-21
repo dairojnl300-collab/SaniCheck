@@ -20,7 +20,7 @@
       "tipos": [
         { "id": "plagas", "label": "Fumigación / control de plagas", "normativa": "Resolución 2674/2013" },
         { "id": "analisis_agua", "label": "Análisis de agua", "normativa": "Resolución 2115/2007" },
-        { "id": "custom", "label": "Documento personalizado", "normativa": "", "custom": true }
+        { "id": "personalizado", "label": "Documento personalizado", "normativa": "", "personalizado": true }
       ]
     }
   },
@@ -28,7 +28,7 @@
     { "id": "anual", "label": "Anual", "meses": 12 },
     { "id": "semestral", "label": "Semestral", "meses": 6 },
     { "id": "trimestral", "label": "Trimestral", "meses": 3 },
-    { "id": "custom", "label": "Personalizada", "meses": 0 }
+    { "id": "personalizado", "label": "Personalizada", "meses": 0 }
   ],
   "estados": {
     "vigente": { "label": "Vigente", "color": "#065F46" },

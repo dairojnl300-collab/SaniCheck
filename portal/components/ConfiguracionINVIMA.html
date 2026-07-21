@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SaniCheck Portal — Configuración INVIMA</title>
   <style>
-    :root { --primary:#1B4332; --accent:#52B788; --bg:#f8faf9; --ink:#1e293b; --custom:#F57C00; }
+    :root { --primary:#1B4332; --accent:#52B788; --bg:#f8faf9; --ink:#1e293b; --complementaria:#52B788; }
     * { box-sizing:border-box; }
     body { font-family: Inter, system-ui, sans-serif; margin:0; background:var(--bg); color:var(--ink); }
     header { background:var(--primary); color:#fff; padding:16px 20px; }
@@ -19,8 +19,8 @@
     table { width:100%; border-collapse:collapse; }
     th, td { padding:10px; border-bottom:1px solid #e2e8f0; font-size:13px; text-align:left; }
     th { background:#f1f5f9; color:var(--ink); font-size:12px; }
-    tr.custom td { background:#fff7ed; }
-    .badge-custom { background:#ffedd5; color:#9a3412; padding:2px 8px; border-radius:99px; font-size:11px; font-weight:700; }
+    tr.complementaria td { background:#ecfdf5; }
+    .badge-complementaria { background:#d1fae5; color:#1B4332; padding:2px 8px; border-radius:99px; font-size:11px; font-weight:700; }
     .readonly-note { font-size:12px; color:#64748b; margin:8px 0 16px; }
   </style>
 </head>
@@ -43,7 +43,7 @@
       </select>
       <button class="primary" id="btn-cargar">Cargar</button>
     </div>
-    <p class="readonly-note">Los ítems normativos (Res. 2674/2013) no se editan desde el portal. Los ítems custom aparecen destacados.</p>
+    <p class="readonly-note">Los ítems normativos (Res. 2674/2013) no se editan desde el portal. Las verificaciones complementarias aparecen destacadas.</p>
     <div class="summary" id="summary">Ingrese código de acceso y pulse Cargar.</div>
     <div id="cats"></div>
   </main>
@@ -71,7 +71,7 @@
     function render(items) {
       const r = InvimaService.resumen(items);
       document.getElementById('summary').innerHTML =
-        `<strong>${r.base}</strong> ítems normativos + <strong>${r.custom}</strong> ítems custom · Total ${r.total}`;
+        `<strong>${r.base}</strong> ítems normativos + <strong>${r.complementaria}</strong> verificaciones complementarias · Total ${r.total}`;
 
       const grouped = groupByCat(items);
       const filtro = document.getElementById('filtro-cat').value;
@@ -86,11 +86,11 @@
               <thead><tr><th>Código</th><th>Nombre</th><th>Normativa</th><th>Tipo</th></tr></thead>
               <tbody>
                 ${rows.length ? rows.map(it => `
-                  <tr class="${it.custom ? 'custom' : ''}">
+                  <tr class="${it.esComplementaria ? 'personalizado' : ''}">
                     <td><strong>${it.codigo}</strong></td>
                     <td>${it.nombre}</td>
                     <td style="font-size:12px;">${it.normativa || '—'}</td>
-                    <td>${it.custom ? '<span class="badge-custom">Custom</span>' : 'Normativo'}</td>
+                    <td>${it.esComplementaria ? '<span class="badge-complementaria">Complementaria</span>' : 'Normativo'}</td>
                   </tr>`).join('') : '<tr><td colspan="4" style="color:#94a3b8;">Sin ítems</td></tr>'}
               </tbody>
             </table>

@@ -1,5 +1,5 @@
 /**
- * invima-scoring.js — Motor A/AR/I para checklist INVIMA (base DADIS + ítems custom)
+ * invima-scoring.js — Motor A/AR/I para Simulador INVIMA (base DADIS + verificación complementaria)
  */
 const InvimaScoring = (() => {
   'use strict';
@@ -99,7 +99,7 @@ const InvimaScoring = (() => {
         nombre: it.nombre,
         normativa: it.normativa || '',
         descripcion: it.descripcion || '',
-        custom: !!it.custom,
+        esComplementaria: !!it.esComplementaria,
       });
     });
 
@@ -139,7 +139,7 @@ const InvimaScoring = (() => {
           puntos: factor === null ? null : pts,
           normativa: it.normativa,
           descripcion: it.descripcion,
-          custom: it.custom,
+          esComplementaria: it.esComplementaria,
         });
       });
 
@@ -185,7 +185,7 @@ const InvimaScoring = (() => {
         puntos: factor === null ? null : pts,
         normativa: it.normativa,
         descripcion: it.descripcion || '',
-        custom: !!it.custom,
+        esComplementaria: !!it.esComplementaria,
       });
     });
 

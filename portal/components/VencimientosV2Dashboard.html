@@ -69,7 +69,7 @@
       establecimiento: [
         { id: 'plagas', label: 'Fumigación / plagas' },
         { id: 'analisis_agua', label: 'Análisis de agua' },
-        { id: 'custom', label: 'Personalizado' },
+        { id: 'personalizado', label: 'Personalizado' },
       ],
     };
 
@@ -183,7 +183,7 @@
               <div><label>Fecha vencimiento</label><input id="m-venc" type="date" style="width:100%"></div>
             </div>
             <label>Frecuencia</label>
-            <select id="m-frec"><option value="anual">Anual</option><option value="semestral">Semestral</option><option value="trimestral">Trimestral</option><option value="custom">Personalizada</option></select>
+            <select id="m-frec"><option value="anual">Anual</option><option value="semestral">Semestral</option><option value="trimestral">Trimestral</option><option value="personalizado">Personalizada</option></select>
             <label>Archivo (PDF/JPG/PNG/WEBP, max 10MB)</label>
             <input id="m-archivo" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp">
             <p id="m-err" class="err"></p>
@@ -223,7 +223,7 @@
         fecha_emision: document.getElementById('m-emision').value || null,
         fecha_vencimiento: document.getElementById('m-venc').value,
         frecuencia: document.getElementById('m-frec').value,
-        custom: tipo === 'custom',
+        esPersonalizado: tipo === 'personalizado',
         creado_por: 'Portal Cliente',
       };
       if (!payload.fecha_vencimiento) throw new Error('Indique fecha de vencimiento');

@@ -99,15 +99,15 @@ function assert(cond, msg) {
   const pesoItem = r.itemsDetalle.find(d => d.id === items[0].id);
   assert(pesoItem.puntos > 0, 'NA aporta puntos como A');
 
-  // Custom item entra al reparto de peso categoría
-  const custom = IC.agregarItem('cat_01', 'Extra verificación', 'Local', null, EST, '1.9');
+  // Complementaria item entra al reparto de peso categoría
+  const esComplementaria = IC.agregarItem('cat_01', 'Extra verificación', 'Local', null, EST, '1.9');
   const cat01 = items.filter(it => it.categoria_id === 'cat_01');
   const respCat01 = {};
   cat01.forEach(it => { respCat01[it.id] = 'A'; });
-  respCat01[custom.id] = 'A';
+  respCat01[esComplementaria.id] = 'A';
   r = IS.calcularPuntaje(respCat01, meta, EST);
   const catRow = r.puntajePorCategoria.find(c => c.id === 'cat_01');
-  assert(catRow.numItems === cat01.length + 1, 'custom incrementa n en categoría');
+  assert(catRow.numItems === cat01.length + 1, 'complementaria incrementa n en categoría');
 
   // Umbrales 80 / 60
   const partial = {};

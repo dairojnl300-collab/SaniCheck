@@ -32,9 +32,9 @@ const InvimaService = (() => {
   }
 
   function resumen(items) {
-    const base = items.filter(it => !it.custom).length;
-    const custom = items.filter(it => it.custom).length;
-    return { base, custom, total: items.length };
+    const base = items.filter(it => !it.esComplementaria).length;
+    const complementaria = items.filter(it => it.esComplementaria).length;
+    return { base, complementaria, total: items.length };
   }
 
   const CAT_LABELS = {
