@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "sync-version": "node scripts/sync-version.js",
-    "build": "node scripts/sync-version.js && node build.js",
+    "generate-portal-config": "node scripts/generate-portal-config-secrets.js",
+    "build": "node scripts/sync-version.js && node scripts/generate-portal-config-secrets.js && node build.js",
     "dev": "python -m http.server 8080 --directory app"
   },
   "devDependencies": {

@@ -978,10 +978,6 @@ window.addEventListener('load', function() {
     return pct >= 80 ? '#2E7D32' : pct >= 50 ? '#F57C00' : '#D32F2F';
   }
 
-  function _esc(s) {
-    if (!s) return '';
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
 
   return { render, attach, compartir, abrirPDF };
 })();

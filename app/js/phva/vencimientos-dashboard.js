@@ -8,11 +8,6 @@ const VencimientosDashboard = (() => {
   let _establecimientoId = '';
   let _onRefresh = null;
 
-  function _esc(s) {
-    return String(s || '')
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
   async function loadDashboard(establecimientoId, onRefresh) {
     _establecimientoId = establecimientoId || '';
     _onRefresh = typeof onRefresh === 'function' ? onRefresh : null;

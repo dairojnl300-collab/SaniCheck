@@ -198,10 +198,6 @@ const Personalizar = (() => {
 
   function attach() {}
 
-  function _esc(s) {
-    if (!s) return '';
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
 
   return { render, attach, toggleItem, agregarComplementaria, eliminarComplementaria, comenzar };
 })();

@@ -305,14 +305,6 @@ const About = (() => {
 
   function attach() { _hydrate(); }
 
-  function _esc(s) {
-    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-
-  function _escAttr(s) {
-    return _esc(s).replace(/"/g, '&quot;');
-  }
-
   return {
     render,
     attach,
