@@ -1,0 +1,218 @@
+/* Modal y listas — Verificación complementaria INVIMA */
+.badge-normativa-invima {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.badge-complementaria-invima {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #1B4332;
+  margin-left: 6px;
+}
+
+.invima-seccion-titulo {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-brand);
+  margin: 12px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.invima-normativa-list {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+
+.invima-normativa-item {
+  font-size: 12px;
+  color: #64748b;
+  padding: 6px 0;
+  border-bottom: 1px dashed #e2e8f0;
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.invima-normativa-item:last-child {
+  border-bottom: none;
+}
+
+.invima-complementaria-list {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
+
+.invima-complementaria-item {
+  font-size: 12px;
+  color: var(--color-ink);
+  padding: 8px 0;
+  border-bottom: 1px dashed #bbf7d0;
+}
+
+.invima-complementaria-item:last-child {
+  border-bottom: none;
+}
+
+.invima-complementaria-item small {
+  display: block;
+  font-size: 10px;
+  color: var(--color-ink3);
+  margin-top: 2px;
+}
+
+.invima-comp-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.invima-comp-actions button {
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid #86efac;
+  background: #fff;
+  color: #1B4332;
+}
+
+.invima-comp-actions button.btn-comp-del {
+  border-color: #fecaca;
+  color: #991B1B;
+}
+
+.modal-complementaria {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2300;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-md);
+}
+
+.modal-complementaria.open {
+  display: flex;
+}
+
+.modal-complementaria-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 46, 35, 0.55);
+}
+
+.modal-complementaria .modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border-radius: var(--radius-md);
+  border: 2px solid #6ee7b7;
+  padding: var(--sp-lg);
+  box-shadow: var(--shadow-lg);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-complementaria h3 {
+  margin: 0 0 var(--sp-md);
+  font-size: 15px;
+  font-weight: 800;
+  color: #1B4332;
+}
+
+.modal-complementaria label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-ink2);
+  margin-bottom: 4px;
+}
+
+.modal-complementaria input[type="text"],
+.modal-complementaria textarea {
+  width: 100%;
+  border: 1px solid #6ee7b7;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  margin-bottom: 10px;
+  font-family: inherit;
+}
+
+.modal-complementaria input[type="text"]:focus,
+.modal-complementaria textarea:focus {
+  outline: none;
+  border-color: #059669;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15);
+}
+
+.modal-complementaria .modal-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+
+.modal-complementaria .modal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.modal-complementaria .btn-guardar {
+  flex: 1;
+  background: #059669;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.modal-complementaria .btn-cancelar {
+  flex: 1;
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.invima-eval-comp-badge {
+  font-size: 10px;
+  color: #059669;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+@media (max-width: 480px) {
+  .modal-complementaria .modal-content {
+    padding: var(--sp-md);
+  }
+}

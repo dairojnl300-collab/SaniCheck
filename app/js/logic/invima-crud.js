@@ -320,11 +320,14 @@ const InvimaCrud = (() => {
   }
 
   function resumen(establecimientoId) {
-    const items = getConfigINVIMA(establecimientoId);
-    const base = items.filter(it => !it.esComplementaria).length;
-    const complementaria = items.filter(it => it.esComplementaria).length;
-    const perfil = items.filter(it => it.en_perfil_rapido).length;
-    return { base, complementaria, total: items.length, perfil };
+    const estId = _estId(establecimientoId);
+    const items = getConfigINVIMA(estId).filter(it => !it.esComplementaria);
+    const base = items.length;
+    const complementaria = typeof InvimaComplementaria !== 'undefined'
+      ? InvimaComplementaria.countAll(estId)
+      : getConfigINVIMA(estId).filter(it => it.esComplementaria).length;
+    const perfil = getConfigINVIMA(estId).filter(it => it.en_perfil_rapido).length;
+    return { base, complementaria, total: base + complementaria, perfil };
   }
 
   return {
