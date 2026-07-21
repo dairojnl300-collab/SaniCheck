@@ -389,3 +389,18 @@
     font-size: 10px;
   }
 }
+
+/* Justificación — textos INVIMA (refuerzo sobre brand.css) */
+.normativa-box p,
+.criterio-box p,
+.item-descripcion,
+.invima-normativa-item,
+.invima-complementaria-item,
+.invima-complementaria-item small {
+  text-align: justify;
+  hyphens: auto;
+}
+
+.subcategoria-header h4 {
+  text-align: justify;
+}
