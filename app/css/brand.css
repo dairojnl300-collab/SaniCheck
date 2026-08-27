@@ -504,7 +504,8 @@ a { color: inherit; text-decoration: none; }
 .eval-btn-I { background:var(--color-deficiente-bg); color:var(--color-deficiente); }
 .eval-btn-I:hover, .eval-btn-I.selected { background:var(--color-deficiente); color:#fff; box-shadow:0 4px 12px rgba(153,27,27,.35); }
 .checklist-nav { grid-template-columns:1fr 1fr; }
-.checklist-nav .btn { width:100%; justify-content:center; }
+.checklist-nav .btn { width:100%; justify-content:center; min-width:0; padding-inline:10px; white-space:nowrap; }
+.checklist-nav .btn > span { white-space:nowrap; }
 .field-stack small { color:var(--ink-70); font-size:11px; line-height:1.4; }
 .catalog-block-head { width:100%; border:0; text-align:left; }
 .catalog-items { display:none; }.catalog-items.open { display:block; }

@@ -292,7 +292,7 @@ const Actuar = (() => {
               <th style="padding:6px 8px;text-align:left;">Programa</th>
               <th style="padding:6px 8px;text-align:center;">Evaluados</th>
               <th style="padding:6px 8px;text-align:center;">Cumplimiento</th>
-              <th style="padding:6px 8px;text-align:center;">Estado</th>
+              <th style="padding:6px 6px;text-align:center;width:64px;white-space:nowrap;">Estado</th>
             </tr>
           </thead>
           <tbody>
@@ -306,10 +306,10 @@ const Actuar = (() => {
                   <td style="padding:6px 8px;text-align:center;">${sc.evaluados}/${sc.total}</td>
                   <td style="padding:6px 8px;text-align:center;font-weight:700;color:${c};">
                     ${sc.pct}%</td>
-                  <td style="padding:6px 8px;text-align:center;">
+                  <td style="padding:6px 4px;text-align:center;white-space:nowrap;">
                     ${est
-                      ? `<span style="background:${c};color:#fff;padding:2px 8px;
-                          border-radius:999px;font-size:10px;font-weight:700;">${LABEL[est]}</span>`
+                      ? `<span style="background:${c};color:#fff;padding:2px 6px;
+                          border-radius:999px;font-size:9px;font-weight:700;white-space:nowrap;">${LABEL[est]}</span>`
                       : '—'}</td>
                 </tr>`;
             }).join('')}
@@ -400,9 +400,9 @@ const Actuar = (() => {
           <td style="padding:6px 8px;font-weight:600;font-size:11px;">${_esc(p.nombre)}</td>
           <td style="padding:6px 8px;text-align:center;font-weight:700;
             color:${color};font-size:12px;">${sc.pct}%</td>
-          <td style="padding:6px 8px;text-align:center;">
+          <td style="padding:6px 4px;text-align:center;white-space:nowrap;">
             <span style="background:${color};color:#fff;padding:2px 8px;
-              border-radius:999px;font-size:9px;font-weight:700;">${ESTADO_LABEL[est]}</span>
+              border-radius:999px;font-size:9px;font-weight:700;white-space:nowrap;">${ESTADO_LABEL[est]}</span>
           </td>
         </tr>`;
     }).join('');
