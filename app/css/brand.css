@@ -300,7 +300,22 @@ a { color: inherit; text-decoration: none; }
   padding: var(--sp-lg) var(--sp-md);
   text-align: center;
 }
-.home-hero-icon { font-size: 40px; margin-bottom: var(--sp-sm); }
+.home-hero-logo {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto var(--sp-sm);
+  display: grid;
+  place-items: center;
+  border-radius: 20px;
+  background: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow-sticker);
+}
+.home-hero-logo img { width: 64px; height: 64px; object-fit: contain; display: block; }
+@media (max-width: 380px) {
+  .home-hero-logo { width: 60px; height: 60px; border-radius: 16px; }
+  .home-hero-logo img { width: 52px; height: 52px; }
+}
 .home-hero-title { font-family: var(--font-heading); font-size: var(--text-xl); font-weight: 800; margin-bottom: 8px; letter-spacing: -0.01em; }
 .home-hero-sub { font-size: var(--text-sm); opacity: 0.8; line-height: 1.6; }
 .home-content { padding: var(--sp-md); }

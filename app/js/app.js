@@ -199,8 +199,8 @@
 
     return `
       <div class="home-hero">
-        <div class="home-hero-icon" style="display:flex;justify-content:center;color:rgba(255,255,255,0.95);">${AppIcons.block('shieldCheck', 40)}</div>
-        <div class="home-hero-title">SaneamientoApp</div>
+        <div class="home-hero-logo"><img src="assets/icons/logotipo-sanicheck.png" alt="" width="64" height="64" decoding="async"></div>
+        <div class="home-hero-title">SaniCheck</div>
         <div class="home-hero-sub">Inspección PSB móvil · Normativa colombiana real<br>ECODESA Ing. S.A.S</div>
       </div>
       <div class="home-content">
