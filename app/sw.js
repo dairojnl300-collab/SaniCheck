@@ -1,6 +1,6 @@
-// Service Worker — SaniCheck v2 — Offline-first completo
+// Service Worker — SaniCheck v3 — Offline-first completo
 
-const CACHE = 'sanicheck-v2';
+const CACHE = 'sanicheck-v3';
 const ASSETS = [
   './index.html',
   './manifest.json',
@@ -10,8 +10,6 @@ const ASSETS = [
   './js/licencias.js',
   './js/app.js',
   './js/logic/psb-data.js',
-  './js/logic/checklist-config.js',
-  './js/logic/observaciones.js',
   './js/logic/scores.js',
   './js/logic/hallazgos.js',
   './js/logic/fotos.js',
@@ -20,6 +18,7 @@ const ASSETS = [
   './js/phva/hacer.js',
   './js/phva/verificar.js',
   './js/phva/actuar.js',
+  './js/phva/marco-normativo.js',
   './assets/vendor/chart.umd.min.js',
   './assets/icons/favicon.png',
   './assets/icons/icon-192.png',

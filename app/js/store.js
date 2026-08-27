@@ -1,7 +1,7 @@
 // store.js — Estado global con localStorage
 
 const Store = (() => {
-  const KEY = 'saneamiento_psb_v1';
+  const KEY = 'saneamiento_psb_v2';
 
   const defaults = {
     inspecciones: [],
