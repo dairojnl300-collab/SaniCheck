@@ -452,17 +452,20 @@ const Actuar = (() => {
     const kpiBase = `flex:1;text-align:center;padding:10px 8px;background:#F9FAFB;
       border-radius:8px;border:1px solid #E5E7EB;`;
 
-    /* Badges por programa */
-    const badges = inspeccion.programas.map(p => {
+    const comparativos = inspeccion.programas.map(p => {
       const pp       = (prev.programas || []).find(x => x.id === p.id);
       const prevPctP = pp ? Scores.calcularPrograma(pp).pct : null;
       const currPctP = Scores.calcularPrograma(p).pct;
       if (prevPctP === null || !Scores.calcularPrograma(p).evaluados) return '';
       const d = currPctP - prevPctP;
-      const bc = d > 2 ? C.acento : d < -2 ? C.rojo : C.gris;
+      const bc = d > 2 ? '#065F46' : d < -2 ? '#991B1B' : '#6B7280';
       const bi = d > 2 ? AppIcons.icon('chevronUp', 9) : d < -2 ? AppIcons.icon('chevronDown', 9) : AppIcons.icon('equal', 9);
-      return `<span style="background:${bc};color:#fff;padding:2px 7px;border-radius:999px;
-        font-size:9px;font-weight:700;margin:2px;display:inline-flex;align-items:center;gap:2px;">${_shortName(p.nombre)} ${bi}${d > 0 ? '+' : ''}${d}%</span>`;
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;
+        min-width:0;padding:7px 8px;border:1px solid ${bc}33;border-left:3px solid ${bc};
+        border-radius:6px;background:${bc}0D;font-size:9px;font-weight:700;line-height:1.3;">
+          <span style="min-width:0;color:#0A2E23;white-space:normal;">${_esc(p.nombre)}</span>
+          <span style="display:inline-flex;align-items:center;gap:2px;color:${bc};white-space:nowrap;flex-shrink:0;">${bi}${d > 0 ? '+' : ''}${d}%</span>
+        </div>`;
     }).filter(Boolean).join('');
 
     return `
@@ -493,7 +496,7 @@ const Actuar = (() => {
           </div>
         </div>
 
-        ${badges ? `<div style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:2px;">${badges}</div>` : ''}
+        ${comparativos ? `<div style="margin-bottom:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;">${comparativos}</div>` : ''}
       </div>`;
   }
 
