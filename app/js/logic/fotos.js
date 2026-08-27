@@ -11,7 +11,6 @@ const Fotos = (() => {
       inp.type    = 'file';
       inp.id      = '_foto-hidden-input';
       inp.accept  = 'image/*';
-      inp.setAttribute('capture', 'environment');
       inp.style.display = 'none';
       inp.addEventListener('change', _onCaptura);
       document.body.appendChild(inp);

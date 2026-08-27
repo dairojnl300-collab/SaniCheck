@@ -755,7 +755,7 @@ const Actuar = (() => {
     const e = inspeccion.establecimiento;
     const cols = [
       ['Elaboró',  inspeccion.inspeccion.inspector,            'Profesional'],
-      ['Revisó',   e.responsable_sanitario || '________________', 'Administrador / Responsable PSB'],
+      ['Presente en visita', e.responsable_sanitario || '________________', 'Administrador / Responsable PSB'],
     ];
     return `
       <div class="acta-firmas" style="margin-bottom:14px;">
