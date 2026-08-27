@@ -516,16 +516,18 @@ const Actuar = (() => {
             <strong style="font-size:9.5px;color:${C.verde};display:block;margin-bottom:3px;">
               METODOLOGÍA DE EVALUACIÓN
             </strong>
-            El porcentaje de cumplimiento se calcula ponderando cada programa según su criticidad
-            sanitaria, no como promedio simple de ítems.
-            <strong>Agua Potable y Limpieza/Desinfección</strong> tienen peso alto (3) por su
-            relación directa con riesgo de salud (Dec. 1575/2007, Res. 2674/2013).
-            <strong>Control de Plagas y Residuos Sólidos</strong> tienen peso medio (2).
-            <strong>Infraestructura Física</strong> tiene peso bajo (1) por ser de naturaleza
-            estructural, no inmediata. Los aspectos marcados <em>No Aplica</em> se excluyen del
-            cálculo. El estado general
-            (<strong>Bueno ≥80% / Regular 50–79% / Deficiente &lt;50%</strong>)
-            refleja este mismo porcentaje ponderado.
+            El porcentaje de cumplimiento se calcula ponderando los cinco bloques del catálogo
+            operativo: <strong>Edificación e instalaciones (11,1%)</strong>,
+            <strong>Equipos y utensilios (11,1%)</strong>,
+            <strong>Personal manipulador (22,2%)</strong>,
+            <strong>Requisitos higiénicos (22,2%)</strong> y
+            <strong>Saneamiento (33,3%)</strong>; no es un promedio simple de ítems.
+            Cada aspecto se califica como <strong>A</strong> (cumple), <strong>I</strong>
+            (incumple) o <strong>N-A</strong> (no aplica); los N-A se excluyen del denominador.
+            El estado general (<strong>Bueno ≥80% / Regular 50–79% / Deficiente &lt;50%</strong>)
+            refleja ese resultado ponderado. Esta metodología es una adaptación operativa propia
+            de ECODESA basada en 20 aspectos del instructivo, no una transcripción literal de un
+            instrumento externo.
           </div>
         </div>
       </div>`;
