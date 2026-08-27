@@ -245,7 +245,7 @@ const Actuar = (() => {
       ['Establecimiento', e.nombre],
       ['NIT', e.nit],
       ['Dirección', e.direccion],
-      ['Profesional', i.inspector],
+      ['Asesor externo', i.inspector],
       ['Administrador / Responsable PSB', e.responsable_sanitario],
       ['Fecha de Inspección', i.fecha],
       ['N° Acta', inspeccion.numero_acta],
@@ -258,7 +258,7 @@ const Actuar = (() => {
             <tr style="background:${idx%2===0?'#fff':'#F9FAFB'};
               border-bottom:1px solid #E5E7EB;">
               <td style="padding:5px 8px;color:#6B7280;font-weight:600;width:38%;">${k}</td>
-              <td style="padding:5px 8px;color:#111827;">${_esc(v||'—')}</td>
+              <td style="padding:5px 8px;color:#111827;text-align:center;">${_esc(v||'—')}</td>
             </tr>`).join('')}
         </table>
       </div>`;
