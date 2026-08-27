@@ -22,7 +22,7 @@ const Verificar = (() => {
     Scores.calcular(insp);
     Store.upsertInspeccion(insp);
 
-    const todos = insp.programas.flatMap(p => p.aspectos.map(a => ({ ...a, bloque_id: p.id, bloque_nombre: p.nombre, peso: p.peso })));
+    const todos = insp.programas.flatMap(p => p.aspectos.filter(a => !a._disabled).map(a => ({ ...a, bloque_id: p.id, bloque_nombre: p.nombre, peso: p.peso })));
     const evaluados = todos.filter(a => a.criterio === 'A' || a.criterio === 'I');
     const totalA = todos.filter(a => a.criterio === 'A').length;
     const totalI = todos.filter(a => a.criterio === 'I').length;

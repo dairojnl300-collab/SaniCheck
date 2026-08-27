@@ -18,7 +18,7 @@ const Hallazgos = (() => {
   function actualizar(inspeccion) {
     const hallazgos = [];
     inspeccion.programas.forEach(bloque => {
-      bloque.aspectos.forEach(asp => {
+      bloque.aspectos.filter(a => !a._disabled).forEach(asp => {
         if (asp.criterio === 'I') {
           hallazgos.push({
             bloque_id:     bloque.id,
