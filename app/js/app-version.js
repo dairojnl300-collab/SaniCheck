@@ -1,6 +1,6 @@
 // app-version.js — Versión semántica de SaniCheck (fuente única para SW, UI y deploy)
 
 const AppVersion = (() => {
-  const VERSION = '4.12.11';
+  const VERSION = '4.12.12';
   return { VERSION };
 })();
