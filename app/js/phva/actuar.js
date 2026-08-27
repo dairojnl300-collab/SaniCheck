@@ -239,6 +239,7 @@ const Actuar = (() => {
     const i = inspeccion.inspeccion;
     const filas = [
       ['Establecimiento', e.nombre],
+      ['NIT', e.nit],
       ['Dirección', e.direccion],
       ['Profesional', i.inspector],
       ['Administrador / Responsable PSB', e.responsable_sanitario],

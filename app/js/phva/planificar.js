@@ -71,7 +71,7 @@ const Planificar = (() => {
   /** v1 oculto — mantener por compatibilidad de datos existentes, ver ETAPA futura de migración v1→v2 */
   const _VENC_V1_UI = false;
 
-  const FORM_IDS = ['inp-nombre', 'inp-direccion', 'inp-responsable', 'inp-fecha'];
+  const FORM_IDS = ['inp-nombre', 'inp-nit', 'inp-direccion', 'inp-responsable', 'inp-fecha'];
 
   function _draftVal(id) {
     const el = document.getElementById(id);
@@ -1872,6 +1872,7 @@ const Planificar = (() => {
   function _renderGeneralFormV2() {
     return `<form class="form-screen" id="form-planificar" novalidate style="padding:0;">
       <div class="form-group"><label class="form-label" for="inp-nombre">Nombre del establecimiento *</label><input class="form-input" id="inp-nombre" required autocomplete="organization" value="${_fv('inp-nombre')}" placeholder="Ej: Restaurante La Bodega"></div>
+      <div class="form-group"><label class="form-label" for="inp-nit">NIT del establecimiento *</label><input class="form-input" type="text" id="inp-nit" required inputmode="numeric" value="${_fv('inp-nit')}" placeholder="Ej: 800.123.456-7"></div>
       <div class="form-group"><label class="form-label" for="inp-direccion">Dirección *</label><input class="form-input" id="inp-direccion" required value="${_fv('inp-direccion')}" placeholder="Ej: Cra. 10 # 20-30"></div>
       <div class="form-group"><label class="form-label" for="inp-profesional">Profesional (quien elaboró la inspección) *</label><input class="form-input" id="inp-profesional" required value="${_fv('inp-profesional')}" placeholder="Nombre del profesional"></div>
       <div class="form-group"><label class="form-label" for="inp-responsable-psb">Administrador / Responsable PSB *</label><input class="form-input" id="inp-responsable-psb" required value="${_fv('inp-responsable-psb')}" placeholder="Nombre del administrador o responsable PSB"></div>
@@ -2430,10 +2431,10 @@ const Planificar = (() => {
   function _submitV2(e) {
     e.preventDefault();
     const val = id => document.getElementById(id)?.value.trim() || '';
-    const nombre = val('inp-nombre'), direccion = val('inp-direccion'), profesional = val('inp-profesional'), responsablePsb = val('inp-responsable-psb'), fecha = val('inp-fecha');
-    if (!nombre || !direccion || !profesional || !responsablePsb || !fecha) { Router.toast('Complete los cinco campos obligatorios'); return; }
+    const nombre = val('inp-nombre'), nit = val('inp-nit'), direccion = val('inp-direccion'), profesional = val('inp-profesional'), responsablePsb = val('inp-responsable-psb'), fecha = val('inp-fecha');
+    if (!nombre || !nit || !direccion || !profesional || !responsablePsb || !fecha) { Router.toast('Complete los seis campos obligatorios'); return; }
     const establecimiento_id = _resolverEstablecimientoId(nombre, direccion);
-    const inspeccion = crearInspeccion({ nombre, direccion, establecimiento_id, responsable_sanitario: responsablePsb, tipo: 'Preparación de alimentos' }, profesional);
+    const inspeccion = crearInspeccion({ nombre, nit, direccion, establecimiento_id, responsable_sanitario: responsablePsb, tipo: 'Preparación de alimentos' }, profesional);
     inspeccion.inspeccion.fecha = fecha;
     Store.upsertInspeccion(inspeccion); Store.clearPlanificarDraft(); Store.setUI({ aspectoIdx: 0, programaIdx: 0 });
     Router.go('personalizar');
