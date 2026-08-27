@@ -350,14 +350,12 @@ const Actuar = (() => {
             <div style="height:4px;width:${sc.pct}%;background:${color};border-radius:2px;"></div>
           </div>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;">
-            <span style="background:${C.acento}22;color:${C.acento};border:1px solid ${C.acento}44;
-              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">Cumple: ${sc.A}</span>
-            <span style="background:${C.naranja}22;color:${C.naranja};border:1px solid ${C.naranja}44;
-              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">Incumple: ${sc.I}</span>
-            <span style="background:${C.rojo}22;color:${C.rojo};border:1px solid ${C.rojo}44;
-              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">No aplica: ${sc.NA}</span>
-            <span style="background:${C.gris}22;color:${C.gris};border:1px solid ${C.gris}44;
+            <span style="background:${color}22;color:${color};border:1px solid ${color}44;
+              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">${ESTADO_LABEL[est]}</span>
+            <span style="background:#0E86C822;color:#0E86C8;border:1px solid #0E86C844;
               padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">Evaluados: ${sc.evaluados}</span>
+            <span style="background:${C.gris}22;color:${C.gris};border:1px solid ${C.gris}44;
+              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">No aplica: ${sc.NA}</span>
           </div>
           <div style="font-size:8.5px;color:#9CA3AF;">Peso: ${PESO_LABEL[peso] || peso}</div>
         </div>`;
