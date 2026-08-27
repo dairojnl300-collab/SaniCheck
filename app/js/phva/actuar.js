@@ -215,18 +215,21 @@ const Actuar = (() => {
       <div id="acta-print-header" style="display:flex;justify-content:space-between;
         align-items:center;padding:10px 16px;
         border-bottom:2px solid ${C.verde};margin-bottom:16px;background:#fff;">
-        <div style="display:flex;align-items:center;gap:10px;min-height:64px;">
-          <img src="${LOGO_B64}" alt="SaniCheck"
-            style="height:64px;width:auto;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:12px;min-height:98px;">
+          <div style="width:98px;height:98px;flex:0 0 98px;display:flex;align-items:center;justify-content:center;
+            border-radius:20px;background:#EFF9F5;border:1px solid rgba(12,138,95,.22);box-shadow:var(--shadow-sticker);">
+            <img src="${LOGO_B64}" alt="SaniCheck"
+              style="height:88px;width:auto;max-width:88px;object-fit:contain;">
+          </div>
           <div style="font-family:'Instrument Sans',Arial,sans-serif;line-height:1.35;">
             <div style="font-family:'Bricolage Grotesque',Arial,sans-serif;font-weight:800;font-size:15px;letter-spacing:-0.02em;color:${C.verde};">SaniCheck</div>
             <div style="font-size:8.5px;font-weight:600;letter-spacing:0.04em;color:${C.acento};">by ECODESA</div>
             <div style="font-size:8.5px;font-weight:400;color:${C.gris};margin-top:2px;">Ecología Desarrollo e Ingeniería S.A.S</div>
             <div style="font-size:8.5px;font-weight:400;color:${C.gris};">ecodesaingenieria@outlook.es</div>
-            <div style="font-size:8.5px;font-weight:500;color:${C.gris};">WhatsApp 301 365 3273 · 324 688 6824</div>
+            <div style="font-size:8.5px;font-weight:500;color:${C.gris};">WhatsApp 324 688 6824</div>
           </div>
         </div>
-        <div style="display:flex;min-height:64px;flex-direction:column;justify-content:center;text-align:right;font-family:'Instrument Sans',Arial,sans-serif;">
+        <div style="display:flex;min-height:98px;flex-direction:column;justify-content:center;text-align:right;font-family:'Instrument Sans',Arial,sans-serif;">
           <div style="font-family:'Bricolage Grotesque',Arial,sans-serif;font-weight:800;font-size:12px;letter-spacing:0.01em;color:${C.verde};">ACTA DE INSPECCIÓN PSB</div>
           <div style="font-size:9px;line-height:1.45;color:#6B7280;">N° <strong>${_esc(inspeccion.numero_acta)}</strong></div>
           <div style="font-size:9px;line-height:1.45;color:#6B7280;">${inspeccion.inspeccion.fecha}</div>
@@ -959,6 +962,7 @@ window.addEventListener('load', function() {
   <base href="${base}">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@10..48,500;10..48,600;10..48,700;10..48,800&family=Instrument+Sans:wght@400;500;600;700;800&display=swap');
+    :root { --shadow-sticker: 0 1px 0 rgba(255,255,255,.65) inset, 0 4px 0 rgba(10,46,35,.08), 0 10px 22px -6px rgba(10,46,35,.16); }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Instrument Sans', Arial, sans-serif; font-size: 11px; color: #111827; background: #fff; }
     .acta-wrap { max-width: 800px; margin: 0 auto; padding: 16px; }
