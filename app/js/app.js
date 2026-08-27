@@ -87,6 +87,7 @@
 
   function renderHome() {
     const { inspecciones } = Store.get();
+    const legacy    = Store.getLegacyInspecciones();
     const esDemo    = Licencias.esDemo();
     const limiteMax = Licencias.maxEstab();
     const topeFull  = esDemo && inspecciones.length >= limiteMax;
@@ -102,7 +103,7 @@
       </div>`;
     }).join('')}</div>`;
 
-    const lista = inspecciones.length === 0
+    const lista = (inspecciones.length === 0 && legacy.length === 0)
       ? `<div class="empty-state">
            <div class="empty-state-icon">📋</div>
            <div class="empty-state-text">Aún no hay inspecciones registradas.<br>
@@ -132,6 +133,24 @@
           </div>`;
         }).join('');
 
+    // Inspecciones guardadas con el esquema anterior (clave saneamiento_psb_v1).
+    // Se listan solo para que no desaparezcan del Home; no se abren en Hacer
+    // porque su estructura no coincide con el catálogo actual.
+    const listaLegacy = legacy.map(ins => `
+      <div class="inspeccion-card" style="border-left-color:var(--color-border);
+        cursor:default;opacity:0.75;" onclick="Router.toast('Inspección en formato anterior: solo lectura, no puede editarse.')">
+        <div class="inspeccion-card-header">
+          <div class="inspeccion-card-nombre">${_esc(ins?.establecimiento?.nombre) || 'Sin nombre'}</div>
+          <div class="inspeccion-card-fecha">${_esc(ins?.inspeccion?.fecha)}</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span class="inspeccion-card-meta">Archivo</span>
+          <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;
+            background:rgba(148,163,184,0.18);color:var(--color-ink3);white-space:nowrap;">
+            Formato anterior — solo lectura</span>
+        </div>
+      </div>`).join('');
+
     return `
       <div class="home-hero">
         <div class="home-hero-icon">🌿</div>
@@ -160,6 +179,7 @@
         ${phvaGrid}
         <div class="home-section-title">Inspecciones</div>
         ${lista}
+        ${listaLegacy}
         <div style="height:32px;"></div>
       </div>`;
   }

@@ -2,6 +2,9 @@
 
 const Store = (() => {
   const KEY = 'saneamiento_psb_v2';
+  // Clave del esquema anterior (escala B/R/D/NA). Solo se LEE, nunca se escribe:
+  // sus inspecciones se muestran en Home como archivo de solo lectura.
+  const LEGACY_KEY = 'saneamiento_psb_v1';
 
   const defaults = {
     inspecciones: [],
@@ -49,5 +52,15 @@ const Store = (() => {
 
   function setUI(partial) { state.ui = { ...state.ui, ...partial }; save(); }
 
-  return { load, save, get, set, getCurrentInspeccion, upsertInspeccion, deleteInspeccion, setUI };
+  // Lectura pura de la clave anterior. No migra ni reescribe nada.
+  function getLegacyInspecciones() {
+    try {
+      const saved = localStorage.getItem(LEGACY_KEY);
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed?.inspecciones) ? parsed.inspecciones : [];
+    } catch (e) { console.warn('Store legacy load error', e); return []; }
+  }
+
+  return { load, save, get, set, getCurrentInspeccion, upsertInspeccion, deleteInspeccion, setUI, getLegacyInspecciones };
 })();
