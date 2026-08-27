@@ -299,7 +299,7 @@ const Actuar = (() => {
             <div style="font-size:16px;font-weight:800;color:${color};margin-bottom:4px;">
               ${estado ? LABEL[estado] : '—'}</div>
             <div style="display:flex;gap:12px;">
-              ${[['Bueno',score.B||0,'#2E7D32'],['Regular',score.R||0,'#F57C00'],['Defic.',score.D||0,'#D32F2F']]
+              ${[['Cumple',score.A||0,'#2E7D32'],['Incumple',score.I||0,'#D32F2F'],['N-A',score.NA||0,'#6B7280']]
                 .map(([l,n,c]) => `<span style="font-size:11px;font-weight:700;color:${c};">${n} ${l}</span>`).join('')}
             </div>
           </div>
@@ -558,8 +558,8 @@ const Actuar = (() => {
         ${_secTitle(`Hallazgos (${todos.length}) · Críticos: ${criticos.length}`, '#D32F2F')}
         ${ordenados.map((h, idx) => `
           <div class="acta-hallazgo" style="padding:8px;border-radius:6px;margin-bottom:6px;
-            background:${h.evaluacion==='D'?'#FEF2F2':'#FFFBEB'};
-            border-left:3px solid ${h.evaluacion==='D'?'#D32F2F':'#F57C00'};
+            background:${h.evaluacion==='I'?'#FEF2F2':'#FFFBEB'};
+            border-left:3px solid ${h.evaluacion==='I'?'#D32F2F':'#F57C00'};
             break-inside:avoid;page-break-inside:avoid;">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
               <div style="flex:1;">
@@ -570,7 +570,7 @@ const Actuar = (() => {
               </div>
               <div style="text-align:right;flex-shrink:0;">
                 <div style="font-size:10px;font-weight:800;
-                  color:${h.evaluacion==='D'?'#D32F2F':'#F57C00'};">${h.evaluacion}</div>
+                  color:${h.evaluacion==='I'?'#D32F2F':'#F57C00'};">${h.evaluacion}</div>
                 <div style="font-size:9px;color:#6B7280;">${h.plazo||''}</div>
               </div>
             </div>
@@ -616,11 +616,11 @@ const Actuar = (() => {
 
     const ACCIONES = {
       'Infraestructura Física':
-        'Ejecutar mantenimiento correctivo y preventivo de instalaciones físicas según Decreto 3075/1997 Anexo I. Registrar actividades.',
+        'Ejecutar mantenimiento correctivo y preventivo de instalaciones físicas según Resolución 2674/2013. Registrar actividades.',
       'Limpieza y Desinfección':
         'Actualizar POE de L&D, verificar concentraciones de desinfectantes y capacitar personal según Resolución 2674/2013.',
       'Control Integrado de Plagas':
-        'Contratar empresa certificada de fumigación e implementar medidas correctivas estructurales según Decreto 3075/1997 Anexo III.',
+        'Implementar medidas correctivas estructurales de control de plagas según Resolución 2674/2013.',
       'Residuos Sólidos':
         'Implementar código de colores, capacitar en separación en la fuente y actualizar registros según Resolución 2184/2019.',
       'Control de Agua Potable':
@@ -642,7 +642,7 @@ const Actuar = (() => {
             ${Object.entries(byProg).map(([prog, items], idx) => {
               const urgente = items.some(i => i.critico);
               const plazo   = urgente ? 'Inmediato'
-                            : items.some(i => i.evaluacion==='D') ? '7 días' : '30 días';
+                            : items.some(i => i.evaluacion==='I') ? '30 días' : '30 días';
               const c = urgente ? '#D32F2F' : '#F57C00';
               return `
                 <tr style="border-bottom:1px solid #E5E7EB;background:${idx%2===0?'#fff':'#F9FAFB'};">
@@ -672,7 +672,7 @@ const Actuar = (() => {
               <div style="font-size:11px;font-weight:700;color:${C.verde};margin-bottom:5px;">
                 ${_esc(p.nombre)}</div>
               ${ev.map(a => {
-                const c = a.evaluacion==='B'?'#2E7D32':a.evaluacion==='R'?'#F57C00':'#D32F2F';
+                const c = a.evaluacion==='A'?'#2E7D32':a.evaluacion==='I'?'#D32F2F':'#6B7280';
                 const autoObs = (typeof Observaciones !== 'undefined')
                   ? Observaciones.getObs(p.id, a.evaluacion, a) : '';
                 const obsTexto = (a.obs_editada && a.obs) ? a.obs : (a.obs || autoObs);
@@ -754,9 +754,8 @@ const Actuar = (() => {
     return `
       <div style="border-top:1.5px solid ${C.verde};padding-top:10px;text-align:center;margin-top:16px;">
         <div style="font-size:9px;color:#6B7280;line-height:1.7;text-align:justify;">
-          Normativa aplicada: Ley 9/1979 (Código Sanitario) · Decreto 3075/1997 (BPM) ·
-          Resolución 2674/2013 · Decreto 1575/2007 (Agua) · Resolución 2115/2007 ·
-          Resolución 2184/2019 (Residuos)
+          Normativa aplicada: Ley 9/1979 (Código Sanitario) · Resolución 2674/2013 ·
+          Resolución 1229/2013 · Decreto 1575/2007 y Resolución 2115/2007, cuando aplique.
         </div>
         <div style="font-size:9px;color:${C.verde};font-weight:700;margin-top:4px;">
           Cartagena de Indias · ECODESA Ecología Desarrollo e Ingeniería S.A.S · ecodesa.org

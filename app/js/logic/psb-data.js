@@ -4,7 +4,7 @@
 const PSB_PESOS = { edificacion: 11.1, equipos: 11.1, personal: 22.2, higienicos: 22.2, saneamiento: 33.3 };
 
 function _aspecto(id, texto, norma) {
-  return { id, texto, norma, criterio: null, evaluacion: null, hallazgo: '', accion: '', obs: '', obs_editada: false, estado: 'Abierto', fotografias: [], hallazgo_critico: false, plazo: null };
+  return { id, texto, norma, criterio: null, evaluacion: null, hallazgo: '', accion: '', obs: '', obs_editada: false, cumple_requerimientos: null, estado: null, fotografias: [], hallazgo_critico: false, plazo: null };
 }
 
 function getPSBPrograms() {

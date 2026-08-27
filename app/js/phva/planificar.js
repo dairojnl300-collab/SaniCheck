@@ -2161,7 +2161,7 @@ const Planificar = (() => {
         </div>
         <div class="form-group">
           <label class="form-label" for="diag-modal-norma">Referencia normativa</label>
-          <input class="form-input" type="text" id="diag-modal-norma" placeholder="Ej: Dec. 3075/1997 Art. 8">
+          <input class="form-input" type="text" id="diag-modal-norma" placeholder="Ej: Resolución 2674/2013, art. 8">
         </div>
         <div class="form-label" style="margin-bottom:8px;">Calificación</div>
         <div class="eval-group" id="diag-modal-eval" style="margin-bottom:var(--sp-md);">
