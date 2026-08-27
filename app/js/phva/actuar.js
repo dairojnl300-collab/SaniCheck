@@ -67,11 +67,7 @@ const Actuar = (() => {
         ${_renderResumenComparativo(inspeccion)}
         ${_renderComparacionHistorica(inspeccion)}
         ${_renderMetodologia()}
-        ${_renderHallazgos(inspeccion)}
-        ${_renderNoAplicables(inspeccion)}
-        ${_renderPlanAcciones(inspeccion)}
-        ${_renderObservacionesPorPrograma(inspeccion)}
-        ${_renderFotografias(inspeccion)}
+        ${_renderDetallePorItem(inspeccion)}
         ${_renderFirmas(inspeccion)}
         ${_renderFooter()}
       </div>`;
@@ -644,14 +640,14 @@ const Actuar = (() => {
       </div>`;
   }
 
-  /* ── Observaciones por programa ─────────────────── */
-  function _renderObservacionesPorPrograma(inspeccion) {
+  /* ── Evidencia y seguimiento por ítem ────────────── */
+  function _renderDetallePorItem(inspeccion) {
     const conEval = inspeccion.programas.filter(p => p.aspectos.some(a => a.evaluacion));
     if (!conEval.length) return '';
 
     return `
       <div class="acta-seccion" style="margin-bottom:14px;">
-        ${_secTitle('Observaciones por Programa', C.verde)}
+        ${_secTitle('Detalle de aspectos evaluados', C.verde)}
         ${conEval.map(p => {
           const ev = p.aspectos.filter(a => a.evaluacion);
           return `
@@ -659,24 +655,62 @@ const Actuar = (() => {
               <div style="font-size:11px;font-weight:700;color:${C.verde};margin-bottom:5px;">
                 ${_esc(p.nombre)}</div>
               ${ev.map(a => {
-                const c = a.evaluacion==='A'?'#2E7D32':a.evaluacion==='I'?'#D32F2F':'#6B7280';
-                const autoObs = (typeof Observaciones !== 'undefined')
-                  ? Observaciones.getObs(p.id, a.evaluacion, a) : '';
-                const obsTexto = (a.obs_editada && a.obs) ? a.obs : (a.obs || autoObs);
+                const criterio = typeof Scores !== 'undefined' ? Scores.criterio(a) : a.evaluacion;
+                const c = criterio==='A'?'#2E7D32':criterio==='I'?'#D32F2F':'#6B7280';
+                const esCumple = criterio === 'A';
+                const esIncumple = criterio === 'I';
+                const cumpleReq = a.cumple_requerimientos === 'Sí';
                 return `
-                  <div style="display:flex;gap:8px;padding:4px 0;
-                    border-bottom:1px dotted #E5E7EB;font-size:11px;">
-                    <span style="font-weight:800;color:${c};flex-shrink:0;">[${a.evaluacion}]</span>
-                    <div>
-                      <div style="color:#111827;">${_esc(a.texto)}</div>
-                      ${obsTexto
-                        ? `<div style="color:#6B7280;font-size:10px;margin-top:1px;text-align:justify;hyphens:auto;">${_esc(obsTexto)}</div>`
-                        : ''}
+                  <div class="acta-card" style="padding:9px 10px;margin-bottom:7px;border:1px solid #E5E7EB;
+                    border-left:3px solid ${c};border-radius:6px;background:#fff;break-inside:avoid;page-break-inside:avoid;">
+                    <div style="display:flex;gap:8px;align-items:flex-start;">
+                      <span style="font-weight:800;color:${c};flex-shrink:0;font-size:11px;">[${_esc(criterio || '')}]</span>
+                      <div style="flex:1;min-width:0;">
+                        <div style="color:#111827;font-size:11px;font-weight:700;">${_esc(a.texto)}</div>
+                        <div style="color:#6B7280;font-size:9px;margin-top:2px;">${_esc(a.norma || '')}</div>
+                      </div>
                     </div>
+                    ${esCumple ? `
+                      <div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;">
+                        <strong>Observaciones:</strong> ${_esc(a.obs || 'Sin observaciones registradas.')}
+                      </div>
+                      <div style="margin-top:4px;font-size:10px;color:#374151;">
+                        <strong>¿Cumple bajo requerimientos?</strong>
+                        ${cumpleReq ? 'SÍ (Abierto como mejora)' : 'NO (Cerrado)'}
+                      </div>` : ''}
+                    ${esIncumple ? `
+                      <div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;">
+                        <strong>Hallazgo:</strong> ${_esc(a.hallazgo || a.obs || 'Sin hallazgo registrado.')}
+                      </div>
+                      <div style="margin-top:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;">
+                        <strong>Acción correctiva:</strong> ${_esc(a.accion || 'Sin acción correctiva registrada.')}
+                      </div>
+                      <div style="margin-top:4px;font-size:10px;color:#374151;">
+                        <strong>Estado de acción:</strong> ${_esc(a.estado || 'Abierto')}
+                      </div>` : ''}
+                    ${criterio === 'NA' ? `
+                      <div style="margin-top:7px;font-size:10px;color:#6B7280;text-align:justify;hyphens:auto;">
+                        <strong>Justificación N-A:</strong> ${_esc(a.obs || 'No aplica a este establecimiento.')}
+                      </div>` : ''}
+                    ${_renderFotosAspecto(a)}
                   </div>`;
               }).join('')}
             </div>`;
         }).join('')}
+      </div>`;
+  }
+
+  function _renderFotosAspecto(aspecto) {
+    const fotos = aspecto.fotografias || [];
+    if (!fotos.length) return '';
+    return `
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px;">
+        ${fotos.map((foto, idx) => `
+          <figure style="margin:0;border:1px solid #E5E7EB;border-radius:5px;overflow:hidden;">
+            <img src="${foto.data}" alt="Evidencia ${idx + 1} del aspecto evaluado"
+              style="width:100%;height:120px;object-fit:cover;display:block;">
+            <figcaption style="padding:3px 5px;background:#F9FAFB;font-size:9px;color:#6B7280;">Evidencia ${idx + 1}</figcaption>
+          </figure>`).join('')}
       </div>`;
   }
 
@@ -937,11 +971,7 @@ window.addEventListener('load', function() {
   ${_renderRankingTabla(inspeccion)}
   ${_renderComparacionHistorica(inspeccion)}
   ${_renderMetodologia()}
-  ${_renderHallazgos(inspeccion)}
-  ${_renderNoAplicables(inspeccion)}
-  ${_renderObservacionesPorPrograma(inspeccion)}
-  ${_renderFotografias(inspeccion)}
-  ${_renderPlanAcciones(inspeccion)}
+  ${_renderDetallePorItem(inspeccion)}
   ${_renderFirmas(inspeccion)}
   ${_renderFooter()}
 </div>
