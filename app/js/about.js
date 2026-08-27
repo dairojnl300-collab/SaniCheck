@@ -17,7 +17,7 @@ const About = (() => {
         <div class="card" style="padding:var(--sp-md);margin-bottom:var(--sp-md);">
           <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);
             text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--sp-sm);">
-            Versión de caché</div>
+            Versión instalada</div>
           <div id="about-cache-info" style="font-size:var(--text-sm);color:var(--color-ink3);">
             Consultando Service Worker…
           </div>
@@ -88,8 +88,8 @@ const About = (() => {
     cacheEl.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;
         padding:10px 0;border-bottom:1px dashed var(--color-border);">
-        <span>Versión activa</span>
-        <strong style="font-family:var(--font-mono);color:var(--color-ink);">${_esc(info.version)}</strong>
+        <span>Versión instalada</span>
+        <strong style="font-family:var(--font-mono);color:var(--color-ink);">v${_esc(info.version)}</strong>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;
         padding:10px 0;border-bottom:1px dashed var(--color-border);">
