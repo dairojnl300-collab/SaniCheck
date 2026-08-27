@@ -716,12 +716,11 @@ const Actuar = (() => {
     const cols = [
       ['Elaboró',  inspeccion.inspeccion.inspector,            'Profesional'],
       ['Revisó',   e.responsable_sanitario || '________________', 'Administrador / Responsable PSB'],
-      ['Aprobó',   e.representante_legal || '________________',   'Representante Legal'],
     ];
     return `
       <div class="acta-firmas" style="margin-bottom:14px;">
         ${_secTitle('Firmas', C.verde)}
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:24px;">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:24px;">
           ${cols.map(([rol, nombre, cargo]) => `
             <div style="text-align:center;">
               <div style="border-top:1.5px solid #111827;padding-top:8px;">
