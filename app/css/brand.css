@@ -1198,7 +1198,7 @@ a { color: inherit; text-decoration: none; }
 .norma-detalle { display:none; margin:8px 0 var(--sp-md); padding:12px; border-left:3px solid var(--aqua); background:var(--wash-b); border-radius:0 var(--radius-sm) var(--radius-sm) 0; }
 .norma-detalle.open { display:block; }
 .norma-detalle strong { display:block; margin-bottom:5px; color:var(--emerald-2); font-size:12px; }
-.norma-detalle p { color:var(--ink-70); font-size:12px; line-height:1.55; text-align:justify; hyphens:auto; }
+.norma-detalle p { color:var(--ink-70); font-size:12px; line-height:1.55; text-align:justify; hyphens:auto; white-space:pre-line; }
 
 /* Tab bar PHVA — íconos 3D */
 .phva-step {
