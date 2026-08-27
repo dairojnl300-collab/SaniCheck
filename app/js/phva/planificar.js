@@ -1676,7 +1676,7 @@ const Planificar = (() => {
 
       <div class="footer">
         <div class="footer-col">
-          <div class="footer-lbl">Responsable / Profesional</div>
+          <div class="footer-lbl">Responsable / Asesor externo</div>
           <div class="footer-val">${_escAttr(responsable)}</div>
           <div class="footer-line"></div>
           <div style="font-size:9px;color:#9CA3AF;margin-top:4px;">Firma</div>
@@ -1995,7 +1995,7 @@ const Planificar = (() => {
             placeholder="Nombre del administrador / responsable PSB" value="${_fv('inp-responsable')}">
         </div>
         <div class="form-group">
-          <label class="form-label" for="inp-inspector">Profesional *</label>
+          <label class="form-label" for="inp-inspector">Asesor externo *</label>
           <input class="form-input" type="text" id="inp-inspector"
             value="${_fv('inp-inspector') || 'Ing. Ambiental'}" required>
         </div>
