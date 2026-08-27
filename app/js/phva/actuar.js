@@ -772,13 +772,13 @@ const Actuar = (() => {
   /* ── Footer normativo ────────────────────────────── */
   function _renderFooter() {
     return `
-      <div style="border-top:1.5px solid ${C.verde};padding-top:10px;text-align:center;margin-top:16px;">
-        <div style="font-size:9px;color:#6B7280;line-height:1.7;text-align:justify;">
+      <div style="border-top:1.5px solid ${C.verde};padding:14px 12px 0;text-align:center;margin-top:16px;">
+        <div style="font-size:8.5px;color:#6B7280;line-height:1.55;text-align:center;max-width:620px;margin:0 auto;">
           Normativa aplicada: Ley 9/1979 (Código Sanitario) · Resolución 2674/2013 ·
           Resolución 1229/2013 · Decreto 1575/2007 y Resolución 2115/2007, cuando aplique.
         </div>
-        <div style="font-size:9px;color:${C.verde};font-weight:700;margin-top:4px;">
-          Cartagena de Indias · ECODESA Ecología Desarrollo e Ingeniería S.A.S · ecodesa.org
+        <div style="font-size:9px;color:${C.verde};font-weight:700;line-height:1.45;margin:10px auto 0;text-align:center;">
+          Cartagena de Indias · ECODESA Ecología Desarrollo e Ingeniería S.A.S · ecodesa.co
         </div>
       </div>`;
   }
