@@ -20,7 +20,14 @@ const Hacer = (() => {
     const ui          = Store.get().ui;
     const programaIdx = Math.min(ui.programaIdx || 0, inspeccion.programas.length - 1);
     const programa    = inspeccion.programas[programaIdx];
-    const aspectoIdx  = Math.min(ui.aspectoIdx || 0, programa.aspectos.length - 1);
+    let aspectoIdx    = Math.min(ui.aspectoIdx || 0, programa.aspectos.length - 1);
+    if (aspectoIdx < 0) aspectoIdx = 0;
+    // Si el índice guardado quedó sobre un ítem desactivado, salta al primer activo del bloque.
+    // aspectoIdx sigue siendo SIEMPRE un índice real sobre programa.aspectos (Fotos.capturar lo usa así).
+    if (programa.aspectos[aspectoIdx] && programa.aspectos[aspectoIdx]._disabled) {
+      const primerActivo = programa.aspectos.findIndex(a => !a._disabled);
+      if (primerActivo !== -1) aspectoIdx = primerActivo;
+    }
     return { inspeccion, programa, programaIdx, aspectoIdx, aspecto: programa.aspectos[aspectoIdx] };
   }
 
@@ -36,31 +43,33 @@ const Hacer = (() => {
       </div>`;
 
     const { inspeccion, programa, programaIdx, aspectoIdx, aspecto } = s;
-    const activos = programa.aspectos.filter(a => !a._disabled);
-    // Si el ítem activo actual quedó desactivado, salta al primero visible.
-    const visibleIdx = activos.includes(aspecto) ? aspectoIdx : programa.aspectos.indexOf(activos[0] || aspecto);
+    // Índices reales de los ítems activos; la navegación y los contadores solo ven estos.
+    const idxActivos = _indicesActivos(programa);
+    const pos        = idxActivos.indexOf(aspectoIdx);   // posición dentro de los activos (-1 si no hay ninguno)
+    const esPrimero  = pos <= 0;
+    const esUltimo   = pos === idxActivos.length - 1;
 
     return `
       <img src="assets/icons/isotipo-transparente.png" class="watermark-bg" alt="">
       <div class="checklist-header">
         ${_renderTopBar(inspeccion)}
         ${_renderProgramTabs(inspeccion.programas, programaIdx)}
-        ${_renderProgress(programa, visibleIdx)}
+        ${_renderProgress(programa, pos)}
       </div>
 
       <div class="aspecto-content">
-        ${activos.length ? _renderAspecto(aspecto, programaIdx, aspectoIdx) : _renderSinItems()}
+        ${idxActivos.length ? _renderAspecto(aspecto, programaIdx, aspectoIdx) : _renderSinItems()}
         ${_renderResumen(programa)}
       </div>
 
       <div class="checklist-nav">
         <button class="btn btn-outline nav-prev" style="width:auto;padding:10px 16px;"
-          onclick="Hacer.navegar(-1)"${aspectoIdx === 0 ? ' disabled' : ''}>← Anterior</button>
-        <div class="nav-counter">${aspectoIdx + 1} / ${programa.aspectos.length}</div>
-        <button class="btn ${aspectoIdx === programa.aspectos.length - 1 ? 'btn-primary' : 'btn-accent'} nav-next"
+          onclick="Hacer.navegar(-1)"${esPrimero ? ' disabled' : ''}>← Anterior</button>
+        <div class="nav-counter">${Math.max(pos + 1, 0)} / ${idxActivos.length}</div>
+        <button class="btn ${esUltimo ? 'btn-primary' : 'btn-accent'} nav-next"
           style="width:auto;padding:10px 16px;"
           onclick="Hacer.navegar(1)">
-          ${aspectoIdx === programa.aspectos.length - 1 ? 'Finalizar →' : 'Siguiente →'}</button>
+          ${esUltimo ? 'Finalizar →' : 'Siguiente →'}</button>
       </div>`;
   }
 
@@ -110,15 +119,16 @@ const Hacer = (() => {
       </div>`;
   }
 
-  function _renderProgress(programa, aspectoIdx) {
-    const total    = programa.aspectos.length;
-    const evaluados = programa.aspectos.filter(a => a.criterio).length;
-    const pct      = Math.round((evaluados / total) * 100);
+  function _renderProgress(programa, pos) {
+    const activos   = programa.aspectos.filter(a => !a._disabled);
+    const total     = activos.length;
+    const evaluados = activos.filter(a => a.criterio).length;
+    const pct       = total ? Math.round((evaluados / total) * 100) : 0;
     return `
       <div style="font-size:13px;font-weight:700;color:var(--color-ink);margin-bottom:8px;">
         ${programa.nombre}</div>
       <div class="progress-label">
-        <span>Aspecto <strong>${aspectoIdx + 1}</strong> de <strong>${total}</strong></span>
+        <span>Aspecto <strong>${Math.max(pos + 1, 0)}</strong> de <strong>${total}</strong></span>
         <span style="color:${pct === 100 ? 'var(--color-bueno)' : 'var(--color-ink3)'};">
           ${evaluados}/${total} evaluados</span>
       </div>
@@ -220,8 +230,15 @@ const Hacer = (() => {
         </div>`}`;
   }
 
+  // Índices reales (sobre programa.aspectos) de los ítems no desactivados.
+  function _indicesActivos(programa) {
+    const out = [];
+    programa.aspectos.forEach((a, i) => { if (!a._disabled) out.push(i); });
+    return out;
+  }
+
   function _renderResumen(programa) {
-    const ev = programa.aspectos.filter(a => a.criterio);
+    const ev = programa.aspectos.filter(a => !a._disabled && a.criterio);
     if (!ev.length) return '';
     const c = { A: 0, I: 0, NA: 0 };
     ev.forEach(a => { if (c[a.criterio] !== undefined) c[a.criterio]++; });
@@ -306,7 +323,12 @@ const Hacer = (() => {
     const s = _state();
     if (!s) return;
     const { programa, aspectoIdx } = s;
-    const next = aspectoIdx + dir;
+    // Salta los ítems desactivados en la dirección del movimiento; si no queda
+    // ninguno activo por delante/atrás, se comporta como final/inicio del bloque.
+    let next = aspectoIdx + dir;
+    while (next >= 0 && next < programa.aspectos.length && programa.aspectos[next]._disabled) {
+      next += dir;
+    }
     if (next < 0) return;
     if (next >= programa.aspectos.length) {
       _finalizarPrograma(programa);
@@ -317,7 +339,7 @@ const Hacer = (() => {
   }
 
   function _finalizarPrograma(programa) {
-    const noEval = programa.aspectos.filter(a => !a.criterio).length;
+    const noEval = programa.aspectos.filter(a => !a._disabled && !a.criterio).length;
     if (noEval > 0 && !confirm(`${noEval} aspecto(s) sin evaluar. ¿Continuar de todas formas?`)) return;
     const ui          = Store.get().ui;
     const inspeccion  = Store.getCurrentInspeccion();

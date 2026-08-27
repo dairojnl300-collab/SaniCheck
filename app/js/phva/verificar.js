@@ -42,8 +42,8 @@ const Verificar = (() => {
         ${_renderPrioridades(insp)}
         ${_renderFiltrosYHallazgos(todos)}
 
-        <button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px;font-weight:700;margin-top:6px;"
-          onclick="Router.go('actuar')">Continuar a Actuar →</button>
+        <button class="btn btn-outline" style="width:100%;padding:14px;font-size:15px;font-weight:700;margin-top:6px;"
+          onclick="Router.go('actuar')">Continuar a Actuar</button>
         <div style="height:32px;"></div>
       </div>
       <div class="dash-lightbox" id="dash-lightbox" onclick="this.classList.remove('open')">

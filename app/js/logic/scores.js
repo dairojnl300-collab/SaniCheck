@@ -6,7 +6,9 @@ const Scores = (() => {
   const VALORES = { A: 1, I: 0 };
 
   function calcularPrograma(bloque) {
-    const aspectos  = bloque.aspectos;
+    // Los ítems desactivados en PERSONALIZAR no existen para el score:
+    // ni suman al total ni cuentan como "no evaluados".
+    const aspectos  = bloque.aspectos.filter(a => !a._disabled);
     const na        = aspectos.filter(a => a.criterio === 'NA').length;
     const evaluados = aspectos.filter(a => a.criterio === 'A' || a.criterio === 'I');
     if (!evaluados.length) {
