@@ -439,11 +439,9 @@ const Actuar = (() => {
 
   /* ── Comparación con inspección anterior ─────────── */
   function _renderComparacionHistorica(inspeccion) {
-    const historial = _getHistorial(inspeccion);
-    if (historial.length < 2) return '';
-
-    const prev = historial[historial.length - 2];
-    const curr = historial[historial.length - 1];
+    const prev = _getInspeccionAnterior(inspeccion);
+    if (!prev) return '';
+    const curr = inspeccion;
 
     const prevPct = prev.score?.pct_cumplimiento || 0;
     const currPct = curr.score?.pct_cumplimiento || 0;
@@ -478,14 +476,14 @@ const Actuar = (() => {
               letter-spacing:0.05em;margin-bottom:4px;">Anterior</div>
             <div style="font-size:26px;font-weight:900;color:${_colorPct(prevPct)};line-height:1.1;">
               ${prevPct}%</div>
-            <div style="font-size:9px;color:#6B7280;margin-top:2px;">${prev.inspeccion.fecha}</div>
+            <div style="font-size:9px;color:#6B7280;margin-top:2px;">${_esc(prev.numero_acta || prev.inspeccion?.numero_acta || 'Sin acta')} · ${_esc(prev.inspeccion?.fecha || '')}</div>
           </div>
           <div style="${kpiBase}">
             <div style="font-size:9px;color:${C.gris};font-weight:700;text-transform:uppercase;
               letter-spacing:0.05em;margin-bottom:4px;">Reciente</div>
             <div style="font-size:26px;font-weight:900;color:${_colorPct(currPct)};line-height:1.1;">
               ${currPct}%</div>
-            <div style="font-size:9px;color:#6B7280;margin-top:2px;">${curr.inspeccion.fecha}</div>
+            <div style="font-size:9px;color:#6B7280;margin-top:2px;">${_esc(curr.numero_acta || curr.inspeccion?.numero_acta || 'Sin acta')} · ${_esc(curr.inspeccion?.fecha || '')}</div>
           </div>
           <div style="${kpiBase}">
             <div style="font-size:9px;color:${C.gris};font-weight:700;text-transform:uppercase;
@@ -798,16 +796,30 @@ const Actuar = (() => {
     return cambio;
   }
 
-  function _getHistorial(inspeccion) {
-    const nit    = inspeccion.establecimiento?.nit;
-    const nombre = inspeccion.establecimiento?.nombre;
+  function _getInspeccionAnterior(actual) {
+    const ordenActual = _ordenInspeccion(actual);
     return (Store.get().inspecciones || [])
-      .filter(i => i.score && i.inspeccion?.fecha)
-      .filter(i =>
-        (nit    && i.establecimiento?.nit    === nit) ||
-        (!nit   && i.establecimiento?.nombre === nombre)
-      )
-      .sort((a, b) => a.inspeccion.fecha.localeCompare(b.inspeccion.fecha));
+      .filter(i => i.id !== actual.id)
+      .filter(i => _mismoEstablecimiento(i, actual))
+      .filter(i => (i.score?.total || 0) > 0)
+      .filter(i => _ordenInspeccion(i) < ordenActual)
+      .sort((a, b) => _ordenInspeccion(b).localeCompare(_ordenInspeccion(a)))[0] || null;
+  }
+
+  function _mismoEstablecimiento(a, b) {
+    const normalizar = valor => String(valor || '').trim().toLowerCase();
+    const aNit = normalizar(a.establecimiento?.nit), bNit = normalizar(b.establecimiento?.nit);
+    if (aNit && bNit) return aNit === bNit;
+    const mismoNombre = normalizar(a.establecimiento?.nombre) === normalizar(b.establecimiento?.nombre);
+    const aDireccion = normalizar(a.establecimiento?.direccion), bDireccion = normalizar(b.establecimiento?.direccion);
+    return mismoNombre && (!aDireccion || !bDireccion || aDireccion === bDireccion);
+  }
+
+  function _ordenInspeccion(inspeccion) {
+    const fecha = inspeccion.inspeccion?.fecha || '0000-00-00';
+    const hora = inspeccion.inspeccion?.hora_inicio || '00:00';
+    const creada = inspeccion.creado_en || '';
+    return `${fecha}T${hora}|${creada}`;
   }
 
   function _shortName(nombre) {
