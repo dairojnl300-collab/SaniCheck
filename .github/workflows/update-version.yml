@@ -10,6 +10,8 @@ jobs:
   update-version:
     name: Auto-Update Version & Deploy
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v3
       
@@ -32,6 +34,23 @@ jobs:
         run: |
           sed -i "s/const CACHE_NAME = 'sanicheck-v[^']*'/const CACHE_NAME = 'sanicheck-v${{ steps.version.outputs.version }}'/" public/service-worker.js
           sed -i "s/const COMMIT_HASH = '[^']*'/const COMMIT_HASH = '${{ steps.version.outputs.commit }}'/" public/service-worker.js
+
+      - name: Bump SW cache hash (sync-version.js)
+        if: github.event_name == 'push'
+        run: node scripts/sync-version.js
+
+      - name: Commit version bump
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- app/sw.js app/version.json; then
+            echo "Sin cambios en sw.js/version.json — nada que commitear"
+          else
+            git add app/sw.js app/version.json
+            git commit -m "chore: bump SW cache hash [skip ci]"
+            git push
+          fi
 
       - name: Generate portal-config.secrets.js
         if: github.event_name == 'push'

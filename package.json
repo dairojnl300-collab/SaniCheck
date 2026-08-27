@@ -7,9 +7,11 @@
     "sync-version": "node scripts/sync-version.js",
     "generate-portal-config": "node scripts/generate-portal-config-secrets.js",
     "build": "node scripts/sync-version.js && node scripts/generate-portal-config-secrets.js && node build.js",
-    "dev": "python -m http.server 8080 --directory app"
+    "dev": "python -m http.server 8080 --directory app",
+    "verify-sw": "node scripts/verify-sw-offline.mjs"
   },
   "devDependencies": {
-    "terser": "^5.48.0"
+    "terser": "^5.48.0",
+    "puppeteer": "^25.9.0"
   }
 }
