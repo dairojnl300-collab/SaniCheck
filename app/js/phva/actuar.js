@@ -244,7 +244,8 @@ const Actuar = (() => {
     const filas = [
       ['Establecimiento', e.nombre],
       ['Dirección', e.direccion],
-      ['Responsable / contacto', e.responsable_sanitario || i.inspector],
+      ['Profesional', i.inspector],
+      ['Administrador / Responsable PSB', e.responsable_sanitario],
       ['Fecha de Inspección', i.fecha],
       ['N° Acta', inspeccion.numero_acta],
     ];

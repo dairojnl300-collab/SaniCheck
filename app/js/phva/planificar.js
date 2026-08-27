@@ -1873,7 +1873,8 @@ const Planificar = (() => {
     return `<form class="form-screen" id="form-planificar" novalidate style="padding:0;">
       <div class="form-group"><label class="form-label" for="inp-nombre">Nombre del establecimiento *</label><input class="form-input" id="inp-nombre" required autocomplete="organization" value="${_fv('inp-nombre')}" placeholder="Ej: Restaurante La Bodega"></div>
       <div class="form-group"><label class="form-label" for="inp-direccion">Dirección *</label><input class="form-input" id="inp-direccion" required value="${_fv('inp-direccion')}" placeholder="Ej: Cra. 10 # 20-30"></div>
-      <div class="form-group"><label class="form-label" for="inp-responsable">Responsable / contacto *</label><input class="form-input" id="inp-responsable" required value="${_fv('inp-responsable')}" placeholder="Nombre de contacto"></div>
+      <div class="form-group"><label class="form-label" for="inp-profesional">Profesional (quien elaboró la inspección) *</label><input class="form-input" id="inp-profesional" required value="${_fv('inp-profesional')}" placeholder="Nombre del profesional"></div>
+      <div class="form-group"><label class="form-label" for="inp-responsable-psb">Administrador / Responsable PSB *</label><input class="form-input" id="inp-responsable-psb" required value="${_fv('inp-responsable-psb')}" placeholder="Nombre del administrador o responsable PSB"></div>
       <div class="form-group"><label class="form-label" for="inp-fecha">Fecha de inspección *</label><input class="form-input" type="date" id="inp-fecha" required value="${_fv('inp-fecha') || _hoy()}"></div>
     </form>`;
   }
@@ -2429,9 +2430,9 @@ const Planificar = (() => {
   function _submitV2(e) {
     e.preventDefault();
     const val = id => document.getElementById(id)?.value.trim() || '';
-    const nombre = val('inp-nombre'), direccion = val('inp-direccion'), responsable = val('inp-responsable'), fecha = val('inp-fecha');
-    if (!nombre || !direccion || !responsable || !fecha) { Router.toast('Complete los cuatro campos obligatorios'); return; }
-    const inspeccion = crearInspeccion({ nombre, direccion, responsable_sanitario: responsable, tipo: 'Preparación de alimentos' }, responsable);
+    const nombre = val('inp-nombre'), direccion = val('inp-direccion'), profesional = val('inp-profesional'), responsablePsb = val('inp-responsable-psb'), fecha = val('inp-fecha');
+    if (!nombre || !direccion || !profesional || !responsablePsb || !fecha) { Router.toast('Complete los cinco campos obligatorios'); return; }
+    const inspeccion = crearInspeccion({ nombre, direccion, responsable_sanitario: responsablePsb, tipo: 'Preparación de alimentos' }, profesional);
     inspeccion.inspeccion.fecha = fecha;
     Store.upsertInspeccion(inspeccion); Store.clearPlanificarDraft(); Store.setUI({ aspectoIdx: 0, programaIdx: 0 });
     Router.go('personalizar');
