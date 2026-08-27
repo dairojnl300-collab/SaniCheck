@@ -808,11 +808,14 @@ const Actuar = (() => {
 
   function _mismoEstablecimiento(a, b) {
     const normalizar = valor => String(valor || '').trim().toLowerCase();
+    const aId = normalizar(a.establecimiento?.establecimiento_id);
+    const bId = normalizar(b.establecimiento?.establecimiento_id);
+    if (aId || bId) return Boolean(aId && bId && aId === bId);
     const aNit = normalizar(a.establecimiento?.nit), bNit = normalizar(b.establecimiento?.nit);
     if (aNit && bNit) return aNit === bNit;
     const mismoNombre = normalizar(a.establecimiento?.nombre) === normalizar(b.establecimiento?.nombre);
     const aDireccion = normalizar(a.establecimiento?.direccion), bDireccion = normalizar(b.establecimiento?.direccion);
-    return mismoNombre && (!aDireccion || !bDireccion || aDireccion === bDireccion);
+    return Boolean(mismoNombre && aDireccion && bDireccion && aDireccion === bDireccion);
   }
 
   function _ordenInspeccion(inspeccion) {

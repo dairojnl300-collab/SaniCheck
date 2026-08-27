@@ -2432,10 +2432,27 @@ const Planificar = (() => {
     const val = id => document.getElementById(id)?.value.trim() || '';
     const nombre = val('inp-nombre'), direccion = val('inp-direccion'), profesional = val('inp-profesional'), responsablePsb = val('inp-responsable-psb'), fecha = val('inp-fecha');
     if (!nombre || !direccion || !profesional || !responsablePsb || !fecha) { Router.toast('Complete los cinco campos obligatorios'); return; }
-    const inspeccion = crearInspeccion({ nombre, direccion, responsable_sanitario: responsablePsb, tipo: 'Preparación de alimentos' }, profesional);
+    const establecimiento_id = _resolverEstablecimientoId(nombre, direccion);
+    const inspeccion = crearInspeccion({ nombre, direccion, establecimiento_id, responsable_sanitario: responsablePsb, tipo: 'Preparación de alimentos' }, profesional);
     inspeccion.inspeccion.fecha = fecha;
     Store.upsertInspeccion(inspeccion); Store.clearPlanificarDraft(); Store.setUI({ aspectoIdx: 0, programaIdx: 0 });
     Router.go('personalizar');
+  }
+
+  // El identificador no se pide al inspector: se conserva por establecimiento
+  // y evita mezclar historiales de clientes con nombres similares.
+  function _resolverEstablecimientoId(nombre, direccion) {
+    const normalizar = valor => String(valor || '').trim().toLowerCase();
+    const nombreNormalizado = normalizar(nombre), direccionNormalizada = normalizar(direccion);
+    const coincidencias = (Store.get().inspecciones || []).filter(i =>
+      normalizar(i.establecimiento?.nombre) === nombreNormalizado &&
+      normalizar(i.establecimiento?.direccion) === direccionNormalizada
+    );
+    const existente = coincidencias.find(i => i.establecimiento?.establecimiento_id)?.establecimiento?.establecimiento_id;
+    const id = existente || `est-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    // Migración local de registros anteriores: solo cuando nombre y dirección coinciden exactamente.
+    coincidencias.forEach(i => { i.establecimiento.establecimiento_id = id; });
+    return id;
   }
 
   function _submit(e) {
