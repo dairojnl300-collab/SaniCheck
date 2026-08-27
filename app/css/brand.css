@@ -131,7 +131,7 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   background: none;
   border: none;
   cursor: pointer;
@@ -139,16 +139,26 @@ a { color: inherit; text-decoration: none; }
   color: inherit;
   min-height: 0;
   flex-shrink: 0;
-  max-width: 100px;
+  max-width: 148px;
+}
+
+.phva-logo-mark {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow-sticker);
 }
 
 .phva-logo-img {
-  height: 26px;
-  width: 26px;
-  flex-shrink: 0;
+  height: 28px;
+  width: 28px;
   display: block;
   object-fit: contain;
-  filter: brightness(0) invert(1);
 }
 
 .phva-logo-copy {
@@ -162,8 +172,8 @@ a { color: inherit; text-decoration: none; }
 
 .phva-logo-text {
   font-family: var(--font-heading);
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 800;
   color: #FFFFFF;
   letter-spacing: -0.01em;
   line-height: 1.05;
@@ -172,8 +182,8 @@ a { color: inherit; text-decoration: none; }
 
 .phva-logo-sub {
   font-family: var(--font-body);
-  font-size: 8px;
-  font-weight: 500;
+  font-size: 8.5px;
+  font-weight: 600;
   color: rgba(255, 255, 255, 0.75);
   letter-spacing: 0.08em;
   line-height: 1;
