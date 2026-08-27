@@ -329,7 +329,7 @@ const Actuar = (() => {
 
       const color = _colorPct(sc.pct);
       const est   = Scores.getEstado(sc.pct);
-      const peso  = (typeof PSB_PESOS !== 'undefined' ? PSB_PESOS[prog.id] : null) || 1;
+      const peso  = prog.peso || (typeof PSB_PESOS !== 'undefined' ? PSB_PESOS[prog.id] : null) || 1;
 
       return `
         <div class="acta-card" style="
@@ -351,15 +351,15 @@ const Actuar = (() => {
           </div>
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;">
             <span style="background:${C.acento}22;color:${C.acento};border:1px solid ${C.acento}44;
-              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">B:${sc.B}</span>
+              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">Cumple: ${sc.A}</span>
             <span style="background:${C.naranja}22;color:${C.naranja};border:1px solid ${C.naranja}44;
-              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">R:${sc.R}</span>
+              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">Incumple: ${sc.I}</span>
             <span style="background:${C.rojo}22;color:${C.rojo};border:1px solid ${C.rojo}44;
-              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">D:${sc.D}</span>
+              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">No aplica: ${sc.NA}</span>
             <span style="background:${C.gris}22;color:${C.gris};border:1px solid ${C.gris}44;
-              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">N/A:${sc.na}</span>
+              padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;">Evaluados: ${sc.evaluados}</span>
           </div>
-          <div style="font-size:8.5px;color:#9CA3AF;">Peso: ${PESO_LABEL[peso]}</div>
+          <div style="font-size:8.5px;color:#9CA3AF;">Peso: ${PESO_LABEL[peso] || peso}</div>
         </div>`;
     }).filter(Boolean);
 
