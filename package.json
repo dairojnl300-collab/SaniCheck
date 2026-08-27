@@ -1,6 +1,6 @@
 {
   "name": "sanicheck-ecodesa",
-  "version": "4.12.6",
+  "version": "4.12.7",
   "description": "Inspección PSB móvil — ECODESA",
   "private": true,
   "scripts": {
