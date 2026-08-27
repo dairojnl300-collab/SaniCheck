@@ -69,5 +69,6 @@ function getPSBPrograms() {
 
 function crearInspeccion(establecimiento, profesional) {
   const ahora = new Date();
-  return { id: 'psb-' + ahora.getTime() + '-' + Math.random().toString(36).slice(2, 8), fase_phva: 'P', establecimiento: { ...establecimiento }, inspeccion: { inspector: profesional || '', fecha: ahora.toISOString().split('T')[0], hora_inicio: ahora.toTimeString().slice(0, 5), hora_fin: null, numero_acta: 'PSB-' + ahora.getFullYear() + '-' + String(ahora.getTime()).slice(-4) }, programas: getPSBPrograms(), estado_general: null, hallazgos_criticos: [], score: { A: 0, I: 0, NA: 0, total: 0, pct_cumplimiento: 0 }, creado_en: ahora.toISOString(), actualizado_en: ahora.toISOString(), version_app: '2.0.0' };
+  const numeroActa = 'PSB-' + ahora.getFullYear() + '-' + String(ahora.getTime()).slice(-4);
+  return { id: 'psb-' + ahora.getTime() + '-' + Math.random().toString(36).slice(2, 8), fase_phva: 'P', establecimiento: { ...establecimiento }, inspeccion: { inspector: profesional || '', fecha: ahora.toISOString().split('T')[0], hora_inicio: ahora.toTimeString().slice(0, 5), hora_fin: null, numero_acta: numeroActa }, numero_acta: numeroActa, programas: getPSBPrograms(), estado_general: null, hallazgos_criticos: [], score: { A: 0, I: 0, NA: 0, total: 0, pct_cumplimiento: 0 }, creado_en: ahora.toISOString(), actualizado_en: ahora.toISOString(), version_app: '2.0.0' };
 }

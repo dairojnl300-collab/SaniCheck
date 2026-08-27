@@ -10,8 +10,7 @@ const Actuar = (() => {
     const inspeccion = Store.getCurrentInspeccion();
     if (!inspeccion) return _sinInspeccion();
 
-    if (!inspeccion.numero_acta) {
-      inspeccion.numero_acta = _generarNumeroActa();
+    if (_sincronizarNumeroActa(inspeccion)) {
       Store.upsertInspeccion(inspeccion);
     }
 
@@ -764,6 +763,19 @@ const Actuar = (() => {
   }
 
   /* ── Helpers ─────────────────────────────────────── */
+
+  // Las inspecciones antiguas guardaban el acta dentro de `inspeccion`;
+  // las actuales la conservan también en la raíz. Se sincronizan al abrir
+  // Actuar para que el documento siempre represente la inspección activa.
+  function _sincronizarNumeroActa(inspeccion) {
+    const existente = inspeccion.numero_acta || inspeccion.inspeccion?.numero_acta;
+    const numero = existente || _generarNumeroActa();
+    const cambio = inspeccion.numero_acta !== numero || inspeccion.inspeccion?.numero_acta !== numero;
+    inspeccion.numero_acta = numero;
+    if (!inspeccion.inspeccion) inspeccion.inspeccion = {};
+    inspeccion.inspeccion.numero_acta = numero;
+    return cambio;
+  }
 
   function _getHistorial(inspeccion) {
     const nit    = inspeccion.establecimiento?.nit;
