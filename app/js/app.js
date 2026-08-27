@@ -247,6 +247,16 @@
     Router.go('hacer');
   };
 
+  function _bindTopbarScroll() {
+    const topbar = document.querySelector('.phva-topbar');
+    const area = document.getElementById('screen-area');
+    if (!topbar || !area) return;
+
+    const update = () => topbar.classList.toggle('is-scrolled', area.scrollTop > 24);
+    area.addEventListener('scroll', update, { passive: true });
+    update();
+  }
+
 
   async function init() {
     if (typeof window.SaniCheckVersionInit === 'function') {
@@ -262,6 +272,7 @@
       VencimientosV2.bindOnlineRetry();
     }
     _ensureDeleteModal();
+    _bindTopbarScroll();
     if (Licencias.esValida()) {
       const ui = Store.get().ui || {};
       const screens = ['home', 'about', 'planificar', 'personalizar', 'hacer', 'verificar', 'dashboard', 'actuar'];
