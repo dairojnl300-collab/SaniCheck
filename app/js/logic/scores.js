@@ -1,70 +1,35 @@
-// scores.js — Score ponderado por ítem: Σ(peso_programa × valor) / Σ(peso_programa) × 100
-// N/A excluido de numerador y denominador. Pesos definidos en PSB_PESOS (psb-data.js).
-
+// A = cumple; I = incumple; N-A queda fuera del denominador.
 const Scores = (() => {
-  const VALORES = { B: 1, R: 0.5, D: 0 };
-
-  function calcularPrograma(programa) {
-    const aspectos  = programa.aspectos;
-    const na        = aspectos.filter(a => a.evaluacion === 'NA').length;
-    const evaluados = aspectos.filter(a => a.evaluacion && a.evaluacion !== 'NA');
-    if (!evaluados.length) {
-      return { pct: 0, evaluados: 0, total: aspectos.length, na, B: 0, R: 0, D: 0 };
-    }
-    const c = { B: 0, R: 0, D: 0 };
-    let suma = 0;
-    evaluados.forEach(a => { c[a.evaluacion]++; suma += VALORES[a.evaluacion]; });
-    return {
-      pct:      Math.round((suma / evaluados.length) * 100),
-      evaluados: evaluados.length,
-      total:    aspectos.length,
-      na,
-      ...c,
-    };
+  // Lectura compatible de inspecciones anteriores: B→A y R/D→I.
+  const criterio = a => {
+    const valor = a.criterio || a.evaluacion || null;
+    return valor === 'B' ? 'A' : (valor === 'R' || valor === 'D') ? 'I' : valor;
+  };
+  function calcularPrograma(bloque) {
+    const aspectos = bloque.aspectos || [];
+    const evaluados = aspectos.filter(a => ['A', 'I'].includes(criterio(a)));
+    const A = evaluados.filter(a => criterio(a) === 'A').length;
+    const I = evaluados.length - A;
+    const NA = aspectos.filter(a => criterio(a) === 'NA').length;
+    return { pct: evaluados.length ? Math.round((A / evaluados.length) * 100) : 0, evaluados: evaluados.length, total: aspectos.length, A, I, NA };
   }
-
   function calcular(inspeccion) {
-    let numerador = 0, denominador = 0;
-
-    inspeccion.programas.forEach(prog => {
-      const peso = PSB_PESOS[prog.id] || 1;
-      prog.aspectos.forEach(asp => {
-        if (asp.evaluacion && asp.evaluacion !== 'NA') {
-          numerador   += peso * VALORES[asp.evaluacion];
-          denominador += peso;
-        }
-      });
+    let suma = 0, peso = 0;
+    const todos = [];
+    (inspeccion.programas || []).forEach(bloque => {
+      const r = calcularPrograma(bloque);
+      bloque.estado_general = r.evaluados ? getEstado(r.pct) : null;
+      const p = bloque.peso || PSB_PESOS[bloque.id] || 0;
+      if (r.evaluados) { suma += p * r.pct; peso += p; }
+      todos.push(...bloque.aspectos);
     });
-
-    const pct = denominador > 0 ? Math.round((numerador / denominador) * 100) : 0;
-
-    const todos   = inspeccion.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion && a.evaluacion !== 'NA'));
-    const todosNA = inspeccion.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion === 'NA'));
-
-    inspeccion.score = {
-      B:                todos.filter(a => a.evaluacion === 'B').length,
-      R:                todos.filter(a => a.evaluacion === 'R').length,
-      D:                todos.filter(a => a.evaluacion === 'D').length,
-      NA:               todosNA.length,
-      total:            todos.length,
-      pct_cumplimiento: pct,
-    };
-    inspeccion.estado_general = todos.length ? getEstado(pct) : null;
+    const pct = peso ? Math.round(suma / peso) : 0;
+    const A = todos.filter(a => criterio(a) === 'A').length, I = todos.filter(a => criterio(a) === 'I').length, NA = todos.filter(a => criterio(a) === 'NA').length;
+    inspeccion.score = { A, I, NA, total: A + I, pct_cumplimiento: pct };
+    inspeccion.estado_general = A + I ? getEstado(pct) : null;
     return inspeccion.score;
   }
-
-  // Única fuente de verdad para umbral de estado: mismos cortes para texto y color.
-  function getEstado(pct) {
-    if (pct >= 80) return 'B';
-    if (pct >= 50) return 'R';
-    return 'D';
-  }
-
-  function getColor(pct) {
-    if (pct >= 80) return 'var(--color-bueno)';
-    if (pct >= 50) return 'var(--color-regular)';
-    return 'var(--color-deficiente)';
-  }
-
-  return { calcular, calcularPrograma, getEstado, getColor };
+  function getEstado(pct) { return pct >= 80 ? 'B' : pct >= 50 ? 'R' : 'D'; }
+  function getColor(pct) { return pct >= 80 ? 'var(--color-bueno)' : pct >= 50 ? 'var(--color-regular)' : 'var(--color-deficiente)'; }
+  return { calcular, calcularPrograma, getEstado, getColor, criterio };
 })();

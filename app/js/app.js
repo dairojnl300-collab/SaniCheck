@@ -10,8 +10,8 @@
   Router.register('personalizar', Personalizar.render);
   Router.register('hacer',        Hacer.render);
   Router.register('verificar',    Verificar.render);
+  Router.register('dashboard',    Verificar.render);
   Router.register('actuar',       Actuar.render);
-  Router.register('dadis',        DadisSimulador.render);
 
   /* ── Pantalla de activación ──────────────────────── */
   function renderLicencia() {
@@ -217,20 +217,6 @@
           style="display:inline-flex;align-items:center;justify-content:center;gap:8px;${topeFull ? 'opacity:0.5;cursor:not-allowed;' : ''}">
           ${AppIcons.row('plus', 'Nueva Inspección PSB', 16)}
         </button>
-        <button type="button" class="home-sim-card card-fixed-row" onclick="Router.go('dadis')"
-          style="margin-top:10px;width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;
-            background:linear-gradient(135deg,rgba(27,67,50,0.08),rgba(82,183,136,0.12));
-            border:1px solid rgba(82,183,136,0.35);border-radius:var(--radius-md);cursor:pointer;text-align:left;">
-          <span style="width:40px;height:40px;border-radius:10px;background:rgba(27,67,50,0.12);color:var(--color-brand);
-            display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
-            ${AppIcons.icon('shieldCheck', 20)}
-          </span>
-          <span class="home-sim-card-text" style="flex:1;min-width:0;">
-            <span class="home-sim-card-title card-text-clamp card-text-clamp-1" style="display:block;font-size:14px;font-weight:800;color:var(--color-brand);">Simulador INVIMA</span>
-            <span class="home-sim-card-sub card-text-clamp card-text-clamp-1" style="display:block;font-size:11px;color:var(--color-ink3);margin-top:2px;">Evaluación rápida</span>
-          </span>
-          <span style="color:var(--color-ink3);">${AppIcons.icon('clipboardCheck', 18)}</span>
-        </button>
         <div class="home-section-title">Fases del proceso</div>
         ${phvaGrid}
         <div class="home-section-title">Inspecciones</div>
@@ -275,14 +261,10 @@
       VencimientosV2.loadCatalog().catch(() => {});
       VencimientosV2.bindOnlineRetry();
     }
-    if (typeof InvimaCrud !== 'undefined') {
-      InvimaCrud.loadBaseChecklist().catch(() => {});
-      InvimaCrud.bindOnlineRetry();
-    }
     _ensureDeleteModal();
     if (Licencias.esValida()) {
       const ui = Store.get().ui || {};
-      const screens = ['home', 'about', 'planificar', 'personalizar', 'hacer', 'verificar', 'actuar', 'dadis'];
+      const screens = ['home', 'about', 'planificar', 'personalizar', 'hacer', 'verificar', 'dashboard', 'actuar'];
       const screen  = screens.includes(ui.screen) ? ui.screen : 'home';
       Router.go(screen);
     } else {

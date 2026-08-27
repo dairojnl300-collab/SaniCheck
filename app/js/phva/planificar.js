@@ -12,39 +12,23 @@ const Planificar = (() => {
   };
 
   const MARCO_GENERAL = [
-    ['Ley 9 de 1979', 'Código Sanitario Nacional', 'General'],
-    ['Decreto 1072 de 2015', 'Decreto Único Reglamentario Sector Trabajo', 'SST'],
-    ['Resolución 0312 de 2019', 'Estándares mínimos SG-SST', 'SST'],
-    ['Resolución 2400 de 1979', 'Estatuto de Seguridad Industrial', 'SST'],
-    ['Decreto 1575 de 2007', 'Protección y control calidad del agua', 'Control de agua'],
-    ['Resolución 2115 de 2007', 'Características y frecuencias control calidad agua', 'Análisis de agua'],
-    ['Decreto 1077 de 2015', 'Agua potable y residuos sólidos', 'Agua/Residuos'],
-    ['Resolución 3956 de 2009', 'Norma vertimientos alcantarillado', 'Vertimientos'],
-    ['Decreto 3930 de 2010', 'Usos del agua y residuos líquidos', 'Vertimientos'],
-    ['Resolución 3079 de 2015', 'Requisitos plaguicidas uso doméstico', 'Control de plagas'],
-    ['Resolución 1439 de 2003', 'Requisitos sanitarios plaguicidas', 'Control de plagas'],
-    ['Decreto 1843 de 1991', 'Uso y manejo de plaguicidas', 'Control de plagas'],
-    ['Resolución 754 de 2014', 'Metodología PGIRS', 'Residuos sólidos'],
-    ['Decreto 2981 de 2013', 'Prestación servicio público de aseo', 'Residuos sólidos'],
-    ['Ley 1259 de 2008', 'Comparendo ambiental', 'Residuos sólidos'],
-    ['Decreto 4741 de 2005', 'Prevención manejo residuos peligrosos', 'RESPEL'],
-    ['Ley 99 de 1993', 'Sistema Nacional Ambiental', 'Ambiental general'],
-    ['Decreto 2811 de 1974', 'Código Nacional Recursos Naturales', 'Ambiental general'],
+    ['Ley 9 de 1979', 'Código Sanitario Nacional — Título V', 'Sanitario'],
+    ['Resolución 2674 de 2013', 'Condiciones sanitarias para alimentos — arts. 5–20, 26 y 32–35', 'Alimentos'],
+    ['Resolución 1229 de 2013', 'Modelo de inspección, vigilancia y control sanitario', 'IVC'],
   ];
   const _ALIM = [
-    ['Decreto 3075 de 1997', 'Buenas Prácticas de Manufactura (BPM)', 'Alimentos'],
-    ['Resolución 2674 de 2013', 'Requisitos sanitarios fabricación/expendio alimentos', 'Alimentos'],
-    ['NTC 5093', 'Manipulación de alimentos', 'Alimentos'],
-    ['Resolución 5109 de 2005', 'Rotulado o etiquetado de alimentos', 'Alimentos'],
+    ['Ley 9 de 1979', 'Código Sanitario Nacional — Título V', 'Sanitario'],
+    ['Resolución 2674 de 2013', 'Requisitos sanitarios aplicables a preparación y expendio de alimentos', 'Alimentos'],
+    ['Resolución 1229 de 2013', 'Modelo IVC sanitario', 'IVC'],
+    ['Resolución 3168 de 2015', 'Solo si fabrica o envasa alimentos para comercialización', 'Condicional'],
+    ['Decreto 1575 de 2007 y Resolución 2115 de 2007', 'Solo cuando aplique control de calidad de agua para consumo humano', 'Condicional'],
   ];
   const MARCO_TIPOS = [
     { key: 'Alimentos', label: 'Restaurante / Comedor / Alimentos', normas: _ALIM },
     { key: 'Casino', label: 'Casino', normas: _ALIM },
     { key: 'Catering', label: 'Catering', normas: [..._ALIM,
-      ['Decreto 3075 de 1997 Art. 34-36', 'Transporte de alimentos preparados', 'Transporte'],
       ['Resolución 2674 de 2013 Cap. VII', 'Condiciones de transporte de alimentos', 'Transporte']] },
     { key: 'Manufactura', label: 'Planta de Manufactura', normas: [
-      ['Decreto 3075 de 1997', 'BPM (si produce alimentos)', 'Alimentos'],
       ['Resolución 2674 de 2013', 'Requisitos sanitarios (si aplica)', 'Alimentos']] },
     { key: 'Bodega', label: 'Bodega/Almacén', normas: [
       ['Decreto 1843 de 1991', 'Almacenamiento de plaguicidas (si aplica)', 'Control de plagas'],
@@ -55,7 +39,6 @@ const Planificar = (() => {
       ['Resolución 2183 de 2004', 'Manual de bioseguridad IPS', 'Bioseguridad']] },
     { key: 'Comedor industrial', label: 'Comedor Industrial', normas: _ALIM },
     { key: 'Educativo', label: 'Institución Educativa', normas: [
-      ['Decreto 3075 de 1997', 'BPM (si tiene comedor/restaurante escolar)', 'Alimentos'],
       ['Resolución 2674 de 2013', 'Requisitos sanitarios (si aplica)', 'Alimentos'],
       ['Resolución 3803 de 2016', 'Lineamientos PAE (Programa Alimentación Escolar)', 'Alimentación escolar']] },
   ];
@@ -88,12 +71,7 @@ const Planificar = (() => {
   /** v1 oculto — mantener por compatibilidad de datos existentes, ver ETAPA futura de migración v1→v2 */
   const _VENC_V1_UI = false;
 
-  const FORM_IDS = [
-    'inp-nombre', 'inp-nit', 'inp-direccion', 'inp-barrio', 'inp-ciudad', 'inp-telefono',
-    'inp-correo', 'inp-representante', 'inp-ciiu', 'inp-tipo', 'inp-turnos', 'inp-raciones',
-    'inp-empresa-cliente', 'inp-concepto-sanitario', 'inp-fecha-elaboracion', 'inp-fecha-vigencia',
-    'inp-version-doc', 'inp-responsable-cocina', 'inp-responsable', 'inp-inspector', 'inp-fecha',
-  ];
+  const FORM_IDS = ['inp-nombre', 'inp-direccion', 'inp-responsable', 'inp-fecha'];
 
   function _draftVal(id) {
     const el = document.getElementById(id);
@@ -169,7 +147,6 @@ const Planificar = (() => {
 
   function render() {
     _restoreUiFromDraft();
-    if (typeof InvimaCrud !== 'undefined') InvimaCrud.loadBaseChecklist().catch(() => {});
     if (!_venc) {
       _vencEst = _currentEst();
       _venc    = Vencimientos.getVencimientos(_vencEst);
@@ -184,30 +161,13 @@ const Planificar = (() => {
       </div>
 
       ${_renderAccordionCard('general', 'Datos Generales',
-        'building', 'var(--color-planificar)', _generalBadgeInfo(), _generalOpen, _renderGeneralForm())}
-
-      ${_renderAccordionCard('diagnostico', 'Perfil Sanitario',
-        'clipboardCheck', 'var(--color-accent)', _perfilBadgeInfo(), _diagOpen, _renderPerfilBody())}
-
-      ${_renderAccordionCard('resultados', 'Resultados Diagnóstico',
-        'listCheck', 'var(--emerald)', _resultadosBadgeInfo(), _resultadosOpen, _renderResultadosBody(),
-        !_resultadosData().rated.length)}
+        'building', 'var(--color-planificar)', _generalBadgeInfo(), _generalOpen, _renderGeneralFormV2())}
 
       ${_renderAccordionCard('marco', 'Marco Normativo',
         'scale', 'var(--azure)', _marcoBadgeInfo(), _marcoOpen, _renderMarcoBody())}
 
-      ${typeof ConfigurarInvima !== 'undefined' ? _renderAccordionCard('invima', 'Simulador INVIMA',
-        'shieldCheck', 'var(--color-brand)', _invimaBadgeInfo(), _invimaOpen, _renderInvimaBody()) : ''}
-
       ${_renderAccordionCard('vencimientos', 'Vencimientos',
         'calendarTime', 'var(--amber)', _vencBadgeInfo(), _vencOpen, _renderVencimientosBody())}
-
-      <div style="margin:0 var(--sp-md) var(--sp-sm);">
-        <button type="button" class="btn btn-accent" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
-          data-p-act="exportarDashboardPDF">
-          ${AppIcons.row('barChart', 'Dashboard Ejecutivo PDF', 14)}
-        </button>
-      </div>
 
       <div style="margin:0 var(--sp-md);">
         <button type="submit" form="form-planificar" class="btn btn-primary">
@@ -395,11 +355,8 @@ const Planificar = (() => {
 
   function _syncAccordion() {
     _setCardState('general', _generalOpen, _generalBadgeInfo());
-    _setCardState('diagnostico', _diagOpen, _perfilBadgeInfo());
     _setCardState('marco', _marcoOpen, _marcoBadgeInfo());
-    _setCardState('invima', _invimaOpen, _invimaBadgeInfo());
     _setCardState('vencimientos', _vencOpen, _vencBadgeInfo());
-    _syncResultados();
   }
 
   function marcoSub(key) {
@@ -409,7 +366,7 @@ const Planificar = (() => {
   }
 
   function _marcoBadgeInfo() {
-    return { text: '10 categorías', cls: 'estado-chip estado-B', style: '' };
+    return { text: 'Normativa vigente', cls: 'estado-chip estado-B', style: '' };
   }
 
   function _perfilResumenTable(i, ar, a) {
@@ -1912,6 +1869,15 @@ const Planificar = (() => {
     _mostrarNotificacionesVenc();
   }
 
+  function _renderGeneralFormV2() {
+    return `<form class="form-screen" id="form-planificar" novalidate style="padding:0;">
+      <div class="form-group"><label class="form-label" for="inp-nombre">Nombre del establecimiento *</label><input class="form-input" id="inp-nombre" required autocomplete="organization" value="${_fv('inp-nombre')}" placeholder="Ej: Restaurante La Bodega"></div>
+      <div class="form-group"><label class="form-label" for="inp-direccion">Dirección *</label><input class="form-input" id="inp-direccion" required value="${_fv('inp-direccion')}" placeholder="Ej: Cra. 10 # 20-30"></div>
+      <div class="form-group"><label class="form-label" for="inp-responsable">Responsable / contacto *</label><input class="form-input" id="inp-responsable" required value="${_fv('inp-responsable')}" placeholder="Nombre de contacto"></div>
+      <div class="form-group"><label class="form-label" for="inp-fecha">Fecha de inspección *</label><input class="form-input" type="date" id="inp-fecha" required value="${_fv('inp-fecha') || _hoy()}"></div>
+    </form>`;
+  }
+
   function _renderGeneralForm() {
     return `
       <form class="form-screen" id="form-planificar" novalidate style="padding:0;">
@@ -2452,12 +2418,23 @@ const Planificar = (() => {
     _ensurePlanificarDelegation();
     const form = document.getElementById('form-planificar');
     if (form) {
-      form.addEventListener('submit', _submit);
+      form.addEventListener('submit', _submitV2);
       _hydrateFormFromDraft();
       const onDraft = () => _schedulePlanificarDraft();
       form.addEventListener('input', onDraft);
       form.addEventListener('change', onDraft);
     }
+  }
+
+  function _submitV2(e) {
+    e.preventDefault();
+    const val = id => document.getElementById(id)?.value.trim() || '';
+    const nombre = val('inp-nombre'), direccion = val('inp-direccion'), responsable = val('inp-responsable'), fecha = val('inp-fecha');
+    if (!nombre || !direccion || !responsable || !fecha) { Router.toast('Complete los cuatro campos obligatorios'); return; }
+    const inspeccion = crearInspeccion({ nombre, direccion, responsable_sanitario: responsable, tipo: 'Preparación de alimentos' }, responsable);
+    inspeccion.inspeccion.fecha = fecha;
+    Store.upsertInspeccion(inspeccion); Store.clearPlanificarDraft(); Store.setUI({ aspectoIdx: 0, programaIdx: 0 });
+    Router.go('personalizar');
   }
 
   function _submit(e) {

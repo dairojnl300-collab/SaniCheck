@@ -5,7 +5,7 @@ const AppMotion = (() => {
 
   const DUR_MS = 380;
   const ANIM_SCREENS = new Set([
-    'home', 'planificar', 'personalizar', 'hacer', 'verificar', 'actuar', 'about', 'dadis',
+    'home', 'planificar', 'personalizar', 'hacer', 'verificar', 'dashboard', 'actuar', 'about',
   ]);
 
   let _origGo  = null;
