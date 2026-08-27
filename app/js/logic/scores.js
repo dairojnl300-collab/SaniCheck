@@ -1,19 +1,20 @@
-// scores.js — Score ponderado por ítem: Σ(peso_programa × valor) / Σ(peso_programa) × 100
-// N/A excluido de numerador y denominador. Pesos definidos en PSB_PESOS (psb-data.js).
+// scores.js — Cumplimiento ponderado en 2 etapas:
+// 1) % por bloque = promedio simple de sus ítems evaluados (N-A excluido).
+// 2) % global = Σ(peso_bloque × %bloque) / Σ(peso_bloque), solo bloques con ≥1 evaluado.
 
 const Scores = (() => {
-  const VALORES = { B: 1, R: 0.5, D: 0 };
+  const VALORES = { A: 1, I: 0 };
 
-  function calcularPrograma(programa) {
-    const aspectos  = programa.aspectos;
-    const na        = aspectos.filter(a => a.evaluacion === 'NA').length;
-    const evaluados = aspectos.filter(a => a.evaluacion && a.evaluacion !== 'NA');
+  function calcularPrograma(bloque) {
+    const aspectos  = bloque.aspectos;
+    const na        = aspectos.filter(a => a.criterio === 'NA').length;
+    const evaluados = aspectos.filter(a => a.criterio === 'A' || a.criterio === 'I');
     if (!evaluados.length) {
-      return { pct: 0, evaluados: 0, total: aspectos.length, na, B: 0, R: 0, D: 0 };
+      return { pct: 0, evaluados: 0, total: aspectos.length, na, A: 0, I: 0 };
     }
-    const c = { B: 0, R: 0, D: 0 };
+    const c = { A: 0, I: 0 };
     let suma = 0;
-    evaluados.forEach(a => { c[a.evaluacion]++; suma += VALORES[a.evaluacion]; });
+    evaluados.forEach(a => { c[a.criterio]++; suma += VALORES[a.criterio]; });
     return {
       pct:      Math.round((suma / evaluados.length) * 100),
       evaluados: evaluados.length,
@@ -26,25 +27,22 @@ const Scores = (() => {
   function calcular(inspeccion) {
     let numerador = 0, denominador = 0;
 
-    inspeccion.programas.forEach(prog => {
-      const peso = PSB_PESOS[prog.id] || 1;
-      prog.aspectos.forEach(asp => {
-        if (asp.evaluacion && asp.evaluacion !== 'NA') {
-          numerador   += peso * VALORES[asp.evaluacion];
-          denominador += peso;
-        }
-      });
+    inspeccion.programas.forEach(bloque => {
+      const scBloque = calcularPrograma(bloque);
+      if (scBloque.evaluados > 0) {
+        numerador   += bloque.peso * scBloque.pct;
+        denominador += bloque.peso;
+      }
     });
 
-    const pct = denominador > 0 ? Math.round((numerador / denominador) * 100) : 0;
+    const pct = denominador > 0 ? Math.round(numerador / denominador) : 0;
 
-    const todos   = inspeccion.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion && a.evaluacion !== 'NA'));
-    const todosNA = inspeccion.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion === 'NA'));
+    const todos   = inspeccion.programas.flatMap(p => p.aspectos.filter(a => a.criterio === 'A' || a.criterio === 'I'));
+    const todosNA = inspeccion.programas.flatMap(p => p.aspectos.filter(a => a.criterio === 'NA'));
 
     inspeccion.score = {
-      B:                todos.filter(a => a.evaluacion === 'B').length,
-      R:                todos.filter(a => a.evaluacion === 'R').length,
-      D:                todos.filter(a => a.evaluacion === 'D').length,
+      A:                todos.filter(a => a.criterio === 'A').length,
+      I:                todos.filter(a => a.criterio === 'I').length,
       NA:               todosNA.length,
       total:            todos.length,
       pct_cumplimiento: pct,
@@ -53,7 +51,7 @@ const Scores = (() => {
     return inspeccion.score;
   }
 
-  // Única fuente de verdad para umbral de estado: mismos cortes para texto y color.
+  // Cortes solo para codificación de color en la UI (no es un juicio normativo).
   function getEstado(pct) {
     if (pct >= 80) return 'B';
     if (pct >= 50) return 'R';

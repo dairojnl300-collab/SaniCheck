@@ -1,35 +1,38 @@
-// hallazgos.js — Extracción y clasificación de hallazgos por programa
+// hallazgos.js — Extracción y clasificación de hallazgos (criterio 'I') por bloque
 
 const Hallazgos = (() => {
   const PLAZOS = {
-    critico_D: 'Inmediato (≤48 h)',
-    normal_D:  '7 días calendario',
-    R:         '30 días calendario',
+    inmediato: 'Inmediato (≤48 h)',
+    corto:     '7 días calendario',
+    largo:     '30 días calendario',
   };
 
-  function calcularPlazo(programa, evaluacion) {
-    if (evaluacion === 'D') {
-      return programa.peso_critico ? PLAZOS.critico_D : PLAZOS.normal_D;
-    }
-    if (evaluacion === 'R') return PLAZOS.R;
-    return null;
+  // Plazo según el peso del bloque (más peso normativo → plazo más corto).
+  function calcularPlazo(bloque, criterio) {
+    if (criterio !== 'I') return null;
+    if (bloque.peso >= 3) return PLAZOS.inmediato;
+    if (bloque.peso === 2) return PLAZOS.corto;
+    return PLAZOS.largo;
   }
 
   function actualizar(inspeccion) {
     const hallazgos = [];
-    inspeccion.programas.forEach(prog => {
-      prog.aspectos.forEach(asp => {
-        if (asp.evaluacion === 'D' || asp.evaluacion === 'R') {
+    inspeccion.programas.forEach(bloque => {
+      bloque.aspectos.forEach(asp => {
+        if (asp.criterio === 'I') {
           hallazgos.push({
-            programa_id:      prog.id,
-            programa_nombre:  prog.nombre,
-            aspecto_id:       asp.id,
-            texto:            asp.texto,
-            norma:            asp.norma,
-            evaluacion:       asp.evaluacion,
-            critico:          asp.evaluacion === 'D' && prog.peso_critico,
-            plazo:            calcularPlazo(prog, asp.evaluacion),
-            obs:              asp.obs,
+            bloque_id:     bloque.id,
+            bloque_nombre: bloque.nombre,
+            peso:          bloque.peso,
+            aspecto_id:    asp.id,
+            texto:         asp.texto,
+            norma:         asp.norma,
+            criterio:      asp.criterio,
+            hallazgo:      asp.hallazgo,
+            accion:        asp.accion,
+            estado:        asp.estado,
+            plazo:         calcularPlazo(bloque, asp.criterio),
+            fotografias:   asp.fotografias || [],
           });
         }
       });
@@ -41,10 +44,9 @@ const Hallazgos = (() => {
   function getResumen(inspeccion) {
     const h = inspeccion.hallazgos_criticos || [];
     return {
-      total:       h.length,
-      criticos:    h.filter(x => x.critico).length,
-      deficientes: h.filter(x => x.evaluacion === 'D').length,
-      regulares:   h.filter(x => x.evaluacion === 'R').length,
+      total:    h.length,
+      abiertos: h.filter(x => x.estado === 'Abierto').length,
+      cerrados: h.filter(x => x.estado === 'Cerrado').length,
     };
   }
 

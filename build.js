@@ -9,22 +9,23 @@ const ORDEN = [
   'app/js/logic/psb-data.js',
   'app/js/store.js',
   'app/js/router.js',
-  'app/js/logic/observaciones.js',
   'app/js/logic/scores.js',
   'app/js/logic/hallazgos.js',
   'app/js/logic/fotos.js',
   'app/js/licencias.js',
   'app/js/phva/planificar.js',
+  'app/js/phva/personalizar.js',
   'app/js/phva/hacer.js',
   'app/js/phva/verificar.js',
   'app/js/phva/actuar.js',
+  'app/js/phva/marco-normativo.js',
   'app/js/app.js',
 ];
 
 // Nombres accedidos desde HTML (onclick=, etc.) — no renombrar
 const RESERVADOS = [
-  'Router','Store','Planificar','Hacer','Verificar','Actuar',
-  'Scores','Hallazgos','Observaciones','Fotos','Licencias',
+  'Router','Store','Planificar','Personalizar','Hacer','Verificar','Actuar','MarcoNormativo',
+  'Scores','Hallazgos','Fotos','Licencias',
   '_abrirInsp','_activarLicencia','_nuevaInspeccion',
   'getPSBPrograms','crearInspeccion',
 ];

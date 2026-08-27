@@ -1,89 +1,168 @@
-// PSB Data — 5 programas, 30 aspectos normativos colombianos
-// Fuente: Ley 9/1979 · Dec. 3075/1997 · Res. 2674/2013 · Dec. 1575/2007
-
-// Peso por criticidad normativa — cada aspecto hereda el peso de su programa
-const PSB_PESOS = { agua: 3, pld: 3, pcip: 2, residuos: 2, infra: 1 };
+// PSB Data — Catálogo oficial: 5 bloques, 20 ítems, escala A / I / N-A
+// Fuente: Instructivo del Acta de Inspección Sanitaria con Enfoque de Riesgo para
+// Establecimientos de Preparación de Alimentos (hoja "Instructivo"). Pesos por bloque
+// tomados de la hoja "Tablas" del mismo instructivo, redistribuidos a 100% (ver plan).
 
 function getPSBPrograms() {
   return [
     {
-      id: 'infra',
-      codigo: 'INFRA',
-      nombre: 'Infraestructura Física',
-      norma_base: 'Decreto 3075/1997 Anexo I',
+      id: 'edificacion',
+      nombre: 'Edificación e Instalaciones',
+      peso: 1,
       estado_general: null,
-      peso_critico: true,
       aspectos: [
-        { id: 'infra_001', texto: '¿Pisos en buen estado (sin grietas ni deterioro)?', norma: 'Dec. 3075/1997 Anexo I Art. 8', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'infra_002', texto: '¿Paredes limpias y sin humedad visible?', norma: 'Dec. 3075/1997 Anexo I Art. 8', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'infra_003', texto: '¿Techos y cielorrasos en buen estado?', norma: 'Dec. 3075/1997 Anexo I', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'infra_004', texto: '¿Iluminación adecuada (≥500 lux en zonas de trabajo)?', norma: 'Dec. 3075/1997 Anexo I Art. 10', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'infra_005', texto: '¿Ventilación suficiente sin olores cruzados?', norma: 'Res. 2674/2013 Art. 7', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'infra_006', texto: '¿Puertas y ventanas con cierre automático y mallas?', norma: 'Dec. 3075/1997 Anexo I Art. 9', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'infra_007', texto: '¿Drenajes e instalaciones sanitarias funcionales?', norma: 'Ley 9/1979 Art. 28', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
+        {
+          id: 'edificacion_1',
+          texto: 'Localización y diseño.',
+          norma: 'Resolución 2674/2013, Artículo 6, Numerales 1.1, 1.2, 1.3, 2.1, 2.3 y 2.6; Artículo 32, Numerales 1, 2, 3, 4, 6 y 7; Artículo 33, Numeral 8.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
+        {
+          id: 'edificacion_2',
+          texto: 'Condiciones de Pisos y Paredes.',
+          norma: 'Resolución 2674/2013, Artículo 7, Numeral 1 y 2; Artículo 33, Numerales 1, 2 y 3.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
+        {
+          id: 'edificacion_3',
+          texto: 'Techos, iluminación y ventilación.',
+          norma: 'Resolución 2674/2013, Artículo 7, Numeral 3, 4, 5, 7 y 8; Artículo 33, Numeral 4.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
+        {
+          id: 'edificacion_4',
+          texto: 'Instalaciones sanitarias.',
+          norma: 'Resolución 2674/2013, Artículo 6, Numeral 6.1, 6.2, 6.3 y 6.4; Artículo 32, Numeral 9 y 11.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
       ],
     },
     {
-      id: 'pld',
-      codigo: 'PLD',
-      nombre: 'Limpieza y Desinfección',
-      norma_base: 'Decreto 3075/1997 Anexo II · Resolución 2674/2013',
+      id: 'equipos',
+      nombre: 'Equipos y Utensilios',
+      peso: 1,
       estado_general: null,
-      peso_critico: false,
       aspectos: [
-        { id: 'pld_001', texto: '¿Existen POE (Procedimientos Operativos) documentados y accesibles?', norma: 'Res. 2674/2013 Art. 28', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'pld_002', texto: '¿Fichas técnicas de productos químicos (FDS) disponibles?', norma: 'Res. 773/2021 (SGA)', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'pld_003', texto: '¿Existe cronograma de limpieza y desinfección implementado?', norma: 'Dec. 3075/1997 Anexo II', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'pld_004', texto: '¿Se realiza limpieza y desinfección de superficies de trabajo?', norma: 'Res. 2674/2013 Art. 26', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'pld_005', texto: '¿Se desinfectan equipos y utensilios después de cada uso?', norma: 'Dec. 3075/1997 Anexo II', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'pld_006', texto: '¿Baños se limpian mínimo 2 veces al día con registro?', norma: 'Res. 2674/2013 Art. 29', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'pld_007', texto: '¿Registros de limpieza diligenciados y archivados?', norma: 'Res. 2674/2013 Art. 60', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
+        {
+          id: 'equipos_1',
+          texto: 'Condiciones de equipos y utensilios.',
+          norma: 'Resolución 2674/2013, Artículo 8; Artículo 9, Numerales 1, 6, 8 y 9; Artículo 10, Numerales 2 y 3; Artículo 34.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
+        {
+          id: 'equipos_2',
+          texto: 'Superficies de contacto con el alimento.',
+          norma: 'Resolución 2674/2013, Artículo 8; Artículo 9, Numerales 2, 3, 4, 5, 7 y 10; Artículo 34; Artículo 35, Numeral 8 y 10. Resoluciones 683, 4142 y 4143 de 2012; 834 y 835 de 2013.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
       ],
     },
     {
-      id: 'pcip',
-      codigo: 'PCIP',
-      nombre: 'Control Integrado de Plagas',
-      norma_base: 'Decreto 3075/1997 Anexo III',
+      id: 'personal',
+      nombre: 'Personal Manipulador de Alimentos',
+      peso: 2,
       estado_general: null,
-      peso_critico: true,
       aspectos: [
-        { id: 'pcip_001', texto: '¿Medidas preventivas estructurales implementadas? (sellamiento, mallas, puertas)', norma: 'Dec. 3075/1997 Anexo III', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'pcip_002', texto: '¿Registros de inspección de indicadores de plagas actualizados?', norma: 'Dec. 3075/1997 Anexo III', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'pcip_003', texto: '¿Contrato vigente con empresa certificada de fumigación?', norma: 'Res. 1287/1994 SS Cartagena', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'pcip_004', texto: '¿Cronograma de control químico definido y ejecutado?', norma: 'Dec. 3075/1997 Anexo III', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'pcip_005', texto: '¿Productos plaguicidas autorizados y almacenados correctamente?', norma: 'Res. 2400/1979 MINSALUD', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'pcip_006', texto: '¿Sin evidencia activa de infestación (excrementos, roeduras, insectos)?', norma: 'Ley 9/1979 Art. 28', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
+        {
+          id: 'personal_1',
+          texto: 'Estado de salud (signos/lesiones).',
+          norma: 'Resolución 2674/2013, Artículo 11; Numeral 1, 2, 4 y 5; Artículo 14, Numeral 12.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
+        {
+          id: 'personal_2',
+          texto: 'Reconocimiento Médico.',
+          norma: 'Resolución 2674 de 2013, Artículo 11, Numeral 1, 2, 3 y 4.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
+        {
+          id: 'personal_3',
+          texto: 'Prácticas higiénicas.',
+          norma: 'Resolución 2674/2013, Artículo 14, Numerales 1 a 11, 13 y 14; Artículo 36; Artículo 35, Numeral 5 y 7.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
+        {
+          id: 'personal_4',
+          texto: 'Educación y Capacitación.',
+          norma: 'Resolución 2674/2013, Artículos 12 y 13; Artículo 36.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
       ],
     },
     {
-      id: 'residuos',
-      codigo: 'RS',
-      nombre: 'Residuos Sólidos',
-      norma_base: 'Ley 1259/2008 · Decreto 596/2016 · Decreto 4741/2005',
+      id: 'higienicos',
+      nombre: 'Requisitos Higiénicos',
+      peso: 2,
       estado_general: null,
-      peso_critico: false,
       aspectos: [
-        { id: 'rs_001', texto: '¿Separación en la fuente implementada (código de colores)?', norma: 'Res. 2184/2019 MADS', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'rs_002', texto: '¿Recipientes identificados, limpios y en buen estado?', norma: 'Dec. 3075/1997 Anexo I', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'rs_003', texto: '¿Almacenamiento temporal de residuos adecuado y señalizado?', norma: 'Dec. 4741/2005', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'rs_004', texto: '¿Cronograma interno de recolección definido y ejecutado?', norma: 'Ley 1259/2008', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'rs_005', texto: '¿Registro de generación de residuos diligenciado?', norma: 'Dec. 596/2016', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
+        {
+          id: 'higienicos_1',
+          texto: 'Control de materias primas e insumos.',
+          norma: 'Decreto 561 de 1984, Art. 89; Resolución 2674/2013, Artículo 16, Numerales 1, 3, 4 y 5; Artículo 35, Numerales 1, 2 y 3; Resolución 5109 de 2005; Resolución 1506 de 2011; Resoluciones 683, 4142 y 4143 de 2012; 834 y 835 de 2013.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
+        {
+          id: 'higienicos_2',
+          texto: 'Contaminación cruzada.',
+          norma: 'Resolución 2674/2013, Artículo 16, Numeral 7; Artículo 18, Numeral 7; Artículo 20, Numeral 5; Artículo 35, Numeral 4.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
+        {
+          id: 'higienicos_3',
+          texto: 'Manejo de temperaturas.',
+          norma: 'Ley 9 de 1979, Artículo 293 y 425; Resolución 2674/2013, Artículo 18, Numeral 3.1, 3.2, 3.3 y 5.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
+        {
+          id: 'higienicos_4',
+          texto: 'Condiciones de almacenamiento.',
+          norma: 'Resoluciones 683/2012; 2674/2013, Artículo 16, Numeral 5 y 6; Artículo 33, Numeral 9.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
       ],
     },
     {
-      id: 'agua',
-      codigo: 'AGUA',
-      nombre: 'Control de Agua Potable',
-      norma_base: 'Decreto 1575/2007 · Resolución 2115/2007',
+      id: 'saneamiento',
+      nombre: 'Saneamiento',
+      peso: 3,
       estado_general: null,
-      peso_critico: true,
       aspectos: [
-        { id: 'agua_001', texto: '¿Agua de fuente potable certificada (red pública o acueducto autorizado)?', norma: 'Dec. 1575/2007 Art. 2', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'agua_002', texto: '¿Tanque de almacenamiento en buen estado, tapado y sin contaminación?', norma: 'Dec. 1575/2007 Art. 11', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'agua_003', texto: '¿Análisis de calidad del agua realizado en laboratorio certificado (anual)?', norma: 'Res. 2115/2007 Art. 27', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'agua_004', texto: '¿Parámetros in-situ registrados: cloro residual (0.3–2.0 mg/L), pH (6.5–9.0)?', norma: 'Res. 2115/2007 Art. 4-5', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
-        { id: 'agua_005', texto: '¿Limpieza y desinfección del tanque realizada semestralmente con registro?', norma: 'Dec. 1575/2007 Art. 11', evaluacion: null, obs: '', obs_editada: false, fotografias: [], hallazgo_critico: false, plazo: null },
+        {
+          id: 'saneamiento_1',
+          texto: 'Suministro y calidad de agua potable.',
+          norma: 'Resolución 2674/2013, Artículo 6, Numeral 3.1, 3.2, 3.3, 3.5.1, 3.5.2 y 3.5.3; Artículo 26, Numeral 4; Artículo 32, Numeral 8; Resolución 2115 de 2007, Artículo 9.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
+        {
+          id: 'saneamiento_2',
+          texto: 'Residuos líquidos.',
+          norma: 'Resolución 2674/2013, Artículo 6, Numeral 4; Artículo 32, Numerales 5 y 10.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
+        {
+          id: 'saneamiento_3',
+          texto: 'Residuos sólidos.',
+          norma: 'Resolución 2674/2013, Artículo 6, Numerales 5.1, 5.2 y 5.3; Artículo 33, Numerales 5, 6 y 7; Artículo 18, Numeral 11.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
+        {
+          id: 'saneamiento_4',
+          texto: 'Control integral de plagas.',
+          norma: 'Resolución 2674/2013, Artículo 26, Numeral 3.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
+        {
+          id: 'saneamiento_5',
+          texto: 'Limpieza y desinfección de áreas, equipos y utensilios.',
+          norma: 'Resolución 2674/2013, Artículo 6, Numeral 6.5; Artículo 26, Numeral 1.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
+        {
+          id: 'saneamiento_6',
+          texto: 'Soportes documentales de saneamiento.',
+          norma: 'Decreto 1575 de 2007, Artículo 10; Resolución 2674/2013, Artículo 26.',
+          criterio: null, hallazgo: '', accion: '', estado: null, fotografias: [], _custom: false, _disabled: false,
+        },
       ],
     },
   ];
@@ -92,10 +171,10 @@ function getPSBPrograms() {
 function crearInspeccion(establecimiento, inspector) {
   return {
     id: 'psb-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
-    fase_phva: 'P',
+    fase_phva: 'H',
     establecimiento: { ...establecimiento },
     inspeccion: {
-      inspector: inspector || 'Ing. Ambiental',
+      inspector: inspector || '',
       fecha: new Date().toISOString().split('T')[0],
       hora_inicio: new Date().toTimeString().slice(0, 5),
       hora_fin: null,
@@ -104,13 +183,14 @@ function crearInspeccion(establecimiento, inspector) {
     programas: getPSBPrograms(),
     estado_general: null,
     hallazgos_criticos: [],
-    score: { b: 0, r: 0, d: 0, total: 0, pct_cumplimiento: 0 },
+    catalogo_audit: [],
+    score: { A: 0, I: 0, NA: 0, total: 0, pct_cumplimiento: 0 },
     numero_acta: '',
     fecha_proxima_inspeccion: null,
     plan_mejora_generado: false,
     acta_pdf_generada: false,
     creado_en: new Date().toISOString(),
     actualizado_en: new Date().toISOString(),
-    version_app: '1.0.0',
+    version_app: '2.0.0',
   };
 }

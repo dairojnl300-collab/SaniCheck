@@ -1,15 +1,15 @@
-// hacer.js — Pantalla HACER: checklist 5 programas PSB (Semana 2)
+// hacer.js — Pantalla HACER: checklist oficial 5 bloques / 20 ítems, escala A/I/N-A
 
 const Hacer = (() => {
   const PROG_ICONS = {
-    infra:    { color: '#1E40AF', svg: '<path d="M4 21V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v16"/><path d="M13 10h5a1 1 0 0 1 1 1v10"/><path d="M2 21h20"/><path d="M7 8h1M10 8h1M7 12h1M10 12h1M7 16h1M10 16h1"/>' },
-    pld:      { color: '#0891B2', svg: '<path d="M12 3c-3.2 4-6 7.6-6 10.6a6 6 0 0 0 12 0C18 10.6 15.2 7 12 3z"/>' },
-    pcip:     { color: '#D97706', svg: '<ellipse cx="12" cy="14" rx="4.5" ry="6"/><path d="M12 8v12"/><path d="M9 5.5 7.5 4M15 5.5 16.5 4"/><circle cx="12" cy="6" r="1.5"/>' },
-    residuos: { color: '#059669', svg: '<path d="M4 12a8 8 0 0 1 14.5-4.5M20 12a8 8 0 0 1-14.5 4.5"/><path d="M17 4v4h-4"/><path d="M7 20v-4h4"/>' },
-    agua:     { color: '#0284C7', svg: '<path d="M3 17c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/><path d="M3 12c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/>' },
+    edificacion: { color: '#1E40AF', svg: '<path d="M4 21V5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v16"/><path d="M13 10h5a1 1 0 0 1 1 1v10"/><path d="M2 21h20"/><path d="M7 8h1M10 8h1M7 12h1M10 12h1M7 16h1M10 16h1"/>' },
+    equipos:     { color: '#0891B2', svg: '<path d="M12 3c-3.2 4-6 7.6-6 10.6a6 6 0 0 0 12 0C18 10.6 15.2 7 12 3z"/>' },
+    personal:    { color: '#D97706', svg: '<ellipse cx="12" cy="14" rx="4.5" ry="6"/><path d="M12 8v12"/><path d="M9 5.5 7.5 4M15 5.5 16.5 4"/><circle cx="12" cy="6" r="1.5"/>' },
+    higienicos:  { color: '#059669', svg: '<path d="M4 12a8 8 0 0 1 14.5-4.5M20 12a8 8 0 0 1-14.5 4.5"/><path d="M17 4v4h-4"/><path d="M7 20v-4h4"/>' },
+    saneamiento: { color: '#0284C7', svg: '<path d="M3 17c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/><path d="M3 12c2 0 2-2 4-2s2 2 4 2 2-2 4-2 2 2 4 2 2-2 4-2"/>' },
   };
   function _progIcon(id, size, strokeOverride) {
-    const p = PROG_ICONS[id] || PROG_ICONS.infra;
+    const p = PROG_ICONS[id] || PROG_ICONS.edificacion;
     size = size || 20;
     return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${strokeOverride || p.color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;flex-shrink:0;">${p.svg}</svg>`;
   }
@@ -36,17 +36,20 @@ const Hacer = (() => {
       </div>`;
 
     const { inspeccion, programa, programaIdx, aspectoIdx, aspecto } = s;
+    const activos = programa.aspectos.filter(a => !a._disabled);
+    // Si el ítem activo actual quedó desactivado, salta al primero visible.
+    const visibleIdx = activos.includes(aspecto) ? aspectoIdx : programa.aspectos.indexOf(activos[0] || aspecto);
 
     return `
       <img src="assets/icons/isotipo-transparente.png" class="watermark-bg" alt="">
       <div class="checklist-header">
         ${_renderTopBar(inspeccion)}
         ${_renderProgramTabs(inspeccion.programas, programaIdx)}
-        ${_renderProgress(programa, aspectoIdx)}
+        ${_renderProgress(programa, visibleIdx)}
       </div>
 
       <div class="aspecto-content">
-        ${_renderAspecto(aspecto, programaIdx, aspectoIdx)}
+        ${activos.length ? _renderAspecto(aspecto, programaIdx, aspectoIdx) : _renderSinItems()}
         ${_renderResumen(programa)}
       </div>
 
@@ -72,9 +75,15 @@ const Hacer = (() => {
           <span style="font-size:14px;font-weight:900;color:${Scores.getColor(pct)}">${pct}%</span>
         </div>
       </div>
-      <div style="font-size:11px;color:var(--color-ink3);margin-bottom:8px;overflow:hidden;
-        text-overflow:ellipsis;white-space:nowrap">
-        ${_esc(inspeccion.establecimiento.nombre)}</div>`;
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
+        <div style="font-size:11px;color:var(--color-ink3);overflow:hidden;
+          text-overflow:ellipsis;white-space:nowrap">${_esc(inspeccion.establecimiento.nombre)}</div>
+        <button onclick="Router.go('personalizar')"
+          style="flex-shrink:0;border:none;background:none;cursor:pointer;
+            font-size:10px;color:var(--color-primary);font-weight:700;white-space:nowrap;">
+          ⚙ Editar ítems
+        </button>
+      </div>`;
   }
 
   function _renderProgramTabs(programas, activeIdx) {
@@ -94,7 +103,7 @@ const Hacer = (() => {
                 background:${isActive ? 'var(--color-primary-bg)' : 'var(--color-surface)'};
                 font-size:11px;font-weight:${isActive ? 700 : 500};
                 color:${isActive ? 'var(--color-primary)' : 'var(--color-ink2)'};">
-              ${_progIcon(p.id, 14, isActive ? '#fff' : null)} ${p.codigo}
+              ${_progIcon(p.id, 14, isActive ? '#fff' : null)} ${Math.round(p.peso / 9 * 100)}%
               <span style="color:${dotColor}">●</span>
             </button>`;
         }).join('')}
@@ -103,7 +112,7 @@ const Hacer = (() => {
 
   function _renderProgress(programa, aspectoIdx) {
     const total    = programa.aspectos.length;
-    const evaluados = programa.aspectos.filter(a => a.evaluacion).length;
+    const evaluados = programa.aspectos.filter(a => a.criterio).length;
     const pct      = Math.round((evaluados / total) * 100);
     return `
       <div style="font-size:13px;font-weight:700;color:var(--color-ink);margin-bottom:8px;">
@@ -118,30 +127,58 @@ const Hacer = (() => {
       </div>`;
   }
 
+  function _renderSinItems() {
+    return `
+      <div style="padding:20px;background:var(--color-surface);border-radius:var(--radius-md);
+        text-align:center;color:var(--color-ink3);font-size:13px;border:1px dashed var(--color-border);">
+        Todos los ítems de este bloque están desactivados.
+        <button onclick="Router.go('personalizar')" class="btn btn-outline mt-md"
+          style="width:auto;padding:8px 16px;margin-top:10px;">⚙ Editar ítems</button>
+      </div>`;
+  }
+
   function _renderAspecto(aspecto, programaIdx, aspectoIdx) {
     return `
-      <div class="aspecto-texto">${aspecto.texto}</div>
-      <div class="norma-badge">📋 ${aspecto.norma}</div>
+      <div class="aspecto-texto">${_esc(aspecto.texto)}</div>
+      <div class="norma-badge">📋 ${_esc(aspecto.norma)}</div>
 
       <div class="eval-group">
-        ${['B', 'R', 'D', 'NA'].map(v => `
-          <button class="eval-btn eval-btn-${v}${aspecto.evaluacion === v ? ' selected' : ''}"
+        ${['A', 'I', 'NA'].map(v => `
+          <button class="eval-btn eval-btn-${v}${aspecto.criterio === v ? ' selected' : ''}"
             onclick="Hacer.evaluar('${v}')">
             <span class="eval-letter">${v === 'NA' ? 'N/A' : v}</span>
-            <span class="eval-word">${v === 'B' ? 'BUENO' : v === 'R' ? 'REGULAR' : v === 'D' ? 'DEFIC.' : 'NO APLICA'}</span>
+            <span class="eval-word">${v === 'A' ? 'ACEPTABLE' : v === 'I' ? 'INACEPTABLE' : 'NO APLICA'}</span>
           </button>`).join('')}
       </div>
 
-      ${aspecto.evaluacion === 'NA' ? `
-        <div style="padding:14px;background:#F3F4F6;border-radius:var(--radius-md);
-          text-align:center;color:#6B7280;font-size:13px;border:1px solid #E5E7EB;">
-          ℹ️ No aplica a este establecimiento
+      ${aspecto.criterio === 'NA' ? `
+        <div class="obs-label">Justificación del No Aplica</div>
+        <textarea class="obs-area" id="hallazgo-area" rows="2"
+          placeholder="Explique por qué este ítem no aplica al establecimiento"
+          onchange="Hacer.guardarHallazgo(this.value)"
+          onblur="Hacer.guardarHallazgo(this.value)">${_esc(aspecto.hallazgo)}</textarea>
+      ` : aspecto.criterio === 'I' ? `
+        <div class="obs-label">Hallazgo</div>
+        <textarea class="obs-area" id="hallazgo-area" rows="3"
+          placeholder="Describa el hallazgo encontrado"
+          onchange="Hacer.guardarHallazgo(this.value)"
+          onblur="Hacer.guardarHallazgo(this.value)">${_esc(aspecto.hallazgo)}</textarea>
+
+        <div class="obs-label" style="margin-top:8px;">Acción correctiva</div>
+        <textarea class="obs-area" id="accion-area" rows="2"
+          placeholder="Describa la acción correctiva propuesta"
+          onchange="Hacer.guardarAccion(this.value)"
+          onblur="Hacer.guardarAccion(this.value)">${_esc(aspecto.accion)}</textarea>
+
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          ${['Abierto', 'Cerrado'].map(v => `
+            <button onclick="Hacer.setEstado('${v}')"
+              style="flex:1;padding:8px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;
+                border:1.5px solid ${aspecto.estado === v ? (v === 'Cerrado' ? 'var(--color-bueno)' : 'var(--color-deficiente)') : 'var(--color-border)'};
+                background:${aspecto.estado === v ? (v === 'Cerrado' ? 'var(--color-bueno-bg)' : 'var(--color-deficiente-bg)') : 'var(--color-surface)'};
+                color:${aspecto.estado === v ? (v === 'Cerrado' ? 'var(--color-bueno)' : 'var(--color-deficiente)') : 'var(--color-ink2)'};">
+              ${v}</button>`).join('')}
         </div>
-      ` : aspecto.evaluacion ? `
-        <div class="obs-label">Observación</div>
-        <textarea class="obs-area" id="obs-area" rows="3"
-          onchange="Hacer.guardarObs(this.value)"
-          onblur="Hacer.guardarObs(this.value)">${_esc(aspecto.obs)}</textarea>
 
         <button onclick="Fotos.capturar(${programaIdx},${aspectoIdx})"
           style="margin-top:10px;width:100%;padding:10px;cursor:pointer;
@@ -153,40 +190,54 @@ const Hacer = (() => {
 
         ${Fotos.renderThumbnails(aspecto.fotografias || [], programaIdx, aspectoIdx)}
 
-        ${aspecto.hallazgo_critico ? `
-          <div style="margin-top:10px;padding:10px 14px;
-            background:var(--color-deficiente-bg);
-            border-left:3px solid var(--color-deficiente);
-            border-radius:0 8px 8px 0;font-size:12px;">
-            ⛔ <strong>HALLAZGO CRÍTICO</strong> · Plazo: ${aspecto.plazo}
-          </div>` : ''}
+        <div style="margin-top:10px;padding:10px 14px;
+          background:var(--color-deficiente-bg);
+          border-left:3px solid var(--color-deficiente);
+          border-radius:0 8px 8px 0;font-size:12px;">
+          ⛔ <strong>HALLAZGO</strong> · Plazo: ${aspecto.plazo}
+        </div>
+      ` : aspecto.criterio === 'A' ? `
+        <div class="obs-label">Evidencia (opcional)</div>
+        <textarea class="obs-area" id="hallazgo-area" rows="2"
+          placeholder="Observación opcional"
+          onchange="Hacer.guardarHallazgo(this.value)"
+          onblur="Hacer.guardarHallazgo(this.value)">${_esc(aspecto.hallazgo)}</textarea>
+
+        <button onclick="Fotos.capturar(${programaIdx},${aspectoIdx})"
+          style="margin-top:10px;width:100%;padding:10px;cursor:pointer;
+            border:1.5px dashed var(--color-border);border-radius:var(--radius-md);
+            background:var(--color-surface);color:var(--color-ink2);font-size:13px;">
+          📷 Añadir fotografía${aspecto.fotografias && aspecto.fotografias.length
+            ? ' (' + aspecto.fotografias.length + ')' : ''}
+        </button>
+
+        ${Fotos.renderThumbnails(aspecto.fotografias || [], programaIdx, aspectoIdx)}
       ` : `
         <div style="padding:20px;background:var(--color-surface);border-radius:var(--radius-md);
           text-align:center;color:var(--color-ink3);font-size:13px;
           border:1px dashed var(--color-border);">
-          Seleccione B / R / D / N·A para registrar la calificación
+          Seleccione A / I / N-A para registrar la calificación
         </div>`}`;
   }
 
   function _renderResumen(programa) {
-    const ev = programa.aspectos.filter(a => a.evaluacion);
+    const ev = programa.aspectos.filter(a => a.criterio);
     if (!ev.length) return '';
-    const c = { B: 0, R: 0, D: 0, NA: 0 };
-    ev.forEach(a => { if (c[a.evaluacion] !== undefined) c[a.evaluacion]++; });
+    const c = { A: 0, I: 0, NA: 0 };
+    ev.forEach(a => { if (c[a.criterio] !== undefined) c[a.criterio]++; });
     const score = Scores.calcularPrograma(programa);
     return `
       <div style="margin-top:var(--sp-md);padding:var(--sp-md);background:var(--color-surface);
         border-radius:var(--radius-md);border:1px solid var(--color-border);">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
           <div style="font-size:10px;font-weight:700;color:var(--color-ink3);
-            text-transform:uppercase;letter-spacing:0.04em;">Resumen del programa</div>
+            text-transform:uppercase;letter-spacing:0.04em;">Resumen del bloque</div>
           <div style="font-size:16px;font-weight:900;color:${Scores.getColor(score.pct)}">
             ${score.pct}%</div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
-          ${[['B','BUENO','var(--color-bueno-bg)','var(--color-bueno)'],
-             ['R','REGULAR','var(--color-regular-bg)','var(--color-regular)'],
-             ['D','DEFIC.','var(--color-deficiente-bg)','var(--color-deficiente)'],
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          ${[['A','ACEPTABLE','var(--color-bueno-bg)','var(--color-bueno)'],
+             ['I','INACEPT.','var(--color-deficiente-bg)','var(--color-deficiente)'],
              ['NA','N/A','#F3F4F6','#6B7280']].map(([v, label, bg, color]) => `
             <div style="text-align:center;padding:8px;border-radius:6px;background:${bg}">
               <div style="font-size:22px;font-weight:900;color:${color}">${c[v]}</div>
@@ -202,23 +253,20 @@ const Hacer = (() => {
     const { inspeccion, programa, aspectoIdx } = s;
     const aspecto = programa.aspectos[aspectoIdx];
 
-    aspecto.evaluacion = valor;
-    if (valor === 'NA') {
-      aspecto.obs            = 'No aplica a este establecimiento';
-      aspecto.obs_editada    = false;
-      aspecto.hallazgo_critico = false;
-      aspecto.plazo          = null;
-    } else {
-      if (!aspecto.obs_editada) {
-        aspecto.obs = Observaciones.getObs(programa.id, valor, aspecto);
-      }
-      aspecto.hallazgo_critico = valor === 'D' && programa.peso_critico;
-      aspecto.plazo = Hallazgos.calcularPlazo(programa, valor);
+    aspecto.criterio = valor;
+    if (valor === 'A') {
+      aspecto.accion = '';
+      aspecto.estado = null;
+    } else if (valor === 'I') {
+      if (!aspecto.estado) aspecto.estado = 'Abierto';
+    } else { // NA
+      aspecto.accion = '';
+      aspecto.estado = null;
     }
+    aspecto.plazo = Hallazgos.calcularPlazo(programa, valor);
 
-    const activos = programa.aspectos.filter(a => a.evaluacion && a.evaluacion !== 'NA');
-    const scProg  = Scores.calcularPrograma(programa);
-    programa.estado_general = activos.length ? Scores.getEstado(scProg.pct) : null;
+    const scProg = Scores.calcularPrograma(programa);
+    programa.estado_general = scProg.evaluados ? Scores.getEstado(scProg.pct) : null;
 
     Hallazgos.actualizar(inspeccion);
     Scores.calcular(inspeccion);
@@ -226,13 +274,27 @@ const Hacer = (() => {
     _refresh();
   }
 
-  function guardarObs(texto) {
+  function guardarHallazgo(texto) {
     const s = _state();
     if (!s) return;
-    const { inspeccion, programa, aspectoIdx } = s;
-    programa.aspectos[aspectoIdx].obs         = texto;
-    programa.aspectos[aspectoIdx].obs_editada = true;
-    Store.upsertInspeccion(inspeccion);
+    s.programa.aspectos[s.aspectoIdx].hallazgo = texto;
+    Store.upsertInspeccion(s.inspeccion);
+  }
+
+  function guardarAccion(texto) {
+    const s = _state();
+    if (!s) return;
+    s.programa.aspectos[s.aspectoIdx].accion = texto;
+    Store.upsertInspeccion(s.inspeccion);
+  }
+
+  function setEstado(valor) {
+    const s = _state();
+    if (!s) return;
+    s.programa.aspectos[s.aspectoIdx].estado = valor;
+    Hallazgos.actualizar(s.inspeccion);
+    Store.upsertInspeccion(s.inspeccion);
+    _refresh();
   }
 
   function seleccionarPrograma(programaIdx) {
@@ -255,7 +317,7 @@ const Hacer = (() => {
   }
 
   function _finalizarPrograma(programa) {
-    const noEval = programa.aspectos.filter(a => !a.evaluacion).length;
+    const noEval = programa.aspectos.filter(a => !a.criterio).length;
     if (noEval > 0 && !confirm(`${noEval} aspecto(s) sin evaluar. ¿Continuar de todas formas?`)) return;
     const ui          = Store.get().ui;
     const inspeccion  = Store.getCurrentInspeccion();
@@ -265,6 +327,9 @@ const Hacer = (() => {
       Store.setUI({ programaIdx: siguienteIdx, aspectoIdx: 0 });
       _refresh();
     } else {
+      Scores.calcular(inspeccion);
+      Hallazgos.actualizar(inspeccion);
+      Store.upsertInspeccion(inspeccion);
       Router.go('verificar');
     }
   }
@@ -283,5 +348,5 @@ const Hacer = (() => {
 
   function attach() {}
 
-  return { render, attach, evaluar, navegar, guardarObs, seleccionarPrograma, refresh };
+  return { render, attach, evaluar, navegar, guardarHallazgo, guardarAccion, setEstado, seleccionarPrograma, refresh };
 })();

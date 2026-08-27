@@ -3,6 +3,7 @@
 const Router = (() => {
   const SCREEN_FASE = {
     home: null, planificar: 'P', personalizar: 'P', hacer: 'H', verificar: 'V', actuar: 'A',
+    'marco-normativo': null,
   };
 
   let currentScreen = 'home';
@@ -32,6 +33,7 @@ const Router = (() => {
       try { if (currentScreen === 'hacer')       Hacer.attach();        } catch(e) {}
       try { if (currentScreen === 'verificar')  Verificar.attach();  } catch(e) {}
       try { if (currentScreen === 'actuar')     Actuar.attach();     } catch(e) {}
+      try { if (currentScreen === 'marco-normativo') MarcoNormativo.attach(); } catch(e) {}
     } else {
       area.innerHTML = _comingSoon(currentScreen);
     }
@@ -43,7 +45,7 @@ const Router = (() => {
     const completed = [];
     if (insp) {
       if (insp.establecimiento && insp.establecimiento.nombre) completed.push('P');
-      if (insp.programas && insp.programas[0]?.aspectos.some(a => a.evaluacion)) completed.push('H');
+      if (insp.programas && insp.programas[0]?.aspectos.some(a => a.criterio)) completed.push('H');
     }
     document.querySelectorAll('.phva-step').forEach(btn => {
       const f = btn.dataset.fase;
@@ -55,17 +57,15 @@ const Router = (() => {
 
   function _comingSoon(screen) {
     const MAP = {
-      verificar: { icon: '📊', title: 'VERIFICAR', desc: 'Dashboard de resultados y comparación histórica. Disponible en Semana 3.' },
-      actuar:    { icon: '📄', title: 'ACTUAR',    desc: 'Generación automática del Acta PSB en PDF. Disponible en Semana 3.' },
+      actuar: { icon: '📄', title: 'ACTUAR', desc: 'Acta PDF en actualización — usa el Dashboard Ejecutivo (Verificar) mientras tanto.', goto: 'verificar', gotoLabel: '📊 Ir al Dashboard' },
     };
-    const i = MAP[screen] || { icon: '🔧', title: screen.toUpperCase(), desc: 'Próximamente.' };
+    const i = MAP[screen] || { icon: '🔧', title: screen.toUpperCase(), desc: 'Próximamente.', goto: 'home', gotoLabel: '← Inicio' };
     return `<div class="coming-soon">
       <div class="coming-soon-icon">${i.icon}</div>
       <div class="coming-soon-title">${i.title}</div>
       <div class="coming-soon-desc">${i.desc}</div>
-      <div class="coming-soon-badge">SEMANA 3</div>
       <button class="btn btn-outline mt-md" style="width:auto;padding:10px 24px"
-        onclick="Router.go('home')">← Inicio</button>
+        onclick="Router.go('${i.goto}')">${i.gotoLabel}</button>
     </div>`;
   }
 

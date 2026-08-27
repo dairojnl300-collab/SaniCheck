@@ -9,7 +9,9 @@
   Router.register('personalizar', Personalizar.render);
   Router.register('hacer',        Hacer.render);
   Router.register('verificar',    Verificar.render);
-  Router.register('actuar',       Actuar.render);
+  Router.register('marco-normativo', MarcoNormativo.render);
+  // 'actuar' queda sin registrar a propósito: Router._comingSoon() muestra
+  // el aviso de "en actualización" sin ejecutar la lógica interna del Acta PDF.
 
   /* ── Pantalla de activación ──────────────────────── */
   function renderLicencia() {
@@ -107,7 +109,7 @@
              Crea la primera con el botón de arriba.</div>
          </div>`
       : inspecciones.map(ins => {
-          const ev    = ins.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion));
+          const ev    = ins.programas.flatMap(p => p.aspectos.filter(a => a.criterio));
           const total = ins.programas.flatMap(p => p.aspectos).length;
           const pct   = total ? Math.round((ev.length / total) * 100) : 0;
           const est   = ins.estado_general;
@@ -119,7 +121,7 @@
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
               <span class="inspeccion-card-meta">
-                ${_esc(ins.establecimiento.tipo)} · ${ev.length} aspectos evaluados</span>
+                ${ev.length} aspectos evaluados</span>
               ${est
                 ? `<span class="estado-chip estado-${est}">${{B:'BUENO',R:'REGULAR',D:'DEFICIENTE'}[est]}</span>`
                 : `<span style="font-size:10px;color:var(--color-ink3)">En progreso</span>`}
@@ -135,6 +137,11 @@
         <div class="home-hero-icon">🌿</div>
         <div class="home-hero-title">SaneamientoApp</div>
         <div class="home-hero-sub">Inspección PSB móvil · Normativa colombiana real<br>ECODESA Ing. S.A.S</div>
+        <div style="margin-top:6px;">
+          <a href="javascript:void(0)" onclick="Router.go('marco-normativo')"
+            style="font-size:11px;color:rgba(255,255,255,0.7);text-decoration:underline;">
+            📖 Marco normativo aplicable</a>
+        </div>
       </div>
       <div class="home-content">
         ${esDemo ? `
