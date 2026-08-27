@@ -273,7 +273,11 @@
     }
     _ensureDeleteModal();
     _bindTopbarScroll();
-    if (Licencias.esValida()) {
+    // TEMPORAL: gate de licencia deshabilitado a pedido de Dairo (2026-08-27) para que la
+    // app cargue directo en la portada sin pedir código de acceso. Para reactivar el gate,
+    // poner SKIP_LICENCIA_GATE en false — Licencias.esValida()/activar()/etc. siguen intactos.
+    const SKIP_LICENCIA_GATE = true;
+    if (SKIP_LICENCIA_GATE || Licencias.esValida()) {
       const ui = Store.get().ui || {};
       const screens = ['home', 'about', 'planificar', 'personalizar', 'hacer', 'verificar', 'dashboard', 'actuar'];
       const screen  = screens.includes(ui.screen) ? ui.screen : 'home';

@@ -790,6 +790,9 @@ const Actuar = (() => {
                 <div style="font-size:11px;font-weight:700;color:#111827;">${_esc(nombres[ft.key])}</div>
                 <div style="font-size:10px;color:#6B7280;margin-top:2px;">${ft.cargo}</div>
                 <div style="font-size:10px;font-weight:600;color:${C.verde};margin-top:2px;">${ft.rol}</div>
+                ${ft.key === 'elaboro' && (datos?.profesion || datos?.posgrado)
+                  ? `<div style="font-size:9px;color:#6B7280;margin-top:2px;">${[_esc(datos?.profesion), _esc(datos?.posgrado)].filter(Boolean).join(', ')}</div>`
+                  : ''}
                 ${datos?.cedula ? `<div style="font-size:9px;color:#6B7280;margin-top:2px;">C.C. ${_esc(datos.cedula)}</div>` : ''}
               </div>
             </div>`;
@@ -820,6 +823,14 @@ const Actuar = (() => {
             <label class="form-label" for="cedula-${ft.key}">Cédula</label>
             <input class="form-input" id="cedula-${ft.key}" type="text" inputmode="numeric" autocomplete="off"
               placeholder="Ej: 1047123456" value="${_esc(datos?.cedula || '')}" style="margin-bottom:10px;">
+            ${ft.key === 'elaboro' ? `
+            <label class="form-label" for="profesion-${ft.key}">Profesión</label>
+            <input class="form-input" id="profesion-${ft.key}" type="text" autocomplete="off"
+              placeholder="Ej: Ingeniero Ambiental" value="${_esc(datos?.profesion || '')}" style="margin-bottom:10px;">
+            <label class="form-label" for="posgrado-${ft.key}">Posgrado (opcional)</label>
+            <input class="form-input" id="posgrado-${ft.key}" type="text" autocomplete="off"
+              placeholder="Ej: Esp. en Gestión Ambiental" value="${_esc(datos?.posgrado || '')}" style="margin-bottom:10px;">
+            ` : ''}
             <label class="form-label">Firma</label>
             <canvas id="firma-${ft.key}" style="width:100%;height:140px;border:1px dashed var(--color-border);
               border-radius:var(--radius-sm);background:#fff;touch-action:none;display:block;"></canvas>
@@ -1160,7 +1171,12 @@ window.addEventListener('load', function() {
     }
     inspeccion.firmas = {};
     FIRMANTES.forEach(ft => {
-      inspeccion.firmas[ft.key] = { cedula: cedulas[ft.key], firma: _firmaData[ft.key] };
+      const datos = { cedula: cedulas[ft.key], firma: _firmaData[ft.key] };
+      if (ft.key === 'elaboro') {
+        datos.profesion = (document.getElementById('profesion-elaboro')?.value || '').trim();
+        datos.posgrado  = (document.getElementById('posgrado-elaboro')?.value || '').trim();
+      }
+      inspeccion.firmas[ft.key] = datos;
     });
     Store.upsertInspeccion(inspeccion);
     _forceCaptura = false;
