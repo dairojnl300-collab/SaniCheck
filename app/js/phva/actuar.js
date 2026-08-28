@@ -685,7 +685,6 @@ const Actuar = (() => {
                 const c = criterio==='A'?'#2E7D32':criterio==='I'?'#D32F2F':'#6B7280';
                 const esCumple = criterio === 'A';
                 const esIncumple = criterio === 'I';
-                const cumpleReq = a.cumple_requerimientos === 'Sí';
                 return `
                   <div class="acta-card" style="padding:9px 10px;margin-bottom:7px;border:1px solid #E5E7EB;
                     border-left:3px solid ${c};border-radius:6px;background:#fff;break-inside:avoid;page-break-inside:avoid;">
@@ -700,10 +699,9 @@ const Actuar = (() => {
                       <div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;">
                         <strong>Observaciones:</strong> ${_esc(a.obs || 'Sin observaciones registradas.')}
                       </div>
-                      <div style="margin-top:4px;font-size:10px;color:#374151;">
-                        <strong>¿Cumple bajo requerimientos?</strong>
-                        ${cumpleReq ? 'SÍ (Abierto como mejora)' : 'NO (Cerrado)'}
-                      </div>` : ''}
+                      ${a.recomendaciones ? `<div style="margin-top:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;">
+                        <strong>Recomendaciones:</strong> ${_esc(a.recomendaciones)}
+                      </div>` : ''}` : ''}
                     ${esIncumple ? `
                       <div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;">
                         <strong>Hallazgo:</strong> ${_esc(a.hallazgo || a.obs || 'Sin hallazgo registrado.')}

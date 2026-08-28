@@ -27,7 +27,7 @@ const PSB_DETALLES = {
 };
 
 function _aspecto(id, texto, norma) {
-  return { id, texto, norma, detalle: PSB_DETALLES[id] || '', criterio: null, evaluacion: null, hallazgo: '', accion: '', obs: '', obs_editada: false, cumple_requerimientos: null, estado: null, fotografias: [], hallazgo_critico: false, plazo: null };
+  return { id, texto, norma, detalle: PSB_DETALLES[id] || '', criterio: null, evaluacion: null, hallazgo: '', accion: '', obs: '', obs_editada: false, recomendaciones: '', cumple_requerimientos: null, estado: null, fotografias: [], hallazgo_critico: false, plazo: null };
 }
 
 function getPSBAspectoDetalle(id) { return PSB_DETALLES[id] || ''; }
