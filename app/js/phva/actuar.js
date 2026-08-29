@@ -1049,16 +1049,8 @@ window.addEventListener('load', function() {
       font-size: 14px; font-weight: 700; cursor: pointer; font-family: Arial, sans-serif;
       letter-spacing: 0.02em; }
     .btn-save:hover { background: #2D6A4F; }
-    /* Membrete: banda de marca en <tfoot> — el único mecanismo que Chromium repite de forma
-       confiable en cada página impresa vía window.print() (verificado: @page{background-image}
-       no se renderiza; position:fixed/background-attachment:fixed no repiten por página).
-       Va en el PIE (no en <thead>) para no competir con el encabezado ya aprobado. */
     #acta-table { width: 100%; border-collapse: collapse; }
-    #acta-table > tfoot > tr > td, #acta-table > tbody > tr > td { padding: 0; }
-    #acta-pie-barra { height: 3px;
-      background: linear-gradient(to right, #2C8B31 0%, #2C8B31 45%, #75B72F 55%, #75B72F 100%); }
-    #acta-pie-membrete { display: flex; justify-content: flex-end; align-items: center; padding: 3px 16px 0; }
-    #acta-pie-membrete img { height: 20px; width: auto; object-fit: contain; }
+    #acta-table > tbody > tr > td { padding: 0; }
     @media print {
       .btn-save { display: none !important; }
       @page { margin: 1.5cm 1.5cm 1.8cm; }
@@ -1069,12 +1061,6 @@ window.addEventListener('load', function() {
 </head>
 <body>
 <table id="acta-table">
-  <tfoot>
-    <tr><td>
-      <div id="acta-pie-barra"></div>
-      <div id="acta-pie-membrete"><img src="${LOGO_ECODESA_FOOTER_B64}" alt="ECODESA"></div>
-    </td></tr>
-  </tfoot>
   <tbody>
     <tr><td>
       <div class="acta-wrap">
