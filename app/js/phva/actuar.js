@@ -789,8 +789,8 @@ const Actuar = (() => {
                 <div style="font-size:11px;font-weight:700;color:#111827;">${_esc(nombres[ft.key])}</div>
                 <div style="font-size:10px;color:#6B7280;margin-top:2px;">${ft.cargo}</div>
                 <div style="font-size:10px;font-weight:600;color:${C.verde};margin-top:2px;">${ft.rol}</div>
-                ${ft.key === 'elaboro' && (datos?.profesion || datos?.posgrado || datos?.empresa)
-                  ? `<div style="font-size:9px;color:#6B7280;margin-top:2px;">${[_esc(datos?.profesion), _esc(datos?.posgrado), _esc(datos?.empresa)].filter(Boolean).join(', ')}</div>`
+                ${ft.key === 'elaboro' && (datos?.profesion || datos?.cursos_certificaciones || datos?.posgrado || datos?.empresa)
+                  ? `<div style="font-size:9px;color:#6B7280;margin-top:2px;">${[_esc(datos?.profesion), _esc(datos?.cursos_certificaciones), _esc(datos?.posgrado), _esc(datos?.empresa)].filter(Boolean).join(', ')}</div>`
                   : ''}
                 ${datos?.cedula ? `<div style="font-size:9px;color:#6B7280;margin-top:2px;">C.C. ${_esc(datos.cedula)}</div>` : ''}
               </div>
@@ -826,6 +826,9 @@ const Actuar = (() => {
             <label class="form-label" for="profesion-${ft.key}">Profesión</label>
             <input class="form-input" id="profesion-${ft.key}" type="text" autocomplete="off"
               placeholder="Ej: Ingeniero Ambiental" value="${_esc(datos?.profesion || '')}" style="margin-bottom:10px;">
+            <label class="form-label" for="cursos-${ft.key}">Cursos o certificaciones (opcional)</label>
+            <input class="form-input" id="cursos-${ft.key}" type="text" autocomplete="off"
+              placeholder="Ej: Auditor interno ISO 14001" value="${_esc(datos?.cursos_certificaciones || '')}" style="margin-bottom:10px;">
             <label class="form-label" for="posgrado-${ft.key}">Posgrado (opcional)</label>
             <input class="form-input" id="posgrado-${ft.key}" type="text" autocomplete="off"
               placeholder="Ej: Esp. en Gestión Ambiental" value="${_esc(datos?.posgrado || '')}" style="margin-bottom:10px;">
@@ -1189,6 +1192,7 @@ window.addEventListener('load', function() {
       const datos = { cedula: cedulas[ft.key], firma: _firmaData[ft.key] };
       if (ft.key === 'elaboro') {
         datos.profesion = (document.getElementById('profesion-elaboro')?.value || '').trim();
+        datos.cursos_certificaciones = (document.getElementById('cursos-elaboro')?.value || '').trim();
         datos.posgrado  = (document.getElementById('posgrado-elaboro')?.value || '').trim();
         datos.empresa   = empresaElaboro;
       }
