@@ -405,7 +405,7 @@ const Planificar = (() => {
           <th style="padding:8px;text-align:left;">Ítem evaluado</th>
           <th style="padding:8px;text-align:left;width:88px;">Calificación</th>
           <th style="padding:8px;text-align:left;width:72px;">Prioridad</th>
-          <th style="padding:8px;text-align:left;">Hallazgo / acción</th>
+          <th style="padding:8px;text-align:left;">Hallazgo</th>
         </tr></thead>
         <tbody>
           ${rows.map((it, idx) => {
@@ -417,7 +417,9 @@ const Planificar = (() => {
             <td style="padding:8px;border-bottom:1px solid var(--color-border);font-weight:600;">${_escAttr(it.codigo || '')} ${_escAttr(it.texto)}</td>
             <td style="padding:8px;border-bottom:1px solid var(--color-border);"><span class="estado-chip ${cls}">${label}</span></td>
             <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink3);">${_escAttr(it.prioridad || '—')}</td>
-            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink2);">${_escAttr(it.accion || '—')}</td>
+            <td style="padding:8px;border-bottom:1px solid var(--color-border);color:var(--color-ink2);line-height:1.45;">
+              <strong style="color:var(--color-ink);">Hallazgo:</strong><br>${_escAttr(it.accion || 'Sin hallazgo registrado.')}
+            </td>
           </tr>`;
           }).join('')}
         </tbody>
@@ -1541,7 +1543,9 @@ const Planificar = (() => {
           <td style="padding:8px;border-bottom:1px solid #E5E7EB;font-weight:600;">${_escAttr(it.codigo || '')} ${_escAttr(it.texto)}</td>
           <td style="padding:8px;border-bottom:1px solid #E5E7EB;"><span class="chip ${chip}">${label}</span></td>
           <td style="padding:8px;border-bottom:1px solid #E5E7EB;color:#6B7280;">${_escAttr(it.prioridad || '—')}</td>
-          <td style="padding:8px;border-bottom:1px solid #E5E7EB;color:#374151;">${_escAttr(it.accion || '—')}</td>
+          <td style="padding:8px;border-bottom:1px solid #E5E7EB;color:#374151;line-height:1.45;">
+            <strong style="color:#111827;">Hallazgo:</strong><br>${_escAttr(it.accion || 'Sin hallazgo registrado.')}
+          </td>
         </tr>`;
     }).join('');
 
