@@ -551,7 +551,11 @@ const Planificar = (() => {
   }
 
   function _generalBadgeInfo() {
-    const completo = _val('inp-nombre') && _val('inp-nit') && _val('inp-direccion') && _val('inp-tipo');
+    // El formulario vigente requiere estos seis campos. Antes se consultaba
+    // `inp-tipo`, que pertenece al formulario anterior y dejaba el estado
+    // como Pendiente aunque los datos actuales ya estuvieran completos.
+    const completo = ['inp-nombre', 'inp-nit', 'inp-direccion', 'inp-profesional', 'inp-responsable-psb', 'inp-fecha']
+      .every(id => _val(id));
     return completo
       ? { text: 'Completado', cls: 'estado-chip estado-B', style: '' }
       : { text: 'Pendiente', cls: '', style: _pendienteStyle() };
@@ -2426,7 +2430,10 @@ const Planificar = (() => {
     if (form) {
       form.addEventListener('submit', _submitV2);
       _hydrateFormFromDraft();
-      const onDraft = () => _schedulePlanificarDraft();
+      const onDraft = () => {
+        _schedulePlanificarDraft();
+        _setCardState('general', _generalOpen, _generalBadgeInfo());
+      };
       form.addEventListener('input', onDraft);
       form.addEventListener('change', onDraft);
     }
