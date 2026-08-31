@@ -669,57 +669,31 @@ const Actuar = (() => {
 
   /* ── Evidencia y seguimiento por ítem ────────────── */
   function _renderDetallePorItem(inspeccion) {
-    const conEval = inspeccion.programas.filter(p => p.aspectos.some(a => a.evaluacion));
+    const conEval = inspeccion.programas.map((p, programaIdx) => ({ p, programaIdx })).filter(({ p }) => p.aspectos.some(a => a.evaluacion || a.criterio || (a.fotografias || []).length || (a.criterios_extra || []).some(x => x.criterio || (x.fotografias || []).length)));
     if (!conEval.length) return '';
+
+    const tarjeta = (a, numero) => {
+      const criterio = typeof Scores !== 'undefined' ? Scores.criterio(a) : a.evaluacion;
+      const c = criterio === 'A' ? '#2E7D32' : criterio === 'I' ? '#D32F2F' : '#6B7280';
+      const cumple = criterio === 'A', incumple = criterio === 'I';
+      return `<div class="acta-card" style="padding:9px 10px;border:1px solid #E5E7EB;border-left:3px solid ${c};border-radius:6px;background:#fff;break-inside:avoid;page-break-inside:avoid;">
+        <div style="display:flex;gap:8px;align-items:flex-start;"><span style="font-weight:800;color:${c};flex-shrink:0;font-size:11px;">[${_esc(criterio || '')}]</span><div style="flex:1;min-width:0;"><div class="acta-aspect-title">${numero}, Aspecto por verificar</div><div class="acta-aspect-norm">${_esc(a.norma || '')}</div></div></div>
+        ${cumple ? `<div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Observaciones:</strong> ${_esc(a.obs || 'Sin observaciones registradas.')}</div><div style="margin-top:4px;padding:5px 7px;background:#F0FAF5;border-radius:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Recomendaciones:</strong> ${_esc(a.recomendaciones || 'Sin recomendación registrada.')}</div>` : ''}
+        ${incumple ? `<div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Hallazgo:</strong> ${_esc(a.hallazgo || a.obs || 'Sin hallazgo registrado.')}</div><div style="margin-top:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Acción correctiva:</strong> ${_esc(a.accion || 'Sin acción correctiva registrada.')}</div><div style="margin-top:4px;font-size:10px;color:#374151;"><strong>Estado de acción:</strong> ${_esc(a.estado || 'Abierto')}</div>` : ''}
+        ${criterio === 'NA' ? `<div style="margin-top:7px;font-size:10px;color:#6B7280;text-align:justify;hyphens:auto;"><strong>Justificación N-A:</strong> ${_esc(a.obs || 'No aplica a este establecimiento.')}</div>` : ''}
+        ${_renderFotosAspecto(a)}</div>`;
+    };
 
     return `
       <div class="acta-seccion" style="margin-bottom:14px;">
         ${_secTitle('Detalle de aspectos evaluados', C.verde)}
-        ${conEval.map(p => {
-          const ev = p.aspectos.flatMap(a => [{ ...a }, ...(a.criterios_extra || []).map((x, i) => ({ ...x, id: `${a.id}-extra-${i + 1}`, texto: `Aspecto por verificar ${i + 2}`, norma: a.norma, fotografias: x.fotografias || [] }))]).filter(a => (a.evaluacion || a.criterio || (a.fotografias || []).length));
+        ${conEval.map(({ p, programaIdx }) => {
+          const criterios = p.aspectos.map((base, criterioIdx) => ({ base, criterioIdx, aspectos: [{ ...base, extraIdx: null }, ...(base.criterios_extra || []).map((x, i) => ({ ...x, norma: base.norma, fotografias: x.fotografias || [], extraIdx: i }))].filter(x => x.evaluacion || x.criterio || (x.fotografias || []).length) })).filter(x => x.aspectos.length);
           return `
-            <div style="margin-bottom:10px;">
-              <div style="font-size:11px;font-weight:700;color:${C.verde};margin-bottom:5px;">
-                ${_esc(p.nombre)}</div>
-              ${ev.map(a => {
-                const criterio = typeof Scores !== 'undefined' ? Scores.criterio(a) : a.evaluacion;
-                const c = criterio==='A'?'#2E7D32':criterio==='I'?'#D32F2F':'#6B7280';
-                const esCumple = criterio === 'A';
-                const esIncumple = criterio === 'I';
-                return `
-                  <div class="acta-card" style="padding:9px 10px;margin-bottom:7px;border:1px solid #E5E7EB;
-                    border-left:3px solid ${c};border-radius:6px;background:#fff;break-inside:avoid;page-break-inside:avoid;">
-                    <div style="display:flex;gap:8px;align-items:flex-start;">
-                      <span style="font-weight:800;color:${c};flex-shrink:0;font-size:11px;">[${_esc(criterio || '')}]</span>
-                      <div style="flex:1;min-width:0;">
-                        <div style="color:#111827;font-size:11px;font-weight:700;">${_esc(a.texto)}</div>
-                        <div style="color:#6B7280;font-size:9px;margin-top:2px;">${_esc(a.norma || '')}</div>
-                      </div>
-                    </div>
-                    ${esCumple ? `
-                      <div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;">
-                        <strong>Observaciones:</strong> ${_esc(a.obs || 'Sin observaciones registradas.')}
-                      </div>
-                      ${a.recomendaciones ? `<div style="margin-top:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;">
-                        <strong>Recomendaciones:</strong> ${_esc(a.recomendaciones)}
-                      </div>` : ''}` : ''}
-                    ${esIncumple ? `
-                      <div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;">
-                        <strong>Hallazgo:</strong> ${_esc(a.hallazgo || a.obs || 'Sin hallazgo registrado.')}
-                      </div>
-                      <div style="margin-top:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;">
-                        <strong>Acción correctiva:</strong> ${_esc(a.accion || 'Sin acción correctiva registrada.')}
-                      </div>
-                      <div style="margin-top:4px;font-size:10px;color:#374151;">
-                        <strong>Estado de acción:</strong> ${_esc(a.estado || 'Abierto')}
-                      </div>` : ''}
-                    ${criterio === 'NA' ? `
-                      <div style="margin-top:7px;font-size:10px;color:#6B7280;text-align:justify;hyphens:auto;">
-                        <strong>Justificación N-A:</strong> ${_esc(a.obs || 'No aplica a este establecimiento.')}
-                      </div>` : ''}
-                    ${_renderFotosAspecto(a)}
-                  </div>`;
-              }).join('')}
+            <div class="acta-programa" style="margin-bottom:14px;">
+              <div class="acta-programa-title">
+                ${programaIdx + 1}. ${_esc(p.nombre)}</div>
+              <div class="acta-criteria-grid">${criterios.map(({ base, criterioIdx, aspectos }) => `<section class="acta-criterion-group"><div class="acta-criterion-title">${programaIdx + 1}.${criterioIdx + 1} ${_esc(base.texto)}</div><div class="acta-aspectos-stack">${aspectos.map(a => tarjeta(a, `${programaIdx + 1}.${criterioIdx + 1}.${a.extraIdx == null ? 1 : a.extraIdx + 2}`)).join('')}</div></section>`).join('')}</div>
             </div>`;
         }).join('')}
       </div>`;
@@ -1045,6 +1019,18 @@ window.addEventListener('load', function() {
     .acta-wrap { max-width: 800px; margin: 0 auto; padding: 16px; }
     .acta-seccion, .acta-card, .acta-hallazgo, .acta-chart-wrap, .acta-firmas {
       page-break-inside: avoid; break-inside: avoid; }
+    .acta-criteria-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; align-items:start; }
+    .acta-criterion-group { min-width:0; break-inside:avoid; page-break-inside:avoid; }
+    .acta-programa-title { font-size:13px; font-weight:800; color:#0A7350; margin-bottom:8px; }
+    .acta-criterion-title { font-size:11px; font-weight:700; color:#0A2E23; margin:0 0 6px; }
+    .acta-aspectos-stack { display:grid; gap:8px; }
+    .acta-aspect-title { color:#111827; font-size:11px; font-weight:700; line-height:1.3; }
+    .acta-aspect-norm { color:#6B7280; font-size:9px; line-height:1.4; margin-top:2px; }
+    .acta-aspectos-stack .acta-card { min-height:238px; box-sizing:border-box; }
+    .acta-aspectos-stack .acta-card figure { max-width:220px; }
+    .acta-aspectos-stack .acta-card figure img { max-height:116px !important; object-fit:contain !important; }
+    .acta-card, .acta-card div { min-width:0; max-width:100%; overflow-wrap:anywhere; word-break:break-word; white-space:normal; }
+    .acta-card div { text-align:justify; hyphens:auto; }
     table { border-collapse: collapse; width: 100%; }
     .btn-save {
       display: block; width: 100%; padding: 12px; margin-bottom: 16px;

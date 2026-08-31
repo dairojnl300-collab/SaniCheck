@@ -31,6 +31,10 @@ function _aspecto(id, texto, norma) {
 }
 
 function getPSBAspectoDetalle(id) { return PSB_DETALLES[id] || ''; }
+function getPSBNumeracion(programaIdx, aspectoIdx, extraIdx) {
+  const base = `${programaIdx + 1}.${aspectoIdx + 1}`;
+  return extraIdx == null ? `${base}.1` : `${base}.${extraIdx + 2}`;
+}
 
 function getPSBPrograms() {
   return [

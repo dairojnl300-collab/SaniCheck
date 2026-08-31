@@ -1,7 +1,7 @@
 // Service Worker — SaniCheck — Offline-first completo
 
 const APP_VERSION = '4.12.13';
-const BUILD_HASH = 'f6c3bf8c8eaa';
+const BUILD_HASH = '67f55d98bc30';
 const CACHE = 'sanicheck-' + BUILD_HASH;
 
 const ASSETS = [
@@ -134,11 +134,16 @@ async function _matchCached(request) {
   let hit = await caches.match(request);
   if (hit) return _cleanResponse(hit);
 
+  // Los recursos versionados (p. ej. brand.css?v=...) deben pedir su versión
+  // exacta; reutilizar una coincidencia sin query puede entregar CSS obsoleto.
+  const requestUrl = new URL(request.url);
+  if (requestUrl.search) return null;
+
   hit = await caches.match(request, { ignoreSearch: true });
   if (hit) return _cleanResponse(hit);
 
   try {
-    const url = new URL(request.url);
+    const url = requestUrl;
     if (url.origin !== self.location.origin) return null;
     const cache = await caches.open(CACHE);
     const keys = await cache.keys();
