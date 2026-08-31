@@ -28,7 +28,7 @@ const Verificar = (() => {
     return [...grupos.values()].map(({ programa, items: aspectos }) => { const programaNumero = (aspectos[0]?.programaIdx ?? 0) + 1; return `
       <div class="dash-detail-group" style="margin:14px 0 10px;">
         <div style="font-size:12px;font-weight:700;color:var(--emerald-2);margin-bottom:7px;">${programaNumero}. ${_esc(programa.nombre)}</div>
-        ${[...new Set(aspectos.map(x => x.criterioIdx ?? 0))].map(criterioIdx => { const grupo = aspectos.filter(x => (x.criterioIdx ?? 0) === criterioIdx); const criterio = grupo.find(x => x.extraIdx == null) || grupo[0]; return `<div class="dash-criterion-group"><div class="dash-criterion-title">${programaNumero}.${criterioIdx + 1} ${_esc(criterio.texto)}</div>${grupo.map(item => { const n = `${programaNumero}.${criterioIdx + 1}.${item.extraIdx == null ? 1 : item.extraIdx + 2}`; return _detalle({ ...item, texto: `${n}, Aspecto por verificar` }); }).join('')}</div>`; }).join('')}
+        ${[...new Set(aspectos.map(x => x.criterioIdx ?? 0))].map(criterioIdx => { const grupo = aspectos.filter(x => (x.criterioIdx ?? 0) === criterioIdx); const criterio = grupo.find(x => x.extraIdx == null) || grupo[0]; return `<div class="dash-criterion-group">${grupo.map(item => { const n = `${programaNumero}.${criterioIdx + 1}.${item.extraIdx == null ? 1 : item.extraIdx + 2}`; return _detalle({ ...item, texto: `${n}, Aspecto por verificar`, criterioTitulo: `${programaNumero}.${criterioIdx + 1} ${criterio.texto}` }); }).join('')}</div>`; }).join('')}
       </div>`; }).join('');
   }
   function _detalle(x) {
@@ -36,6 +36,7 @@ const Verificar = (() => {
     const color = c === 'A' ? 'var(--color-bueno)' : c === 'I' ? 'var(--color-deficiente)' : 'var(--ink-55)';
     const cumple = c === 'A', incumple = c === 'I', noAplica = c === 'NA';
     return `<article class="dash-detail" style="display:block;padding:10px 11px;margin-bottom:8px;border:1px solid var(--line);border-left:3px solid ${color};border-radius:var(--radius-sm);background:#fff;">
+      <div class="dash-criterion-inline-title">${_esc(x.criterioTitulo || '')}</div>
       <div style="display:flex;gap:8px;align-items:flex-start;">
         <span class="criterio-chip criterio-${c}">${c === 'NA' ? 'N-A' : c}</span>
         <div style="min-width:0;flex:1;"><b>${_esc(x.texto)}</b><small>${_esc(x.norma)}</small></div>
