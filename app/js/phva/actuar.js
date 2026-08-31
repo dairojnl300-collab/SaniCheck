@@ -1025,6 +1025,10 @@ window.addEventListener('load', function() {
     .acta-criteria-grid .acta-criterion-group { display:contents; }
     .acta-criteria-grid .acta-criterion-title { grid-column:1 / -1; }
     .acta-criteria-grid .acta-aspectos-stack { display:contents; }
+    .acta-criteria-grid > .acta-card {
+      align-self:stretch;
+      box-sizing:border-box;
+    }
     .acta-criterion-group { min-width:0; break-inside:avoid; page-break-inside:avoid; }
     .acta-programa-title { font-size:13px; font-weight:800; color:#0A7350; margin-bottom:8px; }
     .acta-criterion-title { font-size:11px; font-weight:700; color:#0A2E23; margin:0 0 6px; }
