@@ -672,11 +672,12 @@ const Actuar = (() => {
     const conEval = inspeccion.programas.map((p, programaIdx) => ({ p, programaIdx })).filter(({ p }) => p.aspectos.some(a => a.evaluacion || a.criterio || (a.fotografias || []).length || (a.criterios_extra || []).some(x => x.criterio || (x.fotografias || []).length)));
     if (!conEval.length) return '';
 
-    const tarjeta = (a, numero, criterioTitulo) => {
+    let cardOrdinal = 0;
+    const tarjeta = (a, numero, criterioTitulo, mobileBreakClass = '') => {
       const criterio = typeof Scores !== 'undefined' ? Scores.criterio(a) : a.evaluacion;
       const c = criterio === 'A' ? '#2E7D32' : criterio === 'I' ? '#D32F2F' : '#6B7280';
       const cumple = criterio === 'A', incumple = criterio === 'I';
-      return `<div class="acta-card" style="padding:9px 10px;border:1px solid #E5E7EB;border-left:3px solid ${c};border-radius:6px;background:#fff;break-inside:avoid;page-break-inside:avoid;">
+      return `<div class="acta-card${mobileBreakClass}" style="padding:9px 10px;border:1px solid #E5E7EB;border-left:3px solid ${c};border-radius:6px;background:#fff;break-inside:avoid;page-break-inside:avoid;">
         <div class="acta-criterion-inline-title">${_esc(criterioTitulo || '')}</div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="font-weight:800;color:${c};flex-shrink:0;font-size:11px;">[${_esc(criterio || '')}]</span><div style="flex:1;min-width:0;"><div class="acta-aspect-title">${numero}, Aspecto por verificar</div><div class="acta-aspect-norm">${_esc(a.norma || '')}</div></div></div>
         ${cumple ? `<div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Observaciones:</strong> ${_esc(a.obs || 'Sin observaciones registradas.')}</div><div style="margin-top:4px;padding:5px 7px;background:#F0FAF5;border-radius:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Recomendaciones:</strong> ${_esc(a.recomendaciones || 'Sin recomendación registrada.')}</div>` : ''}
@@ -694,7 +695,7 @@ const Actuar = (() => {
             <div class="acta-programa" style="margin-bottom:14px;">
               <div class="acta-programa-title">
                 ${programaIdx + 1}. ${_esc(p.nombre)}</div>
-              <div class="acta-criteria-grid">${criterios.map(({ base, criterioIdx, aspectos }) => `<section class="acta-criterion-group"><div class="acta-aspectos-stack${aspectos.length > 1 ? ' has-consecutivos' : ''}">${aspectos.map(a => tarjeta(a, `${programaIdx + 1}.${criterioIdx + 1}.${a.extraIdx == null ? 1 : a.extraIdx + 2}`, `${programaIdx + 1}.${criterioIdx + 1} ${base.texto}`)).join('')}</div></section>`).join('')}</div>
+              <div class="acta-criteria-grid">${criterios.map(({ base, criterioIdx, aspectos }) => `<section class="acta-criterion-group"><div class="acta-aspectos-stack${aspectos.length > 1 ? ' has-consecutivos' : ''}">${aspectos.map(a => { const breakClass = cardOrdinal > 0 && cardOrdinal % 4 === 0 ? ' acta-mobile-break-before' : ''; cardOrdinal += 1; return tarjeta(a, `${programaIdx + 1}.${criterioIdx + 1}.${a.extraIdx == null ? 1 : a.extraIdx + 2}`, `${programaIdx + 1}.${criterioIdx + 1} ${base.texto}`, breakClass); }).join('')}</div></section>`).join('')}</div>
             </div>`;
         }).join('')}
       </div>`;
@@ -1093,6 +1094,10 @@ window.addEventListener('load', function() {
       }
       .acta-card, .acta-card > div, .acta-card figure, .acta-card img { max-width: 100%; }
       .acta-card { overflow-wrap: anywhere; word-break: break-word; }
+      .mobile-phone .acta-mobile-break-before {
+        break-before: page;
+        page-break-before: always;
+      }
       .btn-save { display: none !important; }
       @page { margin: 1.5cm 1.5cm 1.8cm; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -1115,6 +1120,11 @@ window.addEventListener('load', function() {
   ${_renderFirmas(inspeccion)}
   ${_renderFooter()}
 </main>
+<script>
+  if (Math.min(window.innerWidth || 9999, window.screen?.width || 9999) <= 600) {
+    document.body.classList.add('mobile-phone');
+  }
+</script>
 </body>
 </html>`;
   }
