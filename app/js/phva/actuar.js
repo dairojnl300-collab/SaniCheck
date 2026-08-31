@@ -672,11 +672,12 @@ const Actuar = (() => {
     const conEval = inspeccion.programas.map((p, programaIdx) => ({ p, programaIdx })).filter(({ p }) => p.aspectos.some(a => a.evaluacion || a.criterio || (a.fotografias || []).length || (a.criterios_extra || []).some(x => x.criterio || (x.fotografias || []).length)));
     if (!conEval.length) return '';
 
-    const tarjeta = (a, numero) => {
+    const tarjeta = (a, numero, criterioTitulo) => {
       const criterio = typeof Scores !== 'undefined' ? Scores.criterio(a) : a.evaluacion;
       const c = criterio === 'A' ? '#2E7D32' : criterio === 'I' ? '#D32F2F' : '#6B7280';
       const cumple = criterio === 'A', incumple = criterio === 'I';
       return `<div class="acta-card" style="padding:9px 10px;border:1px solid #E5E7EB;border-left:3px solid ${c};border-radius:6px;background:#fff;break-inside:avoid;page-break-inside:avoid;">
+        <div class="acta-criterion-inline-title">${_esc(criterioTitulo || '')}</div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="font-weight:800;color:${c};flex-shrink:0;font-size:11px;">[${_esc(criterio || '')}]</span><div style="flex:1;min-width:0;"><div class="acta-aspect-title">${numero}, Aspecto por verificar</div><div class="acta-aspect-norm">${_esc(a.norma || '')}</div></div></div>
         ${cumple ? `<div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Observaciones:</strong> ${_esc(a.obs || 'Sin observaciones registradas.')}</div><div style="margin-top:4px;padding:5px 7px;background:#F0FAF5;border-radius:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Recomendaciones:</strong> ${_esc(a.recomendaciones || 'Sin recomendación registrada.')}</div>` : ''}
         ${incumple ? `<div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Hallazgo:</strong> ${_esc(a.hallazgo || a.obs || 'Sin hallazgo registrado.')}</div><div style="margin-top:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Acción correctiva:</strong> ${_esc(a.accion || 'Sin acción correctiva registrada.')}</div><div style="margin-top:4px;font-size:10px;color:#374151;"><strong>Estado de acción:</strong> ${_esc(a.estado || 'Abierto')}</div>` : ''}
@@ -693,7 +694,7 @@ const Actuar = (() => {
             <div class="acta-programa" style="margin-bottom:14px;">
               <div class="acta-programa-title">
                 ${programaIdx + 1}. ${_esc(p.nombre)}</div>
-              <div class="acta-criteria-grid">${criterios.map(({ base, criterioIdx, aspectos }) => `<section class="acta-criterion-group"><div class="acta-criterion-title">${programaIdx + 1}.${criterioIdx + 1} ${_esc(base.texto)}</div><div class="acta-aspectos-stack${aspectos.length > 1 ? ' has-consecutivos' : ''}">${aspectos.map(a => tarjeta(a, `${programaIdx + 1}.${criterioIdx + 1}.${a.extraIdx == null ? 1 : a.extraIdx + 2}`)).join('')}</div></section>`).join('')}</div>
+              <div class="acta-criteria-grid">${criterios.map(({ base, criterioIdx, aspectos }) => `<section class="acta-criterion-group"><div class="acta-aspectos-stack${aspectos.length > 1 ? ' has-consecutivos' : ''}">${aspectos.map(a => tarjeta(a, `${programaIdx + 1}.${criterioIdx + 1}.${a.extraIdx == null ? 1 : a.extraIdx + 2}`, `${programaIdx + 1}.${criterioIdx + 1} ${base.texto}`)).join('')}</div></section>`).join('')}</div>
             </div>`;
         }).join('')}
       </div>`;
@@ -1027,6 +1028,7 @@ window.addEventListener('load', function() {
     .acta-criterion-group { min-width:0; break-inside:avoid; page-break-inside:avoid; }
     .acta-programa-title { font-size:13px; font-weight:800; color:#0A7350; margin-bottom:8px; }
     .acta-criterion-title { font-size:11px; font-weight:700; color:#0A2E23; margin:0 0 6px; }
+    .acta-criterion-inline-title { color:#0A7350; font-size:10px; line-height:1.3; font-weight:800; margin-bottom:7px; text-align:left !important; }
     .acta-aspectos-stack { display:grid; gap:8px; align-items:start; }
     .acta-aspectos-stack.has-consecutivos {
       grid-template-columns:repeat(2,minmax(0,1fr));
