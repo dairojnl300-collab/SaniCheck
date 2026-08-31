@@ -1047,16 +1047,22 @@ window.addEventListener('load', function() {
       /* Chrome/iOS puede ignorar break-inside en hijos de CSS Grid al paginar.
          El PDF usa flujo de bloques para que una tarjeta nunca se fragmente. */
       .acta-criteria-grid {
-        display: block !important;
-        column-count: 2;
-        column-gap: 12px;
-        column-fill: auto;
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        align-items: start;
+        grid-auto-flow: row;
       }
-      .acta-aspectos-stack { display: block !important; }
+      .acta-aspectos-stack {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        align-items: start;
+      }
       .acta-criterion-group {
-        display: inline-block;
-        width: 100%;
-        vertical-align: top;
+        display: grid;
+        width: auto;
+        min-width: 0;
         margin: 0 0 12px;
         break-inside: avoid;
         page-break-inside: avoid;
