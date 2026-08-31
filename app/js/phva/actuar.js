@@ -1025,7 +1025,7 @@ window.addEventListener('load', function() {
     .acta-criteria-grid .acta-criterion-group { display:contents; }
     .acta-criteria-grid .acta-criterion-title { grid-column:1 / -1; }
     .acta-criteria-grid .acta-aspectos-stack { display:contents; }
-    .acta-criteria-grid > .acta-card {
+    .acta-criteria-grid .acta-card {
       align-self:stretch;
       box-sizing:border-box;
       min-height:320px;
