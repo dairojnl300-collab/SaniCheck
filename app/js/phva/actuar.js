@@ -1028,6 +1028,7 @@ window.addEventListener('load', function() {
     .acta-criteria-grid > .acta-card {
       align-self:stretch;
       box-sizing:border-box;
+      min-height:320px;
     }
     .acta-criterion-group { min-width:0; break-inside:avoid; page-break-inside:avoid; }
     .acta-programa-title { font-size:13px; font-weight:800; color:#0A7350; margin-bottom:8px; }
