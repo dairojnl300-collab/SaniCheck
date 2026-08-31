@@ -1044,10 +1044,25 @@ window.addEventListener('load', function() {
       .acta-wrap { width: 180mm; max-width: 180mm; margin: 0 auto; padding: 0; }
       .acta-seccion { margin-bottom: 14px; }
       .acta-programa { break-inside: auto; page-break-inside: auto; }
-      .acta-criterion-group { break-inside: avoid; page-break-inside: avoid; }
+      /* Chrome/iOS puede ignorar break-inside en hijos de CSS Grid al paginar.
+         El PDF usa flujo de bloques para que una tarjeta nunca se fragmente. */
+      .acta-criteria-grid,
+      .acta-aspectos-stack { display: block !important; }
+      .acta-criterion-group { display: block; break-inside: auto; page-break-inside: auto; }
+      .acta-criterion-title { break-after: avoid; page-break-after: avoid; }
       .acta-card { height: auto !important; min-height: 0 !important; }
       .acta-aspectos-stack { grid-template-columns: 1fr; align-items: start; }
-      .acta-aspectos-stack .acta-card { min-height: 0; height: auto; overflow: visible; }
+      .acta-aspectos-stack .acta-card {
+        display: block; min-height: 0; height: auto; overflow: visible;
+        break-inside: avoid; page-break-inside: avoid;
+      }
+      .acta-card figure, .acta-card img, table tr {
+        break-inside: avoid; page-break-inside: avoid;
+      }
+      thead { display: table-header-group; }
+      h1, h2, h3, .acta-programa-title, .acta-seccion > .section-title {
+        break-after: avoid; page-break-after: avoid;
+      }
       .acta-card, .acta-card > div, .acta-card figure, .acta-card img { max-width: 100%; }
       .acta-card { overflow-wrap: anywhere; word-break: break-word; }
       .btn-save { display: none !important; }
