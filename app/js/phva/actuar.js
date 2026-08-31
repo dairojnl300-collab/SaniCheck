@@ -1016,17 +1016,17 @@ window.addEventListener('load', function() {
     :root { --shadow-sticker: 0 1px 0 rgba(255,255,255,.65) inset, 0 4px 0 rgba(10,46,35,.08), 0 10px 22px -6px rgba(10,46,35,.16); }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Instrument Sans', Arial, sans-serif; font-size: 11px; color: #111827; background: #fff; }
-    .acta-wrap { max-width: 800px; margin: 0 auto; padding: 16px; }
+    .acta-wrap { width: min(100%, 800px); margin: 0 auto; padding: 16px; }
     .acta-seccion, .acta-card, .acta-hallazgo, .acta-chart-wrap, .acta-firmas {
       page-break-inside: avoid; break-inside: avoid; }
     .acta-criteria-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; align-items:start; }
     .acta-criterion-group { min-width:0; break-inside:avoid; page-break-inside:avoid; }
     .acta-programa-title { font-size:13px; font-weight:800; color:#0A7350; margin-bottom:8px; }
     .acta-criterion-title { font-size:11px; font-weight:700; color:#0A2E23; margin:0 0 6px; }
-    .acta-aspectos-stack { display:grid; gap:8px; }
+    .acta-aspectos-stack { display:grid; gap:8px; align-items:start; }
     .acta-aspect-title { color:#111827; font-size:11px; font-weight:700; line-height:1.3; }
     .acta-aspect-norm { color:#6B7280; font-size:9px; line-height:1.4; margin-top:2px; }
-    .acta-aspectos-stack .acta-card { min-height:238px; box-sizing:border-box; }
+    .acta-aspectos-stack .acta-card { min-height:238px; height:auto; box-sizing:border-box; overflow:visible; }
     .acta-aspectos-stack .acta-card figure { max-width:220px; }
     .acta-aspectos-stack .acta-card figure img { max-height:116px !important; object-fit:contain !important; }
     .acta-card, .acta-card div { min-width:0; max-width:100%; overflow-wrap:anywhere; word-break:break-word; white-space:normal; }
@@ -1038,9 +1038,18 @@ window.addEventListener('load', function() {
       font-size: 14px; font-weight: 700; cursor: pointer; font-family: Arial, sans-serif;
       letter-spacing: 0.02em; }
     .btn-save:hover { background: #2D6A4F; }
-    #acta-table { width: 100%; border-collapse: collapse; }
-    #acta-table > tbody > tr > td { padding: 0; }
     @media print {
+      html, body { width: 210mm; min-height: 297mm; background: #fff; }
+      body { margin: 0; }
+      .acta-wrap { width: 180mm; max-width: 180mm; margin: 0 auto; padding: 0; }
+      .acta-seccion { margin-bottom: 14px; }
+      .acta-programa { break-inside: auto; page-break-inside: auto; }
+      .acta-criterion-group { break-inside: avoid; page-break-inside: avoid; }
+      .acta-card { height: auto !important; min-height: 0 !important; }
+      .acta-aspectos-stack { grid-template-columns: 1fr; align-items: start; }
+      .acta-aspectos-stack .acta-card { min-height: 0; height: auto; overflow: visible; }
+      .acta-card, .acta-card > div, .acta-card figure, .acta-card img { max-width: 100%; }
+      .acta-card { overflow-wrap: anywhere; word-break: break-word; }
       .btn-save { display: none !important; }
       @page { margin: 1.5cm 1.5cm 1.8cm; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -1049,26 +1058,20 @@ window.addEventListener('load', function() {
   ${chartScript}
 </head>
 <body>
-<table id="acta-table">
-  <tbody>
-    <tr><td>
-      <div class="acta-wrap">
-        <button class="btn-save" onclick="window.print()">&#128190; Guardar como PDF</button>
-        ${_renderPrintHeader(inspeccion)}
-        ${_renderDatosEstablecimiento(inspeccion)}
-        ${_renderResumenCumplimiento(inspeccion)}
-        ${_renderGraficasPorPrograma(inspeccion)}
-        ${_renderGraficoComparativo(inspeccion)}
-        ${_renderRankingTabla(inspeccion)}
-        ${_renderComparacionHistorica(inspeccion)}
-        ${_renderMetodologia()}
-        ${_renderDetallePorItem(inspeccion)}
-        ${_renderFirmas(inspeccion)}
-        ${_renderFooter()}
-      </div>
-    </td></tr>
-  </tbody>
-</table>
+<main class="acta-wrap">
+  <button class="btn-save" onclick="window.print()">&#128190; Guardar como PDF</button>
+  ${_renderPrintHeader(inspeccion)}
+  ${_renderDatosEstablecimiento(inspeccion)}
+  ${_renderResumenCumplimiento(inspeccion)}
+  ${_renderGraficasPorPrograma(inspeccion)}
+  ${_renderGraficoComparativo(inspeccion)}
+  ${_renderRankingTabla(inspeccion)}
+  ${_renderComparacionHistorica(inspeccion)}
+  ${_renderMetodologia()}
+  ${_renderDetallePorItem(inspeccion)}
+  ${_renderFirmas(inspeccion)}
+  ${_renderFooter()}
+</main>
 </body>
 </html>`;
   }
