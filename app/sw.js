@@ -34,7 +34,7 @@ const ASSETS = [
   './js/phva/personalizar.js',
   './js/phva/hacer.js',
   './js/phva/verificar.js',
-  './js/phva/actuar.js',
+  './js/phva/actuar.js?v=4.12.14',
   './js/screens/dadis-simulador.js',
   './data/dadis-config.json',
   './assets/vendor/chart.umd.min.js',
