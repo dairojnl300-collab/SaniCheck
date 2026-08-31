@@ -3,12 +3,15 @@ const Verificar = (() => {
   function render() {
     const inspeccion = Store.getCurrentInspeccion(); if (!inspeccion) return _vacio();
     Scores.calcular(inspeccion); Hallazgos.actualizar(inspeccion); Store.upsertInspeccion(inspeccion);
-    const sc = inspeccion.score, hallazgos = inspeccion.hallazgos_criticos || [], total = getPSBPrograms().flatMap(p => p.aspectos).length;
-    const seguimientos = inspeccion.programas.flatMap(p => p.aspectos).filter(a => Scores.criterio(a) && a.estado);
+    const sc = inspeccion.score, hallazgos = inspeccion.hallazgos_criticos || [];
+    const expandir = (a, p) => [{ ...a, programa: p }, ...(a.criterios_extra || []).map((x, i) => ({ ...x, id: `${a.id}-extra-${i + 1}`, texto: `Aspecto por verificar ${i + 2}`, norma: a.norma, fotografias: x.fotografias || [], programa: p }))];
+    const todosItems = inspeccion.programas.flatMap(p => p.aspectos.flatMap(a => expandir(a, p)));
+    const total = todosItems.length;
+    const seguimientos = todosItems.filter(a => Scores.criterio(a) && a.estado);
     const abiertos = seguimientos.filter(a => a.estado !== 'Cerrado').length, cerrados = seguimientos.filter(a => a.estado === 'Cerrado').length, sinRegistro = total - sc.A - sc.I - sc.NA;
     const abiertoDeg = Math.round(abiertos / total * 360), cerradoDeg = Math.round((abiertos + cerrados) / total * 360);
     const segmentos = `var(--coral) 0 ${abiertoDeg}deg, var(--aqua) ${abiertoDeg}deg ${cerradoDeg}deg, var(--wash-b) ${cerradoDeg}deg 360deg`;
-    const items = inspeccion.programas.flatMap(p => p.aspectos.map(a => ({ ...a, programa: p })) ).filter(x => (categoria === 'todas' || x.programa.id === categoria) && (criterio === 'todos' || Scores.criterio(x) === criterio));
+    const items = todosItems.filter(x => (categoria === 'todas' || x.programa.id === categoria) && (criterio === 'todos' || Scores.criterio(x) === criterio));
     return `<div class="screen-header">${PhvaIcons.badge('V', 'DASHBOARD EJECUTIVO')}<div class="screen-title">${_esc(inspeccion.establecimiento.nombre || 'Inspección activa')}</div><div class="screen-subtitle">Actualización en vivo del ciclo PHVA</div></div>
       <div class="dashboard-kpis"><div><b>${sc.pct_cumplimiento}%</b><span>Cumplimiento</span></div><div><b>${sc.A}</b><span>Cumple</span></div><div><b>${sc.I}</b><span>Incumple</span></div><div><b>${abiertos}</b><span>Acciones abiertas</span></div></div>
       <section class="dashboard-card"><h3>${AppIcons.row('barChart', 'Cumplimiento por categoría', 16)}</h3>${inspeccion.programas.map(p => { const r = Scores.calcularPrograma(p); return `<div class="dash-bar"><span>${_esc(p.nombre)}</span><div><i style="width:${r.pct}%"></i></div><b>${r.pct}%</b></div>`; }).join('')}</section>
@@ -44,7 +47,7 @@ const Verificar = (() => {
     </article>`;
   }
   function filtrarCategoria(v) { categoria = v; _refresh(); } function filtrarCriterio(v) { criterio = v; _refresh(); }
-  function mostrarFoto(id) { const f = Store.getCurrentInspeccion()?.programas.flatMap(p => p.aspectos).flatMap(a => a.fotografias || []).find(x => x.id === id); if (!f) return; const d = document.createElement('div'); d.className = 'photo-lightbox'; d.tabIndex = -1; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.innerHTML = `<button aria-label="Cerrar foto" onclick="this.parentElement.remove()">${AppIcons.icon('x', 22)}</button><img src="${f.data}" alt="Foto ampliada">`; d.addEventListener('keydown', e => { if (e.key === 'Escape') d.remove(); }); document.body.appendChild(d); d.focus(); }
+  function mostrarFoto(id) { const f = Store.getCurrentInspeccion()?.programas.flatMap(p => p.aspectos.flatMap(a => [a, ...(a.criterios_extra || [])])).flatMap(a => a.fotografias || []).find(x => x.id === id); if (!f) return; const d = document.createElement('div'); d.className = 'photo-lightbox'; d.tabIndex = -1; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.innerHTML = `<button aria-label="Cerrar foto" onclick="this.parentElement.remove()">${AppIcons.icon('x', 22)}</button><img src="${f.data}" alt="Foto ampliada">`; d.addEventListener('keydown', e => { if (e.key === 'Escape') d.remove(); }); document.body.appendChild(d); d.focus(); }
   function _refresh() { const area = document.getElementById('screen-area'); if (area) area.innerHTML = render(); }
   function _vacio() { return `<div class="coming-soon"><div class="coming-soon-icon">${AppIcons.block('barChart', 40)}</div><div class="coming-soon-title">Sin inspección activa</div><button class="btn btn-primary mt-md" onclick="Router.go('planificar')">Ir a Planificar</button></div>`; }
   return { render, attach() {}, filtrarCategoria, filtrarCriterio, mostrarFoto };

@@ -676,7 +676,7 @@ const Actuar = (() => {
       <div class="acta-seccion" style="margin-bottom:14px;">
         ${_secTitle('Detalle de aspectos evaluados', C.verde)}
         ${conEval.map(p => {
-          const ev = p.aspectos.filter(a => a.evaluacion);
+          const ev = p.aspectos.flatMap(a => [{ ...a }, ...(a.criterios_extra || []).map((x, i) => ({ ...x, id: `${a.id}-extra-${i + 1}`, texto: `Aspecto por verificar ${i + 2}`, norma: a.norma, fotografias: x.fotografias || [] }))]).filter(a => (a.evaluacion || a.criterio || (a.fotografias || []).length));
           return `
             <div style="margin-bottom:10px;">
               <div style="font-size:11px;font-weight:700;color:${C.verde};margin-bottom:5px;">
@@ -733,7 +733,7 @@ const Actuar = (() => {
         ${fotos.map((foto, idx) => `
           <figure style="margin:0;border:1px solid #E5E7EB;border-radius:5px;overflow:hidden;">
             <img src="${foto.data}" alt="Evidencia ${idx + 1} del aspecto evaluado"
-              style="width:100%;height:120px;object-fit:cover;display:block;">
+              style="width:100%;height:auto;max-height:280px;object-fit:contain;background:#F8FAF9;display:block;">
             <figcaption style="padding:3px 5px;background:#F9FAFB;font-size:9px;color:#6B7280;">Evidencia ${idx + 1}</figcaption>
           </figure>`).join('')}
       </div>`;
@@ -744,9 +744,9 @@ const Actuar = (() => {
     const fotos = [];
     inspeccion.programas.forEach(p => {
       p.aspectos.forEach(a => {
-        (a.fotografias || []).forEach(f => {
-          fotos.push({ ...f, programa: p.nombre, aspecto: a.texto });
-        });
+        [a, ...(a.criterios_extra || [])].forEach((item, i) => (item.fotografias || []).forEach(f => {
+          fotos.push({ ...f, programa: p.nombre, aspecto: i ? `Aspecto por verificar ${i + 1}` : a.texto });
+        }));
       });
     });
     if (!fotos.length) return '';
@@ -759,7 +759,7 @@ const Actuar = (() => {
             <div style="border-radius:6px;overflow:hidden;border:1px solid #E5E7EB;
               break-inside:avoid;page-break-inside:avoid;">
               <img src="${f.data}" alt="evidencia"
-                style="width:100%;height:110px;object-fit:cover;display:block;">
+                style="width:100%;height:auto;max-height:280px;object-fit:contain;background:#F8FAF9;display:block;">
               <div style="padding:4px 6px;background:#F9FAFB;">
                 <div style="font-size:9px;font-weight:700;color:${C.verde};">
                   ${_esc(f.programa)}</div>

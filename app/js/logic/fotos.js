@@ -3,6 +3,7 @@
 const Fotos = (() => {
   let _pendingProgramaIdx = null;
   let _pendingAspectoIdx  = null;
+  let _pendingCriterioIdx = null;
 
   function _ensureInput() {
     let inp = document.getElementById('_foto-hidden-input');
@@ -18,9 +19,10 @@ const Fotos = (() => {
     return inp;
   }
 
-  function capturar(programaIdx, aspectoIdx) {
+  function capturar(programaIdx, aspectoIdx, criterioIdx) {
     _pendingProgramaIdx = programaIdx;
     _pendingAspectoIdx  = aspectoIdx;
+    _pendingCriterioIdx = Number.isInteger(criterioIdx) ? criterioIdx : null;
     const inp = _ensureInput();
     inp.value = '';
     inp.click();
@@ -35,9 +37,11 @@ const Fotos = (() => {
       if (!inspeccion) return;
       const aspecto = inspeccion.programas[_pendingProgramaIdx]
                         ?.aspectos[_pendingAspectoIdx];
-      if (!aspecto) return;
-      if (!aspecto.fotografias) aspecto.fotografias = [];
-      aspecto.fotografias.push({
+      const destino = _pendingCriterioIdx !== null && Array.isArray(aspecto.criterios_extra)
+        ? aspecto.criterios_extra[_pendingCriterioIdx] : aspecto;
+      if (!destino) return;
+      if (!destino.fotografias) destino.fotografias = [];
+      destino.fotografias.push({
         id:        'foto-' + Date.now(),
         data:      ev.target.result,
         tomada_en: new Date().toISOString(),
@@ -49,17 +53,19 @@ const Fotos = (() => {
     reader.readAsDataURL(file);
   }
 
-  function eliminar(programaIdx, aspectoIdx, fotoId) {
+  function eliminar(programaIdx, aspectoIdx, fotoId, criterioIdx) {
     const inspeccion = Store.getCurrentInspeccion();
     if (!inspeccion) return;
     const aspecto = inspeccion.programas[programaIdx]?.aspectos[aspectoIdx];
     if (!aspecto) return;
-    aspecto.fotografias = (aspecto.fotografias || []).filter(f => f.id !== fotoId);
+    const destino = Number.isInteger(criterioIdx) && Array.isArray(aspecto.criterios_extra) ? aspecto.criterios_extra[criterioIdx] : aspecto;
+    if (!destino) return;
+    destino.fotografias = (destino.fotografias || []).filter(f => f.id !== fotoId);
     Store.upsertInspeccion(inspeccion);
     if (typeof Hacer !== 'undefined' && Hacer.refresh) Hacer.refresh();
   }
 
-  function renderThumbnails(fotografias, programaIdx, aspectoIdx) {
+  function renderThumbnails(fotografias, programaIdx, aspectoIdx, criterioIdx) {
     if (!fotografias || !fotografias.length) return '';
     return `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
       ${fotografias.map(f => `
@@ -67,7 +73,7 @@ const Fotos = (() => {
           <img src="${f.data}" alt="foto"
             style="width:72px;height:72px;object-fit:cover;border-radius:8px;
               border:1px solid var(--color-border);">
-          <button onclick="Fotos.eliminar(${programaIdx},${aspectoIdx},'${f.id}')"
+          <button onclick="Fotos.eliminar(${programaIdx},${aspectoIdx},'${f.id}',${Number.isInteger(criterioIdx) ? criterioIdx : 'null'})"
             style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;
               border-radius:50%;border:none;background:var(--color-deficiente);
               color:#fff;cursor:pointer;line-height:20px;padding:0;display:inline-flex;align-items:center;justify-content:center;">

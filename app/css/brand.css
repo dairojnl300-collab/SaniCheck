@@ -1339,3 +1339,7 @@ p, span, li, label,
   text-align: justify;
   hyphens: auto;
 }
+
+/* Evidencia fotográfica ampliada en Verificar */
+.dash-photo { width:140px; height:auto; max-height:180px; }
+.dash-photo img { width:100%; height:auto; max-height:180px; object-fit:contain; background:#f8faf9; }
