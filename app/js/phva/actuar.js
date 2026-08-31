@@ -1039,7 +1039,7 @@ window.addEventListener('load', function() {
     }
     .acta-aspect-title { color:#111827; font-size:11px; font-weight:700; line-height:1.3; }
     .acta-aspect-norm { color:#6B7280; font-size:9px; line-height:1.4; margin-top:2px; }
-    .acta-aspectos-stack .acta-card { min-height:238px; height:auto; box-sizing:border-box; overflow:visible; }
+    .acta-aspectos-stack .acta-card { min-height:0; height:auto; box-sizing:border-box; overflow:visible; }
     .acta-aspectos-stack .acta-card figure { max-width:220px; }
     .acta-aspectos-stack .acta-card figure img { max-height:116px !important; object-fit:contain !important; }
     .acta-card, .acta-card div { min-width:0; max-width:100%; overflow-wrap:anywhere; word-break:break-word; white-space:normal; }
