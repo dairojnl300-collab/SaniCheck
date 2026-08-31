@@ -1020,6 +1020,10 @@ window.addEventListener('load', function() {
     .acta-seccion, .acta-card, .acta-hallazgo, .acta-chart-wrap, .acta-firmas {
       page-break-inside: avoid; break-inside: avoid; }
     .acta-criteria-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; align-items:start; }
+    /* Una sola rejilla de dos columnas para todos los aspectos del criterio. */
+    .acta-criteria-grid .acta-criterion-group { display:contents; }
+    .acta-criteria-grid .acta-criterion-title { grid-column:1 / -1; }
+    .acta-criteria-grid .acta-aspectos-stack { display:contents; }
     .acta-criterion-group { min-width:0; break-inside:avoid; page-break-inside:avoid; }
     .acta-programa-title { font-size:13px; font-weight:800; color:#0A7350; margin-bottom:8px; }
     .acta-criterion-title { font-size:11px; font-weight:700; color:#0A2E23; margin:0 0 6px; }
@@ -1057,16 +1061,10 @@ window.addEventListener('load', function() {
         grid-auto-flow: row;
       }
       .acta-aspectos-stack {
-        display: grid !important;
-        grid-template-columns: 1fr;
-        gap: 8px;
-        align-items: start;
-      }
-      .acta-aspectos-stack.has-consecutivos {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        display: contents !important;
       }
       .acta-criterion-group {
-        display: grid;
+        display: contents !important;
         width: auto;
         min-width: 0;
         margin: 0 0 12px;
@@ -1075,7 +1073,6 @@ window.addEventListener('load', function() {
       }
       .acta-criterion-title { break-after: avoid; page-break-after: avoid; }
       .acta-card { height: auto !important; min-height: 0 !important; }
-      .acta-aspectos-stack { grid-template-columns: 1fr; align-items: start; }
       .acta-aspectos-stack .acta-card {
         display: block; min-height: 0; height: auto; overflow: visible;
         break-inside: avoid; page-break-inside: avoid;
