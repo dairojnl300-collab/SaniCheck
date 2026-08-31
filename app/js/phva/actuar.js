@@ -699,8 +699,8 @@ const Actuar = (() => {
         </div>`;
     }).join('');
     const paginasMovil = [];
-    for (let i = 0; i < tarjetas.length; i += 4) {
-      paginasMovil.push(`<div class="acta-mobile-page"><div class="acta-mobile-grid">${tarjetas.slice(i, i + 4).map(x => x.html).join('')}</div></div>`);
+    for (let i = 0; i < tarjetas.length; i += 6) {
+      paginasMovil.push(`<div class="acta-mobile-page"><div class="acta-mobile-grid">${tarjetas.slice(i, i + 6).map(x => x.html).join('')}</div></div>`);
     }
 
     return `
