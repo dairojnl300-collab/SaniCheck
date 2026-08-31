@@ -1024,6 +1024,9 @@ window.addEventListener('load', function() {
     .acta-programa-title { font-size:13px; font-weight:800; color:#0A7350; margin-bottom:8px; }
     .acta-criterion-title { font-size:11px; font-weight:700; color:#0A2E23; margin:0 0 6px; }
     .acta-aspectos-stack { display:grid; gap:8px; align-items:start; }
+    .acta-aspectos-stack.has-consecutivos {
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
     .acta-aspect-title { color:#111827; font-size:11px; font-weight:700; line-height:1.3; }
     .acta-aspect-norm { color:#6B7280; font-size:9px; line-height:1.4; margin-top:2px; }
     .acta-aspectos-stack .acta-card { min-height:238px; height:auto; box-sizing:border-box; overflow:visible; }
