@@ -1046,9 +1046,21 @@ window.addEventListener('load', function() {
       .acta-programa { break-inside: auto; page-break-inside: auto; }
       /* Chrome/iOS puede ignorar break-inside en hijos de CSS Grid al paginar.
          El PDF usa flujo de bloques para que una tarjeta nunca se fragmente. */
-      .acta-criteria-grid,
+      .acta-criteria-grid {
+        display: block !important;
+        column-count: 2;
+        column-gap: 12px;
+        column-fill: auto;
+      }
       .acta-aspectos-stack { display: block !important; }
-      .acta-criterion-group { display: block; break-inside: auto; page-break-inside: auto; }
+      .acta-criterion-group {
+        display: inline-block;
+        width: 100%;
+        vertical-align: top;
+        margin: 0 0 12px;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
       .acta-criterion-title { break-after: avoid; page-break-after: avoid; }
       .acta-card { height: auto !important; min-height: 0 !important; }
       .acta-aspectos-stack { grid-template-columns: 1fr; align-items: start; }
