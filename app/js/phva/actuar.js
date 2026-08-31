@@ -693,7 +693,7 @@ const Actuar = (() => {
             <div class="acta-programa" style="margin-bottom:14px;">
               <div class="acta-programa-title">
                 ${programaIdx + 1}. ${_esc(p.nombre)}</div>
-              <div class="acta-criteria-grid">${criterios.map(({ base, criterioIdx, aspectos }) => `<section class="acta-criterion-group"><div class="acta-criterion-title">${programaIdx + 1}.${criterioIdx + 1} ${_esc(base.texto)}</div><div class="acta-aspectos-stack">${aspectos.map(a => tarjeta(a, `${programaIdx + 1}.${criterioIdx + 1}.${a.extraIdx == null ? 1 : a.extraIdx + 2}`)).join('')}</div></section>`).join('')}</div>
+              <div class="acta-criteria-grid">${criterios.map(({ base, criterioIdx, aspectos }) => `<section class="acta-criterion-group"><div class="acta-criterion-title">${programaIdx + 1}.${criterioIdx + 1} ${_esc(base.texto)}</div><div class="acta-aspectos-stack${aspectos.length > 1 ? ' has-consecutivos' : ''}">${aspectos.map(a => tarjeta(a, `${programaIdx + 1}.${criterioIdx + 1}.${a.extraIdx == null ? 1 : a.extraIdx + 2}`)).join('')}</div></section>`).join('')}</div>
             </div>`;
         }).join('')}
       </div>`;
@@ -1058,6 +1058,9 @@ window.addEventListener('load', function() {
         grid-template-columns: 1fr;
         gap: 8px;
         align-items: start;
+      }
+      .acta-aspectos-stack.has-consecutivos {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
       .acta-criterion-group {
         display: grid;
