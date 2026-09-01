@@ -76,6 +76,13 @@ const Actuar = (() => {
         </div>
         <button class="btn btn-outline" style="width:100%;min-height:36px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
           onclick="Actuar.editarFirmas()">${AppIcons.row('refresh', 'Editar firmas', 12)}</button>
+        <div style="display:flex;gap:var(--sp-sm);">
+          <button class="btn btn-outline" style="flex:1;min-height:36px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+            onclick="ScInformesUI.abrirMisInformes()">${AppIcons.row('fileText', 'Mis informes', 12)}</button>
+          ${typeof ScInformes !== 'undefined' && ScInformes.esAdmin() ? `
+          <button class="btn btn-outline" style="flex:1;min-height:36px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+            onclick="ScInformesUI.abrirAdmin()">${AppIcons.row('fileText', 'Panel admin', 12)}</button>` : ''}
+        </div>
       </div>
 
       <div id="acta-doc" style="background:#fff;padding:20px 20px 40px;">
@@ -826,6 +833,14 @@ const Actuar = (() => {
             <label class="form-label" for="empresa-${ft.key}">Empresa</label>
             <input class="form-input" id="empresa-${ft.key}" type="text" autocomplete="off"
               placeholder="Ej: ECODESA Ingeniería S.A.S" value="${_esc(datos?.empresa || '')}" style="margin-bottom:10px;">
+            <label class="form-label" for="sc-codigo-acceso">Código de acceso SaniCheck (respaldo en la nube, opcional)</label>
+            <input class="form-input" id="sc-codigo-acceso" type="text" autocomplete="off"
+              placeholder="Código entregado por tu administrador"
+              value="${_esc(typeof ScInformes !== 'undefined' ? ScInformes.getCodigo() : '')}" style="margin-bottom:4px;">
+            <div style="font-size:10px;color:var(--color-ink3);margin-bottom:10px;">
+              Si no tienes código, el Acta se guarda igual en este dispositivo. Con el código,
+              también queda respaldada en la nube y aparece en "Mis informes".
+            </div>
             ` : ''}
             <label class="form-label">Firma</label>
             <canvas id="firma-${ft.key}" style="width:100%;height:140px;border:1px dashed var(--color-border);
@@ -933,8 +948,22 @@ const Actuar = (() => {
   function abrirPDF() {
     const inspeccion = Store.getCurrentInspeccion();
     if (!inspeccion) { Router.toast('Sin inspección activa'); return; }
-    const win = window.open('', '_blank');
+    const win = window.open('', '_blank', 'noopener');
     if (!win) { Router.toast('Permite ventanas emergentes para generar el acta'); return; }
+    try { win.opener = null; } catch (e) {}
+    _generarActaHtmlCompleta(inspeccion).then(html => {
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+    });
+  }
+
+  /**
+   * Arma el documento HTML completo del Acta (con Chart.js incrustado para que
+   * funcione offline en la ventana emergente). Reutilizado por abrirPDF() y por
+   * el respaldo remoto en Supabase (guardarFirmas → ScInformes.guardarInforme).
+   */
+  function _generarActaHtmlCompleta(inspeccion) {
     const base = location.origin + location.pathname.replace(/\/[^\/]*$/, '/');
     const sorted = [...inspeccion.programas]
       .map(p => ({ nombre: _shortName(p.nombre), ...Scores.calcularPrograma(p) }))
@@ -946,11 +975,38 @@ const Actuar = (() => {
     const chartJsPromise = sorted.length
       ? fetch('assets/vendor/chart.umd.min.js').then(r => r.ok ? r.text() : '').catch(() => '')
       : Promise.resolve('');
-    chartJsPromise.then(chartJs => {
-      const html = _buildActaHTML(inspeccion, base, sorted, chartJs);
-      win.document.open();
-      win.document.write(html);
-      win.document.close();
+    return chartJsPromise.then(chartJs => _buildActaHTML(inspeccion, base, sorted, chartJs));
+  }
+
+  /**
+   * Respaldo en Supabase — se dispara en el mismo click de "Guardar firmas y
+   * generar Acta", sin bloquear el guardado local (Store.upsertInspeccion ya
+   * se ejecutó antes de llamar esta función). Si falla (sin red, código
+   * inválido, RPC caída) ScInformes.guardarInforme encola en su outbox y
+   * reintenta solo — nunca lanza ni bloquea la UI.
+   */
+  function _respaldarEnNube(inspeccion) {
+    if (typeof ScInformes === 'undefined') return;
+    const codigoInput = document.getElementById('sc-codigo-acceso');
+    const codigo = (codigoInput?.value || '').trim();
+    if (codigo) ScInformes.setCodigo(codigo);
+    if (!ScInformes.getCodigo()) return; // sin código: el técnico no pidió respaldo en la nube
+
+    _generarActaHtmlCompleta(inspeccion).then(html => {
+      return ScInformes.guardarInforme({
+        localId: inspeccion.id,
+        establecimiento: inspeccion.establecimiento,
+        fecha: inspeccion.inspeccion.fecha,
+        html,
+        numeroActa: inspeccion.numero_acta,
+      });
+    }).then(res => {
+      if (!res) return;
+      if (res.ok) Router.toast('Firmas guardadas · respaldado en la nube');
+      else if (res.encolado) Router.toast('Firmas guardadas · se respaldará cuando haya conexión');
+      else if (res.codigoInvalido) Router.toast('Firmas guardadas · código de acceso inválido, no se respaldó');
+    }).catch(() => {
+      // Nunca debe romper el flujo de guardado local por un fallo de red/backup.
     });
   }
 
@@ -1312,6 +1368,7 @@ window.addEventListener('load', function() {
     });
     Store.upsertInspeccion(inspeccion);
     _forceCaptura = false;
+    _respaldarEnNube(inspeccion); // lee #sc-codigo-acceso antes de que _refresh() lo reemplace
     Router.toast('Firmas guardadas');
     _refresh();
   }
