@@ -49,6 +49,9 @@ const Actuar = (() => {
         * { -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important; }
       }
+      /* La variante móvil solo se usa dentro del documento PDF generado. */
+      .acta-desktop-detail { display:block !important; }
+      .acta-mobile-detail { display:none !important; }
     `;
 
     return `
@@ -770,7 +773,9 @@ const Actuar = (() => {
             const datos = f[ft.key];
             return `
             <div style="text-align:center;">
-              ${datos?.firma ? `<img src="${datos.firma}" alt="Firma" style="height:50px;max-width:100%;object-fit:contain;display:block;margin:0 auto;">` : ''}
+              <div style="height:50px;display:flex;align-items:flex-end;justify-content:center;">
+                ${datos?.firma ? `<img src="${datos.firma}" alt="Firma" style="height:50px;max-width:100%;object-fit:contain;display:block;">` : ''}
+              </div>
               <div style="border-top:1.5px solid #111827;padding-top:8px;">
                 <div style="font-size:11px;font-weight:700;color:#111827;">${_esc(nombres[ft.key])}</div>
                 <div style="font-size:10px;color:#6B7280;margin-top:2px;">${ft.cargo}</div>
