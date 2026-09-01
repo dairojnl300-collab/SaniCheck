@@ -23,7 +23,7 @@ const Actuar = (() => {
     }
 
     const f = inspeccion.firmas || {};
-    const firmasCompletas = f.elaboro?.firma && f.elaboro?.cedula && f.presente?.firma && f.presente?.cedula;
+    const firmasCompletas = f.elaboro?.firma && f.elaboro?.cedula;
     if (!firmasCompletas || _forceCaptura) {
       return _renderCapturaFirmas(inspeccion);
     }
@@ -95,7 +95,7 @@ const Actuar = (() => {
     if (!inspeccion) return;
 
     const f = inspeccion.firmas || {};
-    const firmasCompletas = f.elaboro?.firma && f.elaboro?.cedula && f.presente?.firma && f.presente?.cedula;
+    const firmasCompletas = f.elaboro?.firma && f.elaboro?.cedula;
     if (!firmasCompletas || _forceCaptura) {
       FIRMANTES.forEach(ft => _bindFirmaCanvas(ft.key, f[ft.key]?.firma));
       return;
@@ -805,7 +805,7 @@ const Actuar = (() => {
           <div style="border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--sp-md);">
             <div style="font-weight:700;font-size:13px;color:var(--color-ink);">${_esc(nombres[ft.key])}</div>
             <div style="font-size:11px;color:var(--color-ink3);margin-bottom:10px;">${ft.cargo} · ${ft.rol}</div>
-            <label class="form-label" for="cedula-${ft.key}">Cédula</label>
+            <label class="form-label" for="cedula-${ft.key}">Cédula${ft.key === 'presente' ? ' (opcional)' : ''}</label>
             <input class="form-input" id="cedula-${ft.key}" type="text" inputmode="numeric" autocomplete="off"
               placeholder="Ej: 1047123456" value="${_esc(datos?.cedula || '')}" style="margin-bottom:10px;">
             ${ft.key === 'elaboro' ? `
@@ -825,6 +825,9 @@ const Actuar = (() => {
             <label class="form-label">Firma</label>
             <canvas id="firma-${ft.key}" style="width:100%;height:140px;border:1px dashed var(--color-border);
               border-radius:var(--radius-sm);background:#fff;touch-action:none;display:block;"></canvas>
+            <label class="form-label" for="firma-imagen-${ft.key}" style="margin-top:10px;">Agregar firma como imagen (opcional)</label>
+            <input id="firma-imagen-${ft.key}" type="file" accept="image/png,image/jpeg,image/webp"
+              class="form-input" style="padding:8px;" onchange="Actuar.cargarFirmaImagen('${ft.key}', this)">
             <button type="button" class="btn btn-outline" style="width:100%;margin-top:8px;"
               onclick="Actuar.limpiarFirma('${ft.key}')">${AppIcons.row('trash', 'Limpiar firma', 14)}</button>
           </div>`;
@@ -1248,13 +1251,35 @@ window.addEventListener('load', function() {
     if (_firmaState[key]) _firmaState[key].hasStroke = false;
   }
 
+  function cargarFirmaImagen(key, input) {
+    const file = input?.files?.[0];
+    const canvas = document.getElementById('firma-' + key);
+    if (!file || !canvas || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const ctx = canvas.getContext('2d');
+        const w = canvas.clientWidth || 600, h = canvas.clientHeight || 140;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const scale = Math.min(w / img.width, h / img.height);
+        const dw = img.width * scale, dh = img.height * scale;
+        ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+        _firmaData[key] = canvas.toDataURL('image/png');
+        _firmaState[key] = { hasStroke: true };
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
   function guardarFirmas() {
     const inspeccion = Store.getCurrentInspeccion();
     if (!inspeccion) return;
     const cedulas = {};
     for (const ft of FIRMANTES) {
       const val = (document.getElementById('cedula-' + ft.key)?.value || '').trim();
-      if (!/^[0-9]{5,15}$/.test(val)) {
+      if (ft.key === 'elaboro' && !/^[0-9]{5,15}$/.test(val)) {
         Router.toast('Cédula inválida (' + ft.cargo + ') — solo números, 5 a 15 dígitos');
         return;
       }
@@ -1265,11 +1290,9 @@ window.addEventListener('load', function() {
       Router.toast('Falta la empresa del Asesor externo');
       return;
     }
-    for (const ft of FIRMANTES) {
-      if (!_firmaData[ft.key] || !_firmaState[ft.key]?.hasStroke) {
-        Router.toast('Falta la firma de ' + ft.cargo);
-        return;
-      }
+    if (!_firmaData.elaboro || !_firmaState.elaboro?.hasStroke) {
+      Router.toast('Falta la firma de ' + FIRMANTES[0].cargo);
+      return;
     }
     inspeccion.firmas = {};
     FIRMANTES.forEach(ft => {
@@ -1320,5 +1343,5 @@ window.addEventListener('load', function() {
   }
 
 
-  return { render, attach, compartir, abrirPDF, limpiarFirma, guardarFirmas, editarFirmas, cancelarEdicionFirmas };
+  return { render, attach, compartir, abrirPDF, limpiarFirma, cargarFirmaImagen, guardarFirmas, editarFirmas, cancelarEdicionFirmas };
 })();
