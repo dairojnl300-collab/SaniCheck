@@ -25,6 +25,7 @@ const ASSET_PATHS = [
   'js/portal-config.js',
   'js/portal-cliente.js',
   'js/sc-informes-config.js',
+  'js/sc-informes-config.secrets.js',
   'js/sc-informes.js',
   'js/sc-informes-ui.js',
   'js/app.js',

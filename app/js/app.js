@@ -149,6 +149,12 @@
     const esDemo    = Licencias.esDemo();
     const limiteMax = Licencias.maxEstab();
     const topeFull  = esDemo && inspecciones.length >= limiteMax;
+    const informesHome = typeof ScInformesUI !== 'undefined' ? `
+        <div class="home-section-title">Informes guardados</div>
+        <button type="button" class="btn btn-outline" style="width:100%;min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+          onclick="ScInformesUI.abrirRegistroInformes()">
+          ${AppIcons.row('fileText', 'Registro de Informes', 14)}
+        </button>` : '';
 
     const phvaGrid = `<div class="phva-grid">${['P', 'H', 'V', 'A'].map(k => {
       const m = FASE_META[k];
@@ -160,42 +166,6 @@
         </div>
       </div>`;
     }).join('')}</div>`;
-
-    const lista = inspecciones.length === 0
-      ? `<div class="empty-state">
-           <div class="empty-state-icon" style="display:flex;justify-content:center;color:var(--color-ink3);">${AppIcons.block('clipboardList', 40)}</div>
-           <div class="empty-state-text">Aún no hay inspecciones registradas.<br>
-             Crea la primera con el botón de arriba.</div>
-         </div>`
-      : inspecciones.map(ins => {
-          const ev    = ins.programas.flatMap(p => p.aspectos.filter(a => a.evaluacion));
-          const total = ins.programas.flatMap(p => p.aspectos).length;
-          const pct   = total ? Math.round((ev.length / total) * 100) : 0;
-          const est   = ins.estado_general;
-          const barColor = ESTADO_COLOR[est] || 'var(--color-border)';
-          return `<div class="inspeccion-card card-fixed-md" style="border-left-color:${barColor}" onclick="_abrirInsp('${ins.id}')">
-            <div class="inspeccion-card-header">
-              <div class="inspeccion-card-nombre card-text-clamp card-text-clamp-2">${_esc(ins.establecimiento.nombre)}</div>
-              <div class="inspeccion-card-fecha">${ins.inspeccion.fecha}</div>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-              <span class="inspeccion-card-meta">
-                ${_esc(ins.establecimiento.tipo)} · ${ev.length} aspectos evaluados</span>
-              ${est
-                ? `<span class="estado-chip estado-${est}">${{B:'BUENO',R:'REGULAR',D:'DEFICIENTE'}[est]}</span>`
-                : `<span style="font-size:10px;color:var(--color-ink3)">En progreso</span>`}
-            </div>
-            <div class="inspeccion-card-progress">
-              <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-            </div>
-            <button type="button" onclick="event.stopPropagation();_pedirEliminarInsp('${ins.id}')"
-              style="margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;
-                padding:8px;border:1px solid rgba(163,45,45,0.25);border-radius:var(--radius-md);
-                background:rgba(163,45,45,0.06);color:var(--color-deficiente);font-size:11px;font-weight:600;cursor:pointer;">
-              ${TRASH_ICON} Eliminar
-            </button>
-          </div>`;
-        }).join('');
 
     return `
       <div class="home-hero">
@@ -219,8 +189,7 @@
         </button>
         <div class="home-section-title">Fases del proceso</div>
         ${phvaGrid}
-        <div class="home-section-title">Inspecciones</div>
-        ${lista}
+        ${informesHome}
         <button type="button" onclick="Router.go('about')"
           style="margin-top:var(--sp-lg);width:100%;padding:12px;
             background:transparent;border:1px dashed var(--color-border);
@@ -266,6 +235,7 @@
     Store.bindLifecycleFlush();
     await Store.recoverFromIdb();
     SwUpdate.init();
+    if (typeof ScInformes !== 'undefined') ScInformes.bindAutoRetry();
     if (typeof PortalCliente !== 'undefined') PortalCliente.bindOnlineRetry();
     if (typeof VencimientosV2 !== 'undefined') {
       VencimientosV2.loadCatalog().catch(() => {});
@@ -282,6 +252,9 @@
       const screens = ['home', 'about', 'planificar', 'personalizar', 'hacer', 'verificar', 'dashboard', 'actuar'];
       const screen  = screens.includes(ui.screen) ? ui.screen : 'home';
       Router.go(screen);
+      if (typeof ScInformesUI !== 'undefined' && ScInformesUI.iniciarSesionAutomatica) {
+        setTimeout(() => ScInformesUI.iniciarSesionAutomatica().catch(() => {}), 0);
+      }
     } else {
       Router.go('licencia');
     }

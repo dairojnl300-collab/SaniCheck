@@ -98,6 +98,28 @@ const ScInformes = (() => {
     }
   }
 
+  async function loginUsuario(usuario, password) {
+    const rows = await _rpc('sc_login_usuario', {
+      p_usuario: String(usuario || '').trim().toLowerCase(),
+      p_password: String(password || ''),
+    });
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    if (!row || !row.id || !row.codigo_acceso) return null;
+    setCodigo(row.codigo_acceso);
+    const sesion = { id: row.id, nombre: row.nombre, rol: row.rol, usuario: row.usuario };
+    _setSesionCache(sesion);
+    return sesion;
+  }
+
+  async function configurarPasswordInicial(usuario, codigo, password) {
+    const rows = await _rpc('sc_configurar_password_inicial', {
+      p_usuario: String(usuario || '').trim().toLowerCase(),
+      p_codigo: String(codigo || '').trim().toUpperCase(),
+      p_password: String(password || ''),
+    });
+    return Array.isArray(rows) ? rows[0] : rows;
+  }
+
   function esAdmin() {
     const s = getSesionCache();
     return !!(s && s.rol === 'admin');
@@ -124,24 +146,35 @@ const ScInformes = (() => {
 
   function _idbTx(mode, fn) {
     return _openIdb().then(db => {
-      if (!db) return null;
+      if (!db) {
+        const error = new Error('IndexedDB no está disponible en este dispositivo');
+        error.code = 'IDB_UNAVAILABLE';
+        throw error;
+      }
       return new Promise((resolve, reject) => {
         const tx = db.transaction(IDB_STORE, mode);
         const store = tx.objectStore(IDB_STORE);
         let out;
         try { out = fn(store); } catch (e) { reject(e); return; }
         tx.oncomplete = () => resolve(out);
-        tx.onerror    = () => reject(tx.error);
+        tx.onerror    = () => reject(tx.error || new Error('La transacción de IndexedDB falló'));
+        tx.onabort    = () => reject(tx.error || new Error('La transacción de IndexedDB fue cancelada'));
       });
     });
   }
 
   function _idbPut(rec) {
-    return _idbTx('readwrite', store => store.put(rec)).catch(e => console.warn('[ScInformes] outbox put', e));
+    return _idbTx('readwrite', store => store.put(rec)).then(() => true).catch(e => {
+      console.warn('[ScInformes] outbox put', e);
+      throw e;
+    });
   }
 
   function _idbDelete(localId) {
-    return _idbTx('readwrite', store => store.delete(localId)).catch(e => console.warn('[ScInformes] outbox delete', e));
+    return _idbTx('readwrite', store => store.delete(localId)).then(() => true).catch(e => {
+      console.warn('[ScInformes] outbox delete', e);
+      throw e;
+    });
   }
 
   function _idbGetAll() {
@@ -153,7 +186,7 @@ const ScInformes = (() => {
         req.onsuccess = () => resolve(req.result || []);
         req.onerror   = () => reject(req.error);
       });
-    }).catch(() => []);
+    });
   }
 
   function encolarPendiente(payload) {
@@ -182,6 +215,10 @@ const ScInformes = (() => {
             p_html: rec.html,
             p_local_id: rec.local_id,
             p_numero_acta: rec.numero_acta || null,
+            p_nivel_cumplimiento: rec.nivel_cumplimiento || null,
+            p_aspectos_evaluados: Number.isFinite(rec.aspectos_evaluados) ? rec.aspectos_evaluados : null,
+            p_aspectos_total: Number.isFinite(rec.aspectos_total) ? rec.aspectos_total : null,
+            p_porcentaje_cumplimiento: Number.isFinite(rec.porcentaje_cumplimiento) ? rec.porcentaje_cumplimiento : null,
           });
           await _idbDelete(rec.local_id);
           n++;
@@ -210,7 +247,8 @@ const ScInformes = (() => {
 
   /**
    * payload: { localId, establecimiento, fecha, html, numeroActa }
-   * No lanza: si falla, encola en el outbox y retorna { ok:false, encolado:true }.
+   * No bloquea el guardado local: si falla, intenta encolar y solo confirma
+   * `encolado` después de que IndexedDB complete la transacción.
    */
   async function guardarInforme(payload) {
     const codigo = getCodigo();
@@ -223,6 +261,10 @@ const ScInformes = (() => {
       p_html: payload.html,
       p_local_id: payload.localId || null,
       p_numero_acta: payload.numeroActa || null,
+      p_nivel_cumplimiento: payload.nivelCumplimiento || null,
+      p_aspectos_evaluados: Number.isFinite(payload.aspectosEvaluados) ? payload.aspectosEvaluados : null,
+      p_aspectos_total: Number.isFinite(payload.aspectosTotal) ? payload.aspectosTotal : null,
+      p_porcentaje_cumplimiento: Number.isFinite(payload.porcentajeCumplimiento) ? payload.porcentajeCumplimiento : null,
     };
     try {
       const id = await _rpc('sc_guardar_informe', params);
@@ -232,15 +274,29 @@ const ScInformes = (() => {
       if (/código de acceso inválido/i.test(e.message || '')) {
         return { ok: false, codigoInvalido: true };
       }
-      await encolarPendiente({
+      const pendiente = {
         local_id: payload.localId || ('sc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)),
         codigo,
         establecimiento: payload.establecimiento || {},
         fecha: payload.fecha,
         html: payload.html,
         numero_acta: payload.numeroActa || null,
-      });
-      return { ok: false, encolado: true, error: e.message };
+        nivel_cumplimiento: payload.nivelCumplimiento || null,
+        aspectos_evaluados: Number.isFinite(payload.aspectosEvaluados) ? payload.aspectosEvaluados : null,
+        aspectos_total: Number.isFinite(payload.aspectosTotal) ? payload.aspectosTotal : null,
+        porcentaje_cumplimiento: Number.isFinite(payload.porcentajeCumplimiento) ? payload.porcentajeCumplimiento : null,
+      };
+      try {
+        await encolarPendiente(pendiente);
+        return { ok: false, encolado: true, error: e.message };
+      } catch (outboxError) {
+        return {
+          ok: false,
+          outboxUnavailable: true,
+          error: e.message,
+          outboxError: outboxError.message,
+        };
+      }
     }
   }
 
@@ -274,10 +330,24 @@ const ScInformes = (() => {
     return _rpc('sc_delete_admin_informe', { p_id: id, p_codigo: getCodigo() });
   }
 
+  function listUsuarios() { return _rpc('sc_list_usuarios', { p_codigo_admin: getCodigo() }); }
+  function crearUsuario(datos) {
+    return _rpc('sc_crear_usuario', { p_codigo_admin: getCodigo(), p_nombre: datos.nombre,
+      p_usuario: datos.usuario, p_rol: datos.rol, p_password: datos.password });
+  }
+  function eliminarUsuario(id) {
+    return _rpc('sc_eliminar_usuario', { p_codigo_admin: getCodigo(), p_id: id });
+  }
+  function cambiarPassword(password) {
+    return _rpc('sc_cambiar_password', { p_codigo: getCodigo(), p_password: String(password || '') });
+  }
+
   return {
-    getCodigo, setCodigo, clearSesion, getSesionCache, whoami, esAdmin,
+    getCodigo, setCodigo, clearSesion, getSesionCache, whoami, loginUsuario,
+    configurarPasswordInicial, esAdmin, eliminarUsuario, cambiarPassword,
     guardarInforme, flushPendientes, bindAutoRetry, encolarPendiente,
     listMisInformes, getInforme, updateInforme, deleteInforme,
     listAdminInformes, getAdminInforme, updateAdminInforme, deleteAdminInforme,
+    listUsuarios, crearUsuario,
   };
 })();

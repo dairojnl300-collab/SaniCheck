@@ -36,7 +36,8 @@
   --color-muted:      var(--ink-40);
   --color-border:     var(--line);
   --color-bueno:      #065F46;
-  --color-regular:    #92400E;
+  /* Regular uses the same orange as the Acta and its compliance summary. */
+  --color-regular:    #F57C00;
   --color-deficiente: #991B1B;
   --color-bueno-bg:   #D1FAE5;
   --color-regular-bg: #FEF3C7;
@@ -225,6 +226,10 @@ a { color: inherit; text-decoration: none; }
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.22);
   color: #FFFFFF;
+}
+
+@media (max-width: 390px) {
+  #btn-ajustes-top { padding-inline: 7px; font-size: 10px; }
 }
 
 /* Bottom tab bar */

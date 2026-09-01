@@ -181,14 +181,14 @@ END; $$;
 
 DROP FUNCTION IF EXISTS public.sc_list_mis_informes(text);
 CREATE OR REPLACE FUNCTION public.sc_list_mis_informes(p_codigo text)
-RETURNS TABLE(id uuid, establecimiento jsonb, fecha date, numero_acta text,
+RETURNS TABLE(id uuid, local_id text, establecimiento jsonb, fecha date, numero_acta text,
               creado_en timestamptz, actualizado_en timestamptz)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE v_actor sc_usuarios;
 BEGIN
   v_actor := sc_resolver_actor(p_codigo);
   RETURN QUERY
-    SELECT i.id, i.establecimiento, i.fecha, i.numero_acta, i.creado_en, i.actualizado_en
+    SELECT i.id, i.local_id, i.establecimiento, i.fecha, i.numero_acta, i.creado_en, i.actualizado_en
     FROM sc_informes i
     WHERE i.tecnico_id = v_actor.id
     ORDER BY i.creado_en DESC;
@@ -196,14 +196,14 @@ END; $$;
 
 DROP FUNCTION IF EXISTS public.sc_get_informe(uuid, text);
 CREATE OR REPLACE FUNCTION public.sc_get_informe(p_id uuid, p_codigo text)
-RETURNS TABLE(id uuid, establecimiento jsonb, fecha date, numero_acta text, informe_html text,
+RETURNS TABLE(id uuid, local_id text, establecimiento jsonb, fecha date, numero_acta text, informe_html text,
               creado_en timestamptz, actualizado_en timestamptz)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE v_actor sc_usuarios;
 BEGIN
   v_actor := sc_resolver_actor(p_codigo);
   RETURN QUERY
-    SELECT i.id, i.establecimiento, i.fecha, i.numero_acta, i.informe_html, i.creado_en, i.actualizado_en
+    SELECT i.id, i.local_id, i.establecimiento, i.fecha, i.numero_acta, i.informe_html, i.creado_en, i.actualizado_en
     FROM sc_informes i
     WHERE i.id = p_id AND i.tecnico_id = v_actor.id;
   IF NOT FOUND THEN RAISE EXCEPTION 'Informe no encontrado'; END IF;
@@ -238,7 +238,7 @@ END; $$;
 
 DROP FUNCTION IF EXISTS public.sc_list_admin_informes(text);
 CREATE OR REPLACE FUNCTION public.sc_list_admin_informes(p_codigo text)
-RETURNS TABLE(id uuid, tecnico_id uuid, tecnico_nombre text, establecimiento jsonb,
+RETURNS TABLE(id uuid, local_id text, tecnico_id uuid, tecnico_nombre text, establecimiento jsonb,
               fecha date, numero_acta text, creado_en timestamptz, actualizado_en timestamptz)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE v_actor sc_usuarios;
@@ -247,7 +247,7 @@ BEGIN
   IF v_actor.rol <> 'admin' THEN RAISE EXCEPTION 'Acceso denegado'; END IF;
 
   RETURN QUERY
-    SELECT i.id, i.tecnico_id, u.nombre, i.establecimiento, i.fecha, i.numero_acta, i.creado_en, i.actualizado_en
+    SELECT i.id, i.local_id, i.tecnico_id, u.nombre, i.establecimiento, i.fecha, i.numero_acta, i.creado_en, i.actualizado_en
     FROM sc_informes i
     JOIN sc_usuarios u ON u.id = i.tecnico_id
     ORDER BY i.creado_en DESC;
@@ -258,7 +258,7 @@ END; $$;
 -- filtro tecnico_id) — análogo a ra_get_admin_dashboard_html en ProyeCar.
 DROP FUNCTION IF EXISTS public.sc_get_admin_informe(uuid, text);
 CREATE OR REPLACE FUNCTION public.sc_get_admin_informe(p_id uuid, p_codigo text)
-RETURNS TABLE(id uuid, tecnico_id uuid, tecnico_nombre text, establecimiento jsonb, fecha date,
+RETURNS TABLE(id uuid, local_id text, tecnico_id uuid, tecnico_nombre text, establecimiento jsonb, fecha date,
               numero_acta text, informe_html text, creado_en timestamptz, actualizado_en timestamptz)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE v_actor sc_usuarios;
@@ -267,7 +267,7 @@ BEGIN
   IF v_actor.rol <> 'admin' THEN RAISE EXCEPTION 'Acceso denegado'; END IF;
 
   RETURN QUERY
-    SELECT i.id, i.tecnico_id, u.nombre, i.establecimiento, i.fecha, i.numero_acta, i.informe_html, i.creado_en, i.actualizado_en
+    SELECT i.id, i.local_id, i.tecnico_id, u.nombre, i.establecimiento, i.fecha, i.numero_acta, i.informe_html, i.creado_en, i.actualizado_en
     FROM sc_informes i
     JOIN sc_usuarios u ON u.id = i.tecnico_id
     WHERE i.id = p_id;

@@ -1,5 +1,19 @@
 # Entrega de Carlos — Respaldo Supabase de informes (Actuar)
 
+## Estado vigente — 2026-09-01
+
+Implementación local lista para revisión/aplicación remota, sin commit, push ni cambios en Supabase.
+
+- Primer ingreso, creación y cambio de contraseña: exactamente 4 dígitos numéricos, con hash `pgcrypto`.
+- Migración auth idempotente: configuración inicial, cambio de contraseña, alta y baja lógica; los informes no se eliminan.
+- `sc_list_usuarios` muestra únicamente usuarios activos; el usuario nuevo se genera desde el nombre completo.
+- Ver/PDF se muestra dentro de la app mediante overlay e iframe `sandbox`/`srcdoc`; el HTML no confiable no se escribe en la ventana principal.
+- Las respuestas RPC incluyen `local_id` para conservar la edición local en Hacer; el outbox se inicializa al arrancar.
+- Validado: `node --check` de archivos afectados, contrato local de contraseña/RPC/visor, pruebas focalizadas Vencimientos v2 y prueba manual local Home/Hacer/Ver-PDF.
+- Bloqueos: falta aplicar las migraciones en Supabase y validar el flujo transaccional contra la base remota; la suite completa mantiene 3 fallos preexistentes por el fixture ausente `app/data/invima-checklist-base-v1.0.json`.
+
+El contenido restante de este documento conserva el contexto histórico de la integración original.
+
 **Estado:** PARCIAL (código completo en la rama; falta aplicar la migración SQL y configurar credenciales reales — ninguna de las dos cosas las puedo hacer yo)
 **Rama:** `feature/sc-informes-backup-supabase`
 **PR:** https://github.com/dairojnl300-collab/SaniCheck/pull/20 (draft — **no mergear**, el merge lo hace Dairo)

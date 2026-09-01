@@ -26,6 +26,15 @@ const About = (() => {
         <div class="card" style="padding:var(--sp-md);margin-bottom:var(--sp-md);">
           <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);
             text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--sp-sm);">
+            Sesión de Registro de Informes</div>
+          <div id="about-sc-session-body" style="font-size:var(--text-sm);color:var(--color-ink2);">
+            Consultando sesión…
+          </div>
+        </div>
+
+        <div class="card" style="padding:var(--sp-md);margin-bottom:var(--sp-md);">
+          <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);
+            text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--sp-sm);">
             Actualizaciones</div>
           <div id="about-update-info" style="font-size:var(--text-sm);color:var(--color-ink2);margin-bottom:var(--sp-md);">
             Verificando estado…
@@ -82,6 +91,8 @@ const About = (() => {
     const reloadBtn = document.getElementById('about-reload-btn');
     if (!cacheEl) return;
 
+    _renderScSession();
+
     const info    = await SwUpdate.getActiveInfo();
     const pending = SwUpdate.getPendingVersion();
 
@@ -121,6 +132,55 @@ const About = (() => {
 
     _renderPortal();
     _renderSwDiagnostic();
+  }
+
+  function _renderScSession() {
+    const el = document.getElementById('about-sc-session-body');
+    if (!el) return;
+
+    const sesion = typeof ScInformes !== 'undefined' ? ScInformes.getSesionCache() : null;
+    const activo = sesion && sesion.usuario && ScInformes.getCodigo();
+    if (!activo) {
+      el.innerHTML = `
+        <p style="margin:0 0 12px;line-height:1.55;color:var(--color-ink2);">
+          No hay una sesión activa de Registro de Informes.
+        </p>
+        <button type="button" class="btn btn-primary" style="width:100%;"
+          onclick="ScInformesUI.abrirRegistroInformes()">
+          Ingresar a Registro de Informes
+        </button>`;
+      return;
+    }
+
+    const rol = sesion.rol === 'admin' ? 'admin' : 'profesional';
+    el.innerHTML = `
+      <div style="padding:10px 12px;margin-bottom:12px;background:var(--wash-a,#EFF9F5);
+        border:1px solid var(--color-border);border-radius:var(--radius-md);color:var(--color-ink);">
+        Sesión: <strong>${_esc(sesion.nombre)}</strong> · ${rol}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn btn-outline" style="flex:1 1 180px;"
+          onclick="About.cambiarPasswordInformes()">
+          Cambiar contraseña
+        </button>
+        <button type="button" class="btn btn-primary" style="flex:1 1 150px;"
+          onclick="About.cerrarSesionInformes()">
+          Cerrar sesión
+        </button>
+      </div>`;
+  }
+
+  function cambiarPasswordInformes() {
+    if (typeof ScInformesUI !== 'undefined' && ScInformesUI.abrirCambiarPassword) {
+      ScInformesUI.abrirCambiarPassword();
+    }
+  }
+
+  function cerrarSesionInformes() {
+    if (typeof ScInformesUI !== 'undefined' && ScInformesUI.cerrarSesion) {
+      ScInformesUI.cerrarSesion();
+    }
+    _renderScSession();
   }
 
   async function _renderSwDiagnostic() {
@@ -309,6 +369,8 @@ const About = (() => {
     render,
     attach,
     buscarActualizacion,
+    cambiarPasswordInformes,
+    cerrarSesionInformes,
     activarPortal,
     restablecerPortal,
     copiarCodigoPortal,

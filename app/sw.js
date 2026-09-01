@@ -1,7 +1,7 @@
 // Service Worker — SaniCheck — Offline-first completo
 
-const APP_VERSION = '4.13.0';
-const BUILD_HASH = '990e8234e227';
+const APP_VERSION = '4.13.1';
+const BUILD_HASH = 'be4d067123d7';
 const CACHE = 'sanicheck-' + BUILD_HASH;
 
 const ASSETS = [
@@ -18,6 +18,7 @@ const ASSETS = [
   './js/sw-update.js',
   './js/portal-config.js',
   './js/portal-cliente.js',
+  './js/sc-informes-config.secrets.js',
   './js/sc-informes-config.js',
   './js/sc-informes.js',
   './js/sc-informes-ui.js',
@@ -26,20 +27,19 @@ const ASSETS = [
   './js/app.js',
   './js/logic/psb-data.js',
   './js/logic/checklist-config.js',
-  './js/logic/diagnostico-inicial.js',
   './js/logic/vencimientos.js',
+  './js/logic/vencimientos-storage.js',
+  './js/logic/vencimientos-v2-crud.js',
   './js/logic/observaciones.js',
   './js/logic/scores.js',
   './js/logic/hallazgos.js',
   './js/logic/fotos.js',
-  './js/logic/dadis-scoring.js',
   './js/phva/planificar.js',
   './js/phva/personalizar.js',
   './js/phva/hacer.js',
   './js/phva/verificar.js',
-  './js/phva/actuar.js?v=4.13.0',
-  './js/screens/dadis-simulador.js',
-  './data/dadis-config.json',
+  './js/phva/vencimientos-dashboard.js',
+  './js/phva/actuar.js?v=4.13.1',
   './assets/vendor/chart.umd.min.js',
   './assets/icons/favicon.png',
   './assets/icons/icon-192.png',

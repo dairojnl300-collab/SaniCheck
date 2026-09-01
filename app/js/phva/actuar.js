@@ -63,8 +63,8 @@ const Actuar = (() => {
           text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;display:flex;align-items:center;gap:6px;">
           ${AppIcons.icon('fileText', 12)} ${_esc(inspeccion.numero_acta)} · ${_esc(inspeccion.establecimiento.nombre)}</div>
         <div style="display:flex;gap:var(--sp-sm);">
-          <button class="btn btn-primary" style="flex:1;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
-            onclick="Actuar.abrirPDF()">${AppIcons.row('download', 'DESCARGAR PDF', 14)}</button>
+          <button class="btn btn-primary" data-acta-guardar-pdf style="flex:1;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+            onclick="Actuar.guardarPDF()">${AppIcons.row('fileText', 'GUARDAR PDF', 14)}</button>
           <button class="btn btn-accent" style="flex:1;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
             onclick="Actuar.compartir()">${AppIcons.row('share', 'COMPARTIR', 14)}</button>
         </div>
@@ -76,13 +76,6 @@ const Actuar = (() => {
         </div>
         <button class="btn btn-outline" style="width:100%;min-height:36px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
           onclick="Actuar.editarFirmas()">${AppIcons.row('refresh', 'Editar firmas', 12)}</button>
-        <div style="display:flex;gap:var(--sp-sm);">
-          <button class="btn btn-outline" style="flex:1;min-height:36px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
-            onclick="ScInformesUI.abrirMisInformes()">${AppIcons.row('fileText', 'Mis informes', 12)}</button>
-          ${typeof ScInformes !== 'undefined' && ScInformes.esAdmin() ? `
-          <button class="btn btn-outline" style="flex:1;min-height:36px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
-            onclick="ScInformesUI.abrirAdmin()">${AppIcons.row('fileText', 'Panel admin', 12)}</button>` : ''}
-        </div>
       </div>
 
       <div id="acta-doc" style="background:#fff;padding:20px 20px 40px;">
@@ -833,14 +826,6 @@ const Actuar = (() => {
             <label class="form-label" for="empresa-${ft.key}">Empresa</label>
             <input class="form-input" id="empresa-${ft.key}" type="text" autocomplete="off"
               placeholder="Ej: ECODESA Ingeniería S.A.S" value="${_esc(datos?.empresa || '')}" style="margin-bottom:10px;">
-            <label class="form-label" for="sc-codigo-acceso">Código de acceso SaniCheck (respaldo en la nube, opcional)</label>
-            <input class="form-input" id="sc-codigo-acceso" type="text" autocomplete="off"
-              placeholder="Código entregado por tu administrador"
-              value="${_esc(typeof ScInformes !== 'undefined' ? ScInformes.getCodigo() : '')}" style="margin-bottom:4px;">
-            <div style="font-size:10px;color:var(--color-ink3);margin-bottom:10px;">
-              Si no tienes código, el Acta se guarda igual en este dispositivo. Con el código,
-              también queda respaldada en la nube y aparece en "Mis informes".
-            </div>
             ` : ''}
             <label class="form-label">Firma</label>
             <canvas id="firma-${ft.key}" style="width:100%;height:140px;border:1px dashed var(--color-border);
@@ -959,6 +944,50 @@ const Actuar = (() => {
   }
 
   /**
+   * Guarda o actualiza el acta en Registro de Informes sin abrir ventanas.
+   * El Registro conserva el HTML completo y ofrece allí la opción Ver / PDF
+   * para imprimirlo o descargarlo desde el visor seguro.
+   */
+  async function guardarPDF() {
+    const inspeccion = Store.getCurrentInspeccion();
+    if (!inspeccion) { Router.toast('Sin inspección activa'); return; }
+
+    if (typeof ScInformes === 'undefined') {
+      Router.toast('Registro de Informes no está disponible');
+      return;
+    }
+
+    const sesion = ScInformes.getSesionCache && ScInformes.getSesionCache();
+    if (!sesion?.usuario || !ScInformes.getCodigo()) {
+      Router.toast('Inicia sesión para guardar el PDF en Registro de Informes');
+      if (typeof ScInformesUI !== 'undefined' && ScInformesUI.abrirRegistroInformes) {
+        ScInformesUI.abrirRegistroInformes();
+      }
+      return;
+    }
+
+    const btn = document.querySelector('[data-acta-guardar-pdf]');
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; btn.textContent = 'Guardando…'; }
+    try {
+      const html = await _generarActaHtmlCompleta(inspeccion);
+      const res = await ScInformes.guardarInforme(_crearPayloadInforme(inspeccion, html));
+      if (res.ok) Router.toast('PDF guardado en Registro de Informes');
+      else if (res.encolado) Router.toast('PDF guardado localmente · se sincronizará en Registro de Informes');
+      else if (res.outboxUnavailable) Router.toast('No se pudo respaldar el PDF en Registro de Informes');
+      else if (res.codigoInvalido) Router.toast('La sesión expiró; inicia sesión nuevamente');
+      else Router.toast('No se pudo guardar el PDF en Registro de Informes');
+    } catch (e) {
+      Router.toast('No se pudo guardar el PDF en Registro de Informes');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = '';
+        btn.innerHTML = AppIcons.row('fileText', 'GUARDAR PDF', 14);
+      }
+    }
+  }
+
+  /**
    * Arma el documento HTML completo del Acta (con Chart.js incrustado para que
    * funcione offline en la ventana emergente). Reutilizado por abrirPDF() y por
    * el respaldo remoto en Supabase (guardarFirmas → ScInformes.guardarInforme).
@@ -987,27 +1016,51 @@ const Actuar = (() => {
    */
   function _respaldarEnNube(inspeccion) {
     if (typeof ScInformes === 'undefined') return;
-    const codigoInput = document.getElementById('sc-codigo-acceso');
-    const codigo = (codigoInput?.value || '').trim();
-    if (codigo) ScInformes.setCodigo(codigo);
-    if (!ScInformes.getCodigo()) return; // sin código: el técnico no pidió respaldo en la nube
+    const sesion = ScInformes.getSesionCache && ScInformes.getSesionCache();
+    if (!sesion?.usuario || !ScInformes.getCodigo()) return; // sin sesión: solo guardado local
+
+    const score = Scores.calcular(inspeccion);
+    const aspectosTotal = (inspeccion.programas || []).reduce((total, programa) => total
+      + (programa.aspectos || []).reduce((subtotal, aspecto) => subtotal + 1 + (aspecto.criterios_extra || []).length, 0), 0);
+    const nivelCumplimiento = score.total ? ({ B: 'BUENO', R: 'REGULAR', D: 'DEFICIENTE' }[Scores.getEstado(score.pct_cumplimiento)] || null) : null;
 
     _generarActaHtmlCompleta(inspeccion).then(html => {
-      return ScInformes.guardarInforme({
-        localId: inspeccion.id,
-        establecimiento: inspeccion.establecimiento,
-        fecha: inspeccion.inspeccion.fecha,
-        html,
-        numeroActa: inspeccion.numero_acta,
-      });
+      return ScInformes.guardarInforme(_crearPayloadInforme(inspeccion, html, {
+        nivelCumplimiento,
+        aspectosEvaluados: score.total,
+        aspectosTotal,
+        porcentajeCumplimiento: score.pct_cumplimiento,
+      }));
     }).then(res => {
       if (!res) return;
       if (res.ok) Router.toast('Firmas guardadas · respaldado en la nube');
       else if (res.encolado) Router.toast('Firmas guardadas · se respaldará cuando haya conexión');
+      else if (res.outboxUnavailable) Router.toast('Firmas guardadas localmente · no se pudo asegurar el respaldo remoto');
       else if (res.codigoInvalido) Router.toast('Firmas guardadas · código de acceso inválido, no se respaldó');
     }).catch(() => {
       // Nunca debe romper el flujo de guardado local por un fallo de red/backup.
     });
+  }
+
+  function _crearPayloadInforme(inspeccion, html, metadata = null) {
+    const score = metadata || Scores.calcular(inspeccion);
+    const aspectosTotal = metadata?.aspectosTotal ?? (inspeccion.programas || []).reduce((total, programa) => total
+      + (programa.aspectos || []).reduce((subtotal, aspecto) => subtotal + 1 + (aspecto.criterios_extra || []).length, 0), 0);
+    const nivelCumplimiento = metadata?.nivelCumplimiento ?? (score.total
+      ? ({ B: 'BUENO', R: 'REGULAR', D: 'DEFICIENTE' }[Scores.getEstado(score.pct_cumplimiento)] || null)
+      : null);
+
+    return {
+      localId: inspeccion.id,
+      establecimiento: inspeccion.establecimiento,
+      fecha: inspeccion.inspeccion.fecha,
+      html,
+      numeroActa: inspeccion.numero_acta,
+      nivelCumplimiento,
+      aspectosEvaluados: metadata?.aspectosEvaluados ?? score.total,
+      aspectosTotal,
+      porcentajeCumplimiento: metadata?.porcentajeCumplimiento ?? score.pct_cumplimiento,
+    };
   }
 
   function _buildActaHTML(inspeccion, base, sorted, chartJs) {
@@ -1368,7 +1421,7 @@ window.addEventListener('load', function() {
     });
     Store.upsertInspeccion(inspeccion);
     _forceCaptura = false;
-    _respaldarEnNube(inspeccion); // lee #sc-codigo-acceso antes de que _refresh() lo reemplace
+    _respaldarEnNube(inspeccion); // usa la sesión iniciada, sin pedir código en Firmas
     Router.toast('Firmas guardadas');
     _refresh();
   }
@@ -1405,5 +1458,5 @@ window.addEventListener('load', function() {
   }
 
 
-  return { render, attach, compartir, abrirPDF, limpiarFirma, cargarFirmaImagen, guardarFirmas, editarFirmas, cancelarEdicionFirmas };
+  return { render, attach, compartir, abrirPDF, guardarPDF, limpiarFirma, cargarFirmaImagen, guardarFirmas, editarFirmas, cancelarEdicionFirmas };
 })();
