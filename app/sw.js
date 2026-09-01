@@ -1,7 +1,7 @@
 // Service Worker — SaniCheck — Offline-first completo
 
 const APP_VERSION = '4.12.13';
-const BUILD_HASH = '16c2c4582e4f';
+const BUILD_HASH = 'e5646c96142c';
 const CACHE = 'sanicheck-' + BUILD_HASH;
 
 const ASSETS = [
