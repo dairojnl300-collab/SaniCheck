@@ -2,7 +2,6 @@
 .env
 .env.local
 app/js/portal-config.secrets.js
-app/js/sc-informes-config.secrets.js
 *.log
 .DS_Store
 .vscode/
