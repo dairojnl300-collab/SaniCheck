@@ -1,62 +1,106 @@
 # Entrega de Carlos — Respaldo Supabase de informes (Actuar)
 
-**Estado:** BLOQUEADA (parcial: diseño SQL entregado, sin aplicar; sin cambios de cliente)
-**Rama:** `feature/sc-informes-backup-supabase` (no mergear a main/master; el merge lo hace Dairo)
-**Tarea origen:** respaldo remoto del informe/Acta generado en el flujo Actuar → `guardarFirmas()`, para que un informe nunca vuelva a perderse por vivir solo en IndexedDB.
+**Estado:** PARCIAL (código completo en la rama; falta aplicar la migración SQL y configurar credenciales reales — ninguna de las dos cosas las puedo hacer yo)
+**Rama:** `feature/sc-informes-backup-supabase`
+**PR:** https://github.com/dairojnl300-collab/SaniCheck/pull/20 (draft — **no mergear**, el merge lo hace Dairo)
 
 ## Paso 0 — Handler localizado
 
-El botón "Guardar"/"Generar informe" no existe con ese texto literal. El punto equivalente en el código es:
+No existe un botón "Guardar"/"Generar informe" con ese texto literal. El punto real es:
+`app/js/phva/actuar.js` → botón "Guardar firmas y generar Acta" → `Actuar.guardarFirmas()`. Ese es el único lugar donde se conectó el respaldo (mismo click, mismo handler, sin paso nuevo obligatorio).
 
-- `app/js/phva/actuar.js:841` — botón "Guardar firmas y generar Acta" → `Actuar.guardarFirmas()` (línea 1281).
-- `guardarFirmas()` valida firmas/cédulas, llama `Store.upsertInspeccion(inspeccion)` (persiste en localStorage + mirror IndexedDB vía `app/js/store.js`) y es el momento en que el Acta queda "generada" (lista para `abrirPDF()` en línea 933, que arma el HTML completo con `_buildActaHTML()`).
-- Éste es el handler donde debía enchufarse `sc_guardar_informe`, en el mismo click, sin botón nuevo.
+## Decisión de identidad (por qué no hay pantalla de login nueva)
 
-## Por qué no se conectó (bloqueo real, no evitable con una suposición razonable)
+SaniCheck no tenía ningún sistema de identidad de técnicos/admin. En vez de construir un login completo (pantalla, sesión, "cerrar sesión" — el patrón `ra_login` de ProyeCar), reutilicé el patrón **ya existente en este mismo repo**: `app/js/portal-cliente.js` identifica establecimientos con un solo `codigo_acceso` secreto enviado en cada llamada; aquí se hace lo mismo pero para identificar al técnico/admin. Cada RPC resuelve `tecnico_id` y `rol` **server-side** a partir del código (función interna `sc_resolver_actor`, sin GRANT a `anon`/`authenticated`) — el cliente nunca conoce ni envía su propio UUID, y nunca hay una `p_tecnico_id` en la que "confiar". Esto es más simple que el par `(id, codigo)` de ProyeCar y evita construir una pantalla de login nueva, a costa de que el campo del código se pide una sola vez dentro del propio formulario de firmas (campo "Código de acceso SaniCheck", opcional, cerca de los datos del firmante "elaboró").
 
-SaniCheck **no tiene ningún sistema de identidad/login de técnicos ni de admin** (confirmado con grep exhaustivo: sin `auth`, sin `usuario`, sin `login`, sin sesión, en todo `app/js/`). Lo único parecido es:
+## Archivos tocados/creados
 
-- `Licencias.js` — activación de **producto** por código único compartido (SHA-256 local), no identifica personas.
-- `PortalCliente.js`/`portal-cliente.js` — identifica **establecimientos** (código de acceso por cliente), no técnicos, y vive en OTRO proyecto Supabase (`hhhyhjidbjpivdnbsyzc`, no `isncjtomlvxyvcaohcpx`).
+- `supabase/migrations/migration_sc_informes_tables.sql` (nuevo) — migración completa, **sin aplicar**.
+- `app/js/sc-informes.js` (nuevo) — cliente RPC (fetch + anon key) + outbox IndexedDB con backoff.
+- `app/js/sc-informes-ui.js` (nuevo) — paneles "Mis informes" y "Panel admin" (login por código, ver/editar/eliminar, exportar PDF).
+- `app/js/sc-informes-config.js` (nuevo) — config pública (URL fija del proyecto `isncjtomlvxyvcaohcpx`, anon key vacía).
+- `app/js/sc-informes-config.secrets.example.js` (nuevo) — plantilla para la anon key real (gitignored el archivo real).
+- `scripts/generate-sc-informes-config-secrets.js` (nuevo) — genera el secrets.js desde `.env` (`SC_INFORMES_SUPABASE_URL`/`SC_INFORMES_SUPABASE_ANON_KEY`), igual patrón que `generate-portal-config-secrets.js`.
+- `.gitignore` — agregada `app/js/sc-informes-config.secrets.js`.
+- `app/js/phva/actuar.js` — campo "Código de acceso SaniCheck" en la captura de firmas; helper `_generarActaHtmlCompleta()` (extraído de `abrirPDF()`, sin duplicar código); `_respaldarEnNube()` llamado dentro de `guardarFirmas()` **antes** de `_refresh()` (para leer el input antes de que el re-render lo reemplace); botones "Mis informes" / "Panel admin" (solo si `ScInformes.esAdmin()`) en la barra de acciones del Acta ya generada.
+- `app/index.html` — script tags nuevos (`sc-informes-config.secrets.js`, `sc-informes-config.js`, `sc-informes.js`, `sc-informes-ui.js`); bump `actuar.js?v=4.13.0` y `brand.css?v=4.13.0`.
+- `app/sw.js` — `APP_VERSION` 4.12.13→4.13.0, `BUILD_HASH` nuevo, 3 archivos nuevos agregados a `ASSETS` (precache), `actuar.js?v=4.13.0`.
+- `app/version.json`, `app/js/app-version.js` — versión sincronizada a 4.13.0.
 
-La tarea pide "Técnico ve/edita/elimina SOLO sus propios informes; Admin ve todos" y da firmas de RPC con `p_tecnico_id` como parámetro **provisto por el cliente sin verificación**. Implementar eso literalmente sería inseguro: cualquiera podría mandar el `tecnico_id` de otra persona y leer/editar/borrar sus informes vía la anon key (SaniCheck no usa Supabase Auth/JWT en ningún módulo, solo REST+anon key). Eso viola el estándar no negociable "sin confianza en autorización del cliente".
+## SQL final (resumen — completo en el archivo de migración)
 
-El patrón real y ya aprobado en el ecosistema ECODESA (`ProyeCar/docs/sql/dashboard-ejecutivo-admin.sql`, `ProyeCar/registro-asesoria.js`) resuelve esto con una tabla `usuarios(id, codigo_acceso, rol, jefe_id)` + un login propio (`ra_login`, `LS_SESSION` en localStorage, barra de sesión, botón "Cerrar sesión") donde cada RPC valida `id + codigo_acceso` server-side antes de tocar datos. SaniCheck no tiene ese login. Construirlo es una decisión de producto/arquitectura real (nueva pantalla, nueva tabla de identidad, quién y cómo reparte los códigos de acceso), no un detalle de implementación que se pueda asumir sin romper "no sustituir arquitectura/seguridad por conveniencia".
+- `sc_usuarios(id, nombre, codigo_acceso UNIQUE, rol CHECK IN ('tecnico','admin'), creado_en)` — sin columna `activo`.
+- `sc_informes(id, tecnico_id FK, local_id, establecimiento jsonb, establecimiento_nombre generated, fecha, numero_acta, informe_html, creado_en, actualizado_en)` — índice único parcial `(tecnico_id, local_id) WHERE local_id IS NOT NULL` → hace idempotente el guardado ante reintentos del outbox.
+- RLS activado + `REVOKE ALL ... FROM PUBLIC, anon, authenticated` en ambas tablas: el único acceso es vía RPC `SECURITY DEFINER`.
+- `sc_resolver_actor(p_codigo)` — helper interno (no expuesto) que valida el código y retorna el usuario.
+- RPCs expuestas (`GRANT EXECUTE ... TO anon, authenticated`): `sc_whoami(p_codigo)`, `sc_guardar_informe(p_codigo, p_establecimiento, p_fecha, p_html, p_local_id, p_numero_acta)`, `sc_list_mis_informes(p_codigo)`, `sc_get_informe(p_id, p_codigo)`, `sc_update_informe(p_id, p_codigo, p_html)`, `sc_delete_informe(p_id, p_codigo)`, `sc_list_admin_informes(p_codigo)`, `sc_get_admin_informe(p_id, p_codigo)` (agregada, no estaba en la lista original pero es necesaria para que el admin pueda "ver" un informe puntual), `sc_update_admin_informe(p_id, p_codigo, p_html)`, `sc_delete_admin_informe(p_id, p_codigo)`.
+- Firmas RPC **sin `p_tecnico_id`/`p_admin_id`** (a diferencia del enunciado original): la identidad se resuelve del código, nunca de un id mandado por el cliente — más simple y sin superficie de suplantación.
 
-## Lo que SÍ se entrega en esta rama
+## Comportamiento offline / outbox
 
-`supabase/migrations/migration_sc_informes_tables.sql` — migración completa **propuesta, NO aplicada**:
+`ScInformes.guardarInforme()` intenta `sc_guardar_informe` de inmediato; si falla (sin red, RPC caída), encola el registro completo en IndexedDB (`sanicheck-sc-informes-outbox`, store `pendientes`) con backoff exponencial (30s→...→tope 30min) y reintenta automáticamente en `online` + cada 60s. Nunca borra un pendiente por fallo repetido (a diferencia del outbox `dashboards_pendientes` de ProyeCar, que descarta tras 8 intentos) — aquí el objetivo explícito es no volver a perder un informe.
 
-- `sc_usuarios(id uuid pk, nombre text, codigo_acceso text unique, rol text check in ('tecnico','admin'), creado_en)` — sin columna `activo` (regla explícita respetada). Tabla nueva con prefijo `sc_` (no reutiliza `usuarios` de ProyeCar, ver pregunta 1 abajo).
-- `sc_informes(id uuid pk, tecnico_id uuid fk sc_usuarios, local_id text, establecimiento jsonb, establecimiento_nombre text generated, fecha date, numero_acta text, informe_html text, creado_en, actualizado_en)`.
-  - `local_id` = id de la `inspeccion` local (Store) + índice único `(tecnico_id, local_id)` → hace **idempotente** `sc_guardar_informe` ante reintentos del outbox (mismo motivo que `p_local_id` en `ra_upsert_registro` de ProyeCar: sin esto, cada reintento offline crearía un informe duplicado).
-- RLS activado + `REVOKE ALL ... FROM PUBLIC, anon, authenticated` en ambas tablas (igual que `dashboards_ejecutivos`): el único camino de acceso son los RPC `SECURITY DEFINER`.
-- RPCs (todas `SECURITY DEFINER`, `SET search_path = public`, verifican `id + codigo_acceso` contra `sc_usuarios` antes de cualquier lectura/escritura — se agregó `p_codigo` a la firma literal del encargo porque sin eso la ownership es fingida):
-  - `sc_guardar_informe(p_tecnico_id, p_codigo, p_establecimiento jsonb, p_fecha, p_html, p_local_id, p_numero_acta)` → upsert idempotente, retorna `id`.
-  - `sc_list_mis_informes(p_tecnico_id, p_codigo)` → lista propia sin html (liviana).
-  - `sc_get_informe(p_id, p_tecnico_id, p_codigo)` → valida ownership, retorna html completo.
-  - `sc_update_informe(p_id, p_tecnico_id, p_codigo, p_html)` / `sc_delete_informe(p_id, p_tecnico_id, p_codigo)` → solo dueño.
-  - `sc_list_admin_informes(p_admin_id, p_codigo)` → sin filtro, columna `tecnico_nombre` vía join.
-  - `sc_get_admin_informe(p_id, p_admin_id, p_codigo)` → **agregada, no estaba en la lista original**; imprescindible para que el admin pueda "ver" un informe puntual (criterio 7 lo exige aunque el listado de RPC no la nombrara).
-  - `sc_update_admin_informe(p_id, p_admin_id, p_codigo, p_html)` / `sc_delete_admin_informe(p_id, p_admin_id, p_codigo)` → sin restricción de dueño, valida solo `rol = 'admin'`.
-- Grants: `EXECUTE` a `anon, authenticated` (SaniCheck no usa Supabase Auth), todo lo demás revocado.
+## Desviación deliberada: sin jsPDF/vendoring nuevo
 
-**No se aplicó** contra la base real: (a) no tengo en esta sesión ninguna herramienta MCP de Supabase disponible (no hay `execute_sql` ni equivalente en las tools que me dieron, pese a que el encargo lo pedía como paso 9), y (b) mi rol no permite ejecutar migraciones de producción por mi cuenta aunque la tuviera. Por eso tampoco pude verificar `information_schema.columns` como pedía el paso 9 — queda pendiente para quien aplique la migración.
+El encargo pedía jsPDF. No lo agregué: `informe_html` es el mismo documento HTML autocontenido que ya genera `_buildActaHTML()` (con Chart.js incrustado y su propio botón "Guardar como PDF" vía `window.print()`, ya probado en producción en `abrirPDF()`). "Ver/PDF" en los paneles reabre ese mismo HTML en una ventana nueva. Agregar jsPDF habría requerido también `html2canvas` (jsPDF no renderiza HTML/CSS complejo ni Chart.js por sí solo) para un resultado de fidelidad probablemente peor que el que ya funciona, violando la regla de "no introducir dependencias sin necesidad demostrable". Si Dairo prefiere específicamente un archivo `.pdf` descargable (no impresión del navegador), es una decisión de producto a confirmar — hoy technically "Exportar PDF" = abrir e imprimir, igual que el resto de la app.
 
-## Lo que NO se hizo (depende de la decisión de identidad)
+## Corrección de seguridad — Stored XSS cross-user en `_verHtml` (HIGH)
 
-- Ningún cambio en `app/js/phva/actuar.js` ni `app/js/store.js`: conectar `sc_guardar_informe` en `guardarFirmas()` sin un `tecnico_id`/`codigo` reales habría significado inventar una identidad falsa (por ejemplo reusar la cédula del firmante "elaboro", que ya se captura en ese mismo formulario) — la cédula es un dato cuasi-público, no un secreto, y usarla como control de acceso sería seguridad de fachada, no seguridad real.
-- No hay outbox/IndexedDB nuevo para `sc_informes` (`sc-informes-outbox.js`): construirlo ahora sería código muerto hasta resolver de dónde sale `tecnico_id`/`codigo`.
-- No hay UI "Mis informes" (técnico) ni panel admin: ambas dependen 100% de sesión/login.
-- No hay integración jsPDF nueva: no aplica sin la UI de listado que la dispara.
+Hallazgo de revisión: `_verHtml()` abría `informe_html` (que puede venir de OTRO
+técnico o de una cuenta comprometida) con `window.open('', '_blank')` +
+`document.write(html)` — same-origin, ejecutaría cualquier `<script>`/`onerror`/
+`javascript:` inyectado, con riesgo de robo del código de acceso guardado en
+`localStorage` cuando el admin abre el informe de un técnico. Corregido:
 
-## Preguntas exactas para desbloquear
+1. `_verHtml()` ya no hace `document.write(html)` del contenido no confiable.
+   Ahora abre una página envolvente propia (confiable) con un
+   `<iframe sandbox="allow-modals">` (sin `allow-scripts` ni `allow-same-origin`)
+   y asigna `iframe.srcdoc = html`. El botón "Imprimir / Guardar como PDF" vive
+   en la página envolvente y llama a `iframe.contentWindow.print()` — funciona
+   aunque el iframe esté sandboxeado. Limitación conocida y aceptada: el
+   gráfico comparativo (Chart.js, con `<script>` inline) no se renderiza en
+   esta vista, porque bloquear scripts es justamente el punto.
+2. `window.open(...)` en `_verHtml` y en `Actuar.abrirPDF()` ahora incluye
+   `'noopener'` + `win.opener = null` de refuerzo (aunque `abrirPDF()` solo
+   muestra contenido autogenerado en la sesión actual, no contenido cruzado
+   entre usuarios — no tenía el mismo riesgo, pero se endureció igual).
+3. Defensa en profundidad server-side: nueva función `sc_sanitizar_html(text)`
+   en la migración SQL (regex conservador, solo 3 vectores: `<script>`,
+   atributos `on*`, URLs `javascript:`), aplicada en `sc_guardar_informe`,
+   `sc_update_informe` y `sc_update_admin_informe` antes de escribir
+   `informe_html`. Documentado en el propio SQL que la mitigación primaria es
+   el sandbox del iframe, no este regex.
 
-1. **Identidad**: ¿`sc_usuarios` es una tabla nueva y propia de SaniCheck (como quedó en la migración propuesta), o los técnicos de SaniCheck ya existen como filas en la tabla `usuarios` de ProyeCar (mismo proyecto `isncjtomlvxyvcaohcpx`) y hay que reutilizarla?
-2. **Login**: ¿Se autoriza construir una pantalla de login mínima en SaniCheck (nombre + código de acceso, sesión en `localStorage`, barra de sesión con "Cerrar sesión" — igual patrón que `registro-asesoria.js` de ProyeCar) antes de poder generar/ver informes? Esto es una superficie de UI nueva que el encargo original no mencionaba explícitamente pero que es condición necesaria para que "técnico ve solo lo suyo" sea real y no decorativo.
-3. **Provisión de códigos**: ¿Quién crea el primer usuario admin (Dairo) y los usuarios técnico — un script SQL que yo prepare para que Dairo lo corra manualmente, o una pantalla de administración de usuarios dentro de SaniCheck?
-4. **Herramienta Supabase**: esta sesión no tuvo ninguna tool MCP de Supabase disponible. Si el flujo esperado depende de `execute_sql`, hay que habilitarla en la próxima sesión de Carlos o dársela a Dairo para aplicar/verificar la migración manualmente.
+Confirmo explícitamente: `_verHtml` ya no ejecuta HTML no confiable en un
+contexto same-origin — el HTML ajeno solo llega a un iframe sandboxeado sin
+capacidad de ejecutar script ni de heredar el origen del documento contenedor.
+
+## Seguridad y accesibilidad
+
+- Ownership resuelto 100% server-side (`sc_resolver_actor`); ningún RPC confía en un id/rol enviado por el cliente.
+- `REVOKE ALL` + RLS en ambas tablas; sin políticas de acceso directo — todo pasa por RPC.
+- Valores dinámicos escapados con el `_esc()` global (`app/js/util/escape-html.js`) en las tablas/paneles nuevos, mismo patrón que el resto de `actuar.js`.
+- Paneles con `role="dialog"`, `aria-modal`, `aria-label`, cierre con Escape/click fuera/botón, foco inicial en el primer control, `role="alert"` en mensajes de error, confirmación nativa antes de eliminar.
+- `informe_html` se reabre con `document.write()` en ventana nueva — mismo patrón ya en producción (`abrirPDF()`), no es una superficie nueva de riesgo.
+- Nunca se bloquea el guardado local: `Store.upsertInspeccion()` corre siempre primero; el respaldo remoto es fire-and-forget con outbox.
+
+## Validación
+
+- `node --check` sobre los 7 archivos JS nuevos/modificados: **OK** (sin errores de sintaxis).
+- `version.json` validado como JSON válido.
+- Revisión manual línea por línea del SQL (balance de bloques `$$…$$`, índices que respaldan cada `ON CONFLICT`, coherencia de tipos) — no ejecutado contra una base real.
+- **No pude**: aplicar la migración ni correr `information_schema.columns` como pedía el paso 9 original — esta sesión no tuvo ninguna herramienta MCP de Supabase invocable (el `<functions>` disponible para este subagente fue solo Read/Write/Edit/Glob/Grep/Bash/PowerShell), y aunque la hubiera tenido, ejecutar una migración de producción por cuenta propia excede mi rol.
+- **No pude**: probar el flujo end-to-end en navegador (login por código → guardar Acta → verlo en "Mis informes") porque no hay proyecto Supabase real conectado (`SC_INFORMES_ANON_KEY` vacía) ni filas en `sc_usuarios` todavía.
+
+## Bloqueos reales para dejarlo 100% operativo (no los puedo resolver yo)
+
+1. **Aplicar la migración** `supabase/migrations/migration_sc_informes_tables.sql` contra `isncjtomlvxyvcaohcpx` (Dairo, vía SQL editor de Supabase o MCP con permisos).
+2. **Provisionar usuarios**: insertar al menos una fila admin (Dairo) y una por técnico en `sc_usuarios`, con códigos de acceso generados fuera de banda (la migración trae el INSERT comentado, con placeholders).
+3. **Configurar la anon key real**: copiar `app/js/sc-informes-config.secrets.example.js` → `app/js/sc-informes-config.secrets.js` (o `node scripts/generate-sc-informes-config-secrets.js` con `.env`) y desplegarlo junto con el resto de la app (mismo mecanismo ya usado para `portal-config.secrets.js`).
+4. Repartir los códigos de acceso a cada técnico por un canal seguro (no quedó definido cuál — WhatsApp/email en texto plano no es ideal, pero no es una decisión técnica que me corresponda).
+
+Sin (1)-(3) la funcionalidad queda instalada pero inerte: el campo de código en el formulario de firmas no tendrá contra qué validar, y `ScInformesUI` fallará con "Código inválido" (comportamiento esperado y no bloqueante — el guardado local sigue funcionando igual que siempre).
 
 ## Para Camila
 
-No aplica auditoría todavía: no hay superficie de cliente ni RPC en producción para revisar. Cuando se resuelvan las preguntas 1-3 y se conecte `guardarFirmas()` + la UI, **Camila debe auditar**: el flujo completo `guardarFirmas()` → `sc_guardar_informe` (incluyendo comportamiento offline/outbox), las pantallas "Mis informes" y admin, y especialmente que ningún RPC permita leer/editar/borrar el informe de otro técnico sin el código correcto.
+Cuando (1)-(3) estén resueltos, **Camila debe auditar**: `Actuar.guardarFirmas()` → `_respaldarEnNube()` → `ScInformes.guardarInforme()` (incluyendo el camino de fallo/outbox con la red cortada de verdad, no simulada); los 10 RPCs `sc_*` uno por uno confirmando que ningún código puede leer/editar/borrar informes de otro técnico ni acceder a `sc_list_admin_informes`/`sc_*_admin_informe` sin `rol = 'admin'`; los paneles "Mis informes" y "Panel admin" en mobile y desktop; y que el service worker sirva la versión 4.13.0 (bump de caché) en producción tras el deploy.

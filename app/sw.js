@@ -1,7 +1,7 @@
 // Service Worker — SaniCheck — Offline-first completo
 
-const APP_VERSION = '4.12.13';
-const BUILD_HASH = '0c15c76e9779';
+const APP_VERSION = '4.13.0';
+const BUILD_HASH = 'a1f3e7b902d4';
 const CACHE = 'sanicheck-' + BUILD_HASH;
 
 const ASSETS = [
@@ -18,6 +18,9 @@ const ASSETS = [
   './js/sw-update.js',
   './js/portal-config.js',
   './js/portal-cliente.js',
+  './js/sc-informes-config.js',
+  './js/sc-informes.js',
+  './js/sc-informes-ui.js',
   './js/about.js',
   './js/phva-icons.js',
   './js/app.js',
@@ -34,7 +37,7 @@ const ASSETS = [
   './js/phva/personalizar.js',
   './js/phva/hacer.js',
   './js/phva/verificar.js',
-  './js/phva/actuar.js?v=4.12.14',
+  './js/phva/actuar.js?v=4.13.0',
   './js/screens/dadis-simulador.js',
   './data/dadis-config.json',
   './assets/vendor/chart.umd.min.js',
