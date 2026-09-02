@@ -89,8 +89,16 @@ END;
 $function$;
 
 -- ── sc_guardar_informe: nuevo parámetro opcional p_estado_estructurado ──
+-- (Postgres NO reemplaza una función in-place al agregarle un parámetro
+-- nuevo, aunque tenga DEFAULT: crea un overload adicional en vez de
+-- sustituir el existente. Hay que dropear la firma vieja de 10 args primero
+-- — comprobado en despliegue: sin este DROP quedan 2 versiones convivendo
+-- y PostgREST puede responder ambiguo ante un body con exactamente 10
+-- claves, ej. un registro ya encolado en el outbox de un cliente desde
+-- antes de este cambio.)
 
-CREATE OR REPLACE FUNCTION public.sc_guardar_informe(
+DROP FUNCTION IF EXISTS public.sc_guardar_informe(text,jsonb,date,text,text,text,text,integer,integer,integer);
+CREATE FUNCTION public.sc_guardar_informe(
   p_codigo text, p_establecimiento jsonb, p_fecha date, p_html text,
   p_local_id text DEFAULT NULL, p_numero_acta text DEFAULT NULL,
   p_nivel_cumplimiento text DEFAULT NULL, p_aspectos_evaluados integer DEFAULT NULL,
@@ -285,11 +293,14 @@ END;
 $function$;
 
 -- ── Grants ──
--- sc_guardar_borrador y sc_guardar_informe conservan su OID (CREATE OR
--- REPLACE con la misma lista de parámetros de entrada, o un parámetro nuevo
--- al final con DEFAULT), por lo que sus GRANT existentes siguen vigentes.
--- sc_get_informe/sc_get_admin_informe se dropearon y recrearon: hay que
--- regranter. Las 2 RPCs admin nuevas necesitan grant explícito.
+-- sc_guardar_borrador conserva su OID (CREATE OR REPLACE con la misma lista
+-- de parámetros de entrada, sin cambios), por lo que su GRANT existente
+-- sigue vigente. sc_guardar_informe, sc_get_informe y sc_get_admin_informe
+-- se dropearon y recrearon (ver nota arriba): hay que regranter. Las 2 RPCs
+-- admin nuevas necesitan grant explícito.
+
+REVOKE ALL ON FUNCTION public.sc_guardar_informe(text,jsonb,date,text,text,text,text,integer,integer,integer,jsonb) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.sc_guardar_informe(text,jsonb,date,text,text,text,text,integer,integer,integer,jsonb) TO anon, authenticated;
 
 REVOKE ALL ON FUNCTION public.sc_get_informe(uuid,text) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.sc_get_informe(uuid,text) TO anon, authenticated;
