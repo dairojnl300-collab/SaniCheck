@@ -526,9 +526,14 @@ const ScInformesUI = (() => {
     const sesion = ScInformes.getSesionCache();
     if (sesion && sesion.usuario && ScInformes.getCodigo()) {
       await mostrarEnPortada(sesion);
+      if (ScInformes.revisarBorradoresRemotos) await ScInformes.revisarBorradoresRemotos();
       return sesion;
     }
-    return _requiereSesion();
+    const nuevaSesion = await _requiereSesion();
+    if (nuevaSesion && ScInformes.revisarBorradoresRemotos) {
+      await ScInformes.revisarBorradoresRemotos();
+    }
+    return nuevaSesion;
   }
 
   async function abrirGestionUsuarios() {
