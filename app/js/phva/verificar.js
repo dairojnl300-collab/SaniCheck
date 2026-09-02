@@ -3,6 +3,7 @@ const Verificar = (() => {
   function render() {
     const inspeccion = Store.getCurrentInspeccion(); if (!inspeccion) return _vacio();
     Scores.calcular(inspeccion); Hallazgos.actualizar(inspeccion); Store.upsertInspeccion(inspeccion);
+    if (typeof ScInformes !== 'undefined' && ScInformes.programarBorradorActual) ScInformes.programarBorradorActual(false);
     const sc = inspeccion.score, hallazgos = inspeccion.hallazgos_criticos || [];
     const expandir = (a, p, programaIdx, criterioIdx) => [{ ...a, programa: p, programaIdx, criterioIdx, extraIdx: null }, ...(a.criterios_extra || []).map((x, i) => ({ ...x, id: `${a.id}-extra-${i + 1}`, texto: `Aspecto por verificar ${i + 2}`, norma: a.norma, fotografias: x.fotografias || [], programa: p, programaIdx, criterioIdx, extraIdx: i }))];
     const todosItems = inspeccion.programas.flatMap((p, programaIdx) => p.aspectos.flatMap((a, i) => expandir(a, p, programaIdx, i)));

@@ -16,6 +16,7 @@ const ScInformes = (() => {
   const LS_CODIGO   = 'sanicheck_sc_codigo_acceso';
   const LS_SESION   = 'sanicheck_sc_sesion';
   const LS_FINALES  = 'sanicheck_sc_informes_finales';
+  const LS_AJENOS   = 'sanicheck_sc_admin_ajenos';
   const IDB_NAME    = 'sanicheck-sc-informes-outbox';
   const IDB_STORE   = 'pendientes';
   const IDB_DRAFT_STORE = 'borradores';
@@ -91,6 +92,32 @@ const ScInformes = (() => {
 
   function esInformeFinalDeSesion(localId) {
     return Boolean(localId && _leerFinalesDeSesion().includes(localId));
+  }
+
+  // Cuando un admin continúa (no solo ve) el borrador o informe finalizado de
+  // OTRO técnico, el guardado debe apuntar a la fila original por id (RPCs
+  // sc_guardar_admin_borrador/sc_guardar_admin_informe) en vez de
+  // sc_guardar_borrador/sc_guardar_informe (que conflictúan por
+  // (tecnico_id, local_id) y crearían una fila duplicada, ya que el
+  // tecnico_id del admin difiere del técnico dueño original).
+  function _leerAjenos() {
+    const sesion = getSesionCache();
+    if (!sesion?.id) return {};
+    try {
+      const cache = JSON.parse(localStorage.getItem(LS_AJENOS) || 'null');
+      return (cache?.sesion_id === sesion.id && cache.map) ? cache.map : {};
+    } catch (e) { return {}; }
+  }
+  function _marcarAjeno(localId, remoteId) {
+    if (!localId || !remoteId) return;
+    const sesion = getSesionCache();
+    if (!sesion?.id) return;
+    const map = _leerAjenos();
+    map[localId] = remoteId;
+    try { localStorage.setItem(LS_AJENOS, JSON.stringify({ sesion_id: sesion.id, map })); } catch (e) {}
+  }
+  function _remoteIdAjeno(localId) {
+    return _leerAjenos()[localId] || null;
   }
 
   // ── RPC ──────────────────────────────────────────────────────────────────
@@ -276,28 +303,51 @@ const ScInformes = (() => {
       for (const rec of listos) {
         try {
           if (rec._tipoPendiente === 'borrador') {
-            await _rpc('sc_guardar_borrador', {
-              p_codigo: rec.codigo,
-              p_establecimiento: rec.establecimiento,
-              p_fecha: rec.fecha,
-              p_local_id: rec.local_id,
-              p_numero_acta: rec.numero_acta || null,
-              p_estado_parcial: rec.estado_parcial,
-            });
+            if (rec.ajeno_id) {
+              await _rpc('sc_guardar_admin_borrador', {
+                p_id: rec.ajeno_id,
+                p_codigo: rec.codigo,
+                p_estado_parcial: rec.estado_parcial,
+              });
+            } else {
+              await _rpc('sc_guardar_borrador', {
+                p_codigo: rec.codigo,
+                p_establecimiento: rec.establecimiento,
+                p_fecha: rec.fecha,
+                p_local_id: rec.local_id,
+                p_numero_acta: rec.numero_acta || null,
+                p_estado_parcial: rec.estado_parcial,
+              });
+            }
             await _idbDeleteDraft(rec.local_id);
           } else {
-            await _rpc('sc_guardar_informe', {
-              p_codigo: rec.codigo,
-              p_establecimiento: rec.establecimiento,
-              p_fecha: rec.fecha,
-              p_html: rec.html,
-              p_local_id: rec.local_id,
-              p_numero_acta: rec.numero_acta || null,
-              p_nivel_cumplimiento: rec.nivel_cumplimiento || null,
-              p_aspectos_evaluados: Number.isFinite(rec.aspectos_evaluados) ? rec.aspectos_evaluados : null,
-              p_aspectos_total: Number.isFinite(rec.aspectos_total) ? rec.aspectos_total : null,
-              p_porcentaje_cumplimiento: Number.isFinite(rec.porcentaje_cumplimiento) ? rec.porcentaje_cumplimiento : null,
-            });
+            if (rec.ajeno_id) {
+              await _rpc('sc_guardar_admin_informe', {
+                p_id: rec.ajeno_id,
+                p_codigo: rec.codigo,
+                p_html: rec.html,
+                p_numero_acta: rec.numero_acta || null,
+                p_nivel_cumplimiento: rec.nivel_cumplimiento || null,
+                p_aspectos_evaluados: Number.isFinite(rec.aspectos_evaluados) ? rec.aspectos_evaluados : null,
+                p_aspectos_total: Number.isFinite(rec.aspectos_total) ? rec.aspectos_total : null,
+                p_porcentaje_cumplimiento: Number.isFinite(rec.porcentaje_cumplimiento) ? rec.porcentaje_cumplimiento : null,
+                p_estado_estructurado: rec.estado_estructurado || null,
+              });
+            } else {
+              await _rpc('sc_guardar_informe', {
+                p_codigo: rec.codigo,
+                p_establecimiento: rec.establecimiento,
+                p_fecha: rec.fecha,
+                p_html: rec.html,
+                p_local_id: rec.local_id,
+                p_numero_acta: rec.numero_acta || null,
+                p_nivel_cumplimiento: rec.nivel_cumplimiento || null,
+                p_aspectos_evaluados: Number.isFinite(rec.aspectos_evaluados) ? rec.aspectos_evaluados : null,
+                p_aspectos_total: Number.isFinite(rec.aspectos_total) ? rec.aspectos_total : null,
+                p_porcentaje_cumplimiento: Number.isFinite(rec.porcentaje_cumplimiento) ? rec.porcentaje_cumplimiento : null,
+                p_estado_estructurado: rec.estado_estructurado || null,
+              });
+            }
             await _idbDelete(rec.local_id);
           }
           n++;
@@ -338,7 +388,26 @@ const ScInformes = (() => {
     const codigo = getCodigo();
     if (!codigo) return { ok: false, sinCodigo: true };
 
-    const params = {
+    let estadoEstructurado = null;
+    try {
+      const inspeccion = (typeof Store !== 'undefined' && Store.get)
+        ? (Store.get().inspecciones || []).find(i => i.id === payload.localId) : null;
+      if (inspeccion) estadoEstructurado = _crearEstadoParcial(inspeccion, null, 'finalizada');
+    } catch (e) { estadoEstructurado = null; }
+
+    const ajenoId = _remoteIdAjeno(payload.localId);
+
+    const params = ajenoId ? {
+      p_id: ajenoId,
+      p_codigo: codigo,
+      p_html: payload.html,
+      p_numero_acta: payload.numeroActa || null,
+      p_nivel_cumplimiento: payload.nivelCumplimiento || null,
+      p_aspectos_evaluados: Number.isFinite(payload.aspectosEvaluados) ? payload.aspectosEvaluados : null,
+      p_aspectos_total: Number.isFinite(payload.aspectosTotal) ? payload.aspectosTotal : null,
+      p_porcentaje_cumplimiento: Number.isFinite(payload.porcentajeCumplimiento) ? payload.porcentajeCumplimiento : null,
+      p_estado_estructurado: estadoEstructurado,
+    } : {
       p_codigo: codigo,
       p_establecimiento: payload.establecimiento || {},
       p_fecha: payload.fecha,
@@ -349,9 +418,10 @@ const ScInformes = (() => {
       p_aspectos_evaluados: Number.isFinite(payload.aspectosEvaluados) ? payload.aspectosEvaluados : null,
       p_aspectos_total: Number.isFinite(payload.aspectosTotal) ? payload.aspectosTotal : null,
       p_porcentaje_cumplimiento: Number.isFinite(payload.porcentajeCumplimiento) ? payload.porcentajeCumplimiento : null,
+      p_estado_estructurado: estadoEstructurado,
     };
     try {
-      const id = await _rpc('sc_guardar_informe', params);
+      const id = await _rpc(ajenoId ? 'sc_guardar_admin_informe' : 'sc_guardar_informe', params);
       await _retirarBorradorPendiente(payload.localId);
       _registrarFinalDeSesion(payload.localId);
       return { ok: true, id };
@@ -371,6 +441,8 @@ const ScInformes = (() => {
         aspectos_evaluados: Number.isFinite(payload.aspectosEvaluados) ? payload.aspectosEvaluados : null,
         aspectos_total: Number.isFinite(payload.aspectosTotal) ? payload.aspectosTotal : null,
         porcentaje_cumplimiento: Number.isFinite(payload.porcentajeCumplimiento) ? payload.porcentajeCumplimiento : null,
+        estado_estructurado: estadoEstructurado,
+        ajeno_id: ajenoId || null,
       };
       try {
         await encolarPendiente(pendiente);
@@ -416,7 +488,9 @@ const ScInformes = (() => {
           + (criterio.criterio ? 1 : 0), 0), 0), 0);
   }
 
-  function _crearEstadoParcial(inspeccion, cursor) {
+  const UI_SCREENS = ['home', 'about', 'planificar', 'personalizar', 'hacer', 'verificar', 'dashboard', 'actuar'];
+
+  function _crearEstadoParcial(inspeccion, cursor, estadoLabel) {
     const ahora = new Date().toISOString();
     const total = _aspectosTotales(inspeccion);
     const evaluados = _aspectosEvaluados(inspeccion);
@@ -435,15 +509,16 @@ const ScInformes = (() => {
       version_app: inspeccion.version_app,
     });
     const ui = (typeof Store !== 'undefined' && Store.get) ? (Store.get().ui || {}) : {};
+    const screenReal = UI_SCREENS.includes(ui.screen) ? ui.screen : 'hacer';
     return {
       version: 1,
-      estado: 'en_curso',
+      estado: estadoLabel || 'en_curso',
       local_id: inspeccion.id,
       guardado_en: ahora,
       aspectos_completados: evaluados,
       aspectos_total: total,
       ultimo_aspecto: cursor || null,
-      ui: { screen: 'hacer', programaIdx: ui.programaIdx || 0, aspectoIdx: ui.aspectoIdx || 0 },
+      ui: { screen: screenReal, programaIdx: ui.programaIdx || 0, aspectoIdx: ui.aspectoIdx || 0 },
       inspeccion: snapshot,
     };
   }
@@ -461,7 +536,12 @@ const ScInformes = (() => {
   async function guardarBorrador(payload) {
     const codigo = getCodigo();
     if (!codigo) return { ok: false, sinCodigo: true };
-    const params = {
+    const ajenoId = _remoteIdAjeno(payload.localId);
+    const params = ajenoId ? {
+      p_id: ajenoId,
+      p_codigo: codigo,
+      p_estado_parcial: payload.estadoParcial,
+    } : {
       p_codigo: codigo,
       p_establecimiento: payload.establecimiento || {},
       p_fecha: payload.fecha,
@@ -470,7 +550,7 @@ const ScInformes = (() => {
       p_estado_parcial: payload.estadoParcial,
     };
     try {
-      const id = await _rpc('sc_guardar_borrador', params);
+      const id = await _rpc(ajenoId ? 'sc_guardar_admin_borrador' : 'sc_guardar_borrador', params);
       return { ok: true, id };
     } catch (e) {
       if (/código de acceso inválido/i.test(e.message || '')) {
@@ -483,6 +563,7 @@ const ScInformes = (() => {
         fecha: payload.fecha,
         numero_acta: payload.numeroActa || null,
         estado_parcial: payload.estadoParcial,
+        ajeno_id: ajenoId || null,
       };
       try {
         await encolarBorrador(pendiente);
@@ -598,21 +679,28 @@ const ScInformes = (() => {
     });
   }
 
-  function _restaurarBorradorLocal(detalle) {
-    const parcial = detalle?.estado_parcial;
-    const remoto = parcial?.inspeccion;
-    if (!remoto?.programas?.length || !detalle.local_id) return null;
+  function _restaurarEstadoRemoto(payloadEstado, remoteId) {
+    const remoto = payloadEstado?.inspeccion;
+    const localId = payloadEstado?.local_id;
+    if (!remoto?.programas?.length || !localId) return null;
     const actual = (typeof Store !== 'undefined' && Store.get) ? Store.get() : { inspecciones: [], ui: {} };
-    const local = (actual.inspecciones || []).find(i => i.id === detalle.local_id) || null;
-    const restaurada = { ...(local || {}), ...remoto, id: detalle.local_id };
+    const local = (actual.inspecciones || []).find(i => i.id === localId) || null;
+    const restaurada = { ...(local || {}), ...remoto, id: localId };
     if (local?.firmas && !restaurada.firmas) restaurada.firmas = local.firmas;
     _conservarFotografias(local, restaurada);
     restaurada.actualizado_en = new Date().toISOString();
-    const inspecciones = (actual.inspecciones || []).filter(i => i.id !== detalle.local_id);
+    const inspecciones = (actual.inspecciones || []).filter(i => i.id !== localId);
     inspecciones.unshift(restaurada);
-    const ui = { ...(actual.ui || {}), ...(parcial.ui || {}), screen: 'hacer' };
-    Store.set({ inspecciones, currentId: detalle.local_id, ui });
+    const screenReal = UI_SCREENS.includes(payloadEstado.ui?.screen) ? payloadEstado.ui.screen : 'hacer';
+    const ui = { ...(actual.ui || {}), ...(payloadEstado.ui || {}), screen: screenReal };
+    Store.set({ inspecciones, currentId: localId, ui });
+    if (remoteId) _marcarAjeno(localId, remoteId);
     return restaurada;
+  }
+
+  // Wrapper delgado: único caller restante es revisarBorradoresRemotos (sin uso en UI, ver 4.3).
+  function _restaurarBorradorLocal(detalle) {
+    return _restaurarEstadoRemoto(detalle?.estado_parcial);
   }
 
   async function revisarBorradoresRemotos() {
@@ -700,6 +788,35 @@ const ScInformes = (() => {
     return _rpc('sc_cambiar_password', { p_codigo: getCodigo(), p_password: String(password || '') });
   }
 
+  function _fusionarUnificado(informes, borradores) {
+    const marcados = [
+      ...(informes || []).map(f => ({ ...f, _enCurso: false })),
+      ...(borradores || []).map(f => ({ ...f, _enCurso: true })),
+    ];
+    return marcados.sort((a, b) => {
+      const tsA = _fechaMs(a._enCurso ? (a.estado_parcial_actualizado_en || a.actualizado_en) : a.actualizado_en);
+      const tsB = _fechaMs(b._enCurso ? (b.estado_parcial_actualizado_en || b.actualizado_en) : b.actualizado_en);
+      return tsB - tsA;
+    });
+  }
+
+  async function listMisInformesUnificado() {
+    const [informes, borradores] = await Promise.all([listMisInformes(), listBorradores()]);
+    return _fusionarUnificado(informes, borradores);
+  }
+
+  function listAdminBorradores() {
+    return _rpc('sc_list_admin_borradores', { p_codigo: getCodigo() });
+  }
+  function getAdminBorrador(id) {
+    return _rpc('sc_get_admin_borrador', { p_id: id, p_codigo: getCodigo() }).then(r => Array.isArray(r) ? r[0] : r);
+  }
+
+  async function listAdminInformesUnificado() {
+    const [informes, borradores] = await Promise.all([listAdminInformes(), listAdminBorradores()]);
+    return _fusionarUnificado(informes, borradores);
+  }
+
   return {
     getCodigo, setCodigo, clearSesion, getSesionCache, whoami, loginUsuario, esInformeFinalDeSesion,
     configurarPasswordInicial, esAdmin, eliminarUsuario, cambiarPassword,
@@ -709,5 +826,9 @@ const ScInformes = (() => {
     listMisInformes, getInforme, updateInforme, deleteInforme,
     listAdminInformes, getAdminInforme, updateAdminInforme, deleteAdminInforme,
     listUsuarios, crearUsuario,
+    restaurarEstadoRemoto: _restaurarEstadoRemoto,
+    marcarAjeno: _marcarAjeno,
+    listMisInformesUnificado, listAdminInformesUnificado,
+    listAdminBorradores, getAdminBorrador,
   };
 })();

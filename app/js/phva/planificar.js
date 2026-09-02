@@ -2453,6 +2453,7 @@ const Planificar = (() => {
     const inspeccion = crearInspeccion({ nombre, nit, direccion, establecimiento_id, responsable_sanitario: responsablePsb, tipo: 'Preparación de alimentos' }, profesional);
     inspeccion.inspeccion.fecha = fecha;
     Store.upsertInspeccion(inspeccion); Store.clearPlanificarDraft(); Store.setUI({ aspectoIdx: 0, programaIdx: 0 });
+    if (typeof ScInformes !== 'undefined' && ScInformes.programarBorradorActual) ScInformes.programarBorradorActual();
     Router.go('personalizar');
   }
 
@@ -2513,6 +2514,7 @@ const Planificar = (() => {
     Store.upsertInspeccion(inspeccion);
     Store.clearPlanificarDraft();
     Store.setUI({ aspectoIdx: 0, programaIdx: 0 });
+    if (typeof ScInformes !== 'undefined' && ScInformes.programarBorradorActual) ScInformes.programarBorradorActual();
     Router.toast('Establecimiento guardado');
     Router.go('personalizar');
   }
