@@ -408,8 +408,6 @@ const ScInformesUI = (() => {
 
   async function mostrarEnPortada(sesion) {
     if (!sesion) return;
-    const contenido = document.querySelector('.home-content');
-    if (!contenido) return;
     let filas;
     let usuarios = [];
     try {
@@ -419,6 +417,11 @@ const ScInformesUI = (() => {
       Router.toast('No se pudieron cargar los informes: ' + (e.message || 'error'));
       return;
     }
+    // Aunque la PWA se reabra directamente en una fase PHVA, la consulta
+    // anterior actualiza el historial confirmado de la sesión. La portada
+    // solo se dibuja cuando está presente en la pantalla actual.
+    const contenido = document.querySelector('.home-content');
+    if (!contenido) return;
     const anterior = document.getElementById('sc-registro-portada');
     if (anterior) anterior.remove();
     const bloque = document.createElement('section');
