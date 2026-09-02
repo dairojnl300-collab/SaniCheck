@@ -65,7 +65,7 @@ const Actuar = (() => {
           ${AppIcons.icon('fileText', 12)} ${_esc(inspeccion.numero_acta)} · ${_esc(inspeccion.establecimiento.nombre)}</div>
         <div style="display:flex;gap:var(--sp-sm);">
           <button class="btn btn-primary" data-acta-guardar-pdf style="flex:1;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
-            onclick="Actuar.generarPDF()">${AppIcons.row('fileText', 'GENERAR PDF / IMPRIMIR', 14)}</button>
+              onclick="Actuar.guardarPDF()">${AppIcons.row('fileText', 'GUARDAR PDF', 14)}</button>
           <button class="btn btn-accent" style="flex:1;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
             onclick="Actuar.compartir()">${AppIcons.row('share', 'COMPARTIR', 14)}</button>
         </div>
@@ -961,7 +961,7 @@ const Actuar = (() => {
     if (!inspeccion) { Router.toast('Sin inspección activa'); return; }
     const win = _abrirVentanaActa();
     if (!win) { Router.toast('Permite ventanas emergentes para generar el acta'); return; }
-    return _generarActaHtmlCompleta(inspeccion, { compacto: true, omitirFotosDetalle: true }).then(html => {
+    return _generarActaHtmlCompleta(inspeccion).then(html => {
       _escribirActaEnVentana(win, html);
       return html;
     }).catch(error => {
@@ -972,57 +972,52 @@ const Actuar = (() => {
     });
   }
 
-  async function _guardarCopiaRegistro(inspeccion, html) {
-    if (typeof ScInformes === 'undefined') return { ok: false, noDisponible: true };
-    const sesion = ScInformes.getSesionCache && ScInformes.getSesionCache();
-    if (!sesion?.usuario || !ScInformes.getCodigo()) return { ok: false, sinSesion: true };
-    return ScInformes.guardarInforme({
-      ..._crearPayloadInforme(inspeccion, html),
-      liberarFotosAlConfirmar: true,
-      localActualizadoEn: inspeccion.actualizado_en,
-    });
-  }
-
-  async function generarPDF() {
+  /**
+   * Guarda o actualiza el acta en Registro de Informes sin abrir ventanas.
+   * Este es el flujo estable usado por la versión comprobada en producción.
+   */
+  async function guardarPDF() {
     const inspeccion = Store.getCurrentInspeccion();
     if (!inspeccion) { Router.toast('Sin inspección activa'); return; }
-    const win = _abrirVentanaActa();
-    if (!win) { Router.toast('Permite ventanas emergentes para generar el acta'); return; }
+
+    if (typeof ScInformes === 'undefined') {
+      Router.toast('Registro de Informes no está disponible');
+      return;
+    }
+
+    const sesion = ScInformes.getSesionCache && ScInformes.getSesionCache();
+    if (!sesion?.usuario || !ScInformes.getCodigo()) {
+      Router.toast('Inicia sesión para guardar el PDF en Registro de Informes');
+      if (typeof ScInformesUI !== 'undefined' && ScInformesUI.abrirRegistroInformes) {
+        ScInformesUI.abrirRegistroInformes();
+      }
+      return;
+    }
 
     const btn = document.querySelector('[data-acta-guardar-pdf]');
-    if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; btn.textContent = 'Preparando PDF…'; }
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; btn.textContent = 'Guardando…'; }
     try {
-      // La misma copia compacta se abre para imprimir y se sube al Registro:
-      // no se construye otra cadena gigante con las fotos originales.
-      const html = await _generarActaHtmlCompleta(inspeccion, { compacto: true, omitirFotosDetalle: true });
-      _escribirActaEnVentana(win, html);
-
-      const res = await _guardarCopiaRegistro(inspeccion, html);
-      if (res.ok && res.fotosLiberadas) Router.toast('PDF generado · copia guardada y fotos liberadas del equipo');
-      else if (res.ok) Router.toast('PDF generado · copia guardada en Registro de Informes');
-      else if (res.encolado) Router.toast('PDF generado · copia pendiente de sincronizar; fotos conservadas');
-      else if (res.sinSesion) Router.toast('PDF generado · inicia sesión para guardar la copia en Registro de Informes');
-      else if (res.outboxUnavailable) Router.toast('PDF generado · no se pudo asegurar la copia; fotos conservadas');
-      else if (res.codigoInvalido) Router.toast('PDF generado · la sesión expiró; fotos conservadas');
-      else if (res.noDisponible) Router.toast('PDF generado · Registro de Informes no está disponible');
-      else Router.toast('PDF generado · no se pudo guardar la copia; fotos conservadas');
-      return res;
+      const html = await _generarActaHtmlCompleta(inspeccion);
+      const res = await ScInformes.guardarInforme(_crearPayloadInforme(inspeccion, html));
+      if (res.ok) Router.toast('PDF guardado en Registro de Informes');
+      else if (res.encolado) Router.toast('PDF guardado localmente · se sincronizará en Registro de Informes');
+      else if (res.outboxUnavailable) Router.toast('No se pudo respaldar el PDF en Registro de Informes');
+      else if (res.codigoInvalido) Router.toast('La sesión expiró; inicia sesión nuevamente');
+      else Router.toast('No se pudo guardar el PDF en Registro de Informes');
     } catch (error) {
-      console.error('[Actuar] No se pudo preparar el PDF', error);
-      _escribirErrorActaEnVentana(win, error);
-      Router.toast('No se pudo preparar el PDF: ' + (error.message || 'error desconocido'));
-      return { ok: false, error: error.message };
+      console.error('[Actuar] No se pudo guardar el PDF en Registro de Informes', error);
+      Router.toast('No se pudo guardar el PDF en Registro de Informes');
     } finally {
       if (btn) {
         btn.disabled = false;
         btn.style.opacity = '';
-        btn.innerHTML = AppIcons.row('fileText', 'GENERAR PDF / IMPRIMIR', 14);
+        btn.innerHTML = AppIcons.row('fileText', 'GUARDAR PDF', 14);
       }
     }
   }
 
-  // Compatibilidad con enlaces antiguos; el botón visible usa generarPDF().
-  function guardarPDF() { return generarPDF(); }
+  // Compatibilidad con el nombre usado por la propuesta de PDF/impresión.
+  function generarPDF() { return guardarPDF(); }
 
   const REGISTRO_FOTO_MAX_PX = 800;
   const REGISTRO_FOTO_MAX_BYTES = 140 * 1024;
@@ -1167,6 +1162,38 @@ const Actuar = (() => {
           : Promise.resolve('');
       return chartJsPromise.then(chartJs => _buildActaHTML(source, base, sorted, chartJs, options));
     });
+  }
+
+  /**
+   * Respaldo en Supabase al guardar firmas. Si falla, ScInformes lo encola
+   * para reintentar sin bloquear ni alterar el guardado local.
+   */
+  function _respaldarEnNube(inspeccion) {
+    if (typeof ScInformes === 'undefined') return;
+    const sesion = ScInformes.getSesionCache && ScInformes.getSesionCache();
+    if (!sesion?.usuario || !ScInformes.getCodigo()) return;
+
+    const score = Scores.calcular(inspeccion);
+    const aspectosTotal = (inspeccion.programas || []).reduce((total, programa) => total
+      + (programa.aspectos || []).reduce((subtotal, aspecto) => subtotal + 1 + (aspecto.criterios_extra || []).length, 0), 0);
+    const nivelCumplimiento = score.total
+      ? ({ B: 'BUENO', R: 'REGULAR', D: 'DEFICIENTE' }[Scores.getEstado(score.pct_cumplimiento)] || null)
+      : null;
+
+    _generarActaHtmlCompleta(inspeccion).then(html => ScInformes.guardarInforme(
+      _crearPayloadInforme(inspeccion, html, {
+        nivelCumplimiento,
+        aspectosEvaluados: score.total,
+        aspectosTotal,
+        porcentajeCumplimiento: score.pct_cumplimiento,
+      })
+    )).then(res => {
+      if (!res) return;
+      if (res.ok) Router.toast('Firmas guardadas · respaldado en la nube');
+      else if (res.encolado) Router.toast('Firmas guardadas · se respaldará cuando haya conexión');
+      else if (res.outboxUnavailable) Router.toast('Firmas guardadas localmente · no se pudo asegurar el respaldo remoto');
+      else if (res.codigoInvalido) Router.toast('Firmas guardadas · código de acceso inválido, no se respaldó');
+    }).catch(() => {});
   }
 
   function _crearPayloadInforme(inspeccion, html, metadata = null) {
@@ -1399,7 +1426,7 @@ window.addEventListener('load', function() {
 </head>
 <body>
 <main class="acta-wrap">
-  <button class="btn-save" onclick="window.print()">&#128196; Generar PDF / Imprimir</button>
+  <button class="btn-save" onclick="window.print()">&#128190; Guardar como PDF</button>
   ${_renderPrintHeader(inspeccion)}
   ${_renderDatosEstablecimiento(inspeccion)}
   ${_renderResumenCumplimiento(inspeccion)}
@@ -1554,6 +1581,7 @@ window.addEventListener('load', function() {
     Store.upsertInspeccion(inspeccion);
     if (typeof ScInformes !== 'undefined' && ScInformes.programarBorradorActual) ScInformes.programarBorradorActual();
     _forceCaptura = false;
+    _respaldarEnNube(inspeccion);
     Router.toast('Firmas guardadas');
     _refresh();
   }
