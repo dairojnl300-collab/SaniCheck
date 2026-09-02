@@ -17,11 +17,20 @@ const ScInformes = (() => {
   const LS_SESION   = 'sanicheck_sc_sesion';
   const IDB_NAME    = 'sanicheck-sc-informes-outbox';
   const IDB_STORE   = 'pendientes';
+  const IDB_DRAFT_STORE = 'borradores';
+  const IDB_VERSION = 2;
   const MAX_BACKOFF_MS = 30 * 60 * 1000; // 30 min
+  const DRAFT_INTERVAL_MS = 30 * 1000;
 
   let _idbReady = null;
   let _syncing = false;
   let _onlineBound = false;
+  let _draftTimer = null;
+  let _draftPending = null;
+  let _draftSending = false;
+  let _draftLastSentAt = 0;
+  let _draftLastAspectKey = '';
+  let _remoteDraftChecked = false;
 
   // ── Config / código de acceso ───────────────────────────────────────────
 
@@ -44,6 +53,7 @@ const ScInformes = (() => {
       localStorage.removeItem(LS_CODIGO);
       localStorage.removeItem(LS_SESION);
     } catch (e) {}
+    _remoteDraftChecked = false;
   }
 
   function getSesionCache() {
@@ -108,6 +118,7 @@ const ScInformes = (() => {
     setCodigo(row.codigo_acceso);
     const sesion = { id: row.id, nombre: row.nombre, rol: row.rol, usuario: row.usuario };
     _setSesionCache(sesion);
+    _remoteDraftChecked = false;
     return sesion;
   }
 
@@ -131,11 +142,14 @@ const ScInformes = (() => {
     if (_idbReady) return _idbReady;
     _idbReady = new Promise((resolve, reject) => {
       if (!('indexedDB' in window)) { resolve(null); return; }
-      const req = indexedDB.open(IDB_NAME, 1);
+      const req = indexedDB.open(IDB_NAME, IDB_VERSION);
       req.onupgradeneeded = e => {
         const db = e.target.result;
         if (!db.objectStoreNames.contains(IDB_STORE)) {
           db.createObjectStore(IDB_STORE, { keyPath: 'local_id' });
+        }
+        if (!db.objectStoreNames.contains(IDB_DRAFT_STORE)) {
+          db.createObjectStore(IDB_DRAFT_STORE, { keyPath: 'local_id' });
         }
       };
       req.onsuccess = e => resolve(e.target.result);
@@ -144,7 +158,7 @@ const ScInformes = (() => {
     return _idbReady;
   }
 
-  function _idbTx(mode, fn) {
+  function _idbTx(mode, fn, storeName = IDB_STORE) {
     return _openIdb().then(db => {
       if (!db) {
         const error = new Error('IndexedDB no está disponible en este dispositivo');
@@ -152,8 +166,8 @@ const ScInformes = (() => {
         throw error;
       }
       return new Promise((resolve, reject) => {
-        const tx = db.transaction(IDB_STORE, mode);
-        const store = tx.objectStore(IDB_STORE);
+        const tx = db.transaction(storeName, mode);
+        const store = tx.objectStore(storeName);
         let out;
         try { out = fn(store); } catch (e) { reject(e); return; }
         tx.oncomplete = () => resolve(out);
@@ -177,6 +191,20 @@ const ScInformes = (() => {
     });
   }
 
+  function _idbPutDraft(rec) {
+    return _idbTx('readwrite', store => store.put(rec), IDB_DRAFT_STORE).then(() => true).catch(e => {
+      console.warn('[ScInformes] outbox borrador put', e);
+      throw e;
+    });
+  }
+
+  function _idbDeleteDraft(localId) {
+    return _idbTx('readwrite', store => store.delete(localId), IDB_DRAFT_STORE).then(() => true).catch(e => {
+      console.warn('[ScInformes] outbox borrador delete', e);
+      throw e;
+    });
+  }
+
   function _idbGetAll() {
     return _openIdb().then(db => {
       if (!db) return [];
@@ -194,12 +222,22 @@ const ScInformes = (() => {
     return _idbPut(rec);
   }
 
+  function encolarBorrador(payload) {
+    const rec = { ...payload, intentos: payload.intentos || 0, ultimo_intento: 0 };
+    return _idbPutDraft(rec);
+  }
+
   async function flushPendientes() {
     if (_syncing || !navigator.onLine) return 0;
     _syncing = true;
     let n = 0;
     try {
-      const todos = await _idbGetAll();
+      const informes = await _idbGetAll();
+      const borradores = await _idbGetAllDrafts();
+      const todos = [
+        ...informes.map(r => ({ ...r, _tipoPendiente: 'informe' })),
+        ...borradores.map(r => ({ ...r, _tipoPendiente: 'borrador' })),
+      ];
       const ahora = Date.now();
       const listos = todos.filter(r => {
         if (!r.intentos) return true;
@@ -208,24 +246,37 @@ const ScInformes = (() => {
       });
       for (const rec of listos) {
         try {
-          await _rpc('sc_guardar_informe', {
-            p_codigo: rec.codigo,
-            p_establecimiento: rec.establecimiento,
-            p_fecha: rec.fecha,
-            p_html: rec.html,
-            p_local_id: rec.local_id,
-            p_numero_acta: rec.numero_acta || null,
-            p_nivel_cumplimiento: rec.nivel_cumplimiento || null,
-            p_aspectos_evaluados: Number.isFinite(rec.aspectos_evaluados) ? rec.aspectos_evaluados : null,
-            p_aspectos_total: Number.isFinite(rec.aspectos_total) ? rec.aspectos_total : null,
-            p_porcentaje_cumplimiento: Number.isFinite(rec.porcentaje_cumplimiento) ? rec.porcentaje_cumplimiento : null,
-          });
-          await _idbDelete(rec.local_id);
+          if (rec._tipoPendiente === 'borrador') {
+            await _rpc('sc_guardar_borrador', {
+              p_codigo: rec.codigo,
+              p_establecimiento: rec.establecimiento,
+              p_fecha: rec.fecha,
+              p_local_id: rec.local_id,
+              p_numero_acta: rec.numero_acta || null,
+              p_estado_parcial: rec.estado_parcial,
+            });
+            await _idbDeleteDraft(rec.local_id);
+          } else {
+            await _rpc('sc_guardar_informe', {
+              p_codigo: rec.codigo,
+              p_establecimiento: rec.establecimiento,
+              p_fecha: rec.fecha,
+              p_html: rec.html,
+              p_local_id: rec.local_id,
+              p_numero_acta: rec.numero_acta || null,
+              p_nivel_cumplimiento: rec.nivel_cumplimiento || null,
+              p_aspectos_evaluados: Number.isFinite(rec.aspectos_evaluados) ? rec.aspectos_evaluados : null,
+              p_aspectos_total: Number.isFinite(rec.aspectos_total) ? rec.aspectos_total : null,
+              p_porcentaje_cumplimiento: Number.isFinite(rec.porcentaje_cumplimiento) ? rec.porcentaje_cumplimiento : null,
+            });
+            await _idbDelete(rec.local_id);
+          }
           n++;
         } catch (e) {
           rec.intentos = (rec.intentos || 0) + 1;
           rec.ultimo_intento = Date.now();
-          await _idbPut(rec); // nunca se borra por fallo: no perder el informe
+          if (rec._tipoPendiente === 'borrador') await _idbPutDraft(rec);
+          else await _idbPut(rec); // nunca se borra por fallo: no perder el informe
           console.warn('[ScInformes] reintento pendiente', rec.local_id, e.message);
         }
       }
@@ -239,6 +290,10 @@ const ScInformes = (() => {
     if (_onlineBound) return;
     _onlineBound = true;
     window.addEventListener('online', () => flushPendientes().catch(() => {}));
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flushBorradorPendiente().catch(() => {});
+    });
+    window.addEventListener('pagehide', () => flushBorradorPendiente().catch(() => {}));
     setInterval(() => flushPendientes().catch(() => {}), 60000);
     setTimeout(() => flushPendientes().catch(() => {}), 3000);
   }
@@ -268,6 +323,7 @@ const ScInformes = (() => {
     };
     try {
       const id = await _rpc('sc_guardar_informe', params);
+      await _retirarBorradorPendiente(payload.localId);
       return { ok: true, id };
     } catch (e) {
       // Código inválido: no tiene sentido encolar (nunca va a pasar sin corregirlo).
@@ -288,6 +344,7 @@ const ScInformes = (() => {
       };
       try {
         await encolarPendiente(pendiente);
+        await _retirarBorradorPendiente(payload.localId);
         return { ok: false, encolado: true, error: e.message };
       } catch (outboxError) {
         return {
@@ -300,10 +357,278 @@ const ScInformes = (() => {
     }
   }
 
+  // ── Borrador incremental: texto estructurado, nunca fotografías ─────────
+
+  function _clonarSinFotos(value) {
+    if (Array.isArray(value)) return value.map(_clonarSinFotos);
+    if (!value || typeof value !== 'object') return value;
+    const out = {};
+    Object.keys(value).forEach(key => {
+      if (key === 'fotografias' || key === 'firmas') return;
+      out[key] = _clonarSinFotos(value[key]);
+    });
+    return out;
+  }
+
+  function _aspectosTotales(inspeccion) {
+    return (inspeccion?.programas || []).reduce((total, programa) => total
+      + (programa.aspectos || []).reduce((subtotal, aspecto) => subtotal
+        + 1 + (aspecto.criterios_extra || []).length, 0), 0);
+  }
+
+  function _aspectosEvaluados(inspeccion) {
+    const criterioDe = aspecto => (typeof Scores !== 'undefined' && typeof Scores.criterio === 'function')
+      ? Scores.criterio(aspecto) : (aspecto.criterio || aspecto.evaluacion);
+    return (inspeccion?.programas || []).reduce((total, programa) => total
+      + (programa.aspectos || []).reduce((subtotal, aspecto) => subtotal
+        + (criterioDe(aspecto) ? 1 : 0)
+        + (aspecto.criterios_extra || []).reduce((extra, criterio) => extra
+          + (criterio.criterio ? 1 : 0), 0), 0), 0);
+  }
+
+  function _crearEstadoParcial(inspeccion, cursor) {
+    const ahora = new Date().toISOString();
+    const total = _aspectosTotales(inspeccion);
+    const evaluados = _aspectosEvaluados(inspeccion);
+    const snapshot = _clonarSinFotos({
+      id: inspeccion.id,
+      fase_phva: inspeccion.fase_phva,
+      establecimiento: inspeccion.establecimiento,
+      inspeccion: inspeccion.inspeccion,
+      numero_acta: inspeccion.numero_acta,
+      programas: inspeccion.programas,
+      estado_general: inspeccion.estado_general,
+      hallazgos_criticos: inspeccion.hallazgos_criticos,
+      score: inspeccion.score,
+      creado_en: inspeccion.creado_en,
+      actualizado_en: inspeccion.actualizado_en,
+      version_app: inspeccion.version_app,
+    });
+    const ui = (typeof Store !== 'undefined' && Store.get) ? (Store.get().ui || {}) : {};
+    return {
+      version: 1,
+      estado: 'en_curso',
+      local_id: inspeccion.id,
+      guardado_en: ahora,
+      aspectos_completados: evaluados,
+      aspectos_total: total,
+      ultimo_aspecto: cursor || null,
+      ui: { screen: 'hacer', programaIdx: ui.programaIdx || 0, aspectoIdx: ui.aspectoIdx || 0 },
+      inspeccion: snapshot,
+    };
+  }
+
+  function _crearPayloadBorrador(inspeccion, cursor) {
+    return {
+      localId: inspeccion.id,
+      establecimiento: inspeccion.establecimiento || {},
+      fecha: inspeccion.inspeccion?.fecha || new Date().toISOString().slice(0, 10),
+      numeroActa: inspeccion.numero_acta || inspeccion.inspeccion?.numero_acta || null,
+      estadoParcial: _crearEstadoParcial(inspeccion, cursor),
+    };
+  }
+
+  async function guardarBorrador(payload) {
+    const codigo = getCodigo();
+    if (!codigo) return { ok: false, sinCodigo: true };
+    const params = {
+      p_codigo: codigo,
+      p_establecimiento: payload.establecimiento || {},
+      p_fecha: payload.fecha,
+      p_local_id: payload.localId,
+      p_numero_acta: payload.numeroActa || null,
+      p_estado_parcial: payload.estadoParcial,
+    };
+    try {
+      const id = await _rpc('sc_guardar_borrador', params);
+      return { ok: true, id };
+    } catch (e) {
+      if (/código de acceso inválido/i.test(e.message || '')) {
+        return { ok: false, codigoInvalido: true };
+      }
+      const pendiente = {
+        local_id: payload.localId,
+        codigo,
+        establecimiento: payload.establecimiento || {},
+        fecha: payload.fecha,
+        numero_acta: payload.numeroActa || null,
+        estado_parcial: payload.estadoParcial,
+      };
+      try {
+        await encolarBorrador(pendiente);
+        return { ok: false, encolado: true, error: e.message };
+      } catch (outboxError) {
+        return { ok: false, outboxUnavailable: true, error: e.message, outboxError: outboxError.message };
+      }
+    }
+  }
+
+  async function _flushBorradorNow() {
+    if (_draftSending || !_draftPending) return null;
+    clearTimeout(_draftTimer);
+    _draftTimer = null;
+    const item = _draftPending;
+    _draftPending = null;
+    _draftSending = true;
+    try {
+      const result = await guardarBorrador(item.payload);
+      if (result.ok || result.encolado) {
+        _draftLastSentAt = Date.now();
+        _draftLastAspectKey = item.aspectKey || '';
+      }
+      return result;
+    } finally {
+      _draftSending = false;
+      if (_draftPending) {
+        const remaining = Math.max(0, DRAFT_INTERVAL_MS - (Date.now() - _draftLastSentAt));
+        _draftTimer = setTimeout(() => _flushBorradorNow().catch(() => {}), remaining);
+      }
+    }
+  }
+
+  function scheduleBorrador(inspeccion, options = {}) {
+    if (!inspeccion?.id || typeof guardarBorrador !== 'function') return;
+    _draftPending = {
+      payload: _crearPayloadBorrador(inspeccion, options.cursor),
+      aspectKey: options.aspectKey || '',
+    };
+    const elapsed = Date.now() - _draftLastSentAt;
+    const cambioDeAspecto = !!options.aspectKey && options.aspectKey !== _draftLastAspectKey;
+    const enviarAhora = options.flushOnExit || (options.force && cambioDeAspecto) || elapsed >= DRAFT_INTERVAL_MS;
+    clearTimeout(_draftTimer);
+    if (enviarAhora) {
+      _flushBorradorNow().catch(() => {});
+    } else {
+      _draftTimer = setTimeout(() => _flushBorradorNow().catch(() => {}), Math.max(0, DRAFT_INTERVAL_MS - elapsed));
+    }
+  }
+
+  function flushBorradorPendiente() {
+    return _flushBorradorNow();
+  }
+
+  function _cancelarBorradorEnMemoria(localId) {
+    if (_draftPending?.payload?.localId !== localId) return;
+    clearTimeout(_draftTimer);
+    _draftTimer = null;
+    _draftPending = null;
+  }
+
+  async function _retirarBorradorPendiente(localId) {
+    if (!localId) return;
+    _cancelarBorradorEnMemoria(localId);
+    try { await _idbDeleteDraft(localId); } catch (e) {
+      console.warn('[ScInformes] no se pudo retirar el borrador finalizado', e);
+    }
+  }
+
+  function programarBorradorActual(force = true) {
+    if (typeof Store === 'undefined' || !Store.getCurrentInspeccion) return;
+    const inspeccion = Store.getCurrentInspeccion();
+    if (inspeccion) scheduleBorrador(inspeccion, { force, flushOnExit: force });
+  }
+
+  function _fechaMs(value) {
+    const time = Date.parse(value || '');
+    return Number.isFinite(time) ? time : 0;
+  }
+
+  function _buscarAspecto(programa, aspecto) {
+    return (programa?.aspectos || []).find(a => a.id === aspecto.id) || null;
+  }
+
+  function _conservarFotografias(local, restaurada) {
+    if (!local || !restaurada) return;
+    const programas = restaurada.programas || [];
+    (local.programas || []).forEach(localPrograma => {
+      const programa = programas.find(p => p.id === localPrograma.id);
+      if (!programa) return;
+      (localPrograma.aspectos || []).forEach(localAspecto => {
+        const aspecto = _buscarAspecto(programa, localAspecto);
+        if (!aspecto || !Array.isArray(localAspecto.fotografias)) return;
+        aspecto.fotografias = localAspecto.fotografias;
+        (localAspecto.criterios_extra || []).forEach((extra, index) => {
+          if (!Array.isArray(extra.fotografias)) return;
+          if (!Array.isArray(aspecto.criterios_extra)) aspecto.criterios_extra = [];
+          if (aspecto.criterios_extra[index]) aspecto.criterios_extra[index].fotografias = extra.fotografias;
+        });
+      });
+    });
+  }
+
+  function _idbGetAllDrafts() {
+    return _openIdb().then(db => {
+      if (!db) return [];
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(IDB_DRAFT_STORE, 'readonly');
+        const req = tx.objectStore(IDB_DRAFT_STORE).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    });
+  }
+
+  function _restaurarBorradorLocal(detalle) {
+    const parcial = detalle?.estado_parcial;
+    const remoto = parcial?.inspeccion;
+    if (!remoto?.programas?.length || !detalle.local_id) return null;
+    const actual = (typeof Store !== 'undefined' && Store.get) ? Store.get() : { inspecciones: [], ui: {} };
+    const local = (actual.inspecciones || []).find(i => i.id === detalle.local_id) || null;
+    const restaurada = { ...(local || {}), ...remoto, id: detalle.local_id };
+    if (local?.firmas && !restaurada.firmas) restaurada.firmas = local.firmas;
+    _conservarFotografias(local, restaurada);
+    restaurada.actualizado_en = new Date().toISOString();
+    const inspecciones = (actual.inspecciones || []).filter(i => i.id !== detalle.local_id);
+    inspecciones.unshift(restaurada);
+    const ui = { ...(actual.ui || {}), ...(parcial.ui || {}), screen: 'hacer' };
+    Store.set({ inspecciones, currentId: detalle.local_id, ui });
+    return restaurada;
+  }
+
+  async function revisarBorradoresRemotos() {
+    if (_remoteDraftChecked || !getCodigo() || typeof Store === 'undefined') return null;
+    let filas;
+    try { filas = await listBorradores(); } catch (e) { return null; }
+    _remoteDraftChecked = true;
+    const inspecciones = Store.get().inspecciones || [];
+    const candidatos = (filas || []).filter(fila => {
+      const local = inspecciones.find(i => i.id === fila.local_id);
+      const remotoMs = _fechaMs(fila.estado_parcial_actualizado_en || fila.actualizado_en);
+      const localMs = _fechaMs(local?.actualizado_en || local?.creado_en);
+      return !local || remotoMs > localMs;
+    }).sort((a, b) => {
+      const current = Store.get().currentId;
+      if (a.local_id === current && b.local_id !== current) return -1;
+      if (b.local_id === current && a.local_id !== current) return 1;
+      return _fechaMs(b.estado_parcial_actualizado_en || b.actualizado_en)
+        - _fechaMs(a.estado_parcial_actualizado_en || a.actualizado_en);
+    });
+    const fila = candidatos[0];
+    if (!fila) return null;
+    let detalle;
+    try { detalle = await getBorrador(fila.id); } catch (e) { return null; }
+    const nombre = detalle?.establecimiento?.nombre || 'esta inspección';
+    const recuperar = window.confirm(
+      `Hay un borrador remoto más reciente de ${nombre}. ¿Deseas recuperar el progreso guardado?`
+    );
+    if (!recuperar) return { ofrecido: true, recuperado: false, localId: detalle.local_id };
+    const restaurada = _restaurarBorradorLocal(detalle);
+    if (!restaurada) return { ofrecido: true, recuperado: false, localId: detalle.local_id };
+    if (typeof Router !== 'undefined' && Router.go) Router.go('hacer');
+    if (typeof Router !== 'undefined' && Router.toast) Router.toast('Progreso recuperado desde la nube');
+    return { ofrecido: true, recuperado: true, localId: detalle.local_id };
+  }
+
   // ── CRUD técnico ─────────────────────────────────────────────────────────
 
   function listMisInformes() {
     return _rpc('sc_list_mis_informes', { p_codigo: getCodigo() });
+  }
+  function listBorradores() {
+    return _rpc('sc_list_borradores', { p_codigo: getCodigo() });
+  }
+  function getBorrador(id) {
+    return _rpc('sc_get_borrador', { p_id: id, p_codigo: getCodigo() }).then(r => Array.isArray(r) ? r[0] : r);
   }
   function getInforme(id) {
     return _rpc('sc_get_informe', { p_id: id, p_codigo: getCodigo() }).then(r => Array.isArray(r) ? r[0] : r);
@@ -346,6 +671,8 @@ const ScInformes = (() => {
     getCodigo, setCodigo, clearSesion, getSesionCache, whoami, loginUsuario,
     configurarPasswordInicial, esAdmin, eliminarUsuario, cambiarPassword,
     guardarInforme, flushPendientes, bindAutoRetry, encolarPendiente,
+    guardarBorrador, scheduleBorrador, flushBorradorPendiente, programarBorradorActual,
+    revisarBorradoresRemotos, listBorradores, getBorrador,
     listMisInformes, getInforme, updateInforme, deleteInforme,
     listAdminInformes, getAdminInforme, updateAdminInforme, deleteAdminInforme,
     listUsuarios, crearUsuario,

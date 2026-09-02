@@ -28,8 +28,12 @@
     <button id="recover" class="primary" disabled>Preparar recuperación y abrir SaniCheck</button>
     <button id="download" class="secondary" disabled>Descargar respaldo de seguridad</button>
     <button id="restore" class="secondary" disabled>Restaurar copia original</button>
+    <button id="remote-recover" class="secondary" disabled>Recuperar respaldo de la nube</button>
+    <p id="remote-status" class="small" aria-live="polite"></p>
     <p class="small">Las fotos originales se conservan en un respaldo local antes de optimizar. No se elimina ninguna inspección.</p>
   </main>
+  <script src="js/sc-informes-config.secrets.js"></script>
+  <script src="js/sc-informes-config.js"></script>
   <script>
     (() => {
       'use strict';
@@ -44,11 +48,81 @@
       const recover = document.getElementById('recover');
       const download = document.getElementById('download');
       const restore = document.getElementById('restore');
+      const remoteRecover = document.getElementById('remote-recover');
+      const remoteStatus = document.getElementById('remote-status');
+      const CODE_KEY = 'sanicheck_sc_codigo_acceso';
       let source = null;
       let sourceSnapshot = null;
       let originalAvailable = false;
 
       const say = text => { status.textContent = text; };
+      const sayRemote = text => { remoteStatus.textContent = text; };
+      const remoteCode = () => String(localStorage.getItem(CODE_KEY) || '').trim();
+      const remoteConfig = () => window.SC_INFORMES_CONFIG || {};
+      const remoteAvailable = () => !!(remoteCode() && remoteConfig().SUPABASE_URL && remoteConfig().SUPABASE_ANON_KEY);
+      const setRemoteAvailability = () => {
+        remoteRecover.disabled = !remoteAvailable();
+        if (!remoteAvailable()) sayRemote('Inicia sesión en Registro de Informes para buscar un respaldo remoto.');
+      };
+
+      async function remoteRpc(name, params) {
+        const cfg = remoteConfig();
+        if (!remoteAvailable()) throw new Error('No hay una sesión remota disponible');
+        const response = await fetch(cfg.SUPABASE_URL.replace(/\/$/, '') + '/rest/v1/rpc/' + name, {
+          method: 'POST',
+          headers: {
+            apikey: cfg.SUPABASE_ANON_KEY,
+            Authorization: 'Bearer ' + cfg.SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(params || {}),
+        });
+        const raw = await response.text();
+        let data = null;
+        try { data = raw ? JSON.parse(raw) : null; } catch (_) {}
+        if (!response.ok) throw new Error(data?.message || data?.error_description || `Error remoto ${response.status}`);
+        return data;
+      }
+
+      function cloneJson(value) {
+        return value == null ? value : JSON.parse(JSON.stringify(value));
+      }
+
+      function copyLocalPhotos(local, target) {
+        if (!local || !target) return;
+        (local.programas || []).forEach(localProgram => {
+          const program = (target.programas || []).find(item => item.id === localProgram.id);
+          if (!program) return;
+          (localProgram.aspectos || []).forEach(localAspect => {
+            const aspect = (program.aspectos || []).find(item => item.id === localAspect.id);
+            if (!aspect) return;
+            if (Array.isArray(localAspect.fotografias)) aspect.fotografias = localAspect.fotografias;
+            (localAspect.criterios_extra || []).forEach((extra, index) => {
+              if (Array.isArray(extra.fotografias) && aspect.criterios_extra?.[index]) {
+                aspect.criterios_extra[index].fotografias = extra.fotografias;
+              }
+            });
+          });
+        });
+      }
+
+      function buildRemoteStore(detail) {
+        const partial = detail?.estado_parcial;
+        const remoteInspection = partial?.inspeccion;
+        if (!remoteInspection?.programas?.length || !detail.local_id) throw new Error('El respaldo remoto no contiene una inspección válida');
+        const base = source && Array.isArray(source.inspecciones)
+          ? cloneJson(source)
+          : { inspecciones: [], currentId: null, ui: {} };
+        const index = base.inspecciones.findIndex(item => item.id === detail.local_id);
+        const local = index >= 0 ? base.inspecciones[index] : null;
+        const recovered = { ...(local || {}), ...cloneJson(remoteInspection), id: detail.local_id, actualizado_en: new Date().toISOString() };
+        copyLocalPhotos(local, recovered);
+        if (index >= 0) base.inspecciones[index] = recovered;
+        else base.inspecciones.unshift(recovered);
+        base.currentId = detail.local_id;
+        base.ui = { ...(base.ui || {}), ...(partial.ui || {}), screen: 'hacer' };
+        return base;
+      }
       const latestUpdate = value => (value?.inspecciones || []).reduce((latest, item) => {
         return Math.max(latest, Date.parse(item.actualizado_en || item.creado_en || '') || 0);
       }, 0);
@@ -193,6 +267,7 @@
           recover.disabled = !source;
           download.disabled = !source;
           restore.disabled = !originalAvailable;
+          setRemoteAvailability();
         } catch (error) {
           console.error('[SaniCheck Recovery]', error);
           say('No se pudo leer el almacenamiento local. No se modificó ningún dato.');
@@ -202,7 +277,7 @@
 
       recover.onclick = async () => {
         if (!source) return;
-        recover.disabled = true; download.disabled = true; restore.disabled = true;
+        recover.disabled = true; download.disabled = true; restore.disabled = true; remoteRecover.disabled = true;
         try {
           say('Creando respaldo original seguro…');
           await idbPut('recovery-original', { store: source, draft: sourceSnapshot?.draft || null, saved_at: new Date().toISOString() });
@@ -217,7 +292,47 @@
           console.error('[SaniCheck Recovery]', error);
           say('No se modificó la inspección porque la recuperación no pudo completarse. Descarga el respaldo e inténtalo de nuevo.');
           status.classList.add('danger');
-          recover.disabled = false; download.disabled = false; restore.disabled = !originalAvailable;
+          recover.disabled = false; download.disabled = false; restore.disabled = !originalAvailable; setRemoteAvailability();
+        }
+      };
+
+      remoteRecover.onclick = async () => {
+        if (!remoteAvailable()) return;
+        remoteRecover.disabled = true; recover.disabled = true; download.disabled = true; restore.disabled = true;
+        try {
+          sayRemote('Buscando el respaldo remoto más reciente…');
+          const rows = await remoteRpc('sc_list_borradores', { p_codigo: remoteCode() });
+          const candidates = (Array.isArray(rows) ? rows : []).sort((a, b) =>
+            (Date.parse(b.estado_parcial_actualizado_en || b.actualizado_en || '') || 0)
+            - (Date.parse(a.estado_parcial_actualizado_en || a.actualizado_en || '') || 0));
+          const row = candidates[0];
+          if (!row) throw new Error('No se encontró un borrador remoto para esta sesión');
+          const detailRows = await remoteRpc('sc_get_borrador', { p_id: row.id, p_codigo: remoteCode() });
+          const detail = Array.isArray(detailRows) ? detailRows[0] : detailRows;
+          const nombre = detail?.establecimiento?.nombre || 'esta inspección';
+          if (!window.confirm(`Se encontró un respaldo remoto de ${nombre}. ¿Deseas recuperarlo?`)) {
+            sayRemote('Recuperación remota cancelada. No se eliminó ningún dato.');
+            remoteRecover.disabled = false; recover.disabled = !source; download.disabled = !source; restore.disabled = !originalAvailable;
+            return;
+          }
+          const rawLocal = localStorage.getItem(KEY);
+          const existingOriginal = await idbGet('recovery-original');
+          if (!existingOriginal?.store && source) {
+            await idbPut('recovery-original', { store: source, draft: sourceSnapshot?.draft || null, saved_at: new Date().toISOString() });
+          } else if (!source && rawLocal) {
+            await idbPut('recovery-corrupt-raw', { raw: rawLocal, saved_at: new Date().toISOString() });
+          }
+          const remoteStore = buildRemoteStore(detail);
+          const snapshot = { store: remoteStore, draft: sourceSnapshot?.draft || null, saved_at: new Date().toISOString() };
+          await idbPut('snapshot', snapshot);
+          await idbPut(KEY, remoteStore);
+          try { localStorage.setItem(KEY, JSON.stringify(remoteStore)); } catch (error) { console.warn('[SaniCheck Recovery] localStorage lleno; IndexedDB conserva la recuperación remota', error); }
+          say(`Respaldo remoto recuperado: ${remoteStore.inspecciones.length} inspección(es) disponibles. Abriendo SaniCheck…`);
+          setTimeout(() => { location.href = './'; }, 1200);
+        } catch (error) {
+          console.error('[SaniCheck Recovery] remoto', error);
+          sayRemote(`No se pudo recuperar el respaldo remoto: ${error.message}`);
+          remoteRecover.disabled = false; recover.disabled = !source; download.disabled = !source; restore.disabled = !originalAvailable;
         }
       };
 
@@ -238,6 +353,7 @@
         }
       };
 
+      setRemoteAvailability();
       load();
     })();
   </script>
