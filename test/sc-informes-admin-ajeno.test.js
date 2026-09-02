@@ -10,7 +10,13 @@ const path = require('path');
 const vm = require('vm');
 
 const source = fs.readFileSync(path.join(__dirname, '..', 'app/js/sc-informes.js'), 'utf8');
-const local = { sanicheck_sc_codigo_acceso: 'ADMIN-CODIGO' };
+const local = {
+  sanicheck_sc_codigo_acceso: 'ADMIN-CODIGO',
+  // _marcarAjeno/_leerAjenos quedan scoped por sesión (mismo patrón que
+  // LS_FINALES): sin una sesión activa en localStorage, el mapa ajeno nunca
+  // escribe nada — este mock es necesario, no un detalle incidental.
+  sanicheck_sc_sesion: JSON.stringify({ id: 'admin-001', nombre: 'Admin Test', rol: 'admin', usuario: 'admin' }),
+};
 const state = { inspecciones: [], currentId: null, ui: { screen: 'hacer', programaIdx: 0, aspectoIdx: 0 } };
 const rpcCalls = [];
 
