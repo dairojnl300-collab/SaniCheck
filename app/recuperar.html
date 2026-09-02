@@ -36,9 +36,10 @@
       const KEY = 'saneamiento_psb_v1';
       const DB_NAME = 'sanicheck-persist';
       const DB_STORE = 'kv';
-      const MAX_PX = 1600;
-      const MAX_BYTES = 900 * 1024;
+      const MAX_PX = 1280;
+      const MAX_BYTES = 350 * 1024;
       const QUALITIES = [0.78, 0.64, 0.52, 0.40];
+      const SCALES = [1, 0.82, 0.68, 0.56, 0.46];
       const status = document.getElementById('status');
       const recover = document.getElementById('recover');
       const download = document.getElementById('download');
@@ -124,16 +125,22 @@
         const image = new Image();
         image.src = data;
         await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = () => reject(new Error('Imagen inválida')); });
-        const scale = Math.min(1, MAX_PX / Math.max(image.naturalWidth, image.naturalHeight));
         const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-        const context = canvas.getContext('2d', { alpha: false });
-        if (!context) throw new Error('No se pudo preparar la imagen');
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        for (const quality of QUALITIES) {
-          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
-          if (blob && (blob.size <= MAX_BYTES || quality === QUALITIES[QUALITIES.length - 1])) return dataUrl(blob);
+        const baseScale = Math.min(1, MAX_PX / Math.max(image.naturalWidth, image.naturalHeight));
+        for (const dimensionScale of SCALES) {
+          const scale = baseScale * dimensionScale;
+          canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+          canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+          const context = canvas.getContext('2d', { alpha: false });
+          if (!context) throw new Error('No se pudo preparar la imagen');
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          let lastBlob = null;
+          for (const quality of QUALITIES) {
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+            if (blob && blob.size <= MAX_BYTES) return dataUrl(blob);
+            if (blob) lastBlob = blob;
+          }
+          if (lastBlob && dimensionScale === SCALES[SCALES.length - 1]) return dataUrl(lastBlob);
         }
         throw new Error('No se pudo comprimir la imagen');
       }

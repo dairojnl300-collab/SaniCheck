@@ -19,7 +19,7 @@
     (function () {
       try {
         var raw = localStorage.getItem('saneamiento_psb_v1');
-        if (raw && raw.length > 3000000 && !/\/recuperar\.html$/i.test(location.pathname)) {
+        if (raw && raw.length > (3 * 1024 * 1024) && !/\/recuperar\.html$/i.test(location.pathname)) {
           location.replace('recuperar.html');
         }
       } catch (e) {}

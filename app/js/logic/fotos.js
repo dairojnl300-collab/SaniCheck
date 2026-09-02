@@ -28,9 +28,10 @@ const Fotos = (() => {
     inp.click();
   }
 
-  const FOTO_MAX_PX = 1600;
-  const FOTO_MAX_BYTES = 900 * 1024;
+  const FOTO_MAX_PX = 1280;
+  const FOTO_MAX_BYTES = 350 * 1024;
   const FOTO_CALIDADES = [0.78, 0.64, 0.52, 0.40];
+  const FOTO_ESCALAS = [1, 0.82, 0.68, 0.56, 0.46];
 
   function _blobToDataUrl(blob) {
     return new Promise((resolve, reject) => {
@@ -59,17 +60,23 @@ const Fotos = (() => {
       const width = bitmap.width || bitmap.naturalWidth;
       const height = bitmap.height || bitmap.naturalHeight;
       if (!width || !height) throw new Error('La foto no tiene dimensiones válidas');
-      const scale = Math.min(1, FOTO_MAX_PX / Math.max(width, height));
       const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.round(width * scale));
-      canvas.height = Math.max(1, Math.round(height * scale));
-      const ctx = canvas.getContext('2d', { alpha: false });
-      if (!ctx) throw new Error('El navegador no pudo preparar la foto');
-      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-      for (const quality of FOTO_CALIDADES) {
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
-        if (blob && (blob.size <= FOTO_MAX_BYTES || quality === FOTO_CALIDADES[FOTO_CALIDADES.length - 1])) {
-          return { data: await _blobToDataUrl(blob), size: blob.size };
+      const baseScale = Math.min(1, FOTO_MAX_PX / Math.max(width, height));
+      for (const dimensionScale of FOTO_ESCALAS) {
+        const scale = baseScale * dimensionScale;
+        canvas.width = Math.max(1, Math.round(width * scale));
+        canvas.height = Math.max(1, Math.round(height * scale));
+        const ctx = canvas.getContext('2d', { alpha: false });
+        if (!ctx) throw new Error('El navegador no pudo preparar la foto');
+        ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        let lastBlob = null;
+        for (const quality of FOTO_CALIDADES) {
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+          if (blob && blob.size <= FOTO_MAX_BYTES) return { data: await _blobToDataUrl(blob), size: blob.size };
+          if (blob) lastBlob = blob;
+        }
+        if (lastBlob && dimensionScale === FOTO_ESCALAS[FOTO_ESCALAS.length - 1]) {
+          return { data: await _blobToDataUrl(lastBlob), size: lastBlob.size };
         }
       }
       throw new Error('No se pudo comprimir la foto');
