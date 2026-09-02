@@ -349,6 +349,7 @@ const ScInformes = (() => {
               });
             }
             await _idbDelete(rec.local_id);
+            await _liberarFotosSiConfirmado(rec);
           }
           n++;
         } catch (e) {
@@ -424,7 +425,8 @@ const ScInformes = (() => {
       const id = await _rpc(ajenoId ? 'sc_guardar_admin_informe' : 'sc_guardar_informe', params);
       await _retirarBorradorPendiente(payload.localId);
       _registrarFinalDeSesion(payload.localId);
-      return { ok: true, id };
+      const fotosLiberadas = await _liberarFotosSiConfirmado(payload);
+      return { ok: true, id, fotosLiberadas };
     } catch (e) {
       // Código inválido: no tiene sentido encolar (nunca va a pasar sin corregirlo).
       if (/código de acceso inválido/i.test(e.message || '')) {
@@ -443,6 +445,8 @@ const ScInformes = (() => {
         porcentaje_cumplimiento: Number.isFinite(payload.porcentajeCumplimiento) ? payload.porcentajeCumplimiento : null,
         estado_estructurado: estadoEstructurado,
         ajeno_id: ajenoId || null,
+        liberarFotosAlConfirmar: !!payload.liberarFotosAlConfirmar,
+        localActualizadoEn: payload.localActualizadoEn || null,
       };
       try {
         await encolarPendiente(pendiente);
@@ -630,6 +634,20 @@ const ScInformes = (() => {
     _cancelarBorradorEnMemoria(localId);
     try { await _idbDeleteDraft(localId); } catch (e) {
       console.warn('[ScInformes] no se pudo retirar el borrador finalizado', e);
+    }
+  }
+
+  async function _liberarFotosSiConfirmado(payload) {
+    if (!payload?.liberarFotosAlConfirmar || typeof Store === 'undefined'
+        || typeof Store.liberarFotosInspeccion !== 'function') return false;
+    const localId = payload.local_id || payload.localId;
+    if (!localId) return false;
+    try {
+      return await Store.liberarFotosInspeccion(localId,
+        payload.local_actualizado_en || payload.localActualizadoEn || null);
+    } catch (e) {
+      console.warn('[ScInformes] no se pudieron liberar las fotos locales', e);
+      return false;
     }
   }
 

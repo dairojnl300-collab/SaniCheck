@@ -65,7 +65,7 @@ const Actuar = (() => {
           ${AppIcons.icon('fileText', 12)} ${_esc(inspeccion.numero_acta)} · ${_esc(inspeccion.establecimiento.nombre)}</div>
         <div style="display:flex;gap:var(--sp-sm);">
           <button class="btn btn-primary" data-acta-guardar-pdf style="flex:1;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
-            onclick="Actuar.guardarPDF()">${AppIcons.row('fileText', 'GUARDAR PDF', 14)}</button>
+            onclick="Actuar.generarPDF()">${AppIcons.row('fileText', 'GENERAR PDF / IMPRIMIR', 14)}</button>
           <button class="btn btn-accent" style="flex:1;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
             onclick="Actuar.compartir()">${AppIcons.row('share', 'COMPARTIR', 14)}</button>
         </div>
@@ -671,7 +671,7 @@ const Actuar = (() => {
   }
 
   /* ── Evidencia y seguimiento por ítem ────────────── */
-  function _renderDetallePorItem(inspeccion) {
+  function _renderDetallePorItem(inspeccion, options = {}) {
     const conEval = inspeccion.programas.map((p, programaIdx) => ({ p, programaIdx })).filter(({ p }) => p.aspectos.some(a => a.evaluacion || a.criterio || (a.fotografias || []).length || (a.criterios_extra || []).some(x => x.criterio || (x.fotografias || []).length)));
     if (!conEval.length) return '';
 
@@ -685,7 +685,7 @@ const Actuar = (() => {
         ${cumple ? `<div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Observaciones:</strong> ${_esc(a.obs || 'Sin observaciones registradas.')}</div><div style="margin-top:4px;padding:5px 7px;background:#F0FAF5;border-radius:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Recomendaciones:</strong> ${_esc(a.recomendaciones || 'Sin recomendación registrada.')}</div>` : ''}
         ${incumple ? `<div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Hallazgo:</strong> ${_esc(a.hallazgo || a.obs || 'Sin hallazgo registrado.')}</div><div style="margin-top:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Acción correctiva:</strong> ${_esc(a.accion || 'Sin acción correctiva registrada.')}</div><div style="margin-top:4px;font-size:10px;color:#374151;"><strong>Estado de acción:</strong> ${_esc(a.estado || 'Abierto')}</div>` : ''}
         ${criterio === 'NA' ? `<div style="margin-top:7px;font-size:10px;color:#6B7280;text-align:justify;hyphens:auto;"><strong>Justificación N-A:</strong> ${_esc(a.obs || 'No aplica a este establecimiento.')}</div>` : ''}
-        ${_renderFotosAspecto(a)}</div>`;
+        ${_renderFotosAspecto(a, options)}</div>`;
     };
 
     const tarjetas = [];
@@ -714,7 +714,8 @@ const Actuar = (() => {
       </div>`;
   }
 
-  function _renderFotosAspecto(aspecto) {
+  function _renderFotosAspecto(aspecto, options = {}) {
+    if (options.omitirFotosDetalle) return '';
     const fotos = aspecto.fotografias || [];
     if (!fotos.length) return '';
     return `
@@ -933,115 +934,238 @@ const Actuar = (() => {
   }
 
   /* ── Abrir ventana HTML dedicada para PDF (regla iOS: window.open('','_blank') + document.write) ── */
+  function _abrirVentanaActa() {
+    const win = window.open('', '_blank', 'noopener');
+    if (!win) return null;
+    try { win.opener = null; } catch (e) {}
+    return win;
+  }
+
+  function _escribirActaEnVentana(win, html) {
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  }
+
+  function _escribirErrorActaEnVentana(win, error) {
+    const detalle = _esc(error?.message || 'Error desconocido');
+    try {
+      _escribirActaEnVentana(win, `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Error al generar PDF</title><style>body{font-family:Arial,sans-serif;padding:32px;color:#0A2E23;line-height:1.5}main{max-width:620px;margin:8vh auto;padding:28px;border:1px solid #D8E8E1;border-radius:16px;background:#F5FBF8}h1{font-size:22px;margin-top:0;color:#A32D2D}p{font-size:15px}small{color:#6B7280}</style></head><body><main><h1>No se pudo generar el PDF</h1><p>${detalle}</p><small>Las fotos y la inspección siguen conservadas en este equipo. Cierra esta ventana y vuelve a intentarlo.</small></main></body></html>`);
+    } catch (writeError) {
+      console.error('[Actuar] No se pudo mostrar el error del PDF', writeError);
+    }
+  }
+
   function abrirPDF() {
     const inspeccion = Store.getCurrentInspeccion();
     if (!inspeccion) { Router.toast('Sin inspección activa'); return; }
-    const win = window.open('', '_blank', 'noopener');
+    const win = _abrirVentanaActa();
     if (!win) { Router.toast('Permite ventanas emergentes para generar el acta'); return; }
-    try { win.opener = null; } catch (e) {}
-    _generarActaHtmlCompleta(inspeccion).then(html => {
-      win.document.open();
-      win.document.write(html);
-      win.document.close();
+    return _generarActaHtmlCompleta(inspeccion, { compacto: true, omitirFotosDetalle: true }).then(html => {
+      _escribirActaEnVentana(win, html);
+      return html;
+    }).catch(error => {
+      console.error('[Actuar] No se pudo preparar el PDF', error);
+      _escribirErrorActaEnVentana(win, error);
+      Router.toast('No se pudo preparar el PDF: ' + (error.message || 'error desconocido'));
+      throw error;
     });
   }
 
-  /**
-   * Guarda o actualiza el acta en Registro de Informes sin abrir ventanas.
-   * El Registro conserva el HTML completo y ofrece allí la opción Ver / PDF
-   * para imprimirlo o descargarlo desde el visor seguro.
-   */
-  async function guardarPDF() {
+  async function _guardarCopiaRegistro(inspeccion, html) {
+    if (typeof ScInformes === 'undefined') return { ok: false, noDisponible: true };
+    const sesion = ScInformes.getSesionCache && ScInformes.getSesionCache();
+    if (!sesion?.usuario || !ScInformes.getCodigo()) return { ok: false, sinSesion: true };
+    return ScInformes.guardarInforme({
+      ..._crearPayloadInforme(inspeccion, html),
+      liberarFotosAlConfirmar: true,
+      localActualizadoEn: inspeccion.actualizado_en,
+    });
+  }
+
+  async function generarPDF() {
     const inspeccion = Store.getCurrentInspeccion();
     if (!inspeccion) { Router.toast('Sin inspección activa'); return; }
-
-    if (typeof ScInformes === 'undefined') {
-      Router.toast('Registro de Informes no está disponible');
-      return;
-    }
-
-    const sesion = ScInformes.getSesionCache && ScInformes.getSesionCache();
-    if (!sesion?.usuario || !ScInformes.getCodigo()) {
-      Router.toast('Inicia sesión para guardar el PDF en Registro de Informes');
-      if (typeof ScInformesUI !== 'undefined' && ScInformesUI.abrirRegistroInformes) {
-        ScInformesUI.abrirRegistroInformes();
-      }
-      return;
-    }
+    const win = _abrirVentanaActa();
+    if (!win) { Router.toast('Permite ventanas emergentes para generar el acta'); return; }
 
     const btn = document.querySelector('[data-acta-guardar-pdf]');
-    if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; btn.textContent = 'Guardando…'; }
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; btn.textContent = 'Preparando PDF…'; }
     try {
-      const html = await _generarActaHtmlCompleta(inspeccion);
-      const res = await ScInformes.guardarInforme(_crearPayloadInforme(inspeccion, html));
-      if (res.ok) Router.toast('PDF guardado en Registro de Informes');
-      else if (res.encolado) Router.toast('PDF guardado localmente · se sincronizará en Registro de Informes');
-      else if (res.outboxUnavailable) Router.toast('No se pudo respaldar el PDF en Registro de Informes');
-      else if (res.codigoInvalido) Router.toast('La sesión expiró; inicia sesión nuevamente');
-      else Router.toast('No se pudo guardar el PDF en Registro de Informes');
-    } catch (e) {
-      Router.toast('No se pudo guardar el PDF en Registro de Informes');
+      // La misma copia compacta se abre para imprimir y se sube al Registro:
+      // no se construye otra cadena gigante con las fotos originales.
+      const html = await _generarActaHtmlCompleta(inspeccion, { compacto: true, omitirFotosDetalle: true });
+      _escribirActaEnVentana(win, html);
+
+      const res = await _guardarCopiaRegistro(inspeccion, html);
+      if (res.ok && res.fotosLiberadas) Router.toast('PDF generado · copia guardada y fotos liberadas del equipo');
+      else if (res.ok) Router.toast('PDF generado · copia guardada en Registro de Informes');
+      else if (res.encolado) Router.toast('PDF generado · copia pendiente de sincronizar; fotos conservadas');
+      else if (res.sinSesion) Router.toast('PDF generado · inicia sesión para guardar la copia en Registro de Informes');
+      else if (res.outboxUnavailable) Router.toast('PDF generado · no se pudo asegurar la copia; fotos conservadas');
+      else if (res.codigoInvalido) Router.toast('PDF generado · la sesión expiró; fotos conservadas');
+      else if (res.noDisponible) Router.toast('PDF generado · Registro de Informes no está disponible');
+      else Router.toast('PDF generado · no se pudo guardar la copia; fotos conservadas');
+      return res;
+    } catch (error) {
+      console.error('[Actuar] No se pudo preparar el PDF', error);
+      _escribirErrorActaEnVentana(win, error);
+      Router.toast('No se pudo preparar el PDF: ' + (error.message || 'error desconocido'));
+      return { ok: false, error: error.message };
     } finally {
       if (btn) {
         btn.disabled = false;
         btn.style.opacity = '';
-        btn.innerHTML = AppIcons.row('fileText', 'GUARDAR PDF', 14);
+        btn.innerHTML = AppIcons.row('fileText', 'GENERAR PDF / IMPRIMIR', 14);
       }
     }
   }
 
-  /**
-   * Arma el documento HTML completo del Acta (con Chart.js incrustado para que
-   * funcione offline en la ventana emergente). Reutilizado por abrirPDF() y por
-   * el respaldo remoto en Supabase (guardarFirmas → ScInformes.guardarInforme).
-   */
-  function _generarActaHtmlCompleta(inspeccion) {
-    const base = location.origin + location.pathname.replace(/\/[^\/]*$/, '/');
-    const sorted = [...inspeccion.programas]
-      .map(p => ({ nombre: _shortName(p.nombre), ...Scores.calcularPrograma(p) }))
-      .filter(p => p.evaluados > 0)
-      .sort((a, b) => b.pct - a.pct);
-    // La ventana emergente (about:blank) no queda bajo control del Service Worker,
-    // así que Chart.js se incrusta inline en vez de cargarse con <script src> para que
-    // funcione sin conexión.
-    const chartJsPromise = sorted.length
-      ? fetch('assets/vendor/chart.umd.min.js').then(r => r.ok ? r.text() : '').catch(() => '')
-      : Promise.resolve('');
-    return chartJsPromise.then(chartJs => _buildActaHTML(inspeccion, base, sorted, chartJs));
+  // Compatibilidad con enlaces antiguos; el botón visible usa generarPDF().
+  function guardarPDF() { return generarPDF(); }
+
+  const REGISTRO_FOTO_MAX_PX = 800;
+  const REGISTRO_FOTO_MAX_BYTES = 140 * 1024;
+  const REGISTRO_FOTO_CALIDADES = [0.68, 0.52, 0.40];
+  const REGISTRO_FOTO_ESCALAS = [1, 0.82, 0.64, 0.50];
+  const REGISTRO_IMAGEN_TIMEOUT_MS = 15_000;
+  const REGISTRO_ENCODER_TIMEOUT_MS = 8_000;
+
+  function _dataUrlBytes(data) {
+    const comma = String(data || '').indexOf(',');
+    return comma < 0 ? String(data || '').length : Math.ceil((data.length - comma - 1) * 0.75);
+  }
+
+  function _cargarImagen(data) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      let settled = false;
+      const finish = (callback, value) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        callback(value);
+      };
+      const timeout = setTimeout(() => finish(reject, new Error('Una fotografía tardó demasiado en prepararse')), REGISTRO_IMAGEN_TIMEOUT_MS);
+      image.onload = () => finish(resolve, image);
+      image.onerror = () => finish(reject, new Error('Una fotografía no pudo abrirse para el respaldo'));
+      image.src = data;
+    });
+  }
+
+  function _codificarFotoRegistro(canvas, quality) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const finish = (callback, value) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        callback(value);
+      };
+      const fallback = () => {
+        try {
+          const data = canvas.toDataURL('image/jpeg', quality);
+          if (!data.startsWith('data:image/')) throw new Error('El encoder no generó una imagen válida');
+          finish(resolve, data);
+        } catch (error) { finish(reject, error); }
+      };
+      const timeout = setTimeout(fallback, REGISTRO_ENCODER_TIMEOUT_MS);
+      try {
+        if (typeof canvas.toBlob !== 'function' || typeof FileReader === 'undefined') {
+          fallback();
+          return;
+        }
+        canvas.toBlob(blob => {
+          if (!blob) { fallback(); return; }
+          const reader = new FileReader();
+          reader.onload = () => finish(resolve, reader.result);
+          reader.onerror = () => fallback();
+          reader.readAsDataURL(blob);
+        }, 'image/jpeg', quality);
+      } catch (error) { finish(reject, error); }
+    });
+  }
+
+  async function _comprimirFotoRegistro(data) {
+    if (!data || !String(data).startsWith('data:image/') || _dataUrlBytes(data) <= REGISTRO_FOTO_MAX_BYTES) return data;
+    const image = await _cargarImagen(data);
+    const canvas = document.createElement('canvas');
+    const width = image.naturalWidth || image.width;
+    const height = image.naturalHeight || image.height;
+    if (!width || !height) throw new Error('Una fotografía no tiene dimensiones válidas');
+    const baseScale = Math.min(1, REGISTRO_FOTO_MAX_PX / Math.max(width, height));
+    let last = data;
+    for (const dimensionScale of REGISTRO_FOTO_ESCALAS) {
+      const scale = baseScale * dimensionScale;
+      canvas.width = Math.max(1, Math.round(width * scale));
+      canvas.height = Math.max(1, Math.round(height * scale));
+      const context = canvas.getContext('2d', { alpha: false });
+      if (!context) throw new Error('No se pudo preparar una fotografía para el respaldo');
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      for (const quality of REGISTRO_FOTO_CALIDADES) {
+        const encoded = await _codificarFotoRegistro(canvas, quality);
+        last = encoded;
+        if (_dataUrlBytes(encoded) <= REGISTRO_FOTO_MAX_BYTES) return encoded;
+      }
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+    return last;
+  }
+
+  async function _listaFotosRegistro(lista) {
+    const result = [];
+    for (const foto of lista || []) {
+      result.push({ ...foto, data: await _comprimirFotoRegistro(foto?.data) });
+    }
+    return result;
+  }
+
+  async function _crearInspeccionParaRegistro(inspeccion) {
+    const copia = { ...inspeccion, programas: [] };
+    for (const programa of inspeccion.programas || []) {
+      const programaCopia = { ...programa, aspectos: [] };
+      for (const aspecto of programa.aspectos || []) {
+        const aspectoCopia = {
+          ...aspecto,
+          fotografias: await _listaFotosRegistro(aspecto.fotografias),
+          criterios_extra: [],
+        };
+        for (const extra of aspecto.criterios_extra || []) {
+          aspectoCopia.criterios_extra.push({
+            ...extra,
+            fotografias: await _listaFotosRegistro(extra.fotografias),
+          });
+        }
+        programaCopia.aspectos.push(aspectoCopia);
+      }
+      copia.programas.push(programaCopia);
+    }
+    return copia;
   }
 
   /**
-   * Respaldo en Supabase — se dispara en el mismo click de "Guardar firmas y
-   * generar Acta", sin bloquear el guardado local (Store.upsertInspeccion ya
-   * se ejecutó antes de llamar esta función). Si falla (sin red, código
-   * inválido, RPC caída) ScInformes.guardarInforme encola en su outbox y
-   * reintenta solo — nunca lanza ni bloquea la UI.
+   * Arma el documento HTML completo del Acta. El PDF generado y la copia del
+   * Registro usan fotografías reducidas y evitan repetirlas en el detalle por
+   * ítem y en el registro fotográfico.
    */
-  function _respaldarEnNube(inspeccion) {
-    if (typeof ScInformes === 'undefined') return;
-    const sesion = ScInformes.getSesionCache && ScInformes.getSesionCache();
-    if (!sesion?.usuario || !ScInformes.getCodigo()) return; // sin sesión: solo guardado local
-
-    const score = Scores.calcular(inspeccion);
-    const aspectosTotal = (inspeccion.programas || []).reduce((total, programa) => total
-      + (programa.aspectos || []).reduce((subtotal, aspecto) => subtotal + 1 + (aspecto.criterios_extra || []).length, 0), 0);
-    const nivelCumplimiento = score.total ? ({ B: 'BUENO', R: 'REGULAR', D: 'DEFICIENTE' }[Scores.getEstado(score.pct_cumplimiento)] || null) : null;
-
-    _generarActaHtmlCompleta(inspeccion).then(html => {
-      return ScInformes.guardarInforme(_crearPayloadInforme(inspeccion, html, {
-        nivelCumplimiento,
-        aspectosEvaluados: score.total,
-        aspectosTotal,
-        porcentajeCumplimiento: score.pct_cumplimiento,
-      }));
-    }).then(res => {
-      if (!res) return;
-      if (res.ok) Router.toast('Firmas guardadas · respaldado en la nube');
-      else if (res.encolado) Router.toast('Firmas guardadas · se respaldará cuando haya conexión');
-      else if (res.outboxUnavailable) Router.toast('Firmas guardadas localmente · no se pudo asegurar el respaldo remoto');
-      else if (res.codigoInvalido) Router.toast('Firmas guardadas · código de acceso inválido, no se respaldó');
-    }).catch(() => {
-      // Nunca debe romper el flujo de guardado local por un fallo de red/backup.
+  function _generarActaHtmlCompleta(inspeccion, options = {}) {
+    const inspeccionPromise = options.compacto
+      ? _crearInspeccionParaRegistro(inspeccion)
+      : Promise.resolve(inspeccion);
+    return inspeccionPromise.then(source => {
+      const base = location.origin + location.pathname.replace(/\/[^\/]*$/, '/');
+      const sorted = [...source.programas]
+        .map(p => ({ nombre: _shortName(p.nombre), ...Scores.calcularPrograma(p) }))
+        .filter(p => p.evaluados > 0)
+        .sort((a, b) => b.pct - a.pct);
+      // La ventana emergente (about:blank) no queda bajo control del Service Worker.
+      // En modo compacto se deja fuera Chart.js para mantener pequeño el documento.
+      const chartJsPromise = options.compacto
+        ? Promise.resolve('')
+        : sorted.length
+          ? fetch('assets/vendor/chart.umd.min.js').then(r => r.ok ? r.text() : '').catch(() => '')
+          : Promise.resolve('');
+      return chartJsPromise.then(chartJs => _buildActaHTML(source, base, sorted, chartJs, options));
     });
   }
 
@@ -1066,7 +1190,7 @@ const Actuar = (() => {
     };
   }
 
-  function _buildActaHTML(inspeccion, base, sorted, chartJs) {
+  function _buildActaHTML(inspeccion, base, sorted, chartJs, options = {}) {
     const D = JSON.stringify(sorted.map(p => ({ nombre: p.nombre, pct: p.pct })));
 
     const chartLib = chartJs
@@ -1275,7 +1399,7 @@ window.addEventListener('load', function() {
 </head>
 <body>
 <main class="acta-wrap">
-  <button class="btn-save" onclick="window.print()">&#128190; Guardar como PDF</button>
+  <button class="btn-save" onclick="window.print()">&#128196; Generar PDF / Imprimir</button>
   ${_renderPrintHeader(inspeccion)}
   ${_renderDatosEstablecimiento(inspeccion)}
   ${_renderResumenCumplimiento(inspeccion)}
@@ -1283,7 +1407,7 @@ window.addEventListener('load', function() {
   ${_renderGraficoComparativo(inspeccion)}
   ${_renderRankingTabla(inspeccion)}
   ${_renderMetodologia()}
-  ${_renderDetallePorItem(inspeccion)}
+  ${_renderDetallePorItem(inspeccion, options)}
   ${_renderFirmas(inspeccion)}
   ${_renderFooter()}
 </main>
@@ -1430,7 +1554,6 @@ window.addEventListener('load', function() {
     Store.upsertInspeccion(inspeccion);
     if (typeof ScInformes !== 'undefined' && ScInformes.programarBorradorActual) ScInformes.programarBorradorActual();
     _forceCaptura = false;
-    _respaldarEnNube(inspeccion); // usa la sesión iniciada, sin pedir código en Firmas
     Router.toast('Firmas guardadas');
     _refresh();
   }
@@ -1467,5 +1590,5 @@ window.addEventListener('load', function() {
   }
 
 
-  return { render, attach, compartir, abrirPDF, guardarPDF, limpiarFirma, cargarFirmaImagen, guardarFirmas, editarFirmas, cancelarEdicionFirmas };
+  return { render, attach, compartir, abrirPDF, generarPDF, guardarPDF, limpiarFirma, cargarFirmaImagen, guardarFirmas, editarFirmas, cancelarEdicionFirmas };
 })();
