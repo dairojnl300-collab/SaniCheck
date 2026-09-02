@@ -67,6 +67,11 @@ const ScInformesUI = (() => {
     } catch (e) { return '—'; }
   }
 
+  function _fechaMsUi(value) {
+    const time = Date.parse(value || '');
+    return Number.isFinite(time) ? time : 0;
+  }
+
   function _metaInforme(f) {
     const local = (typeof Store !== 'undefined' && Store.get)
       ? Store.get().inspecciones.find(i => i.id === f.local_id) : null;
@@ -315,14 +320,14 @@ const ScInformesUI = (() => {
     _abrirOverlay('Mis informes · ' + sesion.nombre, pendientesEl);
     let filas;
     try {
-      filas = await ScInformes.listMisInformes();
+      filas = await ScInformes.listMisInformesUnificado();
     } catch (e) {
       _abrirOverlay('Mis informes', `<p role="alert" style="color:#b91c1c;">No se pudo cargar: ${_esc(e.message)}</p>`);
       return;
     }
     const cuerpo = _tablaInformes(filas || [], { admin: false });
     _abrirOverlay('Mis informes · ' + sesion.nombre, cuerpo);
-    _wireAccionesTabla({ admin: false });
+    _wireAccionesTabla({ admin: false }, null, filas);
   }
 
   function _tablaInformes(filas, opts) {
@@ -330,21 +335,32 @@ const ScInformesUI = (() => {
       return '<p style="font-size:0.86rem;color:#6b7280;">Todavía no hay informes respaldados en la nube.</p>';
     }
     return `<div style="max-height:60vh;overflow:auto;display:grid;gap:10px;">
-      ${filas.map(f => `<article data-sc-id="${_esc(f.id)}" data-sc-editar-tarjeta="true" title="Toca la tarjeta para editar este informe" style="border:1px solid #DDE7E2;border-left:3px solid #0C8A5F;border-radius:12px;padding:13px;background:#fff;box-shadow:0 3px 12px rgba(10,46,35,.07);cursor:pointer;">
-        ${(() => { const m = _metaInforme(f); const color = m.estado === 'BUENO' ? 'var(--color-bueno)' : m.estado === 'DEFICIENTE' ? 'var(--color-deficiente)' : m.estado === 'REGULAR' ? 'var(--color-regular)' : 'var(--ink-55)'; const aspectos = m.aspectos === null ? '—' : m.aspectos; return `<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;"><strong style="font-size:.95rem;color:var(--color-ink);">${_esc((f.establecimiento && f.establecimiento.nombre) || '—')}</strong><span style="font-size:.75rem;color:var(--color-ink3);white-space:nowrap;">${_esc(_fmtFecha(f.fecha))}</span></div><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:.78rem;color:var(--color-ink2);"><span>${aspectos} aspectos evaluados</span><span style="display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:${color};color:#fff;font-size:.7rem;font-weight:800;white-space:nowrap;box-shadow:0 2px 5px rgba(10,46,35,.18);"><span style="width:6px;height:6px;border-radius:50%;background:#fff;"></span>${_esc(m.estado)}</span></div>`; })()}
+      ${filas.map(f => {
+        const enCurso = !!f._enCurso;
+        const m = _metaInforme(f);
+        const color = m.estado === 'BUENO' ? 'var(--color-bueno)' : m.estado === 'DEFICIENTE' ? 'var(--color-deficiente)' : m.estado === 'REGULAR' ? 'var(--color-regular)' : 'var(--ink-55)';
+        const aspectos = m.aspectos === null ? '—' : m.aspectos;
+        const badgeEnCurso = enCurso ? '<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:#B45309;color:#fff;font-size:.7rem;font-weight:800;white-space:nowrap;box-shadow:0 2px 5px rgba(180,83,9,.25);">En curso</span>' : '';
+        const badgeEstado = `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:${color};color:#fff;font-size:.7rem;font-weight:800;white-space:nowrap;box-shadow:0 2px 5px rgba(10,46,35,.18);"><span style="width:6px;height:6px;border-radius:50%;background:#fff;"></span>${_esc(m.estado)}</span>`;
+        const botonVer = enCurso ? '' : `<button type="button" data-sc-ver style="${_btnStyle('#1B4332','#fff')}">Ver / PDF</button>`;
+        return `<article data-sc-id="${_esc(f.id)}" data-sc-editar-tarjeta="true" title="Toca la tarjeta para editar este informe" style="border:1px solid #DDE7E2;border-left:3px solid #0C8A5F;border-radius:12px;padding:13px;background:#fff;box-shadow:0 3px 12px rgba(10,46,35,.07);cursor:pointer;">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;"><strong style="font-size:.95rem;color:var(--color-ink);">${_esc((f.establecimiento && f.establecimiento.nombre) || '—')}</strong><span style="font-size:.75rem;color:var(--color-ink3);white-space:nowrap;">${_esc(_fmtFecha(f.fecha))}</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:.78rem;color:var(--color-ink2);"><span>${aspectos} aspectos evaluados</span><span style="display:inline-flex;gap:6px;align-items:center;">${badgeEnCurso}${badgeEstado}</span></div>
         <div style="margin-top:7px;display:grid;gap:3px;font-size:.78rem;color:#6B7280;">
-          <span><strong style="color:#52635d;">Fecha:</strong> ${_esc(_fmtFecha(f.fecha))} · <strong style="color:#52635d;">Hora:</strong> ${_esc(_fmtHora(f.actualizado_en || f.creado_en))}</span>
+          <span><strong style="color:#52635d;">Fecha:</strong> ${_esc(_fmtFecha(f.fecha))} · <strong style="color:#52635d;">Hora:</strong> ${_esc(_fmtHora(f.actualizado_en || f.estado_parcial_actualizado_en || f.creado_en))}</span>
           <span>${opts.admin ? `Profesional: ${_esc(f.tecnico_nombre || '—')} · ` : ''}Acta: ${_esc(f.numero_acta || '—')}</span>
         </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:11px;"><button type="button" data-sc-ver style="${_btnStyle('#1B4332','#fff')}">Ver / PDF</button><button type="button" data-sc-eliminar style="${_btnStyle('#FFF1F2','#B91C1C')}">Eliminar</button></div>
-      </article>`).join('')}
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:11px;">${botonVer}<button type="button" data-sc-eliminar style="${_btnStyle('#FFF1F2','#B91C1C')}">Eliminar</button></div>
+      </article>`;
+      }).join('')}
       </div>
       <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
       </div>`;
   }
 
-  function _wireAccionesTabla(opts, root) {
+  function _wireAccionesTabla(opts, root, filas) {
     const get = opts.admin ? ScInformes.getAdminInforme : ScInformes.getInforme;
+    const getBorradorRpc = opts.admin ? ScInformes.getAdminBorrador : ScInformes.getBorrador;
     const upd = opts.admin ? ScInformes.updateAdminInforme : ScInformes.updateInforme;
     const del = opts.admin ? ScInformes.deleteAdminInforme : ScInformes.deleteInforme;
     const recargar = opts.admin
@@ -369,16 +385,45 @@ const ScInformesUI = (() => {
       article.addEventListener('click', async ev => {
         if (ev.target.closest('button')) return;
         const id = article.getAttribute('data-sc-id');
+        const fila = (filas || []).find(f => f.id === id);
         try {
-          const row = await get(id);
-          const localId = row.local_id || id;
-          const local = Store.get().inspecciones.find(i => i.id === localId);
-          if (!local) {
-            Router.toast('Este informe no está disponible en este equipo para editarlo en Hacer.');
+          const localId = fila?.local_id;
+          const local = localId ? Store.get().inspecciones.find(i => i.id === localId) : null;
+          const remotoMs = fila
+            ? _fechaMsUi(fila._enCurso ? (fila.estado_parcial_actualizado_en || fila.actualizado_en) : fila.actualizado_en)
+            : 0;
+          const localMs = _fechaMsUi(local?.actualizado_en || local?.creado_en);
+
+          if (local && localMs >= remotoMs) {
+            Store.set({ currentId: local.id });
+            if (Router && Router.go) Router.go('hacer');
             return;
           }
-          Store.set({currentId: local.id});
-          if (Router && Router.go) Router.go('hacer');
+
+          let estadoRemoto = null;
+          if (fila?._enCurso) {
+            const detalle = await getBorradorRpc(id);
+            estadoRemoto = detalle?.estado_parcial || null;
+          } else {
+            const row = await get(id);
+            estadoRemoto = row?.estado_estructurado || null;
+            if (!estadoRemoto) {
+              Router.toast('Este informe no tiene datos editables guardados; solo se puede ver el PDF');
+              return;
+            }
+          }
+          if (!estadoRemoto) {
+            Router.toast('Este informe no está disponible en este equipo para editarlo.');
+            return;
+          }
+          const restaurada = ScInformes.restaurarEstadoRemoto(estadoRemoto);
+          if (!restaurada) {
+            Router.toast('Este informe no está disponible en este equipo para editarlo.');
+            return;
+          }
+          const screenReal = Store.get().ui.screen;
+          if (Router && Router.go) Router.go(screenReal);
+          Router.toast('Progreso cargado desde la nube');
         } catch (e) { Router.toast(e.message || 'No se pudo abrir el informe'); }
       });
     });
@@ -411,7 +456,7 @@ const ScInformesUI = (() => {
     let filas;
     let usuarios = [];
     try {
-      filas = sesion.rol === 'admin' ? await ScInformes.listAdminInformes() : await ScInformes.listMisInformes();
+      filas = sesion.rol === 'admin' ? await ScInformes.listAdminInformesUnificado() : await ScInformes.listMisInformesUnificado();
       if (sesion.rol === 'admin') usuarios = await ScInformes.listUsuarios();
     } catch (e) {
       Router.toast('No se pudieron cargar los informes: ' + (e.message || 'error'));
@@ -432,13 +477,16 @@ const ScInformesUI = (() => {
       .replace(/^<div style="max-height:60vh;overflow:auto;display:grid;gap:10px;">/, '')
       .replace(/<\/div>\s*<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">[\s\S]*?<\/div>\s*$/, '');
     let contenidoInformes = `<div style="display:grid;gap:10px;">${tarjetas}</div>`;
+    let propiosAdmin = [];
+    let profesionalesFilas = new Map();
+    let historicosFilas = new Map();
     if (sesion.rol === 'admin') {
       const profesionales = (usuarios || []).filter(u => u.activo && u.rol === 'tecnico');
       const activosIds = new Set(profesionales.map(u => u.id));
       const historicos = [...new Map((filas || [])
         .filter(f => f.tecnico_id && !activosIds.has(f.tecnico_id) && f.tecnico_id !== sesion.id)
         .map(f => [f.tecnico_id, { id: f.tecnico_id, nombre: f.tecnico_nombre || 'Profesional eliminado' }])).values()];
-      const propiosAdmin = (filas || []).filter(f => f.tecnico_id === sesion.id);
+      propiosAdmin = (filas || []).filter(f => f.tecnico_id === sesion.id);
       const misTarjetas = _tablaInformes(propiosAdmin, {admin:true})
         .replace(/^<div style="max-height:60vh;overflow:auto;display:grid;gap:10px;">/, '')
         .replace(/<\/div>\s*<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">[\s\S]*?<\/div>\s*$/, '');
@@ -448,12 +496,14 @@ const ScInformesUI = (() => {
         <p style="margin:0 0 10px;color:#52635d;font-size:.82rem;">Selecciona un profesional para ver sus informes sincronizados.</p>
         <div style="display:grid;gap:8px;">${profesionales.map(u => {
           const propios = (filas || []).filter(f => f.tecnico_id === u.id);
+          profesionalesFilas.set(u.id, propios);
           const html = _tablaInformes(propios, {admin:true})
             .replace(/^<div style="max-height:60vh;overflow:auto;display:grid;gap:10px;">/, '')
             .replace(/<\/div>\s*<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">[\s\S]*?<\/div>\s*$/, '');
           return `<div><button type="button" data-sc-profesional="${_esc(u.id)}" style="width:100%;text-align:left;padding:15px;border:1px solid #DDE7E2;border-radius:12px;background:#fff;color:#0A2E23;font-size:.95rem;font-weight:700;cursor:pointer;">${_esc(u.nombre)}</button><div data-sc-reportes-prof="${_esc(u.id)}" style="display:none;margin:8px 0 4px 10px;gap:10px;">${html}</div></div>`;
         }).join('')}${historicos.map(u => {
           const propios = (filas || []).filter(f => f.tecnico_id === u.id);
+          historicosFilas.set(u.id, propios);
           const html = _tablaInformes(propios, {admin:true})
             .replace(/^<div style="max-height:60vh;overflow:auto;display:grid;gap:10px;">/, '')
             .replace(/<\/div>\s*<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">[\s\S]*?<\/div>\s*$/, '');
@@ -471,9 +521,11 @@ const ScInformesUI = (() => {
     contenido.appendChild(bloque);
     if (sesion.rol === 'admin') {
       const misAdmin = bloque.querySelector('[data-sc-mis-admin]');
-      if (misAdmin) _wireAccionesTabla({admin: true, portada: true}, misAdmin);
+      if (misAdmin) _wireAccionesTabla({admin: true, portada: true}, misAdmin, propiosAdmin);
       bloque.querySelectorAll('[data-sc-reportes-prof]').forEach(panel => {
-        _wireAccionesTabla({admin: true, portada: true}, panel);
+        const uid = panel.getAttribute('data-sc-reportes-prof');
+        const propias = profesionalesFilas.get(uid) || historicosFilas.get(uid) || [];
+        _wireAccionesTabla({admin: true, portada: true}, panel, propias);
       });
       bloque.querySelectorAll('[data-sc-profesional]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -482,7 +534,7 @@ const ScInformesUI = (() => {
         });
       });
     } else {
-      _wireAccionesTabla({admin: false, portada: true}, bloque);
+      _wireAccionesTabla({admin: false, portada: true}, bloque, filas);
     }
     const btnUsuarios = bloque.querySelector('[data-sc-usuarios]');
     if (btnUsuarios) btnUsuarios.addEventListener('click', abrirGestionUsuarios);
@@ -504,7 +556,7 @@ const ScInformesUI = (() => {
     _abrirOverlay('Panel de informes (todos)', '<p style="font-size:0.8rem;color:#6b7280;">Cargando…</p>');
     let filas;
     try {
-      filas = await ScInformes.listAdminInformes();
+      filas = await ScInformes.listAdminInformesUnificado();
     } catch (e) {
       _abrirOverlay('Panel de informes (todos)', `<p role="alert" style="color:#b91c1c;">No se pudo cargar: ${_esc(e.message)}</p>`);
       return;
@@ -512,7 +564,7 @@ const ScInformesUI = (() => {
     const cuerpo = _tablaInformes(filas || [], { admin: true }) + `
       <button type="button" data-sc-usuarios style="${_btnStyle('#0C8A5F','#fff')};margin-top:10px;width:100%;">Gestionar usuarios y códigos</button>`;
     _abrirOverlay('Panel de informes (todos)', cuerpo);
-    _wireAccionesTabla({ admin: true });
+    _wireAccionesTabla({ admin: true }, null, filas);
     _overlayEl.querySelector('[data-sc-usuarios]').addEventListener('click', abrirGestionUsuarios);
   }
 
@@ -529,13 +581,9 @@ const ScInformesUI = (() => {
     const sesion = ScInformes.getSesionCache();
     if (sesion && sesion.usuario && ScInformes.getCodigo()) {
       await mostrarEnPortada(sesion);
-      if (ScInformes.revisarBorradoresRemotos) await ScInformes.revisarBorradoresRemotos();
       return sesion;
     }
     const nuevaSesion = await _requiereSesion();
-    if (nuevaSesion && ScInformes.revisarBorradoresRemotos) {
-      await ScInformes.revisarBorradoresRemotos();
-    }
     return nuevaSesion;
   }
 
