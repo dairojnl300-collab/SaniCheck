@@ -19,6 +19,7 @@ const Personalizar = (() => {
     config.disabled = new Set(); config.complementarios = [];
     inspeccion.programas = ChecklistConfig.applyConfig(getPSBPrograms(), config);
     inspeccion.fase_phva = 'H'; Scores.calcular(inspeccion); Store.upsertInspeccion(inspeccion);
+    if (typeof ScInformes !== 'undefined' && ScInformes.programarBorradorActual) ScInformes.programarBorradorActual();
     Store.setUI({ programaIdx: 0, aspectoIdx: 0 }); Router.go('hacer');
   }
   function toggleBloque(id) { abiertos.has(id) ? abiertos.delete(id) : abiertos.add(id); const area = document.getElementById('screen-area'); if (area) area.innerHTML = render(); }

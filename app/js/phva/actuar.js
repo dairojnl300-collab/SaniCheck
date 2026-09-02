@@ -20,6 +20,7 @@ const Actuar = (() => {
 
     if (_sincronizarNumeroActa(inspeccion)) {
       Store.upsertInspeccion(inspeccion);
+      if (typeof ScInformes !== 'undefined' && ScInformes.programarBorradorActual) ScInformes.programarBorradorActual();
     }
 
     const f = inspeccion.firmas || {};
@@ -1427,6 +1428,7 @@ window.addEventListener('load', function() {
       inspeccion.firmas[ft.key] = datos;
     });
     Store.upsertInspeccion(inspeccion);
+    if (typeof ScInformes !== 'undefined' && ScInformes.programarBorradorActual) ScInformes.programarBorradorActual();
     _forceCaptura = false;
     _respaldarEnNube(inspeccion); // usa la sesión iniciada, sin pedir código en Firmas
     Router.toast('Firmas guardadas');
