@@ -16,6 +16,7 @@ const Store = (() => {
   let state      = { ...defaults };
   let _saveTimer = null;
   let _idbReady  = null;
+  let _loadFailed = false;
 
   function _openIdb() {
     if (_idbReady) return _idbReady;
@@ -77,26 +78,34 @@ const Store = (() => {
     ]);
   }
 
+  function _latestInspectionUpdate(candidate) {
+    return (candidate?.inspecciones || []).reduce((latest, inspeccion) => {
+      const value = Date.parse(inspeccion.actualizado_en || inspeccion.creado_en || '') || 0;
+      return Math.max(latest, value);
+    }, 0);
+  }
+
   function load() {
     try {
       const saved = localStorage.getItem(KEY);
       if (saved) state = { ...defaults, ...JSON.parse(saved) };
-    } catch (e) { console.warn('Store load error', e); }
+      _loadFailed = false;
+    } catch (e) { _loadFailed = true; console.warn('Store load error', e); }
   }
 
   async function recoverFromIdb() {
     try {
-      if (!localStorage.getItem(KEY)) {
-        const snap = await _idbGet('snapshot');
-        if (snap?.store) {
-          state = { ...defaults, ...snap.store };
+      const snap = await _idbGet('snapshot');
+      const localState = { ...state };
+      const snapshotIsNewer = snap?.store && (Date.parse(snap.saved_at || '') || 0) > _latestInspectionUpdate(localState);
+      if ((!localStorage.getItem(KEY) || _loadFailed || snapshotIsNewer) && snap?.store) {
+        state = { ...defaults, ...snap.store };
+        _writeLs(KEY, state);
+      } else if (!localStorage.getItem(KEY) || _loadFailed) {
+        const recovered = await _idbGet(KEY);
+        if (recovered) {
+          state = { ...defaults, ...recovered };
           _writeLs(KEY, state);
-        } else {
-          const recovered = await _idbGet(KEY);
-          if (recovered) {
-            state = { ...defaults, ...recovered };
-            _writeLs(KEY, state);
-          }
         }
       }
       if (!localStorage.getItem(DRAFT_KEY)) {
@@ -110,8 +119,8 @@ const Store = (() => {
   function save() {
     try {
       _writeLs(KEY, state);
-      scheduleMirror();
     } catch (e) { console.warn('Store save error', e); }
+    finally { scheduleMirror(); }
   }
 
   function scheduleMirror() {
@@ -131,8 +140,8 @@ const Store = (() => {
     _saveTimer = setTimeout(() => {
       try {
         _writeLs(KEY, state);
-        _mirrorCriticalToIdb();
       } catch (e) { console.warn('Store debounced save', e); }
+      finally { _mirrorCriticalToIdb(); }
     }, DEBOUNCE_MS);
   }
 
