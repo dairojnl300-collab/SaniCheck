@@ -10,8 +10,8 @@ const vm = require('vm');
 const actuarSource = fs.readFileSync(path.join(__dirname, '..', 'app/js/phva/actuar.js'), 'utf8');
 const informesSource = fs.readFileSync(path.join(__dirname, '..', 'app/js/sc-informes.js'), 'utf8');
 const instrumented = actuarSource.replace(
-  '  return { render, attach, compartir, abrirPDF, guardarPDF, limpiarFirma, cargarFirmaImagen, guardarFirmas, editarFirmas, cancelarEdicionFirmas };',
-  '  this.__getInspeccionAnterior = _getInspeccionAnterior;\n  return { render, attach, compartir, abrirPDF, guardarPDF, limpiarFirma, cargarFirmaImagen, guardarFirmas, editarFirmas, cancelarEdicionFirmas };'
+  '  return { render, attach, compartir, abrirPDF, generarPDF, guardarPDF, limpiarFirma, cargarFirmaImagen, guardarFirmas, editarFirmas, cancelarEdicionFirmas };',
+  '  this.__getInspeccionAnterior = _getInspeccionAnterior;\n  return { render, attach, compartir, abrirPDF, generarPDF, guardarPDF, limpiarFirma, cargarFirmaImagen, guardarFirmas, editarFirmas, cancelarEdicionFirmas };'
 );
 
 if (instrumented === actuarSource) throw new Error('No se pudo instrumentar Actuar para la prueba');

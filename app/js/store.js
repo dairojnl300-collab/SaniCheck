@@ -193,6 +193,46 @@ const Store = (() => {
     save();
   }
 
+  function _limpiarFotografias(inspeccion) {
+    let changed = false;
+    const limpiar = item => {
+      if (Array.isArray(item?.fotografias) && item.fotografias.length) {
+        item.fotografias = [];
+        changed = true;
+      }
+    };
+    (inspeccion?.programas || []).forEach(programa => {
+      (programa.aspectos || []).forEach(aspecto => {
+        limpiar(aspecto);
+        (aspecto.criterios_extra || []).forEach(limpiar);
+      });
+    });
+    return changed;
+  }
+
+  async function liberarFotosInspeccion(id, expectedUpdatedAt) {
+    const inspeccion = state.inspecciones.find(item => item.id === id);
+    if (!inspeccion) return false;
+    if (expectedUpdatedAt && inspeccion.actualizado_en !== expectedUpdatedAt) return false;
+
+    const changed = _limpiarFotografias(inspeccion);
+    let backupChanged = false;
+    try {
+      const original = await _idbGet('recovery-original');
+      const originalInspeccion = (original?.store?.inspecciones || []).find(item => item.id === id);
+      if (originalInspeccion) {
+        backupChanged = _limpiarFotografias(originalInspeccion);
+        if (backupChanged) await _idbSet('recovery-original', original);
+      }
+    } catch (e) { console.warn('No se pudo limpiar el respaldo fotográfico local', e); }
+
+    if (changed) {
+      try { _writeLs(KEY, state); } catch (e) { console.warn('No se pudo actualizar el estado sin fotos', e); }
+      await _mirrorCriticalToIdb();
+    }
+    return changed || backupChanged;
+  }
+
   function _estSlug(est) {
     return String((est && (est.nit || est.nombre)) || 'default').replace(/[^a-zA-Z0-9]/g, '_');
   }
@@ -254,6 +294,7 @@ const Store = (() => {
   return {
     load, recoverFromIdb, save, saveDebounced, flush, get, set,
     getCurrentInspeccion, upsertInspeccion, deleteInspeccion, setUI,
+    liberarFotosInspeccion,
     needsRecovery,
     getPlanificarDraft, savePlanificarDraft, clearPlanificarDraft,
     bindLifecycleFlush,
