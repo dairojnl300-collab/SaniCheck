@@ -400,6 +400,13 @@ const ScInformesUI = (() => {
             return;
           }
 
+          // Un admin editando el borrador/informe de OTRO técnico debe seguir
+          // guardando bajo el dueño original (sc_guardar_admin_borrador/
+          // sc_guardar_admin_informe) — no forkear una fila nueva a su propio
+          // tecnico_id. `id` es el uuid de la fila remota, el mismo que
+          // necesitan esas RPCs.
+          const esAjeno = !!(opts.admin && fila?.tecnico_id && fila.tecnico_id !== ScInformes.getSesionCache()?.id);
+
           let estadoRemoto = null;
           if (fila?._enCurso) {
             const detalle = await getBorradorRpc(id);
@@ -416,7 +423,7 @@ const ScInformesUI = (() => {
             Router.toast('Este informe no está disponible en este equipo para editarlo.');
             return;
           }
-          const restaurada = ScInformes.restaurarEstadoRemoto(estadoRemoto);
+          const restaurada = ScInformes.restaurarEstadoRemoto(estadoRemoto, esAjeno ? id : null);
           if (!restaurada) {
             Router.toast('Este informe no está disponible en este equipo para editarlo.');
             return;
