@@ -5,6 +5,7 @@ const Store = (() => {
   const DRAFT_KEY  = 'saneamiento_psb_draft_v1';
   const IDB_NAME   = 'sanicheck-persist';
   const IDB_STORE  = 'kv';
+  const RECOVERY_READY_KEY = 'recovery-ready';
   const DEBOUNCE_MS = 500;
   const RECOVERY_LIMIT_BYTES = 3 * 1024 * 1024;
 
@@ -68,16 +69,21 @@ const Store = (() => {
     localStorage.setItem(key, typeof data === 'string' ? data : JSON.stringify(data));
   }
 
-  function _mirrorCriticalToIdb() {
+  async function _mirrorCriticalToIdb() {
     const snap = {
       store: state,
       draft: getPlanificarDraft(),
       saved_at: new Date().toISOString(),
     };
-    return Promise.all([
+    await Promise.all([
       _idbSet('snapshot', snap),
       _idbSet(KEY, state),
     ]);
+    // La pantalla de recuperación puede haber dejado un estado optimizado que
+    // todavía supera el umbral. Mantener la marca sincronizada con el snapshot
+    // evita volver a entrar en recuperar.html mientras el estado no cambie.
+    const ready = await _idbGet(RECOVERY_READY_KEY);
+    if (ready?.valid) await _idbSet(RECOVERY_READY_KEY, { valid: true, saved_at: snap.saved_at });
   }
 
   function _latestInspectionUpdate(candidate) {
@@ -107,8 +113,12 @@ const Store = (() => {
   async function recoverFromIdb() {
     try {
       const snap = await _idbGet('snapshot');
+      const recoveryReady = await _idbGet(RECOVERY_READY_KEY);
       const localState = { ...state };
-      if (snap?.store && _estimatePhotoBytes(snap.store) > RECOVERY_LIMIT_BYTES) {
+      const readyForSnapshot = recoveryReady?.valid
+        && recoveryReady.saved_at
+        && recoveryReady.saved_at === snap?.saved_at;
+      if (snap?.store && _estimatePhotoBytes(snap.store) > RECOVERY_LIMIT_BYTES && !readyForSnapshot) {
         _needsRecovery = true;
         return state;
       }
@@ -177,6 +187,9 @@ const Store = (() => {
     if (idx >= 0) state.inspecciones[idx] = inspeccion;
     else state.inspecciones.unshift(inspeccion);
     state.currentId = inspeccion.id;
+    // Una edición posterior invalida la autorización del estado pesado
+    // recuperado; si vuelve a superar el límite, se revisará nuevamente.
+    _idbSet(RECOVERY_READY_KEY, { valid: false, invalidated_at: new Date().toISOString() });
     save();
   }
 

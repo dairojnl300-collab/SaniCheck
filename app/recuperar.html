@@ -40,6 +40,7 @@
       const KEY = 'saneamiento_psb_v1';
       const DB_NAME = 'sanicheck-persist';
       const DB_STORE = 'kv';
+      const RECOVERY_READY_KEY = 'recovery-ready';
       const MAX_PX = 1280;
       const MAX_BYTES = 350 * 1024;
       const QUALITIES = [0.78, 0.64, 0.52, 0.40];
@@ -285,6 +286,7 @@
           const snapshot = { store: source, draft: sourceSnapshot?.draft || null, saved_at: new Date().toISOString() };
           await idbPut('snapshot', snapshot);
           await idbPut(KEY, source);
+          await idbPut(RECOVERY_READY_KEY, { valid: true, saved_at: snapshot.saved_at });
           try { localStorage.setItem(KEY, JSON.stringify(source)); } catch (error) { console.warn('[SaniCheck Recovery] localStorage lleno; IndexedDB conserva la recuperación', error); }
           say(`Recuperación preparada: ${result.optimized} fotografías optimizadas. Abriendo SaniCheck…`);
           setTimeout(() => { location.href = './'; }, 1200);
@@ -323,9 +325,11 @@
             await idbPut('recovery-corrupt-raw', { raw: rawLocal, saved_at: new Date().toISOString() });
           }
           const remoteStore = buildRemoteStore(detail);
+          await optimizePhotos(remoteStore);
           const snapshot = { store: remoteStore, draft: sourceSnapshot?.draft || null, saved_at: new Date().toISOString() };
           await idbPut('snapshot', snapshot);
           await idbPut(KEY, remoteStore);
+          await idbPut(RECOVERY_READY_KEY, { valid: true, saved_at: snapshot.saved_at });
           try { localStorage.setItem(KEY, JSON.stringify(remoteStore)); } catch (error) { console.warn('[SaniCheck Recovery] localStorage lleno; IndexedDB conserva la recuperación remota', error); }
           say(`Respaldo remoto recuperado: ${remoteStore.inspecciones.length} inspección(es) disponibles. Abriendo SaniCheck…`);
           setTimeout(() => { location.href = './'; }, 1200);
