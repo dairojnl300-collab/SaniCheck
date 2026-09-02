@@ -789,9 +789,12 @@ const ScInformes = (() => {
   }
 
   function _fusionarUnificado(informes, borradores) {
+    const finales = new Set((informes || []).map(f => f.local_id).filter(Boolean));
     const marcados = [
       ...(informes || []).map(f => ({ ...f, _enCurso: false })),
-      ...(borradores || []).map(f => ({ ...f, _enCurso: true })),
+      ...(borradores || [])
+        .filter(f => !f.local_id || !finales.has(f.local_id))
+        .map(f => ({ ...f, _enCurso: true })),
     ];
     return marcados.sort((a, b) => {
       const tsA = _fechaMs(a._enCurso ? (a.estado_parcial_actualizado_en || a.actualizado_en) : a.actualizado_en);
