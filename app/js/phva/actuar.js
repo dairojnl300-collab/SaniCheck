@@ -1259,6 +1259,12 @@ window.addEventListener('load', function() {
       }
       .btn-save { display: none !important; }
       @page { margin: 1.5cm 1.5cm 1.8cm; }
+      /* En teléfonos no forzar A4: el navegador debe respetar Carta u otro
+         tamaño elegido por el usuario, evitando PDFs blancos por overflow. */
+      body.mobile-phone { width:auto !important; min-height:0 !important; }
+      body.mobile-phone .acta-wrap { width:100% !important; max-width:100% !important; }
+      body.mobile-phone .acta-mobile-page { width:100% !important; max-width:100% !important; }
+      @page { size: auto; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
   </style>

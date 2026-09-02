@@ -220,6 +220,27 @@ const ScInformesUI = (() => {
     const htmlSeguro = _htmlEditableSeguro(html);
     if (iframe) iframe.srcdoc = htmlSeguro;
     if (print) print.addEventListener('click', () => {
+      const esMovil = window.matchMedia?.('(max-width: 600px)').matches
+        || (navigator.maxTouchPoints > 1 && window.innerWidth < 900);
+      if (esMovil) {
+        // En navegadores móviles, imprimir un iframe invisible de 1x1 produce
+        // un PDF vacío. Abrir el documento visible permite que el motor móvil
+        // calcule correctamente el tamaño de papel elegido (A4, carta, etc.).
+        const win = window.open('', '_blank');
+        if (!win) { Router.toast('Permite ventanas emergentes para guardar el PDF'); return; }
+        try {
+          win.document.open();
+          win.document.write(htmlSeguro);
+          win.document.close();
+          setTimeout(() => {
+            try { win.focus(); win.print(); } catch (e) { Router.toast('No se pudo abrir la impresión'); }
+          }, 700);
+        } catch (e) {
+          try { win.close(); } catch (ignore) {}
+          Router.toast('No se pudo preparar el PDF');
+        }
+        return;
+      }
       let printFrame = null;
       let limpiarlo = () => {
         if (printFrame && printFrame.parentNode) printFrame.parentNode.removeChild(printFrame);
