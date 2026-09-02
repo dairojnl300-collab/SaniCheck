@@ -877,6 +877,9 @@ const Actuar = (() => {
     const ordenActual = _ordenInspeccion(actual);
     return (Store.get().inspecciones || [])
       .filter(i => i.id !== actual.id)
+      .filter(i => typeof ScInformes !== 'undefined'
+        && typeof ScInformes.esInformeFinalDeSesion === 'function'
+        && ScInformes.esInformeFinalDeSesion(i.id))
       .filter(i => _mismoEstablecimiento(i, actual))
       .filter(i => (i.score?.total || 0) > 0)
       .filter(i => _ordenInspeccion(i) < ordenActual)

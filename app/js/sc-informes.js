@@ -15,6 +15,7 @@ const ScInformes = (() => {
 
   const LS_CODIGO   = 'sanicheck_sc_codigo_acceso';
   const LS_SESION   = 'sanicheck_sc_sesion';
+  const LS_FINALES  = 'sanicheck_sc_informes_finales';
   const IDB_NAME    = 'sanicheck-sc-informes-outbox';
   const IDB_STORE   = 'pendientes';
   const IDB_DRAFT_STORE = 'borradores';
@@ -62,6 +63,34 @@ const ScInformes = (() => {
 
   function _setSesionCache(s) {
     try { localStorage.setItem(LS_SESION, JSON.stringify(s)); } catch (e) {}
+  }
+
+  // Solo los local_id confirmados por el listado remoto de la sesión pueden
+  // participar en comparaciones históricas. El Store es compartido por el
+  // navegador y puede conservar inspecciones antiguas de otra sesión.
+  function _guardarFinalesDeSesion(filas) {
+    const sesion = getSesionCache();
+    if (!sesion?.id) return;
+    const localIds = [...new Set((filas || []).map(f => f?.local_id).filter(Boolean))];
+    try { localStorage.setItem(LS_FINALES, JSON.stringify({ sesion_id: sesion.id, local_ids: localIds })); } catch (e) {}
+  }
+
+  function _leerFinalesDeSesion() {
+    const sesion = getSesionCache();
+    if (!sesion?.id) return [];
+    try {
+      const cache = JSON.parse(localStorage.getItem(LS_FINALES) || 'null');
+      return cache?.sesion_id === sesion.id && Array.isArray(cache.local_ids) ? cache.local_ids : [];
+    } catch (e) { return []; }
+  }
+
+  function _registrarFinalDeSesion(localId) {
+    if (!localId) return;
+    _guardarFinalesDeSesion([..._leerFinalesDeSesion().map(local_id => ({ local_id })), { local_id: localId }]);
+  }
+
+  function esInformeFinalDeSesion(localId) {
+    return Boolean(localId && _leerFinalesDeSesion().includes(localId));
   }
 
   // ── RPC ──────────────────────────────────────────────────────────────────
@@ -324,6 +353,7 @@ const ScInformes = (() => {
     try {
       const id = await _rpc('sc_guardar_informe', params);
       await _retirarBorradorPendiente(payload.localId);
+      _registrarFinalDeSesion(payload.localId);
       return { ok: true, id };
     } catch (e) {
       // Código inválido: no tiene sentido encolar (nunca va a pasar sin corregirlo).
@@ -622,7 +652,10 @@ const ScInformes = (() => {
   // ── CRUD técnico ─────────────────────────────────────────────────────────
 
   function listMisInformes() {
-    return _rpc('sc_list_mis_informes', { p_codigo: getCodigo() });
+    return _rpc('sc_list_mis_informes', { p_codigo: getCodigo() }).then(filas => {
+      _guardarFinalesDeSesion(filas);
+      return filas;
+    });
   }
   function listBorradores() {
     return _rpc('sc_list_borradores', { p_codigo: getCodigo() });
@@ -668,7 +701,7 @@ const ScInformes = (() => {
   }
 
   return {
-    getCodigo, setCodigo, clearSesion, getSesionCache, whoami, loginUsuario,
+    getCodigo, setCodigo, clearSesion, getSesionCache, whoami, loginUsuario, esInformeFinalDeSesion,
     configurarPasswordInicial, esAdmin, eliminarUsuario, cambiarPassword,
     guardarInforme, flushPendientes, bindAutoRetry, encolarPendiente,
     guardarBorrador, scheduleBorrador, flushBorradorPendiente, programarBorradorActual,
