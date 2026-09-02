@@ -84,7 +84,6 @@ const Actuar = (() => {
         ${_renderResumenCumplimiento(inspeccion)}
         ${_renderGraficasPorPrograma(inspeccion)}
         ${_renderResumenComparativo(inspeccion)}
-        ${_renderComparacionHistorica(inspeccion)}
         ${_renderMetodologia()}
         ${_renderDetallePorItem(inspeccion)}
         ${_renderFirmas(inspeccion)}
@@ -1282,7 +1281,6 @@ window.addEventListener('load', function() {
   ${_renderGraficasPorPrograma(inspeccion)}
   ${_renderGraficoComparativo(inspeccion)}
   ${_renderRankingTabla(inspeccion)}
-  ${_renderComparacionHistorica(inspeccion)}
   ${_renderMetodologia()}
   ${_renderDetallePorItem(inspeccion)}
   ${_renderFirmas(inspeccion)}
