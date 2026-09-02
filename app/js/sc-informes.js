@@ -16,7 +16,7 @@ const ScInformes = (() => {
   const LS_CODIGO   = 'sanicheck_sc_codigo_acceso';
   const LS_SESION   = 'sanicheck_sc_sesion';
   const LS_FINALES  = 'sanicheck_sc_informes_finales';
-  const LS_AJENOS  = 'sanicheck_sc_admin_ajenos';
+  const LS_AJENOS   = 'sanicheck_sc_admin_ajenos';
   const IDB_NAME    = 'sanicheck-sc-informes-outbox';
   const IDB_STORE   = 'pendientes';
   const IDB_DRAFT_STORE = 'borradores';
@@ -101,13 +101,20 @@ const ScInformes = (() => {
   // (tecnico_id, local_id) y crearían una fila duplicada, ya que el
   // tecnico_id del admin difiere del técnico dueño original).
   function _leerAjenos() {
-    try { return JSON.parse(localStorage.getItem(LS_AJENOS) || '{}'); } catch (e) { return {}; }
+    const sesion = getSesionCache();
+    if (!sesion?.id) return {};
+    try {
+      const cache = JSON.parse(localStorage.getItem(LS_AJENOS) || 'null');
+      return (cache?.sesion_id === sesion.id && cache.map) ? cache.map : {};
+    } catch (e) { return {}; }
   }
   function _marcarAjeno(localId, remoteId) {
     if (!localId || !remoteId) return;
+    const sesion = getSesionCache();
+    if (!sesion?.id) return;
     const map = _leerAjenos();
     map[localId] = remoteId;
-    try { localStorage.setItem(LS_AJENOS, JSON.stringify(map)); } catch (e) {}
+    try { localStorage.setItem(LS_AJENOS, JSON.stringify({ sesion_id: sesion.id, map })); } catch (e) {}
   }
   function _remoteIdAjeno(localId) {
     return _leerAjenos()[localId] || null;
@@ -419,6 +426,7 @@ const ScInformes = (() => {
       _registrarFinalDeSesion(payload.localId);
       return { ok: true, id };
     } catch (e) {
+      // Código inválido: no tiene sentido encolar (nunca va a pasar sin corregirlo).
       if (/código de acceso inválido/i.test(e.message || '')) {
         return { ok: false, codigoInvalido: true };
       }
@@ -819,6 +827,7 @@ const ScInformes = (() => {
     listAdminInformes, getAdminInforme, updateAdminInforme, deleteAdminInforme,
     listUsuarios, crearUsuario,
     restaurarEstadoRemoto: _restaurarEstadoRemoto,
+    marcarAjeno: _marcarAjeno,
     listMisInformesUnificado, listAdminInformesUnificado,
     listAdminBorradores, getAdminBorrador,
   };

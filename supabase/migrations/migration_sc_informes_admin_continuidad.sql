@@ -38,8 +38,7 @@ BEGIN
          estado_parcial_actualizado_en = now(),
          estado_estructurado = p_estado_parcial,
          estado_estructurado_actualizado_en = now()
-   WHERE id = p_id
-     AND estado_parcial IS NOT NULL;
+   WHERE id = p_id;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Borrador no encontrado';

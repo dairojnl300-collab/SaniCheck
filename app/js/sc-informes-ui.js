@@ -394,18 +394,21 @@ const ScInformesUI = (() => {
             : 0;
           const localMs = _fechaMsUi(local?.actualizado_en || local?.creado_en);
 
-          if (local && localMs >= remotoMs) {
-            Store.set({ currentId: local.id });
-            if (Router && Router.go) Router.go('hacer');
-            return;
-          }
-
           // Un admin editando el borrador/informe de OTRO técnico debe seguir
           // guardando bajo el dueño original (sc_guardar_admin_borrador/
           // sc_guardar_admin_informe) — no forkear una fila nueva a su propio
           // tecnico_id. `id` es el uuid de la fila remota, el mismo que
-          // necesitan esas RPCs.
+          // necesitan esas RPCs. Se calcula ANTES del atajo "local gana" para
+          // marcarlo incluso cuando no hace falta traer el estado remoto ahora
+          // — si no, el siguiente guardado del admin forkearía la fila.
           const esAjeno = !!(opts.admin && fila?.tecnico_id && fila.tecnico_id !== ScInformes.getSesionCache()?.id);
+
+          if (local && localMs >= remotoMs) {
+            if (esAjeno) ScInformes.marcarAjeno(localId, id);
+            Store.set({ currentId: local.id });
+            if (Router && Router.go) Router.go('hacer');
+            return;
+          }
 
           let estadoRemoto = null;
           if (fila?._enCurso) {
