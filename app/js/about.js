@@ -1,4 +1,4 @@
-// about.js — Ajustes / Acerca de SaniCheck (versión, Portal Cliente, soporte)
+// about.js — Ajustes / Acerca de SaniCheck (actualizaciones, Portal Cliente, soporte)
 
 const About = (() => {
   'use strict';
@@ -10,7 +10,7 @@ const About = (() => {
         <div class="screen-fase-badge" style="background:rgba(148,163,184,0.14);color:var(--color-ink3);display:inline-flex;align-items:center;gap:6px;">
           ${AppIcons.icon('settings', 12)} AJUSTES</div>
         <div class="screen-title">Acerca de SaniCheck</div>
-        <div class="screen-subtitle">Versión de caché, Portal Cliente y soporte</div>
+        <div class="screen-subtitle">Información de la aplicación, actualizaciones y soporte</div>
       </div>
 
       <div style="padding:0 var(--sp-md) var(--sp-lg);">
@@ -57,16 +57,6 @@ const About = (() => {
           <div id="about-portal-body" style="font-size:var(--text-sm);color:var(--color-ink2);">
             Cargando…
           </div>
-        </div>
-
-        <div class="card" style="padding:var(--sp-md);margin-bottom:var(--sp-md);">
-          <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);
-            text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--sp-sm);">
-            Diagnóstico Service Worker</div>
-          <pre id="about-sw-diagnostic" style="margin:0;font-family:var(--font-mono,monospace);font-size:11px;
-            line-height:1.55;color:var(--color-ink2);white-space:pre-wrap;word-break:break-word;
-            background:var(--wash-a,#EFF9F5);padding:12px;border-radius:var(--radius-md);
-            border:1px solid var(--color-border);">Consultando…</pre>
         </div>
 
         <div class="card" style="padding:var(--sp-md);margin-bottom:var(--sp-md);">
@@ -131,7 +121,6 @@ const About = (() => {
     }
 
     _renderPortal();
-    _renderSwDiagnostic();
   }
 
   function _renderScSession() {
