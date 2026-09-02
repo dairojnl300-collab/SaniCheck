@@ -232,8 +232,12 @@
       await window.SaniCheckVersionInit();
     }
     Store.load();
-    Store.bindLifecycleFlush();
     await Store.recoverFromIdb();
+    if (Store.needsRecovery && Store.needsRecovery()) {
+      location.replace('recuperar.html');
+      return;
+    }
+    Store.bindLifecycleFlush();
     SwUpdate.init();
     if (typeof ScInformes !== 'undefined') ScInformes.bindAutoRetry();
     if (typeof PortalCliente !== 'undefined') PortalCliente.bindOnlineRetry();

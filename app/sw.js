@@ -1,11 +1,12 @@
 // Service Worker — SaniCheck — Offline-first completo
 
-const APP_VERSION = '4.14.0';
-const BUILD_HASH = 'd9cded51df0b';
+const APP_VERSION = '4.15.0';
+const BUILD_HASH = '4079aff98993';
 const CACHE = 'sanicheck-' + BUILD_HASH;
 
 const ASSETS = [
   './index.html',
+  './recuperar.html',
   './manifest.json',
   './version.json',
   './css/brand.css',
@@ -180,12 +181,34 @@ async function _shellDocument() {
   return _offlinePage();
 }
 
+async function _recoveryDocument() {
+  const candidates = ['./recuperar.html', 'recuperar.html', '/recuperar.html'];
+  for (const u of candidates) {
+    const hit = await caches.match(u);
+    if (hit) return _cleanResponse(hit);
+  }
+  const cache = await caches.open(CACHE);
+  const keys = await cache.keys();
+  for (const req of keys) {
+    if (new URL(req.url).pathname.endsWith('/recuperar.html')) {
+      const hit = await cache.match(req);
+      if (hit) return _cleanResponse(hit);
+    }
+  }
+  return _offlinePage();
+}
+
+async function _documentForRequest(request) {
+  const pathname = new URL(request.url).pathname.replace(/\/$/, '');
+  return pathname.endsWith('/recuperar.html') ? _recoveryDocument() : _shellDocument();
+}
+
 async function _fallbackResponse(request) {
   const dest = request.destination;
   const url = new URL(request.url);
 
   if (request.mode === 'navigate' || dest === 'document') {
-    return _shellDocument();
+    return _documentForRequest(request);
   }
 
   const cached = await _matchCached(request);
@@ -195,7 +218,7 @@ async function _fallbackResponse(request) {
   if (dest === 'style' || url.pathname.endsWith('.css')) return _emptyStyle();
   if (dest === 'json' || url.pathname.endsWith('.json')) return _emptyJson();
 
-  if (request.mode === 'navigate') return _shellDocument();
+  if (request.mode === 'navigate') return _documentForRequest(request);
   return _offlinePage();
 }
 
@@ -274,8 +297,8 @@ self.addEventListener('fetch', e => {
   // Navegación — red primero, shell cacheado, página offline
   if (e.request.mode === 'navigate') {
     _respond(e, fetch(e.request)
-      .then(res => (res && res.ok ? res : _shellDocument()))
-      .catch(() => _shellDocument())
+      .then(res => (res && res.ok ? res : _documentForRequest(e.request)))
+      .catch(() => _documentForRequest(e.request))
     );
     return;
   }

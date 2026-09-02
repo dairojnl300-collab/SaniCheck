@@ -10,6 +10,7 @@ const APP  = path.join(ROOT, 'app');
 
 const ASSET_PATHS = [
   'index.html',
+  'recuperar.html',
   'manifest.json',
   'version.json',
   'css/brand.css',

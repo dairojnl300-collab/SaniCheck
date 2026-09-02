@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Recuperar SaniCheck</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, -apple-system, Segoe UI, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #EFF9F5; color: #0A2E23; display: grid; place-items: center; padding: 20px; }
+    main { width: min(100%, 480px); background: #fff; border: 1px solid rgba(10,46,35,.12); border-radius: 20px; box-shadow: 0 12px 32px rgba(10,46,35,.12); padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 22px; }
+    p { color: rgba(10,46,35,.7); line-height: 1.5; font-size: 14px; }
+    .status { margin: 16px 0; padding: 12px; border-radius: 12px; background: #EFF9F5; font-size: 13px; white-space: pre-line; }
+    button { width: 100%; border: 0; border-radius: 12px; padding: 13px 16px; margin-top: 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    button.primary { color: #fff; background: #0C8A5F; }
+    button.secondary { color: #0A7350; background: #E9F6F0; }
+    button:disabled { opacity: .55; cursor: wait; }
+    .small { font-size: 12px; color: rgba(10,46,35,.58); }
+    .danger { color: #991B1B; background: #FEE2E2; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Recuperación segura de SaniCheck</h1>
+    <p>La inspección tiene un estado local pesado y la aplicación no pudo abrirse. Esta pantalla trabaja por separado para recuperar tus datos.</p>
+    <div id="status" class="status">Buscando la última inspección guardada…</div>
+    <button id="recover" class="primary" disabled>Preparar recuperación y abrir SaniCheck</button>
+    <button id="download" class="secondary" disabled>Descargar respaldo de seguridad</button>
+    <button id="restore" class="secondary" disabled>Restaurar copia original</button>
+    <p class="small">Las fotos originales se conservan en un respaldo local antes de optimizar. No se elimina ninguna inspección.</p>
+  </main>
+  <script>
+    (() => {
+      'use strict';
+      const KEY = 'saneamiento_psb_v1';
+      const DB_NAME = 'sanicheck-persist';
+      const DB_STORE = 'kv';
+      const MAX_PX = 1600;
+      const MAX_BYTES = 900 * 1024;
+      const QUALITIES = [0.78, 0.64, 0.52, 0.40];
+      const status = document.getElementById('status');
+      const recover = document.getElementById('recover');
+      const download = document.getElementById('download');
+      const restore = document.getElementById('restore');
+      let source = null;
+      let sourceSnapshot = null;
+      let originalAvailable = false;
+
+      const say = text => { status.textContent = text; };
+      const latestUpdate = value => (value?.inspecciones || []).reduce((latest, item) => {
+        return Math.max(latest, Date.parse(item.actualizado_en || item.creado_en || '') || 0);
+      }, 0);
+
+      function openDb() {
+        return new Promise((resolve, reject) => {
+          if (!('indexedDB' in window)) return resolve(null);
+          const request = indexedDB.open(DB_NAME, 1);
+          request.onupgradeneeded = event => {
+            if (!event.target.result.objectStoreNames.contains(DB_STORE)) event.target.result.createObjectStore(DB_STORE);
+          };
+          request.onsuccess = event => resolve(event.target.result);
+          request.onerror = () => reject(request.error || new Error('No se pudo abrir IndexedDB'));
+        });
+      }
+
+      async function idbGet(key) {
+        const db = await openDb();
+        if (!db) return null;
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(DB_STORE, 'readonly');
+          const request = tx.objectStore(DB_STORE).get(key);
+          request.onsuccess = () => resolve(request.result ?? null);
+          request.onerror = () => reject(request.error || new Error('No se pudo leer el respaldo'));
+        });
+      }
+
+      async function idbPut(key, value) {
+        const db = await openDb();
+        if (!db) throw new Error('IndexedDB no está disponible');
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(DB_STORE, 'readwrite');
+          tx.objectStore(DB_STORE).put(value, key);
+          tx.oncomplete = resolve;
+          tx.onerror = () => reject(tx.error || new Error('No se pudo guardar el respaldo'));
+          tx.onabort = () => reject(tx.error || new Error('El respaldo fue cancelado'));
+        });
+      }
+
+      function parseLocal() {
+        try {
+          const raw = localStorage.getItem(KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (error) {
+          console.warn('[SaniCheck Recovery] localStorage inválido', error);
+          return null;
+        }
+      }
+
+      function inspections(value) {
+        if (Array.isArray(value?.inspecciones)) return value.inspecciones;
+        return value ? [value] : [];
+      }
+
+      function countPhotos(value) {
+        let count = 0;
+        inspections(value).forEach(inspeccion => (inspeccion.programas || []).forEach(programa => (programa.aspectos || []).forEach(aspecto => {
+          count += (aspecto.fotografias || []).length;
+          (aspecto.criterios_extra || []).forEach(extra => { count += (extra.fotografias || []).length; });
+        })));
+        return count;
+      }
+
+      function dataUrl(blob) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(reader.error || new Error('No se pudo leer la imagen'));
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      async function compress(data) {
+        const image = new Image();
+        image.src = data;
+        await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = () => reject(new Error('Imagen inválida')); });
+        const scale = Math.min(1, MAX_PX / Math.max(image.naturalWidth, image.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        const context = canvas.getContext('2d', { alpha: false });
+        if (!context) throw new Error('No se pudo preparar la imagen');
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        for (const quality of QUALITIES) {
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+          if (blob && (blob.size <= MAX_BYTES || quality === QUALITIES[QUALITIES.length - 1])) return dataUrl(blob);
+        }
+        throw new Error('No se pudo comprimir la imagen');
+      }
+
+      async function optimizePhotos(value) {
+        let total = 0;
+        let optimized = 0;
+        const optimizeList = async list => {
+          for (const item of list || []) {
+            if (!item?.data?.startsWith('data:image/')) continue;
+            total++;
+            item.data = await compress(item.data);
+            optimized++;
+            say(`Optimizando fotografías… ${optimized}/${total}`);
+          }
+        };
+        for (const inspeccion of inspections(value)) {
+          for (const programa of inspeccion.programas || []) {
+            for (const aspecto of programa.aspectos || []) {
+              await optimizeList(aspecto.fotografias);
+              for (const extra of aspecto.criterios_extra || []) await optimizeList(extra.fotografias);
+            }
+          }
+        }
+        return { total, optimized };
+      }
+
+      function downloadBackup() {
+        if (!source) return;
+        const blob = new Blob([JSON.stringify(source)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `sanicheck-respaldo-${new Date().toISOString().slice(0, 10)}.json`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      async function load() {
+        try {
+          sourceSnapshot = await idbGet('snapshot');
+          const local = parseLocal();
+          const snapshotNewer = sourceSnapshot?.store && (!local || (Date.parse(sourceSnapshot.saved_at || '') || 0) > latestUpdate(local));
+          source = snapshotNewer ? sourceSnapshot.store : (local || sourceSnapshot?.store || await idbGet(KEY));
+          const savedOriginal = await idbGet('recovery-original');
+          originalAvailable = !!savedOriginal?.store;
+          const count = countPhotos(source);
+          const size = source ? Math.round(JSON.stringify(source).length / 1024) : 0;
+          say(source ? `Inspección encontrada · ${count} fotografías · ${size} KB aproximados.\nTus datos están listos para recuperarse.` : 'No se encontró una inspección local recuperable.');
+          recover.disabled = !source;
+          download.disabled = !source;
+          restore.disabled = !originalAvailable;
+        } catch (error) {
+          console.error('[SaniCheck Recovery]', error);
+          say('No se pudo leer el almacenamiento local. No se modificó ningún dato.');
+          status.classList.add('danger');
+        }
+      }
+
+      recover.onclick = async () => {
+        if (!source) return;
+        recover.disabled = true; download.disabled = true; restore.disabled = true;
+        try {
+          say('Creando respaldo original seguro…');
+          await idbPut('recovery-original', { store: source, draft: sourceSnapshot?.draft || null, saved_at: new Date().toISOString() });
+          const result = await optimizePhotos(source);
+          const snapshot = { store: source, draft: sourceSnapshot?.draft || null, saved_at: new Date().toISOString() };
+          await idbPut('snapshot', snapshot);
+          await idbPut(KEY, source);
+          try { localStorage.setItem(KEY, JSON.stringify(source)); } catch (error) { console.warn('[SaniCheck Recovery] localStorage lleno; IndexedDB conserva la recuperación', error); }
+          say(`Recuperación preparada: ${result.optimized} fotografías optimizadas. Abriendo SaniCheck…`);
+          setTimeout(() => { location.href = './'; }, 1200);
+        } catch (error) {
+          console.error('[SaniCheck Recovery]', error);
+          say('No se modificó la inspección porque la recuperación no pudo completarse. Descarga el respaldo e inténtalo de nuevo.');
+          status.classList.add('danger');
+          recover.disabled = false; download.disabled = false; restore.disabled = !originalAvailable;
+        }
+      };
+
+      download.onclick = downloadBackup;
+      restore.onclick = async () => {
+        try {
+          const backup = await idbGet('recovery-original');
+          if (!backup?.store) return;
+          const snapshot = { store: backup.store, draft: backup.draft || null, saved_at: new Date().toISOString() };
+          await idbPut('snapshot', snapshot);
+          await idbPut(KEY, backup.store);
+          try { localStorage.setItem(KEY, JSON.stringify(backup.store)); } catch (error) { console.warn('[SaniCheck Recovery] localStorage lleno al restaurar', error); }
+          say('Copia original restaurada. Abriendo SaniCheck…');
+          setTimeout(() => { location.href = './'; }, 1200);
+        } catch (error) {
+          console.error('[SaniCheck Recovery]', error);
+          say('No se pudo restaurar la copia original. No se eliminaron datos.');
+        }
+      };
+
+      load();
+    })();
+  </script>
+</body>
+</html>

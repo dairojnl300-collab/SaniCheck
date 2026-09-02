@@ -6,6 +6,7 @@ const Store = (() => {
   const IDB_NAME   = 'sanicheck-persist';
   const IDB_STORE  = 'kv';
   const DEBOUNCE_MS = 500;
+  const RECOVERY_LIMIT_BYTES = 3 * 1024 * 1024;
 
   const defaults = {
     inspecciones: [],
@@ -17,6 +18,7 @@ const Store = (() => {
   let _saveTimer = null;
   let _idbReady  = null;
   let _loadFailed = false;
+  let _needsRecovery = false;
 
   function _openIdb() {
     if (_idbReady) return _idbReady;
@@ -85,6 +87,15 @@ const Store = (() => {
     }, 0);
   }
 
+  function _estimatePhotoBytes(candidate) {
+    return (candidate?.inspecciones || []).reduce((total, inspeccion) => total +
+      (inspeccion.programas || []).reduce((programTotal, programa) => programTotal +
+        (programa.aspectos || []).reduce((aspectTotal, aspecto) => aspectTotal +
+          (aspecto.fotografias || []).reduce((photoTotal, foto) => photoTotal + (foto?.data?.length || 0), 0) +
+          (aspecto.criterios_extra || []).reduce((extraTotal, extra) => extraTotal +
+            (extra.fotografias || []).reduce((photoTotal, foto) => photoTotal + (foto?.data?.length || 0), 0), 0), 0), 0), 0);
+  }
+
   function load() {
     try {
       const saved = localStorage.getItem(KEY);
@@ -97,6 +108,10 @@ const Store = (() => {
     try {
       const snap = await _idbGet('snapshot');
       const localState = { ...state };
+      if (snap?.store && _estimatePhotoBytes(snap.store) > RECOVERY_LIMIT_BYTES) {
+        _needsRecovery = true;
+        return state;
+      }
       const snapshotIsNewer = snap?.store && (Date.parse(snap.saved_at || '') || 0) > _latestInspectionUpdate(localState);
       if ((!localStorage.getItem(KEY) || _loadFailed || snapshotIsNewer) && snap?.store) {
         state = { ...defaults, ...snap.store };
@@ -146,6 +161,8 @@ const Store = (() => {
   }
 
   function get() { return state; }
+
+  function needsRecovery() { return _needsRecovery; }
 
   function set(partial) { state = { ...state, ...partial }; save(); }
 
@@ -224,6 +241,7 @@ const Store = (() => {
   return {
     load, recoverFromIdb, save, saveDebounced, flush, get, set,
     getCurrentInspeccion, upsertInspeccion, deleteInspeccion, setUI,
+    needsRecovery,
     getPlanificarDraft, savePlanificarDraft, clearPlanificarDraft,
     bindLifecycleFlush,
   };
