@@ -265,7 +265,8 @@
           const count = countPhotos(source);
           const size = source ? Math.round(JSON.stringify(source).length / 1024) : 0;
           say(source ? `Inspección encontrada · ${count} fotografías · ${size} KB aproximados.\nTus datos están listos para recuperarse.` : 'No se encontró una inspección local recuperable.');
-          recover.disabled = !source;
+          recover.textContent = source ? 'Preparar recuperación y abrir SaniCheck' : 'Continuar a SaniCheck';
+          recover.disabled = false;
           download.disabled = !source;
           restore.disabled = !originalAvailable;
           setRemoteAvailability();
@@ -277,7 +278,19 @@
       }
 
       recover.onclick = async () => {
-        if (!source) return;
+        if (!source) {
+          recover.disabled = true; download.disabled = true; restore.disabled = true; remoteRecover.disabled = true;
+          // No hay nada que recuperar: el arranque de emergencia (index.html) redirige aquí
+          // por el tamaño crudo de localStorage, sin poder verificar si es recuperable. Si
+          // esta pantalla tampoco encuentra nada usable, ese dato es irrecuperable (ilegible
+          // en local y en IndexedDB) y hay que limpiarlo o el arranque de emergencia vuelve a
+          // enviar en bucle a esta misma pantalla.
+          try { localStorage.removeItem(KEY); } catch (error) { console.warn('[SaniCheck Recovery] No se pudo limpiar el almacenamiento local', error); }
+          try { await idbPut(RECOVERY_READY_KEY, { valid: false, cleared_at: new Date().toISOString() }); } catch (_) {}
+          say('No había ninguna inspección pesada para recuperar. Abriendo SaniCheck…');
+          setTimeout(() => { location.href = './'; }, 600);
+          return;
+        }
         recover.disabled = true; download.disabled = true; restore.disabled = true; remoteRecover.disabled = true;
         try {
           say('Creando respaldo original seguro…');
