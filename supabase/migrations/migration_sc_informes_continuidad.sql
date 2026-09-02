@@ -97,8 +97,9 @@ $function$;
 -- claves, ej. un registro ya encolado en el outbox de un cliente desde
 -- antes de este cambio.)
 
+DROP FUNCTION IF EXISTS public.sc_guardar_informe(text,jsonb,date,text,text,text);
 DROP FUNCTION IF EXISTS public.sc_guardar_informe(text,jsonb,date,text,text,text,text,integer,integer,integer);
-CREATE FUNCTION public.sc_guardar_informe(
+CREATE OR REPLACE FUNCTION public.sc_guardar_informe(
   p_codigo text, p_establecimiento jsonb, p_fecha date, p_html text,
   p_local_id text DEFAULT NULL, p_numero_acta text DEFAULT NULL,
   p_nivel_cumplimiento text DEFAULT NULL, p_aspectos_evaluados integer DEFAULT NULL,
@@ -176,7 +177,7 @@ $function$;
 -- dropear primero. La firma de entrada (uuid,text) no cambia.)
 
 DROP FUNCTION IF EXISTS public.sc_get_informe(uuid, text);
-CREATE FUNCTION public.sc_get_informe(p_id uuid, p_codigo text)
+CREATE OR REPLACE FUNCTION public.sc_get_informe(p_id uuid, p_codigo text)
 RETURNS TABLE(id uuid, local_id text, establecimiento jsonb, fecha date, numero_acta text, informe_html text,
               nivel_cumplimiento text, aspectos_evaluados integer, aspectos_total integer,
               porcentaje_cumplimiento integer, creado_en timestamptz, actualizado_en timestamptz,
@@ -197,7 +198,7 @@ END;
 $function$;
 
 DROP FUNCTION IF EXISTS public.sc_get_admin_informe(uuid, text);
-CREATE FUNCTION public.sc_get_admin_informe(p_id uuid, p_codigo text)
+CREATE OR REPLACE FUNCTION public.sc_get_admin_informe(p_id uuid, p_codigo text)
 RETURNS TABLE(id uuid, local_id text, tecnico_id uuid, tecnico_nombre text, establecimiento jsonb, fecha date,
               numero_acta text, informe_html text, nivel_cumplimiento text, aspectos_evaluados integer,
               aspectos_total integer, porcentaje_cumplimiento integer, creado_en timestamptz,
