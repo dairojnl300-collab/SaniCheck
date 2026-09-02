@@ -27,7 +27,7 @@ const Hacer = (() => {
   function guardar(campo, valor) { const s = _state(); if (!s) return; s.aspecto[campo] = valor; if (campo === 'hallazgo' || campo === 'obs') { if (campo === 'hallazgo') s.aspecto.obs = valor; s.aspecto.obs_editada = true; } Hallazgos.actualizar(s.inspeccion); Store.upsertInspeccion(s.inspeccion); }
   function _renderCriteriosExtra(aspecto, programaIdx, aspectoIdx) {
     const criterios = Array.isArray(aspecto.criterios_extra) ? aspecto.criterios_extra : [];
-    return criterios.map((c, i) => `<div style="margin-top:16px;padding:14px 10px 12px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface);"><div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink);margin-bottom:10px;">Aspecto por verificar ${i + 2}</div><div class="eval-group">${[['A','Cumple'],['I','Incumple'],['NA','No aplica']].map(([v,l]) => `<button class="eval-btn eval-btn-${v} ${c.criterio === v ? 'selected' : ''}" aria-pressed="${c.criterio === v}" onclick="Hacer.evaluarCriterio(${i},'${v}')"><span class="eval-letter">${v === 'NA' ? 'N-A' : v}</span><span class="eval-word">${l}</span></button>`).join('')}</div>${_renderSeguimientoExtra(c, i, programaIdx, aspectoIdx)}<button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="Fotos.capturar(${programaIdx},${aspectoIdx},${i})">${AppIcons.row('camera', 'Agregar foto', 14)}</button>${Fotos.renderThumbnails(c.fotografias, programaIdx, aspectoIdx, i)}</div>`).join('');
+    return criterios.map((c, i) => `<div style="margin-top:16px;padding:14px 10px 12px;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface);"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;"><div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink);">Aspecto por verificar ${i + 2}</div><button type="button" aria-label="Eliminar aspecto por verificar ${i + 2}" onclick="Hacer.eliminarCriterio(${i})" style="border:0;background:transparent;color:var(--color-deficiente);font-size:var(--text-xs);font-weight:700;cursor:pointer;padding:4px;">${AppIcons.row('trash', 'Eliminar', 12)}</button></div><div class="eval-group">${[['A','Cumple'],['I','Incumple'],['NA','No aplica']].map(([v,l]) => `<button class="eval-btn eval-btn-${v} ${c.criterio === v ? 'selected' : ''}" aria-pressed="${c.criterio === v}" onclick="Hacer.evaluarCriterio(${i},'${v}')"><span class="eval-letter">${v === 'NA' ? 'N-A' : v}</span><span class="eval-word">${l}</span></button>`).join('')}</div>${_renderSeguimientoExtra(c, i, programaIdx, aspectoIdx)}<button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="Fotos.capturar(${programaIdx},${aspectoIdx},${i})">${AppIcons.row('camera', 'Agregar foto', 14)}</button>${Fotos.renderThumbnails(c.fotografias, programaIdx, aspectoIdx, i)}</div>`).join('');
   }
   function _renderSeguimientoExtra(c, i, programaIdx, aspectoIdx) {
     if (!c.criterio || c.criterio === 'NA') return '';
@@ -42,11 +42,18 @@ const Hacer = (() => {
     Store.upsertInspeccion(s.inspeccion); _refresh();
     Router.toast('Aspecto por verificar agregado');
   }
+  function eliminarCriterio(index) {
+    const s = _state(); if (!s || !Array.isArray(s.aspecto.criterios_extra) || !s.aspecto.criterios_extra[index]) return;
+    if (!window.confirm('¿Eliminar este aspecto por verificar adicional?')) return;
+    s.aspecto.criterios_extra.splice(index, 1);
+    Scores.calcular(s.inspeccion); Hallazgos.actualizar(s.inspeccion); Store.upsertInspeccion(s.inspeccion); _refresh();
+    Router.toast('Aspecto por verificar eliminado');
+  }
   function evaluarCriterio(index, valor) { const s = _state(); if (!s || !Array.isArray(s.aspecto.criterios_extra) || !s.aspecto.criterios_extra[index]) return; s.aspecto.criterios_extra[index].criterio = valor; Store.upsertInspeccion(s.inspeccion); Scores.calcular(s.inspeccion); Hallazgos.actualizar(s.inspeccion); _refresh(); }
   function guardarCriterio(index, campo, valor) { const s = _state(); if (!s || !Array.isArray(s.aspecto.criterios_extra) || !s.aspecto.criterios_extra[index]) return; const c = s.aspecto.criterios_extra[index]; c[campo] = valor; if (campo === 'hallazgo') c.obs = valor; Store.upsertInspeccion(s.inspeccion); Hallazgos.actualizar(s.inspeccion); }
   function toggleNorma() { normaAbierta = !normaAbierta; _refresh(); }
   function seleccionarPrograma(i) { normaAbierta = false; Store.setUI({ programaIdx: i, aspectoIdx: 0 }); _refresh(); }
   function navegar(dir) { const s = _state(); if (!s) return; let p = s.programaIdx, a = s.aspectoIdx + dir; if (a < 0 && p > 0) { p--; a = s.inspeccion.programas[p].aspectos.length - 1; } else if (a >= s.programa.aspectos.length && p < s.inspeccion.programas.length - 1) { p++; a = 0; } else if (a >= s.programa.aspectos.length) { Router.go('dashboard'); return; } normaAbierta = false; Store.setUI({ programaIdx: p, aspectoIdx: a }); _refresh(); }
   function _refresh() { const area = document.getElementById('screen-area'); if (area) area.innerHTML = render(); }
-  return { render, attach() {}, evaluar, guardar, agregarCriterio, evaluarCriterio, guardarCriterio, toggleNorma, seleccionarPrograma, navegar, refresh: _refresh };
+  return { render, attach() {}, evaluar, guardar, agregarCriterio, eliminarCriterio, evaluarCriterio, guardarCriterio, toggleNorma, seleccionarPrograma, navegar, refresh: _refresh };
 })();
