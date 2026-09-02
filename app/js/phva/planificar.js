@@ -71,7 +71,12 @@ const Planificar = (() => {
   /** v1 oculto — mantener por compatibilidad de datos existentes, ver ETAPA futura de migración v1→v2 */
   const _VENC_V1_UI = false;
 
-  const FORM_IDS = ['inp-nombre', 'inp-nit', 'inp-direccion', 'inp-responsable', 'inp-fecha'];
+  // Campos del formulario vigente. Mantenerlos aquí garantiza que el borrador
+  // se conserve desde el primer dato diligenciado, incluso antes de guardar.
+  const FORM_IDS = [
+    'inp-nombre', 'inp-nit', 'inp-direccion', 'inp-profesional',
+    'inp-responsable-psb', 'inp-fecha',
+  ];
 
   function _draftVal(id) {
     const el = document.getElementById(id);
