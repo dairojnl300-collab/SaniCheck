@@ -3,11 +3,21 @@
  * proyecto isncjtomlvxyvcaohcpx) y encola reintentos offline.
  *
  * Sin SDK supabase-js (igual que sc-informes.js y vencimientos-storage.js):
- * fetch() crudo con apikey/Authorization = anon key. El bucket es privado
- * pero sus policies aceptan anon/authenticated sin aislar por técnico a
- * nivel Storage (ver comentario de arquitectura en
- * supabase/migrations/migration_sc_informes_fotos_storage.sql) — el gate
- * real sigue siendo el código de acceso validado en las RPCs sc_*.
+ * fetch() crudo con apikey/Authorization = anon key.
+ *
+ * Modelo de riesgo real del bucket (ver
+ * supabase/migrations/migration_sc_informes_fotos_storage_hardening.sql):
+ * el bucket es privado, pero SELECT e INSERT están abiertos a anon +
+ * authenticated sin filtro por técnico — limitación conocida: SaniCheck no usa
+ * JWT de Supabase Auth ni Edge Functions, así que no hay identidad a nivel de
+ * fila en Storage. NO es equivalente a llamar una RPC sc_* sin código válido:
+ * esas rechazan con 'Código de acceso inválido', mientras que aquí un SELECT
+ * con la anon key y el path correcto devuelve la foto. Lo que sí está cerrado:
+ * no hay UPDATE ni DELETE públicos y no se usa upsert, así que nadie puede
+ * sobrescribir ni borrar una foto ya subida. Mitigación de la lectura: paths
+ * no adivinables ({tecnico_id}/{informe_id}/{uuid}.jpg, con UUID real de
+ * crypto.randomUUID). El gate del resto de datos del informe sigue siendo el
+ * código de acceso validado en las RPCs sc_*.
  *
  * Outbox: IndexedDB nativa, mismo patrón ya probado en ProyeCar
  * (index.html: colaInformes) — Blob guardado tal cual (sin base64), loop de
@@ -53,11 +63,16 @@ const FotosStorage = (() => {
   async function _subirAhora(blob, objectPath) {
     const cfg = _cfg();
     if (!cfg) { const e = new Error('Falta configurar sc-informes-config.secrets.js'); e.sinConfig = true; throw e; }
+    // Sin 'x-upsert': un path ya existente NO debe poder sobrescribirse en
+    // silencio. Los paths llevan UUID por foto, así que un 409 aquí significa
+    // que ese objeto ya se subió (p. ej. reintento de la cola tras un timeout
+    // de red con la subida ya completada server-side): se trata como éxito.
     const res = await fetch(_objectUrl(objectPath), {
       method: 'POST',
-      headers: _headers({ 'Content-Type': 'image/jpeg', 'x-upsert': 'true' }),
+      headers: _headers({ 'Content-Type': 'image/jpeg' }),
       body: blob,
     });
+    if (res.status === 409) return true;
     if (!res.ok) {
       const text = await res.text().catch(() => '');
       const err = new Error('Error al subir foto (' + res.status + '): ' + text.slice(0, 160));

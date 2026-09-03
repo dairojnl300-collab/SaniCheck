@@ -216,6 +216,46 @@
     Router.go('hacer');
   };
 
+  /* ── Indicador de fotos pendientes de sincronizar ──────────────────────
+   * FotosStorage encola en IndexedDB las fotos que no pudo subir y las
+   * reintenta sola al volver la conexión (bindAutoRetry). Sin señal visible el
+   * técnico no sabe que hay evidencia sin respaldar todavía. Píldora fija,
+   * visible solo mientras haya pendientes, más un toast en las transiciones
+   * 0 → >0 y >0 → 0 (consistente con Router.toast en el resto de la app).   */
+  let _fotosPendientesPrevio = null;
+
+  function _pillFotosPendientes() {
+    let el = document.getElementById('fotos-pendientes-badge');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'fotos-pendientes-badge';
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-live', 'polite');
+      el.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:9000;display:none;'
+        + 'align-items:center;gap:6px;padding:7px 11px;border-radius:999px;'
+        + 'background:#B45309;color:#fff;font-size:12px;font-weight:700;'
+        + "font-family:'Instrument Sans',Arial,sans-serif;box-shadow:0 3px 10px rgba(10,46,35,.28);"
+        + 'pointer-events:none;';
+      document.body.appendChild(el);
+    }
+    return el;
+  }
+
+  function _bindFotosPendientes() {
+    if (typeof FotosStorage === 'undefined' || !FotosStorage.onCambioPendientes) return;
+    FotosStorage.onCambioPendientes(n => {
+      const total = Number(n) || 0;
+      const el = _pillFotosPendientes();
+      el.textContent = total === 1 ? '1 foto por sincronizar' : `${total} fotos por sincronizar`;
+      el.style.display = total > 0 ? 'inline-flex' : 'none';
+      const previo = _fotosPendientesPrevio;
+      _fotosPendientesPrevio = total;
+      if (previo === null || !Router || !Router.toast) return;
+      if (previo === 0 && total > 0) Router.toast('Fotos pendientes de sincronizar: ' + total);
+      else if (previo > 0 && total === 0) Router.toast('Todas las fotos quedaron sincronizadas');
+    });
+  }
+
   function _bindTopbarScroll() {
     const topbar = document.querySelector('.phva-topbar');
     const area = document.getElementById('screen-area');
@@ -241,6 +281,7 @@
     SwUpdate.init();
     if (typeof ScInformes !== 'undefined') ScInformes.bindAutoRetry();
     if (typeof FotosStorage !== 'undefined') FotosStorage.bindAutoRetry();
+    _bindFotosPendientes();
     if (typeof PortalCliente !== 'undefined') PortalCliente.bindOnlineRetry();
     if (typeof VencimientosV2 !== 'undefined') {
       VencimientosV2.loadCatalog().catch(() => {});

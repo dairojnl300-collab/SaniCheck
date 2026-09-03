@@ -714,9 +714,13 @@ const Actuar = (() => {
       </div>`;
   }
 
-  // foto.path (Storage) se hidrata en el navegador vía el script embebido al
-  // final del documento (fetch autenticado + object URL); foto.data (fallback
-  // local sin sesión) sigue funcionando igual que antes.
+  // foto.path (Storage) queda como marcador `data-foto-path` SIN src: el visor
+  // (sc-informes-ui.js `_hidratarFotosActa`) descarga cada path de
+  // `sc_informes.fotos_urls` y le inyecta el src antes de mostrar el acta.
+  // No se embebe un <script> hidratador en el HTML: la RPC lo borra al guardar
+  // (sc_sanitizar_html), el visor lo vuelve a borrar al leer y el iframe del
+  // visor no tiene allow-scripts. foto.data (fallback local sin sesión) sigue
+  // funcionando igual que antes.
   function _imgFoto(foto, alt, style) {
     return foto.path
       ? `<img data-foto-path="${_esc(foto.path)}" alt="${_esc(alt)}" style="${style}">`
@@ -1076,11 +1080,16 @@ const Actuar = (() => {
     }).catch(() => {});
   }
 
+  // Solo se reportan los paths que existen (o van a existir) en el bucket:
+  // `subida:false` marca una foto cuya subida falló Y no se pudo encolar, así
+  // que su path nunca llegará a Storage y publicarlo dejaría un <img> roto en
+  // el acta. `subida === undefined` = fotos de versiones anteriores del código
+  // (compatibilidad hacia atrás): se consideran válidas.
   function _recolectarFotosUrls(inspeccion) {
     const urls = [];
     (inspeccion.programas || []).forEach(p => (p.aspectos || []).forEach(a => {
       [a, ...(a.criterios_extra || [])].forEach(item => (item.fotografias || []).forEach(f => {
-        if (f.path) urls.push(f.path);
+        if (f.path && f.subida !== false) urls.push(f.path);
       }));
     }));
     return urls;
@@ -1112,34 +1121,11 @@ const Actuar = (() => {
     const D = JSON.stringify(sorted.map(p => ({ nombre: p.nombre, pct: p.pct })));
     // El acta se guarda como HTML estático y puede reabrirse días después
     // (Registro de Informes, incluso en otro dispositivo): las fotos no
-    // pueden embeberse como blob: URL (mueren con la sesión que las creó).
-    // Se referencian por data-foto-path y este script las hidrata al abrir
-    // el documento, con fetch autenticado (misma anon key ya pública en el
-    // resto de la app) contra Supabase Storage.
-    const cfg = window.SC_INFORMES_CONFIG || {};
-    const fotosHidratacionScript = `
-<script>
-(function() {
-  var SUPABASE_URL = ${JSON.stringify(cfg.SUPABASE_URL || '')};
-  var ANON_KEY = ${JSON.stringify(cfg.SUPABASE_ANON_KEY || '')};
-  function hidratar() {
-    if (!SUPABASE_URL || !ANON_KEY) return;
-    var imgs = document.querySelectorAll('img[data-foto-path]');
-    imgs.forEach(function(img) {
-      var p = img.getAttribute('data-foto-path');
-      if (!p) return;
-      fetch(SUPABASE_URL.replace(/\\/$/, '') + '/storage/v1/object/sc-informes-fotos/' + encodeURI(p), {
-        headers: { apikey: ANON_KEY, Authorization: 'Bearer ' + ANON_KEY }
-      }).then(function(res) { return res.ok ? res.blob() : null; })
-        .then(function(blob) { if (blob) img.src = URL.createObjectURL(blob); })
-        .catch(function() {});
-    });
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hidratar);
-  else hidratar();
-})();
-</script>`;
-
+    // pueden embeberse como blob: URL (mueren con la sesión que las creó) ni
+    // hidratarse con un <script> dentro del propio HTML (la RPC lo borra con
+    // sc_sanitizar_html al guardar y el visor lo abre en un iframe sin
+    // allow-scripts). Quedan como <img data-foto-path> y las hidrata el visor
+    // desde `fotos_urls`: ver `_hidratarFotosActa` en sc-informes-ui.js.
     const chartLib = chartJs
       ? `<script>${chartJs.replace(/<\/script/gi, '<\\/script')}</script>`
       : `<script src="/app/assets/vendor/chart.umd.min.js"></script>`;
@@ -1363,7 +1349,6 @@ window.addEventListener('load', function() {
     document.body.classList.add('mobile-phone');
   }
 </script>
-${fotosHidratacionScript}
 </body>
 </html>`;
   }

@@ -90,11 +90,40 @@ const Fotos = (() => {
     }
   }
 
+  // Mismo patrón que _uuid() en logic/vencimientos-v2-crud.js. El id de la
+  // foto es parte del path del bucket y su imprevisibilidad es la única
+  // mitigación de que SELECT esté abierto a anon (ver fotos-storage.js):
+  // 'foto-' + Date.now() era trivialmente adivinable.
+  function _fotoId() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0;
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+  }
+
   function _tecnicoIdActual() {
     try {
       return (typeof ScInformes !== 'undefined' && ScInformes.getSesionCache)
         ? (ScInformes.getSesionCache()?.id || null) : null;
     } catch (e) { return null; }
+  }
+
+  // La subida resuelve después de que la foto ya está guardada en el Store, y
+  // para entonces el técnico pudo haber cambiado de inspección: se busca el
+  // registro por id en el estado vigente en vez de confiar en la referencia
+  // capturada (que sigue como respaldo si el estado se recargó desde IndexedDB).
+  function _marcarSubida(inspeccionId, fotoId, subida, registro) {
+    const inspeccion = (Store.get().inspecciones || []).find(i => i.id === inspeccionId);
+    if (!inspeccion) { if (registro) registro.subida = subida; return; }
+    let encontrada = false;
+    (inspeccion.programas || []).forEach(p => (p.aspectos || []).forEach(a => {
+      [a, ...(a.criterios_extra || [])].forEach(item => (item.fotografias || []).forEach(f => {
+        if (f.id === fotoId) { f.subida = subida; encontrada = true; }
+      }));
+    }));
+    if (!encontrada) { if (registro) registro.subida = subida; return; }
+    Store.upsertInspeccion(inspeccion);
   }
 
   async function _onCaptura(e) {
@@ -111,28 +140,46 @@ const Fotos = (() => {
       if (!destino) return;
       if (!destino.fotografias) destino.fotografias = [];
 
-      const fotoId = 'foto-' + Date.now();
+      const fotoId = _fotoId();
       _previewCache.set(fotoId, URL.createObjectURL(foto.blob));
 
       const tecnicoId = _tecnicoIdActual();
       if (tecnicoId && typeof FotosStorage !== 'undefined') {
         const objectPath = FotosStorage.path(tecnicoId, inspeccion.id, fotoId);
-        destino.fotografias.push({ id: fotoId, path: objectPath, tomada_en: new Date().toISOString() });
-        FotosStorage.subirFoto(foto.blob, tecnicoId, inspeccion.id, fotoId).then(res => {
-          if (!res.ok && res.encolado && typeof Hacer !== 'undefined' && Hacer.refresh) {
-            // Sigue local; se reintentará sola al volver la conexión.
+        // `subida` arranca en false porque la foto se registra ANTES de saber
+        // si el blob llegó al bucket. Mientras siga en false su path no se
+        // publica en fotos_urls (ver _recolectarFotosUrls en phva/actuar.js) y
+        // el acta no queda con un <img> roto.
+        const registro = { id: fotoId, path: objectPath, tomada_en: new Date().toISOString(), subida: false };
+        destino.fotografias.push(registro);
+        const inspeccionId = inspeccion.id;
+        FotosStorage.subirFoto(foto.blob, tecnicoId, inspeccionId, fotoId).then(res => {
+          // Subida en firme O encolada para reintento: en ambos casos el path
+          // va a existir. Solo `!ok && !encolado` es pérdida real (ni se subió
+          // ni se pudo guardar en la cola de IndexedDB).
+          const subida = !!(res && (res.ok || res.encolado));
+          _marcarSubida(inspeccionId, fotoId, subida, registro);
+          if (!subida) {
+            Router.toast('La foto quedó solo en este equipo: no se pudo subir ni encolar');
+          } else if (!res.ok) {
+            Router.toast('Foto guardada · se subirá cuando haya conexión');
+          } else {
+            Router.toast('Foto guardada y optimizada');
           }
+          if (typeof Hacer !== 'undefined' && Hacer.refresh) Hacer.refresh();
         });
       } else {
         // Sin sesión activa: no hay tecnico_id para el path del bucket.
         // Se conserva localmente en base64 como red de seguridad (no bloquea
-        // la captura); se sube cuando el técnico inicie sesión y vuelva a
-        // guardar el informe.
+        // la captura).
+        // ponytail: fallback sin sesión activa guarda base64 local y nunca
+        // migra a Storage al iniciar sesión después — revive el problema de
+        // tamaño que este cambio buscaba resolver.
         destino.fotografias.push({ id: fotoId, data: await _blobToDataUrl(foto.blob), tomada_en: new Date().toISOString() });
+        Router.toast('Foto guardada y optimizada');
       }
 
       Store.upsertInspeccion(inspeccion);
-      Router.toast('Foto guardada y optimizada');
       if (typeof Hacer !== 'undefined' && Hacer.refresh) Hacer.refresh();
     } catch (error) {
       console.warn('Foto no procesada', error);
@@ -140,6 +187,8 @@ const Fotos = (() => {
     }
   }
 
+  // ponytail: al eliminar una foto localmente no se borra del bucket ni del
+  // outbox — queda huérfana en Storage si ya se subió/encoló.
   function eliminar(programaIdx, aspectoIdx, fotoId, criterioIdx) {
     const inspeccion = Store.getCurrentInspeccion();
     if (!inspeccion) return;
