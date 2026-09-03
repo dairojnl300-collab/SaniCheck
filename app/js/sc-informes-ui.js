@@ -6,12 +6,21 @@
 const ScInformesUI = (() => {
   'use strict';
 
+  const FOTOS_BUCKET = 'sc-informes-fotos';
+
   let _overlayEl = null;
   let _lastFocus = null;
+  let _fotosObjectUrls = [];
+
+  function _revocarFotosVisor() {
+    _fotosObjectUrls.forEach(url => { try { URL.revokeObjectURL(url); } catch (e) {} });
+    _fotosObjectUrls = [];
+  }
 
   function _cerrar() {
     if (_overlayEl && _overlayEl.parentNode) _overlayEl.parentNode.removeChild(_overlayEl);
     _overlayEl = null;
+    _revocarFotosVisor();
     document.removeEventListener('keydown', _onKeydown);
     if (_lastFocus && _lastFocus.focus) { try { _lastFocus.focus(); } catch (e) {} }
   }
@@ -199,6 +208,47 @@ const ScInformesUI = (() => {
     });
   }
 
+  // ── Hidratación de fotos del acta ────────────────────────────────────────
+  //
+  // El acta persistida referencia sus fotos como `<img data-foto-path="...">`
+  // SIN src (ver `_imgFoto` en app/js/phva/actuar.js). No puede traerlas sola:
+  // la RPC borra cualquier <script> con sc_sanitizar_html al guardar,
+  // `_htmlEditableSeguro()` lo vuelve a borrar al leer y el iframe del visor no
+  // tiene allow-scripts. Por eso la hidratación vive aquí, en el documento
+  // padre: se descarga cada path de `sc_informes.fotos_urls` (que devuelven
+  // sc_get_informe/sc_get_admin_informe) con el mismo fetch autenticado que usa
+  // FotosStorage, y se inyecta el src como blob: URL en el string del HTML
+  // antes de entregárselo al iframe.
+  async function _hidratarFotosActa(html, fotosUrls) {
+    const base = String(html || '');
+    const paths = (Array.isArray(fotosUrls) ? fotosUrls : [])
+      .filter(p => typeof p === 'string' && p);
+    if (!paths.length) return { html: base, urls: [] };
+    const cfg = window.SC_INFORMES_CONFIG;
+    if (!cfg || !cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return { html: base, urls: [] };
+    const raiz = String(cfg.SUPABASE_URL).replace(/\/$/, '') + '/storage/v1/object/' + FOTOS_BUCKET + '/';
+    const headers = { apikey: cfg.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_ANON_KEY };
+    const urls = [];
+    let salida = base;
+    // ponytail: sin caché entre aperturas — cada vez que se abre el acta se
+    // vuelve a descargar cada foto desde Storage (una petición por path único,
+    // sin reuso con las miniaturas ya descargadas en Hacer ni entre visores).
+    for (const p of Array.from(new Set(paths))) {
+      const marcador = `data-foto-path="${_esc(p)}"`;
+      if (salida.indexOf(marcador) === -1) continue;
+      try {
+        const res = await fetch(raiz + encodeURI(p), { headers });
+        if (!res.ok) { console.warn('[ScInformesUI] foto no disponible (' + res.status + '):', p); continue; }
+        const objectUrl = URL.createObjectURL(await res.blob());
+        urls.push(objectUrl);
+        salida = salida.split(marcador).join(`src="${objectUrl}" ${marcador}`);
+      } catch (e) {
+        console.warn('[ScInformesUI] no se pudo descargar la foto', p, e && e.message);
+      }
+    }
+    return { html: salida, urls };
+  }
+
   // ── Ver / exportar PDF ───────────────────────────────────────────────────
   //
   // informe_html puede venir de OTRO técnico (o de un técnico comprometido) y
@@ -207,22 +257,33 @@ const ScInformesUI = (() => {
   // document.write en la ventana (eso sería same-origin y correría cualquier
   // <script>/onerror/javascript: como el propio SaniCheck, robando el código
   // de acceso guardado en localStorage). Se aísla en un <iframe sandbox>
-  // sin allow-scripts ni allow-same-origin, cargado vía srcdoc. El botón de
-  // imprimir vive en la página envolvente (confiable, no en el HTML ajeno) y
-  // llama a iframe.contentWindow.print(), que funciona aunque el iframe esté
-  // El informe remoto se trata como contenido no confiable. El documento
-  // contenedor es propio de SaniCheck y el HTML ajeno vive solo en un iframe
-  // sandbox sin scripts ni same-origin; nunca se inserta en el overlay.
-  function _verHtml(html) {
+  // sin allow-scripts, cargado vía srcdoc. El botón de imprimir vive en la
+  // página envolvente (confiable, no en el HTML ajeno) y llama a
+  // iframe.contentWindow.print(), que funciona aunque el iframe esté sandboxed.
+  // El informe remoto se trata como contenido no confiable y nunca se inserta
+  // en el overlay.
+  //
+  // El sandbox lleva `allow-same-origin` (no `allow-scripts`) porque las fotos
+  // entran como blob: URL creadas en este documento y un iframe con origen
+  // opaco no puede leerlas. Sin `allow-scripts` el HTML ajeno sigue sin poder
+  // ejecutar nada (ni <script>, ni on*, ni javascript:, que además ya elimina
+  // `_htmlEditableSeguro`), así que no gana acceso al localStorage ni al DOM
+  // de SaniCheck: la combinación peligrosa es allow-scripts + allow-same-origin.
+  async function _verHtml(html, fotosUrls) {
+    const htmlBase = _htmlEditableSeguro(html);
+    const fotos = await _hidratarFotosActa(htmlBase, fotosUrls);
     const overlay = _abrirOverlay('Ver informe / PDF', `
       <div style="display:flex;flex-direction:column;gap:12px;">
-        <iframe id="sc-viewer" title="Contenido del informe" sandbox="allow-modals"
+        <iframe id="sc-viewer" title="Contenido del informe" sandbox="allow-modals allow-same-origin"
           style="width:100%;height:65vh;min-height:360px;border:1px solid #DDE7E2;border-radius:8px;background:#fff;"></iframe>
         <button type="button" id="sc-print-btn" style="${_btnStyle('#1B4332','#fff')};width:100%;">Imprimir / Guardar como PDF</button>
       </div>`);
+    // Se registran DESPUÉS de _abrirOverlay: esa llamada hace _cerrar(), que
+    // revoca las blob: URL del visor anterior.
+    _fotosObjectUrls = fotos.urls;
     const iframe = overlay.querySelector('#sc-viewer');
     const print = overlay.querySelector('#sc-print-btn');
-    const htmlSeguro = _htmlEditableSeguro(html);
+    const htmlSeguro = fotos.html;
     if (iframe) iframe.srcdoc = htmlSeguro;
     if (print) print.addEventListener('click', () => {
       const esMovil = window.matchMedia?.('(max-width: 600px)').matches
@@ -375,7 +436,7 @@ const ScInformesUI = (() => {
         const id = btn.closest('[data-sc-id]').getAttribute('data-sc-id');
         try {
           const row = await get(id);
-          _verHtml(row.informe_html);
+          await _verHtml(row.informe_html, row.fotos_urls);
         } catch (e) {
           window.Router && Router.toast && Router.toast('No se pudo abrir: ' + e.message);
         }

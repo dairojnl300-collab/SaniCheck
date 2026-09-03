@@ -714,6 +714,19 @@ const Actuar = (() => {
       </div>`;
   }
 
+  // foto.path (Storage) queda como marcador `data-foto-path` SIN src: el visor
+  // (sc-informes-ui.js `_hidratarFotosActa`) descarga cada path de
+  // `sc_informes.fotos_urls` y le inyecta el src antes de mostrar el acta.
+  // No se embebe un <script> hidratador en el HTML: la RPC lo borra al guardar
+  // (sc_sanitizar_html), el visor lo vuelve a borrar al leer y el iframe del
+  // visor no tiene allow-scripts. foto.data (fallback local sin sesión) sigue
+  // funcionando igual que antes.
+  function _imgFoto(foto, alt, style) {
+    return foto.path
+      ? `<img data-foto-path="${_esc(foto.path)}" alt="${_esc(alt)}" style="${style}">`
+      : `<img src="${foto.data || ''}" alt="${_esc(alt)}" style="${style}">`;
+  }
+
   function _renderFotosAspecto(aspecto, options = {}) {
     if (options.omitirFotosDetalle) return '';
     const fotos = aspecto.fotografias || [];
@@ -722,8 +735,8 @@ const Actuar = (() => {
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px;">
         ${fotos.map((foto, idx) => `
           <figure style="margin:0;border:1px solid #E5E7EB;border-radius:5px;overflow:hidden;">
-            <img src="${foto.data}" alt="Evidencia ${idx + 1} del aspecto evaluado"
-              style="width:100%;height:auto;max-height:280px;object-fit:contain;background:#F8FAF9;display:block;">
+            ${_imgFoto(foto, `Evidencia ${idx + 1} del aspecto evaluado`,
+              'width:100%;height:auto;max-height:280px;object-fit:contain;background:#F8FAF9;display:block;')}
             <figcaption style="padding:3px 5px;background:#F9FAFB;font-size:9px;color:#6B7280;">Evidencia ${idx + 1}</figcaption>
           </figure>`).join('')}
       </div>`;
@@ -748,8 +761,7 @@ const Actuar = (() => {
           ${fotos.map(f => `
             <div style="border-radius:6px;overflow:hidden;border:1px solid #E5E7EB;
               break-inside:avoid;page-break-inside:avoid;">
-              <img src="${f.data}" alt="evidencia"
-                style="width:100%;height:auto;max-height:280px;object-fit:contain;background:#F8FAF9;display:block;">
+              ${_imgFoto(f, 'evidencia', 'width:100%;height:auto;max-height:280px;object-fit:contain;background:#F8FAF9;display:block;')}
               <div style="padding:4px 6px;background:#F9FAFB;">
                 <div style="font-size:9px;font-weight:700;color:${C.verde};">
                   ${_esc(f.programa)}</div>
@@ -1019,149 +1031,21 @@ const Actuar = (() => {
   // Compatibilidad con el nombre usado por la propuesta de PDF/impresión.
   function generarPDF() { return guardarPDF(); }
 
-  const REGISTRO_FOTO_MAX_PX = 800;
-  const REGISTRO_FOTO_MAX_BYTES = 140 * 1024;
-  const REGISTRO_FOTO_CALIDADES = [0.68, 0.52, 0.40];
-  const REGISTRO_FOTO_ESCALAS = [1, 0.82, 0.64, 0.50];
-  const REGISTRO_IMAGEN_TIMEOUT_MS = 15_000;
-  const REGISTRO_ENCODER_TIMEOUT_MS = 8_000;
-
-  function _dataUrlBytes(data) {
-    const comma = String(data || '').indexOf(',');
-    return comma < 0 ? String(data || '').length : Math.ceil((data.length - comma - 1) * 0.75);
-  }
-
-  function _cargarImagen(data) {
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-      let settled = false;
-      const finish = (callback, value) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timeout);
-        callback(value);
-      };
-      const timeout = setTimeout(() => finish(reject, new Error('Una fotografía tardó demasiado en prepararse')), REGISTRO_IMAGEN_TIMEOUT_MS);
-      image.onload = () => finish(resolve, image);
-      image.onerror = () => finish(reject, new Error('Una fotografía no pudo abrirse para el respaldo'));
-      image.src = data;
-    });
-  }
-
-  function _codificarFotoRegistro(canvas, quality) {
-    return new Promise((resolve, reject) => {
-      let settled = false;
-      const finish = (callback, value) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timeout);
-        callback(value);
-      };
-      const fallback = () => {
-        try {
-          const data = canvas.toDataURL('image/jpeg', quality);
-          if (!data.startsWith('data:image/')) throw new Error('El encoder no generó una imagen válida');
-          finish(resolve, data);
-        } catch (error) { finish(reject, error); }
-      };
-      const timeout = setTimeout(fallback, REGISTRO_ENCODER_TIMEOUT_MS);
-      try {
-        if (typeof canvas.toBlob !== 'function' || typeof FileReader === 'undefined') {
-          fallback();
-          return;
-        }
-        canvas.toBlob(blob => {
-          if (!blob) { fallback(); return; }
-          const reader = new FileReader();
-          reader.onload = () => finish(resolve, reader.result);
-          reader.onerror = () => fallback();
-          reader.readAsDataURL(blob);
-        }, 'image/jpeg', quality);
-      } catch (error) { finish(reject, error); }
-    });
-  }
-
-  async function _comprimirFotoRegistro(data) {
-    if (!data || !String(data).startsWith('data:image/') || _dataUrlBytes(data) <= REGISTRO_FOTO_MAX_BYTES) return data;
-    const image = await _cargarImagen(data);
-    const canvas = document.createElement('canvas');
-    const width = image.naturalWidth || image.width;
-    const height = image.naturalHeight || image.height;
-    if (!width || !height) throw new Error('Una fotografía no tiene dimensiones válidas');
-    const baseScale = Math.min(1, REGISTRO_FOTO_MAX_PX / Math.max(width, height));
-    let last = data;
-    for (const dimensionScale of REGISTRO_FOTO_ESCALAS) {
-      const scale = baseScale * dimensionScale;
-      canvas.width = Math.max(1, Math.round(width * scale));
-      canvas.height = Math.max(1, Math.round(height * scale));
-      const context = canvas.getContext('2d', { alpha: false });
-      if (!context) throw new Error('No se pudo preparar una fotografía para el respaldo');
-      context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      for (const quality of REGISTRO_FOTO_CALIDADES) {
-        const encoded = await _codificarFotoRegistro(canvas, quality);
-        last = encoded;
-        if (_dataUrlBytes(encoded) <= REGISTRO_FOTO_MAX_BYTES) return encoded;
-      }
-      await new Promise(resolve => setTimeout(resolve, 0));
-    }
-    return last;
-  }
-
-  async function _listaFotosRegistro(lista) {
-    const result = [];
-    for (const foto of lista || []) {
-      result.push({ ...foto, data: await _comprimirFotoRegistro(foto?.data) });
-    }
-    return result;
-  }
-
-  async function _crearInspeccionParaRegistro(inspeccion) {
-    const copia = { ...inspeccion, programas: [] };
-    for (const programa of inspeccion.programas || []) {
-      const programaCopia = { ...programa, aspectos: [] };
-      for (const aspecto of programa.aspectos || []) {
-        const aspectoCopia = {
-          ...aspecto,
-          fotografias: await _listaFotosRegistro(aspecto.fotografias),
-          criterios_extra: [],
-        };
-        for (const extra of aspecto.criterios_extra || []) {
-          aspectoCopia.criterios_extra.push({
-            ...extra,
-            fotografias: await _listaFotosRegistro(extra.fotografias),
-          });
-        }
-        programaCopia.aspectos.push(aspectoCopia);
-      }
-      copia.programas.push(programaCopia);
-    }
-    return copia;
-  }
-
   /**
-   * Arma el documento HTML completo del Acta. El PDF generado y la copia del
-   * Registro usan fotografías reducidas y evitan repetirlas en el detalle por
-   * ítem y en el registro fotográfico.
+   * Arma el documento HTML completo del Acta. Las fotos ya no se embeben en
+   * base64 (Storage + data-foto-path, ver _imgFoto), así que ya no hace
+   * falta una segunda pasada "compacta" para reducir el tamaño del HTML.
    */
   function _generarActaHtmlCompleta(inspeccion, options = {}) {
-    const inspeccionPromise = options.compacto
-      ? _crearInspeccionParaRegistro(inspeccion)
-      : Promise.resolve(inspeccion);
-    return inspeccionPromise.then(source => {
-      const base = location.origin + location.pathname.replace(/\/[^\/]*$/, '/');
-      const sorted = [...source.programas]
-        .map(p => ({ nombre: _shortName(p.nombre), ...Scores.calcularPrograma(p) }))
-        .filter(p => p.evaluados > 0)
-        .sort((a, b) => b.pct - a.pct);
-      // La ventana emergente (about:blank) no queda bajo control del Service Worker.
-      // En modo compacto se deja fuera Chart.js para mantener pequeño el documento.
-      const chartJsPromise = options.compacto
-        ? Promise.resolve('')
-        : sorted.length
-          ? fetch('assets/vendor/chart.umd.min.js').then(r => r.ok ? r.text() : '').catch(() => '')
-          : Promise.resolve('');
-      return chartJsPromise.then(chartJs => _buildActaHTML(source, base, sorted, chartJs, options));
-    });
+    const base = location.origin + location.pathname.replace(/\/[^\/]*$/, '/');
+    const sorted = [...inspeccion.programas]
+      .map(p => ({ nombre: _shortName(p.nombre), ...Scores.calcularPrograma(p) }))
+      .filter(p => p.evaluados > 0)
+      .sort((a, b) => b.pct - a.pct);
+    const chartJsPromise = sorted.length
+      ? fetch('assets/vendor/chart.umd.min.js').then(r => r.ok ? r.text() : '').catch(() => '')
+      : Promise.resolve('');
+    return chartJsPromise.then(chartJs => _buildActaHTML(inspeccion, base, sorted, chartJs, options));
   }
 
   /**
@@ -1196,6 +1080,21 @@ const Actuar = (() => {
     }).catch(() => {});
   }
 
+  // Solo se reportan los paths que existen (o van a existir) en el bucket:
+  // `subida:false` marca una foto cuya subida falló Y no se pudo encolar, así
+  // que su path nunca llegará a Storage y publicarlo dejaría un <img> roto en
+  // el acta. `subida === undefined` = fotos de versiones anteriores del código
+  // (compatibilidad hacia atrás): se consideran válidas.
+  function _recolectarFotosUrls(inspeccion) {
+    const urls = [];
+    (inspeccion.programas || []).forEach(p => (p.aspectos || []).forEach(a => {
+      [a, ...(a.criterios_extra || [])].forEach(item => (item.fotografias || []).forEach(f => {
+        if (f.path && f.subida !== false) urls.push(f.path);
+      }));
+    }));
+    return urls;
+  }
+
   function _crearPayloadInforme(inspeccion, html, metadata = null) {
     const score = metadata || Scores.calcular(inspeccion);
     const aspectosTotal = metadata?.aspectosTotal ?? (inspeccion.programas || []).reduce((total, programa) => total
@@ -1214,12 +1113,19 @@ const Actuar = (() => {
       aspectosEvaluados: metadata?.aspectosEvaluados ?? score.total,
       aspectosTotal,
       porcentajeCumplimiento: metadata?.porcentajeCumplimiento ?? score.pct_cumplimiento,
+      fotosUrls: _recolectarFotosUrls(inspeccion),
     };
   }
 
   function _buildActaHTML(inspeccion, base, sorted, chartJs, options = {}) {
     const D = JSON.stringify(sorted.map(p => ({ nombre: p.nombre, pct: p.pct })));
-
+    // El acta se guarda como HTML estático y puede reabrirse días después
+    // (Registro de Informes, incluso en otro dispositivo): las fotos no
+    // pueden embeberse como blob: URL (mueren con la sesión que las creó) ni
+    // hidratarse con un <script> dentro del propio HTML (la RPC lo borra con
+    // sc_sanitizar_html al guardar y el visor lo abre en un iframe sin
+    // allow-scripts). Quedan como <img data-foto-path> y las hidrata el visor
+    // desde `fotos_urls`: ver `_hidratarFotosActa` en sc-informes-ui.js.
     const chartLib = chartJs
       ? `<script>${chartJs.replace(/<\/script/gi, '<\\/script')}</script>`
       : `<script src="/app/assets/vendor/chart.umd.min.js"></script>`;

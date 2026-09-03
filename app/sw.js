@@ -1,7 +1,7 @@
 // Service Worker — SaniCheck — Offline-first completo
 
-const APP_VERSION = '4.17.5';
-const BUILD_HASH = '47c7b4298f75';
+const APP_VERSION = '4.17.6';
+const BUILD_HASH = 'd81311d8d271';
 const CACHE = 'sanicheck-' + BUILD_HASH;
 
 const ASSETS = [
@@ -34,13 +34,14 @@ const ASSETS = [
   './js/logic/observaciones.js',
   './js/logic/scores.js',
   './js/logic/hallazgos.js',
+  './js/logic/fotos-storage.js',
   './js/logic/fotos.js',
   './js/phva/planificar.js',
   './js/phva/personalizar.js',
   './js/phva/hacer.js',
   './js/phva/verificar.js',
   './js/phva/vencimientos-dashboard.js',
-  './js/phva/actuar.js?v=4.17.4',
+  './js/phva/actuar.js?v=4.17.6',
   './assets/vendor/chart.umd.min.js',
   './assets/icons/favicon.png',
   './assets/icons/icon-192.png',
