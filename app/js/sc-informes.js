@@ -332,6 +332,7 @@ const ScInformes = (() => {
                 p_aspectos_total: Number.isFinite(rec.aspectos_total) ? rec.aspectos_total : null,
                 p_porcentaje_cumplimiento: Number.isFinite(rec.porcentaje_cumplimiento) ? rec.porcentaje_cumplimiento : null,
                 p_estado_estructurado: rec.estado_estructurado || null,
+                p_fotos_urls: Array.isArray(rec.fotos_urls) ? rec.fotos_urls : null,
               });
             } else {
               await _rpc('sc_guardar_informe', {
@@ -346,6 +347,7 @@ const ScInformes = (() => {
                 p_aspectos_total: Number.isFinite(rec.aspectos_total) ? rec.aspectos_total : null,
                 p_porcentaje_cumplimiento: Number.isFinite(rec.porcentaje_cumplimiento) ? rec.porcentaje_cumplimiento : null,
                 p_estado_estructurado: rec.estado_estructurado || null,
+                p_fotos_urls: Array.isArray(rec.fotos_urls) ? rec.fotos_urls : null,
               });
             }
             await _idbDelete(rec.local_id);
@@ -398,6 +400,8 @@ const ScInformes = (() => {
 
     const ajenoId = _remoteIdAjeno(payload.localId);
 
+    const fotosUrls = Array.isArray(payload.fotosUrls) ? payload.fotosUrls : null;
+
     const params = ajenoId ? {
       p_id: ajenoId,
       p_codigo: codigo,
@@ -408,6 +412,7 @@ const ScInformes = (() => {
       p_aspectos_total: Number.isFinite(payload.aspectosTotal) ? payload.aspectosTotal : null,
       p_porcentaje_cumplimiento: Number.isFinite(payload.porcentajeCumplimiento) ? payload.porcentajeCumplimiento : null,
       p_estado_estructurado: estadoEstructurado,
+      p_fotos_urls: fotosUrls,
     } : {
       p_codigo: codigo,
       p_establecimiento: payload.establecimiento || {},
@@ -420,6 +425,7 @@ const ScInformes = (() => {
       p_aspectos_total: Number.isFinite(payload.aspectosTotal) ? payload.aspectosTotal : null,
       p_porcentaje_cumplimiento: Number.isFinite(payload.porcentajeCumplimiento) ? payload.porcentajeCumplimiento : null,
       p_estado_estructurado: estadoEstructurado,
+      p_fotos_urls: fotosUrls,
     };
     try {
       const id = await _rpc(ajenoId ? 'sc_guardar_admin_informe' : 'sc_guardar_informe', params);
@@ -444,6 +450,7 @@ const ScInformes = (() => {
         aspectos_total: Number.isFinite(payload.aspectosTotal) ? payload.aspectosTotal : null,
         porcentaje_cumplimiento: Number.isFinite(payload.porcentajeCumplimiento) ? payload.porcentajeCumplimiento : null,
         estado_estructurado: estadoEstructurado,
+        fotos_urls: fotosUrls,
         ajeno_id: ajenoId || null,
         liberarFotosAlConfirmar: !!payload.liberarFotosAlConfirmar,
         localActualizadoEn: payload.localActualizadoEn || null,
@@ -772,8 +779,11 @@ const ScInformes = (() => {
   function getInforme(id) {
     return _rpc('sc_get_informe', { p_id: id, p_codigo: getCodigo() }).then(r => Array.isArray(r) ? r[0] : r);
   }
-  function updateInforme(id, html) {
-    return _rpc('sc_update_informe', { p_id: id, p_codigo: getCodigo(), p_html: html });
+  function updateInforme(id, html, fotosUrls) {
+    return _rpc('sc_update_informe', {
+      p_id: id, p_codigo: getCodigo(), p_html: html,
+      p_fotos_urls: Array.isArray(fotosUrls) ? fotosUrls : null,
+    });
   }
   function deleteInforme(id) {
     return _rpc('sc_delete_informe', { p_id: id, p_codigo: getCodigo() });
@@ -787,8 +797,11 @@ const ScInformes = (() => {
   function getAdminInforme(id) {
     return _rpc('sc_get_admin_informe', { p_id: id, p_codigo: getCodigo() }).then(r => Array.isArray(r) ? r[0] : r);
   }
-  function updateAdminInforme(id, html) {
-    return _rpc('sc_update_admin_informe', { p_id: id, p_codigo: getCodigo(), p_html: html });
+  function updateAdminInforme(id, html, fotosUrls) {
+    return _rpc('sc_update_admin_informe', {
+      p_id: id, p_codigo: getCodigo(), p_html: html,
+      p_fotos_urls: Array.isArray(fotosUrls) ? fotosUrls : null,
+    });
   }
   function deleteAdminInforme(id) {
     return _rpc('sc_delete_admin_informe', { p_id: id, p_codigo: getCodigo() });

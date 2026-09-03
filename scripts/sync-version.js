@@ -37,6 +37,7 @@ const ASSET_PATHS = [
   'js/logic/observaciones.js',
   'js/logic/scores.js',
   'js/logic/hallazgos.js',
+  'js/logic/fotos-storage.js',
   'js/logic/fotos.js',
   'js/logic/dadis-scoring.js',
   'js/phva/planificar.js',

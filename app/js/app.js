@@ -240,6 +240,7 @@
     Store.bindLifecycleFlush();
     SwUpdate.init();
     if (typeof ScInformes !== 'undefined') ScInformes.bindAutoRetry();
+    if (typeof FotosStorage !== 'undefined') FotosStorage.bindAutoRetry();
     if (typeof PortalCliente !== 'undefined') PortalCliente.bindOnlineRetry();
     if (typeof VencimientosV2 !== 'undefined') {
       VencimientosV2.loadCatalog().catch(() => {});
