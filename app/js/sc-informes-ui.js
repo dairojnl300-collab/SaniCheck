@@ -292,9 +292,14 @@ const ScInformesUI = (() => {
         const titulo = h.titulo || h.texto || h.hallazgo || h.aspecto || 'Hallazgo';
         const estado = h.estado_accion || h.seguimiento || h.evaluacion || h.criterio || 'Pendiente';
         const actualizado = h.actualizado_en || h.fecha_actualizado_en;
-        return `<article style="margin:0 0 12px;padding:9px;border-left:3px solid #0A7350;background:#F8FAF9;">
-          <div style="font-weight:700;color:#173B31;font-size:11px;">${_esc(h.numero || h.numeracion || `${i + 1}`)}. ${_esc(titulo)}</div>
-          <div style="font-size:10px;color:#6B7280;margin:3px 0 7px;">${_esc(h.aspecto || h.programa_nombre || h.aspecto_id || 'Aspecto')} · Estado: ${_esc(estado)}${actualizado ? ` · Actualizado: ${_esc(_fmtFecha(actualizado))}` : ''}</div>
+        const numero = h.numero || h.numeracion || h.orden || `${i + 1}`;
+        const tema = h.tema || h.programa_nombre || h.programa || h.aspecto_id || 'Aspecto evaluado';
+        const subtitulo = h.subseccion || h.subseccion_nombre || '';
+        return `<article style="margin:0 0 12px;padding:12px;border:1px solid #DDE7E2;border-left:4px solid #0A7350;background:#F8FAF9;border-radius:6px;">
+          <div style="font-weight:800;color:#173B31;font-size:12px;">${_esc(numero)} · ${_esc(titulo)}</div>
+          <div style="font-size:10px;color:#52635d;margin-top:4px;"><strong>Tema:</strong> ${_esc(tema)}${subtitulo ? ` · <strong>Subtítulo:</strong> ${_esc(subtitulo)}` : ''}</div>
+          <div style="font-size:10px;color:#6B7280;margin:4px 0 8px;"><strong>Estado:</strong> ${_esc(estado)}${actualizado ? ` · Actualizado: ${_esc(_fmtFecha(actualizado))}` : ''}</div>
+          <div style="font-size:10px;color:#52635d;margin-bottom:5px;"><strong>Foto enviada para este hallazgo:</strong></div>
           <img data-foto-path="${_esc(path)}" alt="Evidencia de corrección del cliente" style="max-width:100%;max-height:280px;object-fit:contain;background:#fff;display:block;border-radius:5px;">
         </article>`;
       }).join('')}
