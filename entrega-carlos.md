@@ -117,6 +117,12 @@ Sin (1)-(3) la funcionalidad queda instalada pero inerte: el campo de código en
 
 ## Corte actual — visor administrativo
 
+## Corte actual — organización de evidencias del cliente (2026-09-07)
+
+- `app/js/sc-informes-ui.js`: las evidencias con foto del portal se filtran, ordenan por numeración y aspecto/hallazgo, y muestran numeración, título, estado, `actualizado_en` cuando existe y la foto dentro del visor existente.
+- Validación: `node --check app/js/sc-informes-ui.js` OK; `git diff --check` OK.
+- No se crearon tablas, no se modificó la subida del portal, no se hizo deploy. Siguiente ruta: auditoría posterior de Camila.
+
 - `app/js/sc-informes-ui.js`: el visor admin compone evidencia portal, mantiene iframe sandboxed y muestra acciones seguras únicamente en estado `En corrección`; ambas requieren confirmación y recarga tras RPC.
 - `app/js/sc-informes.js`: añade `revisarAdminInforme()` para invocar la RPC con el código de sesión.
 - `supabase/migrations/migration_sc_informes_revision_admin.sql`: RPC `sc_revisar_admin_informe` valida rol admin y persiste el estado en `estado_estructurado.revision_admin`; pendiente de aplicar, no ejecutada.
