@@ -249,6 +249,37 @@ const ScInformesUI = (() => {
     return { html: salida, urls };
   }
 
+  async function _insertarEvidenciaInline(iframe, items) {
+    if (!iframe || !Array.isArray(items) || !items.length) return;
+    await new Promise(resolve => { if (iframe.contentDocument?.readyState === 'complete') resolve(); else iframe.addEventListener('load', resolve, { once: true }); });
+    const doc = iframe.contentDocument;
+    if (!doc) return;
+    const cfg = window.SC_INFORMES_CONFIG;
+    if (!cfg?.SUPABASE_URL || !cfg?.SUPABASE_ANON_KEY) return;
+    const raiz = String(cfg.SUPABASE_URL).replace(/\/$/, '') + '/storage/v1/object/' + FOTOS_BUCKET + '/';
+    for (const h of items) {
+      const id = String(h.aspecto_id || '');
+      const path = h.foto_path || h.foto_url || h.foto;
+      if (!id || !path) continue;
+      const tarjeta = Array.from(doc.querySelectorAll('[data-aspecto-id]')).find(el => el.getAttribute('data-aspecto-id') === id);
+      if (!tarjeta || tarjeta.querySelector('[data-sc-evidencia-inline]')) continue;
+      try {
+        const res = await fetch(raiz + encodeURI(path), { headers: { apikey: cfg.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_ANON_KEY } });
+        if (!res.ok) continue;
+        const url = URL.createObjectURL(await res.blob());
+        _fotosObjectUrls.push(url);
+        const bloque = doc.createElement('div');
+        bloque.setAttribute('data-sc-evidencia-inline', 'true');
+        bloque.style.cssText = 'margin-top:8px;padding:7px;border-top:1px solid #DDE7E2;background:#F8FAF9;';
+        bloque.innerHTML = '<strong style="display:block;font-size:10px;color:#173B31;margin-bottom:5px;">Evidencia de corrección del cliente</strong>';
+        const img = doc.createElement('img');
+        img.src = url; img.alt = 'Evidencia de corrección del cliente';
+        img.style.cssText = 'display:block;max-width:100%;max-height:240px;object-fit:contain;border-radius:5px;';
+        bloque.appendChild(img); tarjeta.appendChild(bloque);
+      } catch (e) { console.warn('[ScInformesUI] evidencia inline no disponible', e); }
+    }
+  }
+
   // ── Ver / exportar PDF ───────────────────────────────────────────────────
   //
   // informe_html puede venir de OTRO técnico (o de un técnico comprometido) y
@@ -389,13 +420,16 @@ const ScInformesUI = (() => {
     const acciones = items.length ? `<section aria-label="Revisión administrativa" style="margin-top:12px;padding:12px;border:1px solid #DDE7E2;border-radius:8px;background:#F8FAF9;"><strong style="display:block;color:#1B4332;font-size:.84rem;margin-bottom:8px;">Revisar correcciones del cliente</strong>${items.map(h => `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #E5E7EB;"><span style="font-size:.78rem;color:#374151;flex:1;"><strong>${_esc(h.numero || h.aspecto_id)}</strong> · ${_esc(h.texto || h.hallazgo || 'Hallazgo')}</span><button type="button" data-sc-revision="cumple" data-sc-aspecto-id="${_esc(h.aspecto_id)}" style="${_btnStyle('#2E7D32','#fff')}">Marcar como cumple</button><button type="button" data-sc-revision="ajustes_solicitados" data-sc-aspecto-id="${_esc(h.aspecto_id)}" style="${_btnStyle('#B45309','#fff')}">Solicitar ajustes</button></div>`).join('')}</section>` : '';
     const overlay = _abrirOverlay('Detalle administrativo', `<p style="margin:0;color:#52635d;font-size:.82rem;">${_esc(row.establecimiento?.nombre || 'Informe')} · Acta ${_esc(row.numero_acta || '—')}</p>${acciones}<div data-sc-admin-viewer style="margin-top:12px;"></div>`);
     const viewer = overlay.querySelector('[data-sc-admin-viewer]');
-    const evidencia = _evidenciaPortalHtml(row.estado_estructurado);
+    const inlineCapable = String(row.informe_html || '').includes('data-aspecto-id=');
+    const evidencia = inlineCapable ? '' : _evidenciaPortalHtml(row.estado_estructurado);
     const base = evidencia + _htmlEditableSeguro(row.informe_html);
     const fotosPortal = Array.isArray(row.estado_estructurado?.inspeccion?.hallazgos_criticos) ? row.estado_estructurado.inspeccion.hallazgos_criticos.map(h => h?.foto_path || h?.foto_url || h?.foto).filter(Boolean) : [];
     const fotos = await _hidratarFotosActa(base, [...(row.fotos_urls || []), ...fotosPortal]);
     _fotosObjectUrls = fotos.urls;
     viewer.innerHTML = `<iframe title="Contenido del informe" sandbox="allow-modals allow-same-origin" style="width:100%;height:55vh;min-height:320px;border:1px solid #DDE7E2;border-radius:8px;background:#fff;"></iframe>`;
-    viewer.querySelector('iframe').srcdoc = fotos.html;
+    const iframe = viewer.querySelector('iframe');
+    iframe.srcdoc = fotos.html;
+    if (inlineCapable) _insertarEvidenciaInline(iframe, items);
     overlay.querySelectorAll('[data-sc-revision]').forEach(btn => btn.addEventListener('click', async () => {
       const nuevo = btn.getAttribute('data-sc-revision');
       const aspectoId = btn.getAttribute('data-sc-aspecto-id');
