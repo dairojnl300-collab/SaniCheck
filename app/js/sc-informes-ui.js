@@ -286,7 +286,7 @@ const ScInformesUI = (() => {
       .map(({ h }) => h);
     if (!conFoto.length) return '';
     return `<section style="margin:18px 0;padding:12px;border:1px solid #DDE7E2;border-radius:8px;background:#fff;break-inside:avoid;">
-      <h2 style="margin:0 0 12px;color:#1B4332;font-size:14px;border-bottom:2px solid #5BA832;padding-bottom:6px;">Evidencia de corrección del cliente</h2>
+      <h2 style="margin:0 0 12px;color:#1B4332;font-size:14px;border-bottom:2px solid #5BA832;padding-bottom:6px;">Aspectos con corrección enviada</h2>
       ${conFoto.map((h, i) => {
         const path = h.foto_path || h.foto_url || h.foto;
         const titulo = h.titulo || h.texto || h.hallazgo || h.aspecto || 'Hallazgo';
