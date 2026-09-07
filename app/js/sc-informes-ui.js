@@ -670,7 +670,7 @@ const ScInformesUI = (() => {
     const sesion = await _requiereSesion();
     if (!sesion) return;
     if (sesion.rol !== 'admin') {
-      _abrirOverlay('Acceso restringido', '<p role="alert" style="color:#b91c1c;">Este panel es solo para administradores.</p>');
+      await abrirRegistroInformes();
       return;
     }
     await _renderAdmin();
