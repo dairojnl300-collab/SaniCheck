@@ -6,7 +6,8 @@ RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $f
 DECLARE v_actor sc_usuarios;
 BEGIN
   v_actor := public.sc_resolver_actor(p_codigo);
-  IF v_actor.rol <> 'admin' THEN RAISE EXCEPTION 'Acceso denegado'; END IF;
+  IF v_actor.rol NOT IN ('admin', 'tecnico') THEN RAISE EXCEPTION 'Acceso denegado'; END IF;
+  IF v_actor.rol = 'tecnico' AND NOT EXISTS (SELECT 1 FROM public.sc_informes WHERE id = p_informe_id AND tecnico_id = v_actor.id) THEN RAISE EXCEPTION 'Acceso denegado'; END IF;
   IF p_estado NOT IN ('cumple', 'ajustes_solicitados') THEN RAISE EXCEPTION 'Estado de revisión inválido'; END IF;
   IF p_estado = 'cumple' AND NOT EXISTS (SELECT 1 FROM public.sc_hallazgos_estado WHERE informe_id=p_informe_id AND aspecto_id=p_aspecto_id AND foto_url IS NOT NULL) THEN RAISE EXCEPTION 'Se requiere evidencia'; END IF;
   UPDATE public.sc_hallazgos_estado h

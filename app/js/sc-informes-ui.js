@@ -487,7 +487,8 @@ const ScInformesUI = (() => {
         const id = btn.closest('[data-sc-id]').getAttribute('data-sc-id');
         try {
           const row = await get(id);
-          if (opts.admin) await _verDetalleAdmin(row);
+          const puedeRevisar = opts.admin || ScInformes.getSesionCache()?.rol === 'tecnico';
+          if (puedeRevisar) await _verDetalleAdmin(row);
           else await _verHtml(row.informe_html, row.fotos_urls, row.estado_estructurado);
         } catch (e) {
           window.Router && Router.toast && Router.toast('No se pudo abrir: ' + e.message);
