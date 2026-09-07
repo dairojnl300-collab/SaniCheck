@@ -15,7 +15,11 @@ const PortalCliente = (() => {
   let _onlineBound = false;
 
   function _cfg() {
-    const c = window.SANICHECK_PORTAL_CONFIG;
+    const c = window.SANICHECK_PORTAL_CONFIG || {};
+    if (!c.SUPABASE_ANON_KEY && window.SC_INFORMES_CONFIG?.SUPABASE_ANON_KEY) {
+      c.SUPABASE_URL = window.SC_INFORMES_CONFIG.SUPABASE_URL || c.SUPABASE_URL;
+      c.SUPABASE_ANON_KEY = window.SC_INFORMES_CONFIG.SUPABASE_ANON_KEY;
+    }
     if (!c || !c.SUPABASE_URL || !c.SUPABASE_ANON_KEY) {
       throw new Error('Falta portal-config.js');
     }
