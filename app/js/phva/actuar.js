@@ -679,7 +679,7 @@ const Actuar = (() => {
       const criterio = typeof Scores !== 'undefined' ? Scores.criterio(a) : a.evaluacion;
       const c = criterio === 'A' ? '#2E7D32' : criterio === 'I' ? '#D32F2F' : '#6B7280';
       const cumple = criterio === 'A', incumple = criterio === 'I';
-      return `<div class="acta-card" style="padding:9px 10px;border:1px solid #E5E7EB;border-left:3px solid ${c};border-radius:6px;background:#fff;break-inside:avoid;page-break-inside:avoid;">
+      return `<div class="acta-card" data-aspecto-id="${_esc(a.aspecto_id || '')}" data-aspecto-numero="${_esc(numero)}" style="padding:9px 10px;border:1px solid #E5E7EB;border-left:3px solid ${c};border-radius:6px;background:#fff;break-inside:avoid;page-break-inside:avoid;">
         <div class="acta-criterion-inline-title">${_esc(criterioTitulo || '')}</div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="font-weight:800;color:${c};flex-shrink:0;font-size:11px;">[${_esc(criterio || '')}]</span><div style="flex:1;min-width:0;"><div class="acta-aspect-title">${numero}, Aspecto por verificar</div><div class="acta-aspect-norm">${_esc(a.norma || '')}</div></div></div>
         ${cumple ? `<div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Observaciones:</strong> ${_esc(a.obs || 'Sin observaciones registradas.')}</div><div style="margin-top:4px;padding:5px 7px;background:#F0FAF5;border-radius:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Recomendaciones:</strong> ${_esc(a.recomendaciones || 'Sin recomendación registrada.')}</div>` : ''}
