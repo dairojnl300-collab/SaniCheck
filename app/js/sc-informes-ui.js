@@ -289,7 +289,8 @@ const ScInformesUI = (() => {
   }
 
   async function _verHtml(html, fotosUrls, estadoEstructurado) {
-    const htmlBase = _htmlEditableSeguro(html) + _evidenciaPortalHtml(estadoEstructurado);
+    const evidenciaPortal = _evidenciaPortalHtml(estadoEstructurado);
+    const htmlBase = evidenciaPortal + _htmlEditableSeguro(html);
     const fotosPortal = Array.isArray(estadoEstructurado?.inspeccion?.hallazgos_criticos)
       ? estadoEstructurado.inspeccion.hallazgos_criticos.map(h => h?.foto_path || h?.foto_url || h?.foto).filter(Boolean)
       : [];

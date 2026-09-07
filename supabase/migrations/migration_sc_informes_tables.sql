@@ -259,7 +259,8 @@ END; $$;
 DROP FUNCTION IF EXISTS public.sc_get_admin_informe(uuid, text);
 CREATE OR REPLACE FUNCTION public.sc_get_admin_informe(p_id uuid, p_codigo text)
 RETURNS TABLE(id uuid, local_id text, tecnico_id uuid, tecnico_nombre text, establecimiento jsonb, fecha date,
-              numero_acta text, informe_html text, creado_en timestamptz, actualizado_en timestamptz)
+              numero_acta text, informe_html text, creado_en timestamptz, actualizado_en timestamptz,
+              estado_estructurado jsonb, fotos_urls jsonb)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE v_actor sc_usuarios;
 BEGIN
@@ -267,7 +268,8 @@ BEGIN
   IF v_actor.rol <> 'admin' THEN RAISE EXCEPTION 'Acceso denegado'; END IF;
 
   RETURN QUERY
-    SELECT i.id, i.local_id, i.tecnico_id, u.nombre, i.establecimiento, i.fecha, i.numero_acta, i.informe_html, i.creado_en, i.actualizado_en
+    SELECT i.id, i.local_id, i.tecnico_id, u.nombre, i.establecimiento, i.fecha, i.numero_acta, i.informe_html, i.creado_en, i.actualizado_en,
+           i.estado_estructurado, i.fotos_urls
     FROM sc_informes i
     JOIN sc_usuarios u ON u.id = i.tecnico_id
     WHERE i.id = p_id;
