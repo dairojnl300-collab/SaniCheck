@@ -362,6 +362,34 @@ const ScInformesUI = (() => {
     });
   }
 
+  function _estadoRevisionLabel(estado) {
+    return ({ en_correccion: 'En corrección', cumple: 'Cumple', ajustes_solicitados: 'Ajustes solicitados' })[estado] || '';
+  }
+
+  async function _verDetalleAdmin(row) {
+    const items = (row.estado_estructurado?.inspeccion?.hallazgos_criticos || []).filter(h => h && h.aspecto_id && (h.foto_url || h.foto_path || h.foto) && (h.seguimiento === 'En corrección' || h.estado_accion === 'En corrección' || !h.seguimiento));
+    const acciones = items.length ? `<section aria-label="Revisión administrativa" style="margin-top:12px;padding:12px;border:1px solid #DDE7E2;border-radius:8px;background:#F8FAF9;"><strong style="display:block;color:#1B4332;font-size:.84rem;margin-bottom:8px;">Revisar correcciones del cliente</strong>${items.map(h => `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #E5E7EB;"><span style="font-size:.78rem;color:#374151;flex:1;"><strong>${_esc(h.numero || h.aspecto_id)}</strong> · ${_esc(h.texto || h.hallazgo || 'Hallazgo')}</span><button type="button" data-sc-revision="cumple" data-sc-aspecto-id="${_esc(h.aspecto_id)}" style="${_btnStyle('#2E7D32','#fff')}">Marcar como cumple</button><button type="button" data-sc-revision="ajustes_solicitados" data-sc-aspecto-id="${_esc(h.aspecto_id)}" style="${_btnStyle('#B45309','#fff')}">Solicitar ajustes</button></div>`).join('')}</section>` : '';
+    const overlay = _abrirOverlay('Detalle administrativo', `<p style="margin:0;color:#52635d;font-size:.82rem;">${_esc(row.establecimiento?.nombre || 'Informe')} · Acta ${_esc(row.numero_acta || '—')}</p>${acciones}<div data-sc-admin-viewer style="margin-top:12px;"></div>`);
+    const viewer = overlay.querySelector('[data-sc-admin-viewer]');
+    const evidencia = _evidenciaPortalHtml(row.estado_estructurado);
+    const base = evidencia + _htmlEditableSeguro(row.informe_html);
+    const fotosPortal = Array.isArray(row.estado_estructurado?.inspeccion?.hallazgos_criticos) ? row.estado_estructurado.inspeccion.hallazgos_criticos.map(h => h?.foto_path || h?.foto_url || h?.foto).filter(Boolean) : [];
+    const fotos = await _hidratarFotosActa(base, [...(row.fotos_urls || []), ...fotosPortal]);
+    _fotosObjectUrls = fotos.urls;
+    viewer.innerHTML = `<iframe title="Contenido del informe" sandbox="allow-modals allow-same-origin" style="width:100%;height:55vh;min-height:320px;border:1px solid #DDE7E2;border-radius:8px;background:#fff;"></iframe>`;
+    viewer.querySelector('iframe').srcdoc = fotos.html;
+    overlay.querySelectorAll('[data-sc-revision]').forEach(btn => btn.addEventListener('click', async () => {
+      const nuevo = btn.getAttribute('data-sc-revision');
+      const aspectoId = btn.getAttribute('data-sc-aspecto-id');
+      const observacion = nuevo === 'ajustes_solicitados' ? prompt('Indica qué debe corregirse:') : null;
+      if (nuevo === 'ajustes_solicitados' && !observacion?.trim()) return;
+      if (!confirm(nuevo === 'cumple' ? '¿Marcar este hallazgo como cumple?' : '¿Solicitar ajustes para este hallazgo?')) return;
+      btn.disabled = true;
+      try { await ScInformes.revisarAdminHallazgo(row.id, aspectoId, nuevo, observacion); Router.toast('Revisión actualizada'); _cerrar(); await _renderAdmin(); }
+      catch (e) { btn.disabled = false; Router.toast(e.message || 'No se pudo actualizar la revisión'); }
+    }));
+  }
+
   // ── Editor simple de HTML (técnico: solo el suyo · admin: cualquiera) ───
 
   function _abrirEditor(id, htmlActual, onGuardar) {
@@ -459,7 +487,8 @@ const ScInformesUI = (() => {
         const id = btn.closest('[data-sc-id]').getAttribute('data-sc-id');
         try {
           const row = await get(id);
-          await _verHtml(row.informe_html, row.fotos_urls, row.estado_estructurado);
+          if (opts.admin) await _verDetalleAdmin(row);
+          else await _verHtml(row.informe_html, row.fotos_urls, row.estado_estructurado);
         } catch (e) {
           window.Router && Router.toast && Router.toast('No se pudo abrir: ' + e.message);
         }
