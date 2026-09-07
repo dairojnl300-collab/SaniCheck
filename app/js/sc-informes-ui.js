@@ -690,6 +690,11 @@ const ScInformesUI = (() => {
   }
 
   async function _renderAdmin() {
+    const sesion = ScInformes.getSesionCache();
+    if (sesion && sesion.rol !== 'admin') {
+      await mostrarEnPortada(sesion);
+      return;
+    }
     _abrirOverlay('Panel de informes (todos)', '<p style="font-size:0.8rem;color:#6b7280;">Cargando…</p>');
     let filas;
     try {
