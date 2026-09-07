@@ -269,9 +269,31 @@ const ScInformesUI = (() => {
   // ejecutar nada (ni <script>, ni on*, ni javascript:, que además ya elimina
   // `_htmlEditableSeguro`), así que no gana acceso al localStorage ni al DOM
   // de SaniCheck: la combinación peligrosa es allow-scripts + allow-same-origin.
-  async function _verHtml(html, fotosUrls) {
-    const htmlBase = _htmlEditableSeguro(html);
-    const fotos = await _hidratarFotosActa(htmlBase, fotosUrls);
+  function _evidenciaPortalHtml(estadoEstructurado) {
+    const items = estadoEstructurado?.inspeccion?.hallazgos_criticos;
+    if (!Array.isArray(items)) return '';
+    const conFoto = items.filter(h => h && typeof (h.foto_path || h.foto_url || h.foto) === 'string' && (h.foto_path || h.foto_url || h.foto));
+    if (!conFoto.length) return '';
+    return `<section style="margin:18px 0;padding:12px;border:1px solid #DDE7E2;border-radius:8px;background:#fff;break-inside:avoid;">
+      <h2 style="margin:0 0 12px;color:#1B4332;font-size:14px;border-bottom:2px solid #5BA832;padding-bottom:6px;">Evidencia de corrección del cliente</h2>
+      ${conFoto.map((h, i) => {
+        const path = h.foto_path || h.foto_url || h.foto;
+        const resultado = h.evaluacion || h.criterio || '';
+        return `<article style="margin:0 0 12px;padding:9px;border-left:3px solid #0A7350;background:#F8FAF9;">
+          <div style="font-weight:700;color:#173B31;font-size:11px;">${_esc(h.numero || h.numeracion || `${i + 1}`)} ${_esc(h.texto || 'Hallazgo')}</div>
+          <div style="font-size:10px;color:#6B7280;margin:3px 0 7px;">[${_esc(resultado || 'I')}] · ${_esc(h.programa_nombre || '')}</div>
+          <img data-foto-path="${_esc(path)}" alt="Evidencia de corrección del cliente" style="max-width:100%;max-height:280px;object-fit:contain;background:#fff;display:block;border-radius:5px;">
+        </article>`;
+      }).join('')}
+    </section>`;
+  }
+
+  async function _verHtml(html, fotosUrls, estadoEstructurado) {
+    const htmlBase = _htmlEditableSeguro(html) + _evidenciaPortalHtml(estadoEstructurado);
+    const fotosPortal = Array.isArray(estadoEstructurado?.inspeccion?.hallazgos_criticos)
+      ? estadoEstructurado.inspeccion.hallazgos_criticos.map(h => h?.foto_path || h?.foto_url || h?.foto).filter(Boolean)
+      : [];
+    const fotos = await _hidratarFotosActa(htmlBase, [...(Array.isArray(fotosUrls) ? fotosUrls : []), ...fotosPortal]);
     const overlay = _abrirOverlay('Ver informe / PDF', `
       <div style="display:flex;flex-direction:column;gap:12px;">
         <iframe id="sc-viewer" title="Contenido del informe" sandbox="allow-modals allow-same-origin"
@@ -436,7 +458,7 @@ const ScInformesUI = (() => {
         const id = btn.closest('[data-sc-id]').getAttribute('data-sc-id');
         try {
           const row = await get(id);
-          await _verHtml(row.informe_html, row.fotos_urls);
+          await _verHtml(row.informe_html, row.fotos_urls, row.estado_estructurado);
         } catch (e) {
           window.Router && Router.toast && Router.toast('No se pudo abrir: ' + e.message);
         }
