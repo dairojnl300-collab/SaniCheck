@@ -4,7 +4,7 @@
  * NUNCA pongas service_role aquí.
  */
 window.SANICHECK_PORTAL_CONFIG = {
-  SUPABASE_URL: 'https://hhhyhjidbjpivdnbsyzc.supabase.co',
+  SUPABASE_URL: 'https://isncjtomlvxyvcaohcpx.supabase.co',
   SUPABASE_ANON_KEY: '',
 };
 
