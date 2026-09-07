@@ -272,16 +272,29 @@ const ScInformesUI = (() => {
   function _evidenciaPortalHtml(estadoEstructurado) {
     const items = estadoEstructurado?.inspeccion?.hallazgos_criticos;
     if (!Array.isArray(items)) return '';
-    const conFoto = items.filter(h => h && typeof (h.foto_path || h.foto_url || h.foto) === 'string' && (h.foto_path || h.foto_url || h.foto));
+    const conFoto = items.filter(h => h && typeof (h.foto_path || h.foto_url || h.foto) === 'string' && (h.foto_path || h.foto_url || h.foto))
+      .map((h, indice) => ({ h, indice }))
+      .sort((a, b) => {
+        const numeroA = Number(a.h.numero || a.h.numeracion || a.h.orden);
+        const numeroB = Number(b.h.numero || b.h.numeracion || b.h.orden);
+        if (Number.isFinite(numeroA) && Number.isFinite(numeroB) && numeroA !== numeroB) return numeroA - numeroB;
+        if (Number.isFinite(numeroA) !== Number.isFinite(numeroB)) return Number.isFinite(numeroA) ? -1 : 1;
+        const aspectoA = String(a.h.aspecto_id || a.h.programa_nombre || a.h.aspecto || '');
+        const aspectoB = String(b.h.aspecto_id || b.h.programa_nombre || b.h.aspecto || '');
+        return aspectoA.localeCompare(aspectoB, 'es') || a.indice - b.indice;
+      })
+      .map(({ h }) => h);
     if (!conFoto.length) return '';
     return `<section style="margin:18px 0;padding:12px;border:1px solid #DDE7E2;border-radius:8px;background:#fff;break-inside:avoid;">
       <h2 style="margin:0 0 12px;color:#1B4332;font-size:14px;border-bottom:2px solid #5BA832;padding-bottom:6px;">Evidencia de corrección del cliente</h2>
       ${conFoto.map((h, i) => {
         const path = h.foto_path || h.foto_url || h.foto;
-        const resultado = h.evaluacion || h.criterio || '';
+        const titulo = h.titulo || h.texto || h.hallazgo || h.aspecto || 'Hallazgo';
+        const estado = h.estado_accion || h.seguimiento || h.evaluacion || h.criterio || 'Pendiente';
+        const actualizado = h.actualizado_en || h.fecha_actualizado_en;
         return `<article style="margin:0 0 12px;padding:9px;border-left:3px solid #0A7350;background:#F8FAF9;">
-          <div style="font-weight:700;color:#173B31;font-size:11px;">${_esc(h.numero || h.numeracion || `${i + 1}`)} ${_esc(h.texto || 'Hallazgo')}</div>
-          <div style="font-size:10px;color:#6B7280;margin:3px 0 7px;">[${_esc(resultado || 'I')}] · ${_esc(h.programa_nombre || '')}</div>
+          <div style="font-weight:700;color:#173B31;font-size:11px;">${_esc(h.numero || h.numeracion || `${i + 1}`)}. ${_esc(titulo)}</div>
+          <div style="font-size:10px;color:#6B7280;margin:3px 0 7px;">${_esc(h.aspecto || h.programa_nombre || h.aspecto_id || 'Aspecto')} · Estado: ${_esc(estado)}${actualizado ? ` · Actualizado: ${_esc(_fmtFecha(actualizado))}` : ''}</div>
           <img data-foto-path="${_esc(path)}" alt="Evidencia de corrección del cliente" style="max-width:100%;max-height:280px;object-fit:contain;background:#fff;display:block;border-radius:5px;">
         </article>`;
       }).join('')}
