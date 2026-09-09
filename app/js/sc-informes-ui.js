@@ -338,7 +338,10 @@ const ScInformesUI = (() => {
   }
 
   async function _verHtml(html, fotosUrls, estadoEstructurado) {
-    const evidenciaPortal = _evidenciaPortalHtml(estadoEstructurado);
+    const itemsPortal = (estadoEstructurado?.inspeccion?.hallazgos_criticos || [])
+      .filter(h => h && h.aspecto_id && (h.foto_url || h.foto_path || h.foto));
+    const inlineCapable = String(html || '').includes('data-aspecto-id=');
+    const evidenciaPortal = inlineCapable ? '' : _evidenciaPortalHtml(estadoEstructurado);
     const htmlBase = evidenciaPortal + _htmlEditableSeguro(html);
     const fotosPortal = Array.isArray(estadoEstructurado?.inspeccion?.hallazgos_criticos)
       ? estadoEstructurado.inspeccion.hallazgos_criticos.map(h => h?.foto_path || h?.foto_url || h?.foto).filter(Boolean)
@@ -357,6 +360,7 @@ const ScInformesUI = (() => {
     const print = overlay.querySelector('#sc-print-btn');
     const htmlSeguro = fotos.html;
     if (iframe) iframe.srcdoc = htmlSeguro;
+    if (inlineCapable) _insertarEvidenciaInline(iframe, itemsPortal);
     if (print) print.addEventListener('click', () => {
       const esMovil = window.matchMedia?.('(max-width: 600px)').matches
         || (navigator.maxTouchPoints > 1 && window.innerWidth < 900);
