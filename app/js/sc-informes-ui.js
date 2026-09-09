@@ -251,7 +251,12 @@ const ScInformesUI = (() => {
 
   async function _insertarEvidenciaInline(iframe, items) {
     if (!iframe || !Array.isArray(items) || !items.length) return;
-    await new Promise(resolve => { if (iframe.contentDocument?.readyState === 'complete') resolve(); else iframe.addEventListener('load', resolve, { once: true }); });
+    await new Promise(resolve => {
+      let terminado = false;
+      const terminar = () => { if (terminado) return; terminado = true; resolve(); };
+      iframe.addEventListener('load', terminar, { once: true });
+      setTimeout(terminar, 800);
+    });
     const doc = iframe.contentDocument;
     if (!doc) return;
     const cfg = window.SC_INFORMES_CONFIG;
