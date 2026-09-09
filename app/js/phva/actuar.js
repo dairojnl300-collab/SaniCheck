@@ -69,6 +69,8 @@ const Actuar = (() => {
           <button class="btn btn-accent" style="flex:1;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
             onclick="Actuar.compartir()">${AppIcons.row('share', 'COMPARTIR', 14)}</button>
         </div>
+        <button class="btn btn-outline" style="width:100%;min-height:40px;margin-top:8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+          onclick="Actuar.activarPortal()">${AppIcons.row('link', 'ACTIVAR PORTAL CLIENTE', 14)}</button>
         <div style="display:flex;gap:var(--sp-sm);">
           <button class="btn btn-outline" style="flex:1;min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
             onclick="Router.go('verificar')">${AppIcons.row('arrowLeft', 'VERIFICAR', 14)}</button>
@@ -1031,6 +1033,20 @@ const Actuar = (() => {
   // Compatibilidad con el nombre usado por la propuesta de PDF/impresión.
   function generarPDF() { return guardarPDF(); }
 
+  async function activarPortal() {
+    const inspeccion = Store.getCurrentInspeccion();
+    if (!inspeccion || typeof ScInformes === 'undefined') { Router.toast('Guarda primero el informe en Registro de Informes'); return; }
+    try {
+      const filas = await ScInformes.listMisInformesUnificado();
+      const fila = (filas || []).find(x => x.local_id === inspeccion.id && !x._enCurso);
+      if (!fila?.id) { Router.toast('Guarda primero el informe y espera la sincronización'); return; }
+      const codigo = await ScInformes.activarPortalInforme(fila.id);
+      const enlace = 'https://sanicheck-portal.pages.dev/informe?codigo=' + encodeURIComponent(codigo);
+      try { await navigator.clipboard.writeText(enlace); } catch (e) {}
+      Router.toast('Portal activado. Enlace copiado');
+    } catch (e) { Router.toast(e.message || 'No se pudo activar el Portal'); }
+  }
+
   /**
    * Arma el documento HTML completo del Acta. Las fotos ya no se embeben en
    * base64 (Storage + data-foto-path, ver _imgFoto), así que ya no hace
@@ -1524,5 +1540,5 @@ window.addEventListener('load', function() {
   }
 
 
-  return { render, attach, compartir, abrirPDF, generarPDF, guardarPDF, limpiarFirma, cargarFirmaImagen, guardarFirmas, editarFirmas, cancelarEdicionFirmas };
+  return { render, attach, compartir, abrirPDF, generarPDF, guardarPDF, activarPortal, limpiarFirma, cargarFirmaImagen, guardarFirmas, editarFirmas, cancelarEdicionFirmas };
 })();

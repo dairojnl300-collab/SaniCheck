@@ -806,6 +806,9 @@ const ScInformes = (() => {
   function revisarAdminHallazgo(informeId, aspectoId, estado, observacion) {
     return _rpc('sc_admin_revisar_hallazgo', { p_informe_id: informeId, p_aspecto_id: aspectoId, p_codigo: getCodigo(), p_estado: estado, p_observacion: observacion || null });
   }
+  function activarPortalInforme(informeId) {
+    return _rpc('sc_activar_portal_establecimiento', { p_informe_id: informeId, p_codigo_acceso: getCodigo() });
+  }
   function deleteAdminInforme(id) {
     return _rpc('sc_delete_admin_informe', { p_id: id, p_codigo: getCodigo() });
   }
@@ -861,7 +864,7 @@ const ScInformes = (() => {
     guardarBorrador, scheduleBorrador, flushBorradorPendiente, programarBorradorActual,
     revisarBorradoresRemotos, listBorradores, getBorrador,
     listMisInformes, getInforme, updateInforme, deleteInforme,
-    listAdminInformes, getAdminInforme, updateAdminInforme, revisarAdminHallazgo, deleteAdminInforme,
+    listAdminInformes, getAdminInforme, updateAdminInforme, revisarAdminHallazgo, activarPortalInforme, deleteAdminInforme,
     listUsuarios, crearUsuario,
     restaurarEstadoRemoto: _restaurarEstadoRemoto,
     marcarAjeno: _marcarAjeno,
