@@ -1041,9 +1041,8 @@ const Actuar = (() => {
       const fila = (filas || []).find(x => x.local_id === inspeccion.id && !x._enCurso);
       if (!fila?.id) { Router.toast('Guarda primero el informe y espera la sincronización'); return; }
       const codigo = await ScInformes.activarPortalInforme(fila.id);
-      const enlace = 'https://sanicheck-portal.pages.dev/informe?codigo=' + encodeURIComponent(codigo);
-      try { await navigator.clipboard.writeText(enlace); } catch (e) {}
-      Router.toast('Portal activado. Enlace copiado');
+      try { await navigator.clipboard.writeText(codigo); } catch (e) {}
+      Router.toast('Portal activado. Código copiado: ' + codigo);
     } catch (e) { Router.toast(e.message || 'No se pudo activar el Portal'); }
   }
 
