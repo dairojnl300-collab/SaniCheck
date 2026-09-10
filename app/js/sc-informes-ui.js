@@ -516,6 +516,7 @@ const ScInformesUI = (() => {
         const badgeEnCurso = enCurso ? '<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:#B45309;color:#fff;font-size:.7rem;font-weight:800;white-space:nowrap;box-shadow:0 2px 5px rgba(180,83,9,.25);">En curso</span>' : '';
         const badgeEstado = `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:${color};color:#fff;font-size:.7rem;font-weight:800;white-space:nowrap;box-shadow:0 2px 5px rgba(10,46,35,.18);"><span style="width:6px;height:6px;border-radius:50%;background:#fff;"></span>${_esc(m.estado)}</span>`;
         const botonVer = enCurso ? '' : `<button type="button" data-sc-ver style="${_btnStyle('#1B4332','#fff')}">Ver / PDF</button>`;
+        const botonRevision = opts.admin ? `<button type="button" data-sc-revision-open style="${_btnStyle('#E8F5EE','#1B4332')}">Revisar correcciones</button>` : '';
         return `<article data-sc-id="${_esc(f.id)}" data-sc-editar-tarjeta="true" title="Toca la tarjeta para editar este informe" style="border:1px solid #DDE7E2;border-left:3px solid #0C8A5F;border-radius:12px;padding:13px;background:#fff;box-shadow:0 3px 12px rgba(10,46,35,.07);cursor:pointer;">
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;"><strong style="font-size:.95rem;color:var(--color-ink);">${_esc((f.establecimiento && f.establecimiento.nombre) || '—')}</strong><span style="font-size:.75rem;color:var(--color-ink3);white-space:nowrap;">${_esc(_fmtFecha(f.fecha))}</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:.78rem;color:var(--color-ink2);"><span>${aspectos} aspectos evaluados</span><span style="display:inline-flex;gap:6px;align-items:center;">${badgeEnCurso}${badgeEstado}</span></div>
@@ -523,7 +524,7 @@ const ScInformesUI = (() => {
           <span><strong style="color:#52635d;">Fecha:</strong> ${_esc(_fmtFecha(f.fecha))} · <strong style="color:#52635d;">Hora:</strong> ${_esc(_fmtHora(f.actualizado_en || f.estado_parcial_actualizado_en || f.creado_en))}</span>
           <span>${opts.admin ? `Profesional: ${_esc(f.tecnico_nombre || '—')} · ` : ''}Acta: ${_esc(f.numero_acta || '—')}</span>
         </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:11px;">${botonVer}<button type="button" data-sc-eliminar style="${_btnStyle('#FFF1F2','#B91C1C')}">Eliminar</button></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:11px;">${botonVer}${botonRevision}<button type="button" data-sc-eliminar style="${_btnStyle('#FFF1F2','#B91C1C')}">Eliminar</button></div>
       </article>`;
       }).join('')}
       </div>
@@ -548,12 +549,18 @@ const ScInformesUI = (() => {
         const id = btn.closest('[data-sc-id]').getAttribute('data-sc-id');
         try {
           const row = await get(id);
-          const puedeRevisar = opts.admin || ScInformes.getSesionCache()?.rol === 'tecnico';
-          if (puedeRevisar) await _verDetalleAdmin(row);
-          else await _verHtml(row.informe_html, row.fotos_urls, row.estado_estructurado);
+          await _verHtml(row.informe_html, row.fotos_urls, row.estado_estructurado);
         } catch (e) {
           window.Router && Router.toast && Router.toast('No se pudo abrir: ' + e.message);
         }
+      });
+    });
+    contenedor.querySelectorAll('[data-sc-revision-open]').forEach(btn => {
+      btn.addEventListener('click', async ev => {
+        ev.stopPropagation();
+        const id = btn.closest('[data-sc-id]').getAttribute('data-sc-id');
+        try { await _verDetalleAdmin(await get(id)); }
+        catch (e) { Router.toast(e.message || 'No se pudo abrir la revisión'); }
       });
     });
     contenedor.querySelectorAll('[data-sc-editar-tarjeta]').forEach(article => {
