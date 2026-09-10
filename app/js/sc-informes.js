@@ -33,6 +33,7 @@ const ScInformes = (() => {
   let _draftLastSentAt = 0;
   let _draftLastAspectKey = '';
   let _remoteDraftChecked = false;
+  let _portalSyncPending = false;
 
   // ── Config / código de acceso ───────────────────────────────────────────
 
@@ -779,6 +780,45 @@ const ScInformes = (() => {
   function getInforme(id) {
     return _rpc('sc_get_informe', { p_id: id, p_codigo: getCodigo() }).then(r => Array.isArray(r) ? r[0] : r);
   }
+
+  // Importa el resultado de la revisión del portal al informe local que está
+  // abierto. El portal escribe sc_hallazgos_estado; el dashboard trabaja con
+  // IndexedDB, por eso ambas fuentes deben reconciliarse al entrar a Verificar.
+  async function sincronizarHallazgosPortal(inspeccion) {
+    if (_portalSyncPending || !inspeccion?.id || !getCodigo() || typeof Store === 'undefined') return false;
+    _portalSyncPending = true;
+    try {
+      const filas = await listMisInformes();
+      const fila = (filas || []).find(x => x.local_id === inspeccion.id);
+      if (!fila?.id) return false;
+      const remoto = await getInforme(fila.id);
+      const hallazgos = remoto?.estado_estructurado?.inspeccion?.hallazgos_criticos;
+      if (!Array.isArray(hallazgos) || !hallazgos.length) return false;
+      let cambio = false;
+      hallazgos.forEach(h => {
+        if (!['Verificado', 'En corrección'].includes(h.seguimiento || h.estado_accion || h.estado)) return;
+        const aspecto = (inspeccion.programas || []).flatMap(p => p.aspectos || [])
+          .find(a => a.id === h.aspecto_id);
+        if (!aspecto) return;
+        if (h.seguimiento === 'Verificado' || h.estado_accion === 'Verificado') {
+          if (aspecto.evaluacion !== 'A' || aspecto.estado !== 'Cerrado') cambio = true;
+          aspecto.evaluacion = 'A'; aspecto.criterio = 'A'; aspecto.estado = 'Cerrado';
+        }
+        if (h.foto_url && !(aspecto.fotografias || []).some(f => f.path === h.foto_url)) {
+          aspecto.fotografias = [...(aspecto.fotografias || []), { id: 'portal-' + h.id, path: h.foto_url, tomada_en: h.actualizado_en }];
+          cambio = true;
+        }
+      });
+      if (!cambio) return false;
+      Scores.calcular(inspeccion);
+      Hallazgos.actualizar(inspeccion);
+      Store.upsertInspeccion(inspeccion);
+      return true;
+    } catch (e) {
+      console.warn('[ScInformes] no se pudo sincronizar revisión del portal', e);
+      return false;
+    } finally { _portalSyncPending = false; }
+  }
   function updateInforme(id, html, fotosUrls) {
     return _rpc('sc_update_informe', {
       p_id: id, p_codigo: getCodigo(), p_html: html,
@@ -863,6 +903,6 @@ const ScInformes = (() => {
     restaurarEstadoRemoto: _restaurarEstadoRemoto,
     marcarAjeno: _marcarAjeno,
     listMisInformesUnificado, listAdminInformesUnificado,
-    listAdminBorradores, getAdminBorrador,
+    listAdminBorradores, getAdminBorrador, sincronizarHallazgosPortal,
   };
 })();
