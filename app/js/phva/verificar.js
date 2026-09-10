@@ -2,6 +2,11 @@ const Verificar = (() => {
   let categoria = 'todas', criterio = 'todos';
   function render() {
     const inspeccion = Store.getCurrentInspeccion(); if (!inspeccion) return _vacio();
+    if (typeof ScInformes !== 'undefined' && ScInformes.sincronizarHallazgosPortal) {
+      ScInformes.sincronizarHallazgosPortal(inspeccion).then(cambio => {
+        if (cambio) _refresh();
+      }).catch(() => {});
+    }
     Scores.calcular(inspeccion); Hallazgos.actualizar(inspeccion); Store.upsertInspeccion(inspeccion);
     if (typeof ScInformes !== 'undefined' && ScInformes.programarBorradorActual) ScInformes.programarBorradorActual(false);
     const sc = inspeccion.score, hallazgos = inspeccion.hallazgos_criticos || [];
