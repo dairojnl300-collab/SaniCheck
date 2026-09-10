@@ -249,6 +249,45 @@ const ScInformesUI = (() => {
     return { html: salida, urls };
   }
 
+  async function _insertarEvidenciaInline(iframe, items) {
+    if (!iframe || !Array.isArray(items) || !items.length) return;
+    await new Promise(resolve => { let done = false; const finish = () => { if (!done) { done = true; resolve(); } }; iframe.addEventListener('load', finish, { once: true }); setTimeout(finish, 800); });
+    const doc = iframe.contentDocument;
+    const cfg = window.SC_INFORMES_CONFIG;
+    if (!doc || !cfg?.SUPABASE_URL || !cfg?.SUPABASE_ANON_KEY) return;
+    const root = String(cfg.SUPABASE_URL).replace(/\/$/, '') + '/storage/v1/object/' + FOTOS_BUCKET + '/';
+    for (const h of items) {
+      const path = h.foto_path || h.foto_url || h.foto;
+      const card = Array.from(doc.querySelectorAll('[data-aspecto-id]')).find(el => el.getAttribute('data-aspecto-id') === String(h.aspecto_id));
+      if (!path || !card || card.querySelector('[data-sc-evidencia-inline]')) continue;
+      try {
+        const res = await fetch(root + encodeURI(path), { headers: { apikey: cfg.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_ANON_KEY } });
+        if (!res.ok) continue;
+        const url = URL.createObjectURL(await res.blob()); _fotosObjectUrls.push(url);
+        const block = doc.createElement('div'); block.setAttribute('data-sc-evidencia-inline', 'true'); block.style.cssText = 'margin-top:8px;padding:7px;border-top:1px solid #DDE7E2;background:#F8FAF9;';
+        block.innerHTML = '<strong style="display:block;font-size:10px;color:#173B31;margin-bottom:5px;">Evidencia de corrección del cliente</strong>';
+        const img = doc.createElement('img'); img.src = url; img.alt = 'Evidencia de corrección del cliente'; img.style.cssText = 'display:block;max-width:100%;max-height:240px;object-fit:contain;border-radius:5px;'; block.appendChild(img); card.appendChild(block);
+      } catch (e) { console.warn('[ScInformesUI] evidencia inline no disponible', e); }
+    }
+  }
+
+  async function _verDetalleAdmin(row) {
+    const items = (row.estado_estructurado?.inspeccion?.hallazgos_criticos || []).filter(h => h?.aspecto_id && (h.foto_url || h.foto_path || h.foto));
+    const acciones = items.length ? `<section aria-label="Revisión de correcciones" style="margin-top:12px;padding:12px;border:1px solid #DDE7E2;border-radius:8px;background:#F8FAF9;"><strong style="display:block;color:#1B4332;font-size:.84rem;margin-bottom:8px;">Revisar correcciones del cliente</strong>${items.map(h => `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #E5E7EB;"><span style="font-size:.78rem;color:#374151;flex:1;"><strong>${_esc(h.numero || h.aspecto_id)}</strong> · ${_esc(h.texto || h.hallazgo || 'Hallazgo')}</span><button type="button" data-sc-revision="cumple" data-sc-aspecto-id="${_esc(h.aspecto_id)}" style="${_btnStyle('#2E7D32','#fff')}">Marcar como cumple</button><button type="button" data-sc-revision="ajustes_solicitados" data-sc-aspecto-id="${_esc(h.aspecto_id)}" style="${_btnStyle('#B45309','#fff')}">Solicitar ajustes</button></div>`).join('')}</section>` : '';
+    const overlay = _abrirOverlay('Detalle administrativo', `${acciones}<div data-sc-admin-viewer style="margin-top:12px;"></div>`);
+    const viewer = overlay.querySelector('[data-sc-admin-viewer]');
+    const base = _htmlEditableSeguro(row.informe_html);
+    const fotos = await _hidratarFotosActa(base, [...(row.fotos_urls || []), ...items.map(h => h.foto_path || h.foto_url || h.foto)]);
+    _fotosObjectUrls = fotos.urls; viewer.innerHTML = '<iframe title="Contenido del informe" sandbox="allow-modals allow-same-origin" style="width:100%;height:55vh;min-height:320px;border:1px solid #DDE7E2;border-radius:8px;background:#fff;"></iframe>';
+    const iframe = viewer.querySelector('iframe'); iframe.srcdoc = fotos.html; _insertarEvidenciaInline(iframe, items);
+    overlay.querySelectorAll('[data-sc-revision]').forEach(btn => btn.addEventListener('click', async () => {
+      const estado = btn.getAttribute('data-sc-revision'); const aspecto = btn.getAttribute('data-sc-aspecto-id');
+      const observacion = estado === 'ajustes_solicitados' ? prompt('Indica qué debe corregirse:') : null;
+      if (estado === 'ajustes_solicitados' && !observacion?.trim()) return; if (!confirm(estado === 'cumple' ? '¿Marcar este hallazgo como cumple?' : '¿Solicitar ajustes para este hallazgo?')) return;
+      btn.disabled = true; try { await ScInformes.revisarAdminHallazgo(row.id, aspecto, estado, observacion); Router.toast('Revisión actualizada'); _cerrar(); await _renderAdmin(); } catch (e) { btn.disabled = false; Router.toast(e.message || 'No se pudo actualizar la revisión'); }
+    }));
+  }
+
   // ── Ver / exportar PDF ───────────────────────────────────────────────────
   //
   // informe_html puede venir de OTRO técnico (o de un técnico comprometido) y
@@ -436,7 +475,9 @@ const ScInformesUI = (() => {
         const id = btn.closest('[data-sc-id]').getAttribute('data-sc-id');
         try {
           const row = await get(id);
-          await _verHtml(row.informe_html, row.fotos_urls);
+          const puedeRevisar = opts.admin || ScInformes.getSesionCache()?.rol === 'tecnico';
+          if (puedeRevisar) await _verDetalleAdmin(row);
+          else await _verHtml(row.informe_html, row.fotos_urls);
         } catch (e) {
           window.Router && Router.toast && Router.toast('No se pudo abrir: ' + e.message);
         }
