@@ -802,21 +802,22 @@ const ScInformes = (() => {
           && (!nitLocal || !nitRemoto || nitLocal === nitRemoto);
       });
       if (!fila?.id) return false;
+      inspeccion.portal_informe_id = fila.id;
       const remoto = await getInforme(fila.id);
       const hallazgos = remoto?.estado_estructurado?.inspeccion?.hallazgos_criticos;
       if (!Array.isArray(hallazgos) || !hallazgos.length) return false;
       let cambio = false;
       hallazgos.forEach(h => {
-        if (!['Verificado', 'En corrección'].includes(h.seguimiento || h.estado_accion || h.estado)) return;
+        const estadoPortal = h.seguimiento || h.estado_accion || h.estado || '';
         const aspecto = (inspeccion.programas || []).flatMap(p => p.aspectos || [])
           .find(a => a.id === h.aspecto_id);
         if (!aspecto) return;
-        if (h.seguimiento === 'Verificado' || h.estado_accion === 'Verificado') {
+        if (['Verificado', 'En corrección'].includes(estadoPortal) && (h.seguimiento === 'Verificado' || h.estado_accion === 'Verificado')) {
           if (aspecto.evaluacion !== 'A' || aspecto.estado !== 'Cerrado') cambio = true;
           aspecto.evaluacion = 'A'; aspecto.criterio = 'A'; aspecto.estado = 'Cerrado';
         }
         if (h.foto_url && !(aspecto.fotografias || []).some(f => f.path === h.foto_url)) {
-          aspecto.fotografias = [...(aspecto.fotografias || []), { id: 'portal-' + h.id, path: h.foto_url, tomada_en: h.actualizado_en }];
+          aspecto.fotografias = [...(aspecto.fotografias || []), { id: 'portal-' + h.id, aspecto_id: h.aspecto_id, path: h.foto_url, tomada_en: h.actualizado_en, origen: 'Cliente', estado_portal: estadoPortal }];
           cambio = true;
         }
       });
