@@ -8,6 +8,10 @@ const Verificar = (() => {
       }).catch(() => {});
     }
     Scores.calcular(inspeccion); Hallazgos.actualizar(inspeccion); Store.upsertInspeccion(inspeccion);
+    setTimeout(() => {
+      const area = document.getElementById('screen-area');
+      if (area && typeof Fotos !== 'undefined' && Fotos.hidratarMiniaturas) Fotos.hidratarMiniaturas(area);
+    }, 0);
     if (typeof ScInformes !== 'undefined' && ScInformes.programarBorradorActual) ScInformes.programarBorradorActual(false);
     const sc = inspeccion.score, hallazgos = inspeccion.hallazgos_criticos || [];
     const expandir = (a, p, programaIdx, criterioIdx) => [{ ...a, programa: p, programaIdx, criterioIdx, extraIdx: null }, ...(a.criterios_extra || []).map((x, i) => ({ ...x, id: `${a.id}-extra-${i + 1}`, texto: `Aspecto por verificar ${i + 2}`, norma: a.norma, fotografias: x.fotografias || [], programa: p, programaIdx, criterioIdx, extraIdx: i }))];
@@ -50,12 +54,12 @@ const Verificar = (() => {
       ${cumple ? `<p><strong>Observaciones:</strong> ${_esc(x.obs || 'Sin observaciones registradas.')}</p><p style="padding:7px 9px;background:#f0faf5;border-radius:6px;"><strong>Recomendaciones:</strong> ${_esc(x.recomendaciones || 'Sin recomendación registrada.')}</p>` : ''}
       ${incumple ? `<p><strong>Hallazgo:</strong> ${_esc(x.hallazgo || x.obs || 'Sin hallazgo registrado.')}</p><p><strong>Acción correctiva:</strong> ${_esc(x.accion || 'Sin acción correctiva registrada.')}</p><p><strong>Estado de acción:</strong> ${_esc(x.estado || 'Abierto')}</p>` : ''}
       ${noAplica ? `<p><strong>Justificación N-A:</strong> ${_esc(x.obs || 'No aplica a este establecimiento.')}</p>` : ''}
-      ${(x.fotografias || []).map(f => `<button class="dash-photo" onclick="Verificar.mostrarFoto('${f.id}')"><img src="${f.data}" alt="Foto del aspecto"></button>`).join('')}
+      ${(x.fotografias || []).map(f => `<button class="dash-photo" onclick="Verificar.mostrarFoto('${f.id}')"><img ${f.data ? `src="${f.data}"` : ''}${f.path ? `data-foto-path="${_esc(f.path)}"` : ''} alt="Foto del aspecto"></button>`).join('')}
     </article>`;
   }
   function filtrarCategoria(v) { categoria = v; _refresh(); } function filtrarCriterio(v) { criterio = v; _refresh(); }
   function mostrarFoto(id) { const f = Store.getCurrentInspeccion()?.programas.flatMap(p => p.aspectos.flatMap(a => [a, ...(a.criterios_extra || [])])).flatMap(a => a.fotografias || []).find(x => x.id === id); if (!f) return; const d = document.createElement('div'); d.className = 'photo-lightbox'; d.tabIndex = -1; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.innerHTML = `<button aria-label="Cerrar foto" onclick="this.parentElement.remove()">${AppIcons.icon('x', 22)}</button><img src="${f.data}" alt="Foto ampliada">`; d.addEventListener('keydown', e => { if (e.key === 'Escape') d.remove(); }); document.body.appendChild(d); d.focus(); }
-  function _refresh() { const area = document.getElementById('screen-area'); if (area) area.innerHTML = render(); }
+  function _refresh() { const area = document.getElementById('screen-area'); if (area) { area.innerHTML = render(); if (typeof Fotos !== 'undefined' && Fotos.hidratarMiniaturas) Fotos.hidratarMiniaturas(area); } }
   function _vacio() { return `<div class="coming-soon"><div class="coming-soon-icon">${AppIcons.block('barChart', 40)}</div><div class="coming-soon-title">Sin inspección activa</div><button class="btn btn-primary mt-md" onclick="Router.go('planificar')">Ir a Planificar</button></div>`; }
   return { render, attach() {}, filtrarCategoria, filtrarCriterio, mostrarFoto };
 })();
