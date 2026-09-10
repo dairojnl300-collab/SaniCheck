@@ -42,6 +42,7 @@ const Fotos = (() => {
   const FOTO_MAX_BYTES = 350 * 1024;
   const FOTO_CALIDADES = [0.78, 0.64, 0.52, 0.40];
   const FOTO_ESCALAS = [1, 0.82, 0.68, 0.56, 0.46];
+  const FOTO_MAX_LOCAL_BYTES = 4 * 1024 * 1024;
 
   function _blobToDataUrl(blob) {
     return new Promise((resolve, reject) => {
@@ -184,7 +185,15 @@ const Fotos = (() => {
         // ponytail: fallback sin sesión activa guarda base64 local y nunca
         // migra a Storage al iniciar sesión después — revive el problema de
         // tamaño que este cambio buscaba resolver.
-        destino.fotografias.push({ id: fotoId, data: await _blobToDataUrl(foto.blob), tomada_en: new Date().toISOString() });
+        const data = await _blobToDataUrl(foto.blob);
+        const estimado = new Blob([JSON.stringify(Store.get())]).size + new Blob([data]).size;
+        if (estimado > FOTO_MAX_LOCAL_BYTES) {
+          const preview = _previewCache.get(fotoId);
+          if (preview) { URL.revokeObjectURL(preview); _previewCache.delete(fotoId); }
+          Router.toast('Límite local alcanzado. Inicia sesión para guardar más fotos en la nube.');
+          return;
+        }
+        destino.fotografias.push({ id: fotoId, data, tomada_en: new Date().toISOString() });
         Router.toast('Foto guardada y optimizada');
       }
 
