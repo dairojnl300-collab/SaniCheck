@@ -820,6 +820,12 @@ const ScInformes = (() => {
           aspecto.fotografias = [...(aspecto.fotografias || []), { id: 'portal-' + h.id, aspecto_id: h.aspecto_id, path: h.foto_url, tomada_en: h.actualizado_en || h.created_at || h.subido_en, origen: 'Cliente', estado_portal: estadoPortal }];
           cambio = true;
         }
+        const fotoPortal = (aspecto.fotografias || []).find(f => f.path === h.foto_url && f.origen === 'Cliente');
+        if (fotoPortal && (fotoPortal.estado_portal !== estadoPortal || fotoPortal.tomada_en !== (h.actualizado_en || h.created_at || h.subido_en))) {
+          fotoPortal.estado_portal = estadoPortal;
+          fotoPortal.tomada_en = h.actualizado_en || h.created_at || h.subido_en || fotoPortal.tomada_en;
+          cambio = true;
+        }
       });
       if (!cambio) return false;
       Scores.calcular(inspeccion);
