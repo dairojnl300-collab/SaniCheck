@@ -789,7 +789,18 @@ const ScInformes = (() => {
     _portalSyncPending = true;
     try {
       const filas = await listMisInformes();
-      const fila = (filas || []).find(x => x.local_id === inspeccion.id);
+      const establecimientoLocal = inspeccion.establecimiento || {};
+      const nombreLocal = String(establecimientoLocal.nombre || '').trim().toLowerCase();
+      const nitLocal = String(establecimientoLocal.nit || '').trim().toLowerCase();
+      const fila = (filas || []).find(x => {
+        if (x.local_id !== inspeccion.id) return false;
+        const nombreRemoto = String(x.establecimiento_nombre || x.establecimiento?.nombre || '').trim().toLowerCase();
+        const nitRemoto = String(x.establecimiento?.nit || '').trim().toLowerCase();
+        // local_id identifica el registro; nombre/NIT evitan cruzar datos si
+        // un navegador reutilizó un id local de otro establecimiento.
+        return (!nombreLocal || !nombreRemoto || nombreLocal === nombreRemoto)
+          && (!nitLocal || !nitRemoto || nitLocal === nitRemoto);
+      });
       if (!fila?.id) return false;
       const remoto = await getInforme(fila.id);
       const hallazgos = remoto?.estado_estructurado?.inspeccion?.hallazgos_criticos;
