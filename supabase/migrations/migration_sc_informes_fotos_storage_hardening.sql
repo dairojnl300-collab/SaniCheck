@@ -38,6 +38,9 @@
 
 DROP POLICY IF EXISTS sc_informes_fotos_update ON storage.objects;
 DROP POLICY IF EXISTS sc_informes_fotos_delete ON storage.objects;
+-- También retirar cualquier policy heredada con FOR ALL para authenticated.
+-- El cliente no usa ese rol para Storage y no debe conservar UPDATE/DELETE.
+DROP POLICY IF EXISTS sc_informes_fotos_tecnica_all ON storage.objects;
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- 2. fotos_urls: un array vacío no debe borrar los paths ya guardados
