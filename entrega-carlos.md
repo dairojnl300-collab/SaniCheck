@@ -115,6 +115,20 @@ capacidad de ejecutar script ni de heredar el origen del documento contenedor.
 
 Sin (1)-(3) la funcionalidad queda instalada pero inerte: el campo de código en el formulario de firmas no tendrá contra qué validar, y `ScInformesUI` fallará con "Código inválido" (comportamiento esperado y no bloqueante — el guardado local sigue funcionando igual que siempre).
 
+## Corte actual — visor administrativo
+
+## Corte actual — organización de evidencias del cliente (2026-09-07)
+
+- `app/js/sc-informes-ui.js`: las evidencias con foto del portal se filtran, ordenan por numeración y aspecto/hallazgo, y muestran numeración, título, estado, `actualizado_en` cuando existe y la foto dentro del visor existente.
+- Validación: `node --check app/js/sc-informes-ui.js` OK; `git diff --check` OK.
+- No se crearon tablas, no se modificó la subida del portal, no se hizo deploy. Siguiente ruta: auditoría posterior de Camila.
+
+- `app/js/sc-informes-ui.js`: el visor admin compone evidencia portal, mantiene iframe sandboxed y muestra acciones seguras únicamente en estado `En corrección`; ambas requieren confirmación y recarga tras RPC.
+- `app/js/sc-informes.js`: añade `revisarAdminInforme()` para invocar la RPC con el código de sesión.
+- `supabase/migrations/migration_sc_informes_revision_admin.sql`: RPC `sc_revisar_admin_informe` valida rol admin y persiste el estado en `estado_estructurado.revision_admin`; pendiente de aplicar, no ejecutada.
+- Validación: `node --check app/js/sc-informes-ui.js` OK; `node --check app/js/sc-informes.js` OK; `git diff --check` OK.
+- No merge ni deploy realizados. Siguiente ruta: aplicar la migración y ejecutar auditoría posterior con Camila.
+
 ## Para Camila
 
 Cuando (1)-(3) estén resueltos, **Camila debe auditar**: `Actuar.guardarFirmas()` → `_respaldarEnNube()` → `ScInformes.guardarInforme()` (incluyendo el camino de fallo/outbox con la red cortada de verdad, no simulada); los 10 RPCs `sc_*` uno por uno confirmando que ningún código puede leer/editar/borrar informes de otro técnico ni acceder a `sc_list_admin_informes`/`sc_*_admin_informe` sin `rol = 'admin'`; los paneles "Mis informes" y "Panel admin" en mobile y desktop; y que el service worker sirva la versión 4.13.0 (bump de caché) en producción tras el deploy.

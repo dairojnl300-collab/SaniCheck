@@ -259,26 +259,16 @@ const About = (() => {
       return;
     }
 
-    const local = PortalCliente.resolverEstablecimientoLocal();
     el.innerHTML = `
-      <p style="margin-bottom:12px;line-height:1.55;color:var(--color-ink2);">
-        Activa el Portal para que el establecimiento consulte Personal y Equipos con un código de 6 caracteres.
-      </p>
-      <div class="form-group" style="margin-bottom:10px;">
-        <label class="form-label" for="portal-nombre">Nombre del establecimiento</label>
-        <input class="form-input" type="text" id="portal-nombre" value="${_escAttr(local.nombre)}"
-          placeholder="Razón social" autocomplete="organization">
-      </div>
-      <div class="form-group" style="margin-bottom:14px;">
-        <label class="form-label" for="portal-nit">NIT</label>
-        <input class="form-input" type="text" id="portal-nit" value="${_escAttr(local.nit)}"
-          placeholder="NIT / CC" autocomplete="off">
-      </div>
-      <p id="about-portal-msg" style="display:none;margin-bottom:10px;font-size:var(--text-xs);"></p>
-      <button type="button" class="btn btn-primary" style="width:100%;" id="about-portal-activar"
-        onclick="About.activarPortal()">
-        Activar Portal Cliente
-      </button>`;
+      <div class="card" style="padding:16px;background:var(--wash-a,#EFF9F5);">
+        <strong style="display:block;margin-bottom:6px;">Activación por informe</strong>
+        <p class="text-muted" style="margin:0;line-height:1.55;">
+          La activación del Portal Cliente se realiza desde <strong>Actuar</strong>, dentro del informe guardado.
+        </p>
+        <p class="text-muted" style="margin:8px 0 0;font-size:var(--text-xs);line-height:1.55;">
+          Guarda y sincroniza primero el informe; luego pulsa “Activar Portal Cliente” para generar su código.
+        </p>
+      </div>`;
   }
 
   async function activarPortal() {

@@ -251,41 +251,38 @@ const ScInformesUI = (() => {
 
   async function _insertarEvidenciaInline(iframe, items) {
     if (!iframe || !Array.isArray(items) || !items.length) return;
-    await new Promise(resolve => { let done = false; const finish = () => { if (!done) { done = true; resolve(); } }; iframe.addEventListener('load', finish, { once: true }); setTimeout(finish, 800); });
+    await new Promise(resolve => {
+      let terminado = false;
+      const terminar = () => { if (terminado) return; terminado = true; resolve(); };
+      iframe.addEventListener('load', terminar, { once: true });
+      setTimeout(terminar, 800);
+    });
     const doc = iframe.contentDocument;
+    if (!doc) return;
     const cfg = window.SC_INFORMES_CONFIG;
-    if (!doc || !cfg?.SUPABASE_URL || !cfg?.SUPABASE_ANON_KEY) return;
-    const root = String(cfg.SUPABASE_URL).replace(/\/$/, '') + '/storage/v1/object/' + FOTOS_BUCKET + '/';
+    if (!cfg?.SUPABASE_URL || !cfg?.SUPABASE_ANON_KEY) return;
+    const raiz = String(cfg.SUPABASE_URL).replace(/\/$/, '') + '/storage/v1/object/' + FOTOS_BUCKET + '/';
     for (const h of items) {
+      const id = String(h.aspecto_id || '');
       const path = h.foto_path || h.foto_url || h.foto;
-      const card = Array.from(doc.querySelectorAll('[data-aspecto-id]')).find(el => el.getAttribute('data-aspecto-id') === String(h.aspecto_id));
-      if (!path || !card || card.querySelector('[data-sc-evidencia-inline]')) continue;
+      if (!id || !path) continue;
+      const tarjeta = Array.from(doc.querySelectorAll('[data-aspecto-id]')).find(el => el.getAttribute('data-aspecto-id') === id);
+      if (!tarjeta || tarjeta.querySelector('[data-sc-evidencia-inline]')) continue;
       try {
-        const res = await fetch(root + encodeURI(path), { headers: { apikey: cfg.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_ANON_KEY } });
+        const res = await fetch(raiz + encodeURI(path), { headers: { apikey: cfg.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_ANON_KEY } });
         if (!res.ok) continue;
-        const url = URL.createObjectURL(await res.blob()); _fotosObjectUrls.push(url);
-        const block = doc.createElement('div'); block.setAttribute('data-sc-evidencia-inline', 'true'); block.style.cssText = 'margin-top:8px;padding:7px;border-top:1px solid #DDE7E2;background:#F8FAF9;';
-        block.innerHTML = '<strong style="display:block;font-size:10px;color:#173B31;margin-bottom:5px;">Evidencia de corrección del cliente</strong>';
-        const img = doc.createElement('img'); img.src = url; img.alt = 'Evidencia de corrección del cliente'; img.style.cssText = 'display:block;max-width:100%;max-height:240px;object-fit:contain;border-radius:5px;'; block.appendChild(img); card.appendChild(block);
+        const url = URL.createObjectURL(await res.blob());
+        _fotosObjectUrls.push(url);
+        const bloque = doc.createElement('div');
+        bloque.setAttribute('data-sc-evidencia-inline', 'true');
+        bloque.style.cssText = 'margin-top:8px;padding:7px;border-top:1px solid #DDE7E2;background:#F8FAF9;';
+        bloque.innerHTML = '<strong style="display:block;font-size:10px;color:#173B31;margin-bottom:5px;">Evidencia de corrección del cliente</strong>';
+        const img = doc.createElement('img');
+        img.src = url; img.alt = 'Evidencia de corrección del cliente';
+        img.style.cssText = 'display:block;max-width:100%;max-height:240px;object-fit:contain;border-radius:5px;';
+        bloque.appendChild(img); tarjeta.appendChild(bloque);
       } catch (e) { console.warn('[ScInformesUI] evidencia inline no disponible', e); }
     }
-  }
-
-  async function _verDetalleAdmin(row) {
-    const items = (row.estado_estructurado?.inspeccion?.hallazgos_criticos || []).filter(h => h?.aspecto_id && (h.foto_url || h.foto_path || h.foto));
-    const acciones = items.length ? `<section aria-label="Revisión de correcciones" style="margin-top:12px;padding:12px;border:1px solid #DDE7E2;border-radius:8px;background:#F8FAF9;"><strong style="display:block;color:#1B4332;font-size:.84rem;margin-bottom:8px;">Revisar correcciones del cliente</strong>${items.map(h => `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #E5E7EB;"><span style="font-size:.78rem;color:#374151;flex:1;"><strong>${_esc(h.numero || h.aspecto_id)}</strong> · ${_esc(h.texto || h.hallazgo || 'Hallazgo')}</span><button type="button" data-sc-revision="cumple" data-sc-aspecto-id="${_esc(h.aspecto_id)}" style="${_btnStyle('#2E7D32','#fff')}">Marcar como cumple</button><button type="button" data-sc-revision="ajustes_solicitados" data-sc-aspecto-id="${_esc(h.aspecto_id)}" style="${_btnStyle('#B45309','#fff')}">Solicitar ajustes</button></div>`).join('')}</section>` : '';
-    const overlay = _abrirOverlay('Detalle administrativo', `${acciones}<div data-sc-admin-viewer style="margin-top:12px;"></div>`);
-    const viewer = overlay.querySelector('[data-sc-admin-viewer]');
-    const base = _htmlEditableSeguro(row.informe_html);
-    const fotos = await _hidratarFotosActa(base, [...(row.fotos_urls || []), ...items.map(h => h.foto_path || h.foto_url || h.foto)]);
-    _fotosObjectUrls = fotos.urls; viewer.innerHTML = '<iframe title="Contenido del informe" sandbox="allow-modals allow-same-origin" style="width:100%;height:55vh;min-height:320px;border:1px solid #DDE7E2;border-radius:8px;background:#fff;"></iframe>';
-    const iframe = viewer.querySelector('iframe'); iframe.srcdoc = fotos.html; _insertarEvidenciaInline(iframe, items);
-    overlay.querySelectorAll('[data-sc-revision]').forEach(btn => btn.addEventListener('click', async () => {
-      const estado = btn.getAttribute('data-sc-revision'); const aspecto = btn.getAttribute('data-sc-aspecto-id');
-      const observacion = estado === 'ajustes_solicitados' ? prompt('Indica qué debe corregirse:') : null;
-      if (estado === 'ajustes_solicitados' && !observacion?.trim()) return; if (!confirm(estado === 'cumple' ? '¿Marcar este hallazgo como cumple?' : '¿Solicitar ajustes para este hallazgo?')) return;
-      btn.disabled = true; try { await ScInformes.revisarAdminHallazgo(row.id, aspecto, estado, observacion); Router.toast('Revisión actualizada'); _cerrar(); await _renderAdmin(); } catch (e) { btn.disabled = false; Router.toast(e.message || 'No se pudo actualizar la revisión'); }
-    }));
   }
 
   // ── Ver / exportar PDF ───────────────────────────────────────────────────
@@ -308,9 +305,53 @@ const ScInformesUI = (() => {
   // ejecutar nada (ni <script>, ni on*, ni javascript:, que además ya elimina
   // `_htmlEditableSeguro`), así que no gana acceso al localStorage ni al DOM
   // de SaniCheck: la combinación peligrosa es allow-scripts + allow-same-origin.
-  async function _verHtml(html, fotosUrls) {
-    const htmlBase = _htmlEditableSeguro(html);
-    const fotos = await _hidratarFotosActa(htmlBase, fotosUrls);
+  function _evidenciaPortalHtml(estadoEstructurado) {
+    const items = estadoEstructurado?.inspeccion?.hallazgos_criticos;
+    if (!Array.isArray(items)) return '';
+    const conFoto = items.filter(h => h && typeof (h.foto_path || h.foto_url || h.foto) === 'string' && (h.foto_path || h.foto_url || h.foto))
+      .map((h, indice) => ({ h, indice }))
+      .sort((a, b) => {
+        const numeroA = Number(a.h.numero || a.h.numeracion || a.h.orden);
+        const numeroB = Number(b.h.numero || b.h.numeracion || b.h.orden);
+        if (Number.isFinite(numeroA) && Number.isFinite(numeroB) && numeroA !== numeroB) return numeroA - numeroB;
+        if (Number.isFinite(numeroA) !== Number.isFinite(numeroB)) return Number.isFinite(numeroA) ? -1 : 1;
+        const aspectoA = String(a.h.aspecto_id || a.h.programa_nombre || a.h.aspecto || '');
+        const aspectoB = String(b.h.aspecto_id || b.h.programa_nombre || b.h.aspecto || '');
+        return aspectoA.localeCompare(aspectoB, 'es') || a.indice - b.indice;
+      })
+      .map(({ h }) => h);
+    if (!conFoto.length) return '';
+    return `<section style="margin:18px 0;padding:12px;border:1px solid #DDE7E2;border-radius:8px;background:#fff;break-inside:avoid;">
+      <h2 style="margin:0 0 12px;color:#1B4332;font-size:14px;border-bottom:2px solid #5BA832;padding-bottom:6px;">Aspectos con corrección enviada</h2>
+      ${conFoto.map((h, i) => {
+        const path = h.foto_path || h.foto_url || h.foto;
+        const titulo = h.titulo || h.texto || h.hallazgo || h.aspecto || 'Hallazgo';
+        const estado = h.estado_accion || h.seguimiento || h.evaluacion || h.criterio || 'Pendiente';
+        const actualizado = h.actualizado_en || h.fecha_actualizado_en;
+        const numero = h.numero || h.numeracion || h.orden || `${i + 1}`;
+        const tema = h.tema || h.programa_nombre || h.programa || h.aspecto_id || 'Aspecto evaluado';
+        const subtitulo = h.subseccion || h.subseccion_nombre || '';
+        return `<article style="margin:0 0 12px;padding:12px;border:1px solid #DDE7E2;border-left:4px solid #0A7350;background:#F8FAF9;border-radius:6px;">
+          <div style="font-weight:800;color:#173B31;font-size:12px;">${_esc(numero)} · ${_esc(titulo)}</div>
+          <div style="font-size:10px;color:#52635d;margin-top:4px;"><strong>Tema:</strong> ${_esc(tema)}${subtitulo ? ` · <strong>Subtítulo:</strong> ${_esc(subtitulo)}` : ''}</div>
+          <div style="font-size:10px;color:#6B7280;margin:4px 0 8px;"><strong>Estado:</strong> ${_esc(estado)}${actualizado ? ` · Actualizado: ${_esc(_fmtFecha(actualizado))}` : ''}</div>
+          <div style="font-size:10px;color:#52635d;margin-bottom:5px;"><strong>Foto enviada para este hallazgo:</strong></div>
+          <img data-foto-path="${_esc(path)}" alt="Evidencia de corrección del cliente" style="max-width:100%;max-height:280px;object-fit:contain;background:#fff;display:block;border-radius:5px;">
+        </article>`;
+      }).join('')}
+    </section>`;
+  }
+
+  async function _verHtml(html, fotosUrls, estadoEstructurado) {
+    const itemsPortal = (estadoEstructurado?.inspeccion?.hallazgos_criticos || [])
+      .filter(h => h && h.aspecto_id && (h.foto_url || h.foto_path || h.foto));
+    const inlineCapable = String(html || '').includes('data-aspecto-id=');
+    const evidenciaPortal = inlineCapable ? '' : _evidenciaPortalHtml(estadoEstructurado);
+    const htmlBase = evidenciaPortal + _htmlEditableSeguro(html);
+    const fotosPortal = Array.isArray(estadoEstructurado?.inspeccion?.hallazgos_criticos)
+      ? estadoEstructurado.inspeccion.hallazgos_criticos.map(h => h?.foto_path || h?.foto_url || h?.foto).filter(Boolean)
+      : [];
+    const fotos = await _hidratarFotosActa(htmlBase, [...(Array.isArray(fotosUrls) ? fotosUrls : []), ...fotosPortal]);
     const overlay = _abrirOverlay('Ver informe / PDF', `
       <div style="display:flex;flex-direction:column;gap:12px;">
         <iframe id="sc-viewer" title="Contenido del informe" sandbox="allow-modals allow-same-origin"
@@ -324,6 +365,7 @@ const ScInformesUI = (() => {
     const print = overlay.querySelector('#sc-print-btn');
     const htmlSeguro = fotos.html;
     if (iframe) iframe.srcdoc = htmlSeguro;
+    if (inlineCapable) _insertarEvidenciaInline(iframe, itemsPortal);
     if (print) print.addEventListener('click', () => {
       const esMovil = window.matchMedia?.('(max-width: 600px)').matches
         || (navigator.maxTouchPoints > 1 && window.innerWidth < 900);
@@ -376,6 +418,37 @@ const ScInformesUI = (() => {
         Router.toast('No se pudo preparar el PDF');
       }
     });
+  }
+
+  function _estadoRevisionLabel(estado) {
+    return ({ en_correccion: 'En corrección', cumple: 'Cumple', ajustes_solicitados: 'Ajustes solicitados' })[estado] || '';
+  }
+
+  async function _verDetalleAdmin(row) {
+    const items = (row.estado_estructurado?.inspeccion?.hallazgos_criticos || []).filter(h => h && h.aspecto_id && (h.foto_url || h.foto_path || h.foto));
+    const acciones = items.length ? `<section aria-label="Revisión administrativa" style="margin-top:12px;padding:12px;border:1px solid #DDE7E2;border-radius:8px;background:#F8FAF9;"><strong style="display:block;color:#1B4332;font-size:.84rem;margin-bottom:8px;">Revisar correcciones del cliente</strong>${items.map(h => `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #E5E7EB;"><span style="font-size:.78rem;color:#374151;flex:1;"><strong>${_esc(h.numero || h.aspecto_id)}</strong> · ${_esc(h.texto || h.hallazgo || 'Hallazgo')}</span><button type="button" data-sc-revision="cumple" data-sc-aspecto-id="${_esc(h.aspecto_id)}" style="${_btnStyle('#2E7D32','#fff')}">Marcar como cumple</button><button type="button" data-sc-revision="ajustes_solicitados" data-sc-aspecto-id="${_esc(h.aspecto_id)}" style="${_btnStyle('#B45309','#fff')}">Solicitar ajustes</button></div>`).join('')}</section>` : '';
+    const overlay = _abrirOverlay('Detalle administrativo', `<p style="margin:0;color:#52635d;font-size:.82rem;">${_esc(row.establecimiento?.nombre || 'Informe')} · Acta ${_esc(row.numero_acta || '—')}</p>${acciones}<div data-sc-admin-viewer style="margin-top:12px;"></div>`);
+    const viewer = overlay.querySelector('[data-sc-admin-viewer]');
+    const inlineCapable = String(row.informe_html || '').includes('data-aspecto-id=');
+    const evidencia = inlineCapable ? '' : _evidenciaPortalHtml(row.estado_estructurado);
+    const base = evidencia + _htmlEditableSeguro(row.informe_html);
+    const fotosPortal = Array.isArray(row.estado_estructurado?.inspeccion?.hallazgos_criticos) ? row.estado_estructurado.inspeccion.hallazgos_criticos.map(h => h?.foto_path || h?.foto_url || h?.foto).filter(Boolean) : [];
+    const fotos = await _hidratarFotosActa(base, [...(row.fotos_urls || []), ...fotosPortal]);
+    _fotosObjectUrls = fotos.urls;
+    viewer.innerHTML = `<iframe title="Contenido del informe" sandbox="allow-modals allow-same-origin" style="width:100%;height:55vh;min-height:320px;border:1px solid #DDE7E2;border-radius:8px;background:#fff;"></iframe>`;
+    const iframe = viewer.querySelector('iframe');
+    iframe.srcdoc = fotos.html;
+    if (inlineCapable) _insertarEvidenciaInline(iframe, items);
+    overlay.querySelectorAll('[data-sc-revision]').forEach(btn => btn.addEventListener('click', async () => {
+      const nuevo = btn.getAttribute('data-sc-revision');
+      const aspectoId = btn.getAttribute('data-sc-aspecto-id');
+      const observacion = nuevo === 'ajustes_solicitados' ? prompt('Indica qué debe corregirse:') : null;
+      if (nuevo === 'ajustes_solicitados' && !observacion?.trim()) return;
+      if (!confirm(nuevo === 'cumple' ? '¿Marcar este hallazgo como cumple?' : '¿Solicitar ajustes para este hallazgo?')) return;
+      btn.disabled = true;
+      try { await ScInformes.revisarAdminHallazgo(row.id, aspectoId, nuevo, observacion); Router.toast('Revisión actualizada'); _cerrar(); await _renderAdmin(); }
+      catch (e) { btn.disabled = false; Router.toast(e.message || 'No se pudo actualizar la revisión'); }
+    }));
   }
 
   // ── Editor simple de HTML (técnico: solo el suyo · admin: cualquiera) ───
@@ -477,7 +550,7 @@ const ScInformesUI = (() => {
           const row = await get(id);
           const puedeRevisar = opts.admin || ScInformes.getSesionCache()?.rol === 'tecnico';
           if (puedeRevisar) await _verDetalleAdmin(row);
-          else await _verHtml(row.informe_html, row.fotos_urls);
+          else await _verHtml(row.informe_html, row.fotos_urls, row.estado_estructurado);
         } catch (e) {
           window.Router && Router.toast && Router.toast('No se pudo abrir: ' + e.message);
         }
@@ -658,13 +731,18 @@ const ScInformesUI = (() => {
     const sesion = await _requiereSesion();
     if (!sesion) return;
     if (sesion.rol !== 'admin') {
-      _abrirOverlay('Acceso restringido', '<p role="alert" style="color:#b91c1c;">Este panel es solo para administradores.</p>');
+      await abrirRegistroInformes();
       return;
     }
     await _renderAdmin();
   }
 
   async function _renderAdmin() {
+    const sesion = ScInformes.getSesionCache();
+    if (sesion && sesion.rol !== 'admin') {
+      await mostrarEnPortada(sesion);
+      return;
+    }
     _abrirOverlay('Panel de informes (todos)', '<p style="font-size:0.8rem;color:#6b7280;">Cargando…</p>');
     let filas;
     try {

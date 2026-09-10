@@ -69,6 +69,8 @@ const Actuar = (() => {
           <button class="btn btn-accent" style="flex:1;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
             onclick="Actuar.compartir()">${AppIcons.row('share', 'COMPARTIR', 14)}</button>
         </div>
+        <button class="btn btn-outline" style="width:100%;min-height:40px;margin-top:8px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+          onclick="Actuar.activarPortal()">${AppIcons.row('link', 'ACTIVAR PORTAL CLIENTE', 14)}</button>
         <div style="display:flex;gap:var(--sp-sm);">
           <button class="btn btn-outline" style="flex:1;min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
             onclick="Router.go('verificar')">${AppIcons.row('arrowLeft', 'VERIFICAR', 14)}</button>
@@ -679,7 +681,7 @@ const Actuar = (() => {
       const criterio = typeof Scores !== 'undefined' ? Scores.criterio(a) : a.evaluacion;
       const c = criterio === 'A' ? '#2E7D32' : criterio === 'I' ? '#D32F2F' : '#6B7280';
       const cumple = criterio === 'A', incumple = criterio === 'I';
-      return `<div class="acta-card" style="padding:9px 10px;border:1px solid #E5E7EB;border-left:3px solid ${c};border-radius:6px;background:#fff;break-inside:avoid;page-break-inside:avoid;">
+      return `<div class="acta-card" data-aspecto-id="${_esc(a.aspecto_id || '')}" data-aspecto-numero="${_esc(numero)}" style="padding:9px 10px;border:1px solid #E5E7EB;border-left:3px solid ${c};border-radius:6px;background:#fff;break-inside:avoid;page-break-inside:avoid;">
         <div class="acta-criterion-inline-title">${_esc(criterioTitulo || '')}</div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span style="font-weight:800;color:${c};flex-shrink:0;font-size:11px;">[${_esc(criterio || '')}]</span><div style="flex:1;min-width:0;"><div class="acta-aspect-title">${numero}, Aspecto por verificar</div><div class="acta-aspect-norm">${_esc(a.norma || '')}</div></div></div>
         ${cumple ? `<div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Observaciones:</strong> ${_esc(a.obs || 'Sin observaciones registradas.')}</div><div style="margin-top:4px;padding:5px 7px;background:#F0FAF5;border-radius:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Recomendaciones:</strong> ${_esc(a.recomendaciones || 'Sin recomendación registrada.')}</div>` : ''}
@@ -1033,6 +1035,19 @@ const Actuar = (() => {
 
   // Compatibilidad con el nombre usado por la propuesta de PDF/impresión.
   function generarPDF() { return guardarPDF(); }
+
+  async function activarPortal() {
+    const inspeccion = Store.getCurrentInspeccion();
+    if (!inspeccion || typeof ScInformes === 'undefined') { Router.toast('Guarda primero el informe en Registro de Informes'); return; }
+    try {
+      const filas = await ScInformes.listMisInformesUnificado();
+      const fila = (filas || []).find(x => x.local_id === inspeccion.id && !x._enCurso);
+      if (!fila?.id) { Router.toast('Guarda primero el informe y espera la sincronización'); return; }
+      const codigo = await ScInformes.activarPortalInforme(fila.id);
+      try { await navigator.clipboard.writeText(codigo); } catch (e) {}
+      Router.toast('Portal activado. Código copiado: ' + codigo);
+    } catch (e) { Router.toast(e.message || 'No se pudo activar el Portal'); }
+  }
 
   /**
    * Arma el documento HTML completo del Acta. Las fotos ya no se embeben en
@@ -1528,5 +1543,5 @@ window.addEventListener('load', function() {
   }
 
 
-  return { render, attach, compartir, abrirPDF, generarPDF, guardarPDF, limpiarFirma, cargarFirmaImagen, guardarFirmas, editarFirmas, cancelarEdicionFirmas };
+  return { render, attach, compartir, abrirPDF, generarPDF, guardarPDF, activarPortal, limpiarFirma, cargarFirmaImagen, guardarFirmas, editarFirmas, cancelarEdicionFirmas };
 })();

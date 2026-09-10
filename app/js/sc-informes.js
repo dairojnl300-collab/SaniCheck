@@ -848,17 +848,17 @@ const ScInformes = (() => {
   function getAdminInforme(id) {
     return _rpc('sc_get_admin_informe', { p_id: id, p_codigo: getCodigo() }).then(r => Array.isArray(r) ? r[0] : r);
   }
-  function revisarAdminHallazgo(informeId, aspectoId, estado, observacion) {
-    return _rpc('sc_admin_revisar_hallazgo', {
-      p_codigo: getCodigo(), p_informe_id: informeId, p_aspecto_id: aspectoId,
-      p_estado: estado, p_observacion: observacion || null,
-    });
-  }
   function updateAdminInforme(id, html, fotosUrls) {
     return _rpc('sc_update_admin_informe', {
       p_id: id, p_codigo: getCodigo(), p_html: html,
       p_fotos_urls: Array.isArray(fotosUrls) ? fotosUrls : null,
     });
+  }
+  function revisarAdminHallazgo(informeId, aspectoId, estado, observacion) {
+    return _rpc('sc_admin_revisar_hallazgo', { p_informe_id: informeId, p_aspecto_id: aspectoId, p_codigo: getCodigo(), p_estado: estado, p_observacion: observacion || null });
+  }
+  function activarPortalInforme(informeId) {
+    return _rpc('sc_activar_portal_establecimiento', { p_informe_id: informeId, p_codigo_acceso: getCodigo() });
   }
   function deleteAdminInforme(id) {
     return _rpc('sc_delete_admin_informe', { p_id: id, p_codigo: getCodigo() });
@@ -915,7 +915,7 @@ const ScInformes = (() => {
     guardarBorrador, scheduleBorrador, flushBorradorPendiente, programarBorradorActual,
     revisarBorradoresRemotos, listBorradores, getBorrador,
     listMisInformes, getInforme, updateInforme, deleteInforme,
-    listAdminInformes, getAdminInforme, revisarAdminHallazgo, updateAdminInforme, deleteAdminInforme,
+    listAdminInformes, getAdminInforme, updateAdminInforme, revisarAdminHallazgo, activarPortalInforme, deleteAdminInforme,
     listUsuarios, crearUsuario,
     restaurarEstadoRemoto: _restaurarEstadoRemoto,
     marcarAjeno: _marcarAjeno,
