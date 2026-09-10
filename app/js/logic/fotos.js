@@ -9,6 +9,11 @@ const Fotos = (() => {
   // persiste en Store): fotografias[] ahora guarda {id, path, tomada_en},
   // no el dataURL. Se limpia con revokeObjectURL cuando ya no se usa.
   const _previewCache = new Map();
+  const _subidasPendientes = new Set();
+
+  function esperarSubidas() {
+    return Promise.allSettled([..._subidasPendientes]);
+  }
 
   function _ensureInput() {
     let inp = document.getElementById('_foto-hidden-input');
@@ -153,7 +158,7 @@ const Fotos = (() => {
         const registro = { id: fotoId, path: objectPath, tomada_en: new Date().toISOString(), subida: false };
         destino.fotografias.push(registro);
         const inspeccionId = inspeccion.id;
-        FotosStorage.subirFoto(foto.blob, tecnicoId, inspeccionId, fotoId).then(res => {
+        const subidaPendiente = FotosStorage.subirFoto(foto.blob, tecnicoId, inspeccionId, fotoId).then(res => {
           // Subida en firme O encolada para reintento: en ambos casos el path
           // va a existir. Solo `!ok && !encolado` es pérdida real (ni se subió
           // ni se pudo guardar en la cola de IndexedDB).
@@ -167,7 +172,11 @@ const Fotos = (() => {
             Router.toast('Foto guardada y optimizada');
           }
           if (typeof Hacer !== 'undefined' && Hacer.refresh) Hacer.refresh();
-        });
+        }).catch(error => {
+          console.warn('[Fotos] no se pudo completar la subida', error);
+          _marcarSubida(inspeccionId, fotoId, false, registro);
+        }).finally(() => _subidasPendientes.delete(subidaPendiente));
+        _subidasPendientes.add(subidaPendiente);
       } else {
         // Sin sesión activa: no hay tecnico_id para el path del bucket.
         // Se conserva localmente en base64 como red de seguridad (no bloquea
@@ -234,5 +243,5 @@ const Fotos = (() => {
     });
   }
 
-  return { capturar, eliminar, renderThumbnails, hidratarMiniaturas };
+  return { capturar, eliminar, renderThumbnails, hidratarMiniaturas, esperarSubidas };
 })();

@@ -1011,6 +1011,9 @@ const Actuar = (() => {
     const btn = document.querySelector('[data-acta-guardar-pdf]');
     if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; btn.textContent = 'Guardando…'; }
     try {
+      if (typeof Fotos !== 'undefined' && Fotos.esperarSubidas) {
+        await Fotos.esperarSubidas();
+      }
       const html = await _generarActaHtmlCompleta(inspeccion);
       const res = await ScInformes.guardarInforme(_crearPayloadInforme(inspeccion, html));
       if (res.ok) Router.toast('PDF guardado en Registro de Informes');
@@ -1067,7 +1070,7 @@ const Actuar = (() => {
    * Respaldo en Supabase al guardar firmas. Si falla, ScInformes lo encola
    * para reintentar sin bloquear ni alterar el guardado local.
    */
-  function _respaldarEnNube(inspeccion) {
+  async function _respaldarEnNube(inspeccion) {
     if (typeof ScInformes === 'undefined') return;
     const sesion = ScInformes.getSesionCache && ScInformes.getSesionCache();
     if (!sesion?.usuario || !ScInformes.getCodigo()) return;
@@ -1079,6 +1082,7 @@ const Actuar = (() => {
       ? ({ B: 'BUENO', R: 'REGULAR', D: 'DEFICIENTE' }[Scores.getEstado(score.pct_cumplimiento)] || null)
       : null;
 
+    await (typeof Fotos !== 'undefined' && Fotos.esperarSubidas ? Fotos.esperarSubidas() : Promise.resolve());
     _generarActaHtmlCompleta(inspeccion).then(html => ScInformes.guardarInforme(
       _crearPayloadInforme(inspeccion, html, {
         nivelCumplimiento,
