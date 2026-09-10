@@ -82,6 +82,22 @@ const FotosStorage = (() => {
     return true;
   }
 
+  async function optimizarFoto(blob) {
+    if (!blob || !/^image\/(jpeg|png|webp)$/i.test(blob.type || '') || typeof createImageBitmap !== 'function') return blob;
+    try {
+      const img = await createImageBitmap(blob);
+      const max = 1600;
+      const escala = Math.min(1, max / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.width * escala));
+      canvas.height = Math.max(1, Math.round(img.height * escala));
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      img.close();
+      const salida = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', .8));
+      return salida && salida.size < blob.size ? salida : blob;
+    } catch (_) { return blob; }
+  }
+
   async function descargarFotoBlob(objectPath) {
     const cfg = _cfg();
     if (!cfg) throw new Error('Falta configurar sc-informes-config.secrets.js');
@@ -153,6 +169,7 @@ const FotosStorage = (() => {
 
   /** Sube una foto; si falla o está offline, la encola para reintentar. Nunca lanza. */
   async function subirFoto(blob, tecnicoId, informeId, fotoId) {
+    blob = await optimizarFoto(blob);
     const objectPath = path(tecnicoId, informeId, fotoId);
     if (navigator.onLine) {
       try {
