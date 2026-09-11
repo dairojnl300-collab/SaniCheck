@@ -5,9 +5,10 @@ const Verificar = (() => {
   let _syncEventsBound = false;
   function _normalizarFotos(inspeccion) {
     (inspeccion?.programas || []).forEach(programa => (programa.aspectos || []).forEach(base => {
-      [base, ...(base.criterios_extra || [])].forEach((aspecto, index) => {
+      (base.criterios_extra || []).forEach((extra, i) => Hallazgos.idExtra(base, extra, i));
+      [base, ...(base.criterios_extra || [])].forEach(aspecto => {
         if (!Array.isArray(aspecto.fotografias)) return;
-        const aspectoId = aspecto.id || `${base.id}-extra-${index}`;
+        const aspectoId = aspecto.id;
         aspecto.fotografias.forEach((foto, fotoIndex) => {
           if (!foto.id) foto.id = `portal-${aspectoId}-${fotoIndex + 1}`;
           if (!foto.aspecto_id) foto.aspecto_id = aspectoId;
@@ -21,7 +22,7 @@ const Verificar = (() => {
     if (typeof ScInformes !== 'undefined' && ScInformes.sincronizarHallazgosPortal) {
       ScInformes.sincronizarHallazgosPortal(inspeccion).then(cambio => {
         if (cambio) _refresh();
-      }).catch(() => {});
+      }).catch(e => console.warn('[Verificar] sync portal falló', e));
     }
     Scores.calcular(inspeccion); Hallazgos.actualizar(inspeccion); Store.upsertInspeccion(inspeccion);
     setTimeout(() => {
@@ -30,7 +31,7 @@ const Verificar = (() => {
     }, 0);
     if (typeof ScInformes !== 'undefined' && ScInformes.programarBorradorActual) ScInformes.programarBorradorActual(false);
     const sc = inspeccion.score, hallazgos = inspeccion.hallazgos_criticos || [];
-    const expandir = (a, p, programaIdx, criterioIdx) => [{ ...a, programa: p, programaIdx, criterioIdx, extraIdx: null }, ...(a.criterios_extra || []).map((x, i) => ({ ...x, id: `${a.id}-extra-${i + 1}`, texto: `Aspecto por verificar ${i + 2}`, norma: a.norma, fotografias: x.fotografias || [], programa: p, programaIdx, criterioIdx, extraIdx: i }))];
+    const expandir = (a, p, programaIdx, criterioIdx) => [{ ...a, programa: p, programaIdx, criterioIdx, extraIdx: null }, ...(a.criterios_extra || []).map((x, i) => { Hallazgos.idExtra(a, x, i); return { ...x, texto: `Aspecto por verificar ${i + 2}`, norma: a.norma, fotografias: x.fotografias || [], programa: p, programaIdx, criterioIdx, extraIdx: i }; })];
     const todosItems = inspeccion.programas.flatMap((p, programaIdx) => p.aspectos.flatMap((a, i) => expandir(a, p, programaIdx, i)));
     const total = todosItems.length;
     const seguimientos = todosItems.filter(a => Scores.criterio(a) && a.estado);
@@ -74,7 +75,7 @@ const Verificar = (() => {
     </article>`;
   }
   function filtrarCategoria(v) { categoria = v; _refresh(); } function filtrarCriterio(v) { criterio = v; _refresh(); }
-  async function revisarCliente(fotoId, estado) { const inspeccion = Store.getCurrentInspeccion(); const aspectos = inspeccion?.programas.flatMap(p => p.aspectos.flatMap(a => [a, ...(a.criterios_extra || []).map((x, i) => { if (!x.id) x.id = `${a.id}-extra-${i + 1}`; return x; })])); const registro = aspectos?.flatMap(aspecto => (aspecto.fotografias || []).map(foto => ({ foto, aspecto }))).find(x => x.foto.id === fotoId); const foto = registro?.foto; const aspecto = registro?.aspecto; if (!foto || !aspecto) return Router.toast('No se encontró el aspecto de esta evidencia'); if (!inspeccion.portal_informe_id && ScInformes.sincronizarHallazgosPortal) { Router.toast('Vinculando informe…'); await ScInformes.sincronizarHallazgosPortal(inspeccion); } if (!inspeccion.portal_informe_id) return Router.toast('No se pudo vincular el informe. Intenta nuevamente.'); let aspectoId = aspecto.id; if (ScInformes.getInforme && foto.path) { try { const remoto = await ScInformes.getInforme(inspeccion.portal_informe_id); const remotoFoto = (remoto?.estado_estructurado?.inspeccion?.hallazgos_criticos || []).find(h => h.foto_url === foto.path || h.foto_path === foto.path); if (remotoFoto?.aspecto_id) aspectoId = remotoFoto.aspecto_id; } catch (e) { /* se conserva el ID local si el informe remoto no responde */ } } if (!aspectoId) return Router.toast('No se encontró el identificador del aspecto'); foto.aspecto_id = aspectoId; const observacion = estado === 'ajustes_solicitados' ? prompt('Indica qué debe corregirse:') : null; if (estado === 'ajustes_solicitados' && !observacion?.trim()) return; try { await ScInformes.revisarAdminHallazgo(inspeccion.portal_informe_id, aspectoId, estado, observacion); foto.estado_portal = estado === 'cumple' ? 'Verificado' : 'En corrección'; if (estado === 'cumple') { aspecto.evaluacion = 'A'; aspecto.criterio = 'A'; aspecto.estado = 'Cerrado'; } Scores.calcular(inspeccion); Hallazgos.actualizar(inspeccion); Store.upsertInspeccion(inspeccion); Router.toast(estado === 'cumple' ? 'Revisado y verificado' : 'Ajustes solicitados'); _refresh(); } catch (e) { Router.toast(e.message || 'No se pudo revisar la evidencia'); } }
+  async function revisarCliente(fotoId, estado) { const inspeccion = Store.getCurrentInspeccion(); const aspectos = inspeccion?.programas.flatMap(p => p.aspectos.flatMap(a => [a, ...(a.criterios_extra || []).map((x, i) => { Hallazgos.idExtra(a, x, i); return x; })])); const registro = aspectos?.flatMap(aspecto => (aspecto.fotografias || []).map(foto => ({ foto, aspecto }))).find(x => x.foto.id === fotoId); const foto = registro?.foto; const aspecto = registro?.aspecto; if (!foto || !aspecto) return Router.toast('No se encontró el aspecto de esta evidencia'); if (!inspeccion.portal_informe_id && ScInformes.sincronizarHallazgosPortal) { Router.toast('Vinculando informe…'); await ScInformes.sincronizarHallazgosPortal(inspeccion); } if (!inspeccion.portal_informe_id) return Router.toast('No se pudo vincular el informe. Intenta nuevamente.'); let aspectoId = aspecto.id; if (ScInformes.getInforme && foto.path) { try { const remoto = await ScInformes.getInforme(inspeccion.portal_informe_id); const remotoFoto = (remoto?.estado_estructurado?.inspeccion?.hallazgos_criticos || []).find(h => h.foto_url === foto.path || h.foto_path === foto.path); if (remotoFoto?.aspecto_id) aspectoId = remotoFoto.aspecto_id; } catch (e) { /* se conserva el ID local si el informe remoto no responde */ } } if (!aspectoId) return Router.toast('No se encontró el identificador del aspecto'); foto.aspecto_id = aspectoId; const observacion = estado === 'ajustes_solicitados' ? prompt('Indica qué debe corregirse:') : null; if (estado === 'ajustes_solicitados' && !observacion?.trim()) return; try { await ScInformes.revisarAdminHallazgo(inspeccion.portal_informe_id, aspectoId, estado, observacion); foto.estado_portal = estado === 'cumple' ? 'Verificado' : 'En corrección'; if (estado === 'cumple') { aspecto.evaluacion = 'A'; aspecto.criterio = 'A'; aspecto.estado = 'Cerrado'; } Scores.calcular(inspeccion); Hallazgos.actualizar(inspeccion); Store.upsertInspeccion(inspeccion); Router.toast(estado === 'cumple' ? 'Revisado y verificado' : 'Ajustes solicitados'); _refresh(); } catch (e) { Router.toast(e.message || 'No se pudo revisar la evidencia'); } }
   function mostrarFoto(id) { const f = Store.getCurrentInspeccion()?.programas.flatMap(p => p.aspectos.flatMap(a => [a, ...(a.criterios_extra || [])])).flatMap(a => a.fotografias || []).find(x => x.id === id); if (!f) return; const d = document.createElement('div'); d.className = 'photo-lightbox'; d.tabIndex = -1; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.innerHTML = `<button aria-label="Cerrar foto" onclick="this.parentElement.remove()">${AppIcons.icon('x', 22)}</button><img src="${f.data}" alt="Foto ampliada">`; d.addEventListener('keydown', e => { if (e.key === 'Escape') d.remove(); }); document.body.appendChild(d); d.focus(); }
   function _refresh() { const area = document.getElementById('screen-area'); if (area) { area.innerHTML = render(); if (typeof Fotos !== 'undefined' && Fotos.hidratarMiniaturas) Fotos.hidratarMiniaturas(area); } }
   function _vacio() { return `<div class="coming-soon"><div class="coming-soon-icon">${AppIcons.block('barChart', 40)}</div><div class="coming-soon-title">Sin inspección activa</div><button class="btn btn-primary mt-md" onclick="Router.go('planificar')">Ir a Planificar</button></div>`; }
@@ -85,7 +86,7 @@ const Verificar = (() => {
     try {
       const cambio = await ScInformes.sincronizarHallazgosPortal(inspeccion);
       if (cambio && (Router.current ? Router.current() : 'verificar') === 'verificar') _refresh();
-    } catch (e) { /* la sincronización se reintentará en el siguiente ciclo */ }
+    } catch (e) { console.warn('[Verificar] sync automático falló, se reintentará', e); }
   }
   function attach() {
     if (!_syncTimer) {
