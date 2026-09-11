@@ -207,6 +207,8 @@
       Router.toast('Versión Demo: máximo 1 establecimiento. Adquiere una licencia completa.');
       return;
     }
+    Store.set({ currentId: null });
+    Store.clearPlanificarDraft();
     Router.go('planificar');
   };
 
