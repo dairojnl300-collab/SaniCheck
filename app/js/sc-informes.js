@@ -34,6 +34,7 @@ const ScInformes = (() => {
   let _draftLastAspectKey = '';
   let _remoteDraftChecked = false;
   let _portalSyncPending = false;
+  let _portalSyncBlockedUntil = 0;
 
   // ── Config / código de acceso ───────────────────────────────────────────
 
@@ -785,6 +786,7 @@ const ScInformes = (() => {
   // abierto. El portal escribe sc_hallazgos_estado; el dashboard trabaja con
   // IndexedDB, por eso ambas fuentes deben reconciliarse al entrar a Verificar.
   async function sincronizarHallazgosPortal(inspeccion) {
+    if (Date.now() < _portalSyncBlockedUntil) return false;
     if (_portalSyncPending || !inspeccion?.id || !getCodigo() || typeof Store === 'undefined') return false;
     _portalSyncPending = true;
     try {
@@ -862,7 +864,8 @@ const ScInformes = (() => {
     });
   }
   function revisarAdminHallazgo(informeId, aspectoId, estado, observacion) {
-    return _rpc('sc_admin_revisar_hallazgo', { p_informe_id: informeId, p_aspecto_id: aspectoId, p_codigo: getCodigo(), p_estado: estado, p_observacion: observacion || null });
+    return _rpc('sc_admin_revisar_hallazgo', { p_informe_id: informeId, p_aspecto_id: aspectoId, p_codigo: getCodigo(), p_estado: estado, p_observacion: observacion || null })
+      .then(resultado => { _portalSyncBlockedUntil = Date.now() + 3000; return resultado; });
   }
   function activarPortalInforme(informeId) {
     return _rpc('sc_activar_portal_establecimiento', { p_informe_id: informeId, p_codigo_acceso: getCodigo() });
