@@ -1,6 +1,8 @@
 const Verificar = (() => {
   const _btnStyle = (bg, color) => `border:0;border-radius:7px;padding:7px 9px;background:${bg};color:${color};font-weight:700;font-size:11px;cursor:pointer`;
   let categoria = 'todas', criterio = 'todos';
+  let _syncTimer = null;
+  let _syncEventsBound = false;
   function render() {
     const inspeccion = Store.getCurrentInspeccion(); if (!inspeccion) return _vacio();
     if (typeof ScInformes !== 'undefined' && ScInformes.sincronizarHallazgosPortal) {
@@ -63,5 +65,32 @@ const Verificar = (() => {
   function mostrarFoto(id) { const f = Store.getCurrentInspeccion()?.programas.flatMap(p => p.aspectos.flatMap(a => [a, ...(a.criterios_extra || [])])).flatMap(a => a.fotografias || []).find(x => x.id === id); if (!f) return; const d = document.createElement('div'); d.className = 'photo-lightbox'; d.tabIndex = -1; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.innerHTML = `<button aria-label="Cerrar foto" onclick="this.parentElement.remove()">${AppIcons.icon('x', 22)}</button><img src="${f.data}" alt="Foto ampliada">`; d.addEventListener('keydown', e => { if (e.key === 'Escape') d.remove(); }); document.body.appendChild(d); d.focus(); }
   function _refresh() { const area = document.getElementById('screen-area'); if (area) { area.innerHTML = render(); if (typeof Fotos !== 'undefined' && Fotos.hidratarMiniaturas) Fotos.hidratarMiniaturas(area); } }
   function _vacio() { return `<div class="coming-soon"><div class="coming-soon-icon">${AppIcons.block('barChart', 40)}</div><div class="coming-soon-title">Sin inspección activa</div><button class="btn btn-primary mt-md" onclick="Router.go('planificar')">Ir a Planificar</button></div>`; }
-  return { render, attach() {}, filtrarCategoria, filtrarCriterio, mostrarFoto, revisarCliente };
+  async function _syncAhora() {
+    if (document.hidden || typeof ScInformes === 'undefined' || !ScInformes.sincronizarHallazgosPortal) return;
+    const inspeccion = Store.getCurrentInspeccion();
+    if (!inspeccion) return;
+    try {
+      const cambio = await ScInformes.sincronizarHallazgosPortal(inspeccion);
+      if (cambio && (Router.current ? Router.current() : 'verificar') === 'verificar') _refresh();
+    } catch (e) { /* la sincronización se reintentará en el siguiente ciclo */ }
+  }
+  function attach() {
+    if (!_syncTimer) {
+      _syncAhora();
+      _syncTimer = setInterval(() => {
+        const pantalla = Router.current ? Router.current() : 'verificar';
+        if (pantalla !== 'verificar' && pantalla !== 'dashboard') {
+          clearInterval(_syncTimer); _syncTimer = null; return;
+        }
+        _syncAhora();
+      }, 15000);
+    }
+    if (!_syncEventsBound) {
+      const reintentar = () => { if (!document.hidden) _syncAhora(); };
+      document.addEventListener('visibilitychange', reintentar);
+      window.addEventListener('focus', reintentar);
+      _syncEventsBound = true;
+    }
+  }
+  return { render, attach, filtrarCategoria, filtrarCriterio, mostrarFoto, revisarCliente };
 })();

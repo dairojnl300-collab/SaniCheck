@@ -809,10 +809,21 @@ const ScInformes = (() => {
       const hallazgos = remoto?.estado_estructurado?.inspeccion?.hallazgos_criticos;
       if (!Array.isArray(hallazgos) || !hallazgos.length) return false;
       let cambio = false;
+      const buscarAspecto = (aspectoId) => {
+        for (const programa of inspeccion.programas || []) {
+          for (const base of programa.aspectos || []) {
+            if (base.id === aspectoId) return base;
+            const extra = (base.criterios_extra || []).find((x, i) =>
+              x.id === aspectoId || `${base.id}-extra-${i + 1}` === aspectoId
+            );
+            if (extra) return extra;
+          }
+        }
+        return null;
+      };
       hallazgos.forEach(h => {
         const estadoPortal = h.seguimiento || h.estado_accion || h.estado || '';
-        const aspecto = (inspeccion.programas || []).flatMap(p => p.aspectos || [])
-          .find(a => a.id === h.aspecto_id);
+        const aspecto = buscarAspecto(h.aspecto_id);
         if (!aspecto) return;
         if (estadoPortal === 'Verificado') {
           if (aspecto.evaluacion !== 'A' || aspecto.estado !== 'Cerrado') cambio = true;
