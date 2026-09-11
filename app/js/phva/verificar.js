@@ -3,8 +3,21 @@ const Verificar = (() => {
   let categoria = 'todas', criterio = 'todos';
   let _syncTimer = null;
   let _syncEventsBound = false;
+  function _normalizarFotos(inspeccion) {
+    (inspeccion?.programas || []).forEach(programa => (programa.aspectos || []).forEach(base => {
+      [base, ...(base.criterios_extra || [])].forEach((aspecto, index) => {
+        if (!Array.isArray(aspecto.fotografias)) return;
+        const aspectoId = aspecto.id || `${base.id}-extra-${index}`;
+        aspecto.fotografias.forEach((foto, fotoIndex) => {
+          if (!foto.id) foto.id = `portal-${aspectoId}-${fotoIndex + 1}`;
+          if (!foto.aspecto_id) foto.aspecto_id = aspectoId;
+        });
+      });
+    }));
+  }
   function render() {
     const inspeccion = Store.getCurrentInspeccion(); if (!inspeccion) return _vacio();
+    _normalizarFotos(inspeccion);
     if (typeof ScInformes !== 'undefined' && ScInformes.sincronizarHallazgosPortal) {
       ScInformes.sincronizarHallazgosPortal(inspeccion).then(cambio => {
         if (cambio) _refresh();
