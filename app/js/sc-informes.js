@@ -875,7 +875,9 @@ const ScInformes = (() => {
     });
   }
   function revisarAdminHallazgo(informeId, aspectoId, estado, observacion) {
-    return _rpc('sc_admin_revisar_hallazgo', { p_informe_id: informeId, p_aspecto_id: aspectoId, p_codigo: getCodigo(), p_estado: estado, p_observacion: observacion || null })
+    const estadoRpc = estado === 'cumple' ? 'cumple' : estado === 'ajustes_solicitados' ? 'ajustes_solicitados' : null;
+    if (!estadoRpc) return Promise.reject(new Error('Estado de revisión inválido: ' + String(estado)));
+    return _rpc('sc_admin_revisar_hallazgo', { p_informe_id: informeId, p_aspecto_id: aspectoId, p_codigo: getCodigo(), p_estado: estadoRpc, p_observacion: observacion || null })
       .then(resultado => { _portalSyncBlockedUntil = Date.now() + 3000; return resultado; });
   }
   function activarPortalInforme(informeId) {
