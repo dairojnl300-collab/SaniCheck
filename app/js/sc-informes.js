@@ -782,6 +782,13 @@ const ScInformes = (() => {
     return _rpc('sc_get_informe', { p_id: id, p_codigo: getCodigo() }).then(r => Array.isArray(r) ? r[0] : r);
   }
 
+  function getHallazgosEstado(informeId) {
+    return _rpc('sc_get_hallazgos_estado', {
+      p_informe_id: informeId,
+      p_codigo: getCodigo(),
+    }).then(r => Array.isArray(r) ? r : []);
+  }
+
   // Importa el resultado de la revisión del portal al informe local que está
   // abierto. El portal escribe sc_hallazgos_estado; el dashboard trabaja con
   // IndexedDB, por eso ambas fuentes deben reconciliarse al entrar a Verificar.
@@ -805,8 +812,7 @@ const ScInformes = (() => {
       });
       if (!fila?.id) return false;
       inspeccion.portal_informe_id = fila.id;
-      const remoto = await getInforme(fila.id);
-      const hallazgos = remoto?.estado_estructurado?.inspeccion?.hallazgos_criticos;
+      const hallazgos = await getHallazgosEstado(fila.id);
       if (!Array.isArray(hallazgos) || !hallazgos.length) return false;
       let cambio = false;
       const buscarAspecto = (aspectoId) => {
@@ -938,7 +944,7 @@ const ScInformes = (() => {
     guardarInforme, flushPendientes, bindAutoRetry, encolarPendiente,
     guardarBorrador, scheduleBorrador, flushBorradorPendiente, programarBorradorActual,
     revisarBorradoresRemotos, listBorradores, getBorrador,
-    listMisInformes, getInforme, updateInforme, deleteInforme,
+    listMisInformes, getInforme, getHallazgosEstado, updateInforme, deleteInforme,
     listAdminInformes, getAdminInforme, updateAdminInforme, revisarAdminHallazgo, activarPortalInforme, deleteAdminInforme,
     listUsuarios, crearUsuario,
     restaurarEstadoRemoto: _restaurarEstadoRemoto,
