@@ -66,6 +66,8 @@ const Actuar = (() => {
         <div style="display:flex;gap:var(--sp-sm);">
           <button class="btn btn-primary" data-acta-guardar-pdf style="flex:1;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
               onclick="Actuar.guardarPDF()">${AppIcons.row('fileText', 'GUARDAR PDF', 14)}</button>
+          <button class="btn btn-accent" data-acta-actualizar-informe style="flex:1;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
+              onclick="Actuar.actualizarInforme()">${AppIcons.row('refresh', 'ACTUALIZAR INFORME', 14)}</button>
           <button class="btn btn-accent" style="flex:1;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:6px;"
             onclick="Actuar.compartir()">${AppIcons.row('share', 'COMPARTIR', 14)}</button>
         </div>
@@ -992,6 +994,24 @@ const Actuar = (() => {
    * Este es el flujo estable usado por la versión comprobada en producción.
    */
   async function guardarPDF() {
+    return _guardarInformeEnSupabase({
+      selector: '[data-acta-guardar-pdf]',
+      procesando: 'Guardando…',
+      restaurar: 'GUARDAR PDF',
+      exito: 'PDF guardado en Registro de Informes',
+    });
+  }
+
+  async function actualizarInforme() {
+    return _guardarInformeEnSupabase({
+      selector: '[data-acta-actualizar-informe]',
+      procesando: 'Actualizando…',
+      restaurar: 'ACTUALIZAR INFORME',
+      exito: 'Informe actualizado y sincronizado',
+    });
+  }
+
+  async function _guardarInformeEnSupabase(opciones) {
     const inspeccion = Store.getCurrentInspeccion();
     if (!inspeccion) { Router.toast('Sin inspección activa'); return; }
 
@@ -1009,15 +1029,15 @@ const Actuar = (() => {
       return;
     }
 
-    const btn = document.querySelector('[data-acta-guardar-pdf]');
-    if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; btn.textContent = 'Guardando…'; }
+    const btn = document.querySelector(opciones.selector);
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; btn.textContent = opciones.procesando; }
     try {
       if (typeof Fotos !== 'undefined' && Fotos.esperarSubidas) {
         await Fotos.esperarSubidas();
       }
       const html = await _generarActaHtmlCompleta(inspeccion);
       const res = await ScInformes.guardarInforme(_crearPayloadInforme(inspeccion, html));
-      if (res.ok) Router.toast('PDF guardado en Registro de Informes');
+      if (res.ok) Router.toast(opciones.exito);
       else if (res.encolado) Router.toast('PDF guardado localmente · se sincronizará en Registro de Informes');
       else if (res.outboxUnavailable) Router.toast('No se pudo respaldar el PDF en Registro de Informes');
       else if (res.codigoInvalido) Router.toast('La sesión expiró; inicia sesión nuevamente');
@@ -1029,7 +1049,7 @@ const Actuar = (() => {
       if (btn) {
         btn.disabled = false;
         btn.style.opacity = '';
-        btn.innerHTML = AppIcons.row('fileText', 'GUARDAR PDF', 14);
+        btn.innerHTML = AppIcons.row('refresh', opciones.restaurar, 14);
       }
     }
   }
@@ -1544,5 +1564,5 @@ window.addEventListener('load', function() {
   }
 
 
-  return { render, attach, compartir, abrirPDF, generarPDF, guardarPDF, activarPortal, limpiarFirma, cargarFirmaImagen, guardarFirmas, editarFirmas, cancelarEdicionFirmas };
+  return { render, attach, compartir, abrirPDF, generarPDF, guardarPDF, actualizarInforme, activarPortal, limpiarFirma, cargarFirmaImagen, guardarFirmas, editarFirmas, cancelarEdicionFirmas };
 })();
