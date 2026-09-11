@@ -85,7 +85,23 @@ const Planificar = (() => {
     return (draft?.form?.[id] || '').trim();
   }
 
-  function _fv(id) { return _escAttr(_draftVal(id)); }
+  function _planificarVal(id) {
+    const activa = Store.getCurrentInspeccion();
+    if (activa) {
+      const valores = {
+        'inp-nombre': activa.establecimiento?.nombre,
+        'inp-nit': activa.establecimiento?.nit,
+        'inp-direccion': activa.establecimiento?.direccion,
+        'inp-profesional': activa.inspeccion?.inspector,
+        'inp-responsable-psb': activa.establecimiento?.responsable_sanitario,
+        'inp-fecha': activa.inspeccion?.fecha,
+      };
+      if (valores[id] !== undefined) return String(valores[id] || '');
+    }
+    return _draftVal(id);
+  }
+
+  function _fv(id) { return _escAttr(_planificarVal(id)); }
 
   function _restoreUiFromDraft() {
     const d = Store.getPlanificarDraft();
@@ -152,8 +168,9 @@ const Planificar = (() => {
 
   function render() {
     _restoreUiFromDraft();
+    const activa = Store.getCurrentInspeccion();
     if (!_venc) {
-      _vencEst = _currentEst();
+      _vencEst = activa?.establecimiento || _currentEst();
       _venc    = Vencimientos.getVencimientos(_vencEst);
     }
 
@@ -161,8 +178,10 @@ const Planificar = (() => {
       <img src="assets/icons/isotipo-transparente.png" class="watermark-bg" alt="">
       <div class="screen-header">
         ${PhvaIcons.badge('P', 'PLANIFICAR')}
-        <div class="screen-title">Nuevo Establecimiento</div>
-        <div class="screen-subtitle">Complete los datos para iniciar la inspección PSB</div>
+        <div class="screen-title">${activa ? 'Editar inspección' : 'Nuevo Establecimiento'}</div>
+        <div class="screen-subtitle">${activa
+          ? 'Revise o actualice los datos de la inspección activa'
+          : 'Complete los datos para iniciar la inspección PSB'}</div>
       </div>
 
       ${_renderAccordionCard('general', 'Datos Generales',
@@ -2449,8 +2468,23 @@ const Planificar = (() => {
     const val = id => document.getElementById(id)?.value.trim() || '';
     const nombre = val('inp-nombre'), nit = val('inp-nit'), direccion = val('inp-direccion'), profesional = val('inp-profesional'), responsablePsb = val('inp-responsable-psb'), fecha = val('inp-fecha');
     if (!nombre || !nit || !direccion || !profesional || !responsablePsb || !fecha) { Router.toast('Complete los seis campos obligatorios'); return; }
-    const establecimiento_id = _resolverEstablecimientoId(nombre, direccion);
-    const inspeccion = crearInspeccion({ nombre, nit, direccion, establecimiento_id, responsable_sanitario: responsablePsb, tipo: 'Preparación de alimentos' }, profesional);
+    const activa = Store.getCurrentInspeccion();
+    const establecimiento_id = activa?.establecimiento?.establecimiento_id
+      || _resolverEstablecimientoId(nombre, direccion);
+    const inspeccion = activa || crearInspeccion(
+      { nombre, nit, direccion, establecimiento_id, responsable_sanitario: responsablePsb, tipo: 'Preparación de alimentos' },
+      profesional
+    );
+    inspeccion.establecimiento = {
+      ...(inspeccion.establecimiento || {}),
+      nombre, nit, direccion, establecimiento_id,
+      responsable_sanitario: responsablePsb,
+    };
+    inspeccion.inspeccion = {
+      ...(inspeccion.inspeccion || {}),
+      inspector: profesional,
+      fecha,
+    };
     inspeccion.inspeccion.fecha = fecha;
     Store.upsertInspeccion(inspeccion); Store.clearPlanificarDraft(); Store.setUI({ aspectoIdx: 0, programaIdx: 0 });
     if (typeof ScInformes !== 'undefined' && ScInformes.programarBorradorActual) ScInformes.programarBorradorActual();
