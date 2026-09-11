@@ -683,11 +683,12 @@ const Actuar = (() => {
       const criterio = typeof Scores !== 'undefined' ? Scores.criterio(a) : a.evaluacion;
       const c = criterio === 'A' ? '#2E7D32' : criterio === 'I' ? '#D32F2F' : '#6B7280';
       const cumple = criterio === 'A', incumple = criterio === 'I';
+      const verificadoPortal = a._verificadoPortal === true;
       const aspectoId = a.aspecto_id || a.id || '';
       return `<div class="acta-card" data-aspecto-id="${_esc(aspectoId)}" data-aspecto-numero="${_esc(numero)}" style="padding:9px 10px;border:1px solid #E5E7EB;border-left:3px solid ${c};border-radius:6px;background:#fff;break-inside:avoid;page-break-inside:avoid;">
         <div class="acta-criterion-inline-title">${_esc(criterioTitulo || '')}</div>
         <div style="display:flex;gap:8px;align-items:flex-start;"><span data-resultado style="font-weight:800;color:${c};flex-shrink:0;font-size:11px;">[${_esc(criterio || '')}]</span><div style="flex:1;min-width:0;"><div class="acta-aspect-title">${numero}, Aspecto por verificar</div><div class="acta-aspect-norm">${_esc(a.norma || '')}</div></div></div>
-        ${cumple ? `<div data-linea-accion style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong data-etiqueta-accion>Observaciones:</strong> ${_esc(a.obs || 'Sin observaciones registradas.')}</div><div data-recomendaciones style="margin-top:4px;padding:5px 7px;background:#F0FAF5;border-radius:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Recomendaciones:</strong> ${_esc(a.recomendaciones || 'Sin recomendación registrada.')}</div>` : ''}
+        ${cumple ? `<div data-linea-accion style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong data-etiqueta-accion>${verificadoPortal ? 'Acción correctiva:' : 'Observaciones:'}</strong> ${_esc(verificadoPortal ? (a.accion || a.accion_correctiva || 'Sin acción correctiva registrada.') : (a.obs || 'Sin observaciones registradas.'))}</div><div data-recomendaciones style="margin-top:4px;padding:5px 7px;background:#F0FAF5;border-radius:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>${verificadoPortal ? 'Verificado por ECODESA' : 'Recomendaciones:'}</strong>${verificadoPortal ? '' : ` ${_esc(a.recomendaciones || 'Sin recomendación registrada.')}`}</div>` : ''}
         ${incumple ? `<div style="margin-top:7px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong>Hallazgo:</strong> ${_esc(a.hallazgo || a.obs || 'Sin hallazgo registrado.')}</div><div style="margin-top:4px;font-size:10px;color:#374151;text-align:justify;hyphens:auto;"><strong data-etiqueta-accion>Acción correctiva:</strong> ${_esc(a.accion || 'Sin acción correctiva registrada.')}</div><div style="margin-top:4px;font-size:10px;color:#374151;"><strong>Estado de acción:</strong> <span data-estado-accion>${_esc(a.estado || 'Abierto')}</span></div>` : ''}
         ${criterio === 'NA' ? `<div style="margin-top:7px;font-size:10px;color:#6B7280;text-align:justify;hyphens:auto;"><strong>Justificación N-A:</strong> ${_esc(a.obs || 'No aplica a este establecimiento.')}</div>` : ''}
         ${_renderFotosAspecto(a, options)}</div>`;
@@ -736,13 +737,38 @@ const Actuar = (() => {
     if (options.omitirFotosDetalle) return '';
     const fotos = aspecto.fotografias || [];
     if (!fotos.length) return '';
+
+    const aspectoId = String(aspecto.aspecto_id || aspecto.id || '');
+    const fotosCliente = fotos.filter(f =>
+      f.origen === 'Cliente' && String(f.aspecto_id || '') === aspectoId
+    );
+
+    if (!fotosCliente.length) {
+      return `
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px;">
+          ${fotos.map((foto, idx) => `
+            <figure style="margin:0;border:1px solid #E5E7EB;border-radius:5px;overflow:hidden;">
+              ${_imgFoto(foto, `Evidencia ${idx + 1} del aspecto evaluado`,
+                'width:100%;height:auto;max-height:280px;object-fit:contain;background:#F8FAF9;display:block;')}
+              <figcaption style="padding:3px 5px;background:#F9FAFB;font-size:9px;color:#6B7280;">Evidencia ${idx + 1}</figcaption>
+            </figure>`).join('')}
+        </div>`;
+    }
+
+    const fotosTecnico = fotos.filter(f => f.origen !== 'Cliente');
     return `
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px;">
-        ${fotos.map((foto, idx) => `
+        ${fotosTecnico.map(foto => `
           <figure style="margin:0;border:1px solid #E5E7EB;border-radius:5px;overflow:hidden;">
-            ${_imgFoto(foto, `Evidencia ${idx + 1} del aspecto evaluado`,
+            ${_imgFoto(foto, 'Evidencia original del profesional',
               'width:100%;height:auto;max-height:280px;object-fit:contain;background:#F8FAF9;display:block;')}
-            <figcaption style="padding:3px 5px;background:#F9FAFB;font-size:9px;color:#6B7280;">Evidencia ${idx + 1}</figcaption>
+            <figcaption style="padding:3px 5px;background:#F9FAFB;font-size:9px;color:#6B7280;">Antes</figcaption>
+          </figure>`).join('')}
+        ${fotosCliente.map(foto => `
+          <figure style="margin:0;border:1px solid #E5E7EB;border-radius:5px;overflow:hidden;">
+            ${_imgFoto(foto, 'Evidencia del cliente',
+              'width:100%;height:auto;max-height:280px;object-fit:contain;background:#F8FAF9;display:block;')}
+            <figcaption style="padding:3px 5px;background:#F9FAFB;font-size:9px;color:#6B7280;">Después</figcaption>
           </figure>`).join('')}
       </div>`;
   }
