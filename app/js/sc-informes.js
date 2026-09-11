@@ -832,7 +832,14 @@ const ScInformes = (() => {
         const aspecto = buscarAspecto(h.aspecto_id);
         if (!aspecto) return;
         if (estadoPortal === 'Verificado') {
-          if (aspecto.evaluacion !== 'A' || aspecto.estado !== 'Cerrado') cambio = true;
+          const yaVerificado = aspecto._verificadoPortal === true;
+          if (
+            aspecto.evaluacion !== 'A' ||
+            aspecto.estado !== 'Cerrado' ||
+            !yaVerificado
+          ) {
+            cambio = true;
+          }
           aspecto.evaluacion = 'A'; aspecto.criterio = 'A'; aspecto.estado = 'Cerrado';
           aspecto._verificadoPortal = true;
         }

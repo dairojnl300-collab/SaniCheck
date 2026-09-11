@@ -1061,6 +1061,18 @@ const Actuar = (() => {
       if (typeof Fotos !== 'undefined' && Fotos.esperarSubidas) {
         await Fotos.esperarSubidas();
       }
+
+      if (typeof ScInformes.sincronizarHallazgosPortal === 'function') {
+        try {
+          await ScInformes.sincronizarHallazgosPortal(inspeccion);
+        } catch (error) {
+          console.warn(
+            '[Actuar] No se pudo sincronizar el estado del Portal; se continuará con los datos locales',
+            error
+          );
+        }
+      }
+
       const html = await _generarActaHtmlCompleta(inspeccion);
       const res = await ScInformes.guardarInforme(_crearPayloadInforme(inspeccion, html));
       if (res.ok) Router.toast(opciones.exito);
