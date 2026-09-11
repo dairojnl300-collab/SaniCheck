@@ -35,6 +35,24 @@ const FotosStorage = (() => {
   let _idbReady = null;
   let _onlineBound = false;
   let _onCambioPendientes = null;
+  // Evita saturar el navegador, el Service Worker y Storage cuando se
+  // agregan muchas evidencias seguidas. La cola conserva todas las fotos;
+  // sólo limita las solicitudes simultáneas.
+  const MAX_SUBIDAS_SIMULTANEAS = 3;
+  let _subidasActivas = 0;
+  const _turnosSubida = [];
+
+  async function _conTurnoSubida(tarea) {
+    if (_subidasActivas >= MAX_SUBIDAS_SIMULTANEAS) {
+      await new Promise(resolve => _turnosSubida.push(resolve));
+    }
+    _subidasActivas++;
+    try { return await tarea(); }
+    finally {
+      _subidasActivas--;
+      _turnosSubida.shift()?.();
+    }
+  }
 
   function _cfg() {
     const c = window.SC_INFORMES_CONFIG;
@@ -173,7 +191,7 @@ const FotosStorage = (() => {
     const objectPath = path(tecnicoId, informeId, fotoId);
     if (navigator.onLine) {
       try {
-        await _subirAhora(blob, objectPath);
+        await _conTurnoSubida(() => _subirAhora(blob, objectPath));
         return { ok: true, path: objectPath, encolado: false };
       } catch (e) {
         console.warn('[FotosStorage] subida falló, se encola', e);
@@ -194,7 +212,7 @@ const FotosStorage = (() => {
     const items = await _listarPendientes();
     for (const item of items) {
       try {
-        await _subirAhora(item.blob, item.path);
+        await _conTurnoSubida(() => _subirAhora(item.blob, item.path));
         await _retirar(item.id);
         n++;
       } catch (e) {
