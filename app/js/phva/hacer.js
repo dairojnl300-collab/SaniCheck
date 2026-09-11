@@ -49,7 +49,13 @@ const Hacer = (() => {
   function agregarCriterio() {
     const s = _state(); if (!s) return;
     if (!Array.isArray(s.aspecto.criterios_extra)) s.aspecto.criterios_extra = [];
-    s.aspecto.criterios_extra.push({ criterio: null });
+    // Id fijo al crear, no por posición: si luego se elimina un aspecto
+    // adicional anterior, los que quedan no deben reindexarse (ver Hallazgos.idExtra).
+    const usados = s.aspecto.criterios_extra
+      .map(c => parseInt((/-extra-(\d+)$/.exec(c.id || '') || [])[1], 10))
+      .filter(n => !isNaN(n));
+    const siguiente = (usados.length ? Math.max(...usados) : s.aspecto.criterios_extra.length) + 1;
+    s.aspecto.criterios_extra.push({ criterio: null, id: `${s.aspecto.id}-extra-${siguiente}` });
     Store.upsertInspeccion(s.inspeccion); _programarBorrador(s, { aspectKey: `${s.programa.id}:${s.aspecto.id}:base` }); _refresh();
     Router.toast('Aspecto por verificar agregado');
   }
