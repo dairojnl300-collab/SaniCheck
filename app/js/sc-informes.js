@@ -873,6 +873,19 @@ const ScInformes = (() => {
         const estadoPortal = h.seguimiento || h.estado_accion || h.estado || '';
         const aspecto = buscarAspecto(h.aspecto_id);
         if (!aspecto) return;
+        if (!h.foto_url) {
+          const fotosAntes = aspecto.fotografias || [];
+          const fotosDespues = fotosAntes.map(f =>
+            f.origen === 'Cliente' && f.superada !== true && f.eliminada !== true &&
+            String(f.aspecto_id || '') === String(h.aspecto_id || '')
+              ? { ...f, eliminada: true }
+              : f
+          );
+          if (fotosDespues.some((f, i) => f !== fotosAntes[i])) {
+            aspecto.fotografias = fotosDespues;
+            cambio = true;
+          }
+        }
         if (estadoPortal === 'Verificado') {
           const yaVerificado = aspecto._verificadoPortal === true;
           if (
