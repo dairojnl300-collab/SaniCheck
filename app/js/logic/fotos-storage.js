@@ -206,20 +206,40 @@ const FotosStorage = (() => {
     }
   }
 
-  async function reintentarCola() {
-    if (!navigator.onLine) return 0;
+  async function reintentarCola(maxIntentos = 3) {
     let n = 0;
-    const items = await _listarPendientes();
+    let items = await _listarPendientes();
+
     for (const item of items) {
-      try {
-        await _conTurnoSubida(() => _subirAhora(item.blob, item.path));
-        await _retirar(item.id);
-        n++;
-      } catch (e) {
-        console.warn('[FotosStorage] reintento de cola falló', item.path, e.message);
+      let subido = false;
+
+      for (let intento = 1; intento <= maxIntentos && navigator.onLine; intento++) {
+        try {
+          await _conTurnoSubida(() => _subirAhora(item.blob, item.path));
+          await _retirar(item.id);
+          n++;
+          subido = true;
+          break;
+        } catch (e) {
+          console.warn(
+            `[FotosStorage] intento ${intento}/${maxIntentos} falló`,
+            item.path,
+            e.message
+          );
+        }
+      }
+
+      if (!subido) {
+        console.warn('[FotosStorage] foto pendiente después de reintentos', item.path);
       }
     }
-    return n;
+
+    items = await _listarPendientes();
+    return {
+      subidas: n,
+      pendientes: items.length,
+      rutasPendientes: items.map(item => item.path),
+    };
   }
 
   function bindAutoRetry() {
@@ -232,5 +252,6 @@ const FotosStorage = (() => {
 
   return {
     path, subirFoto, descargarFotoBlob, reintentarCola, bindAutoRetry, onCambioPendientes,
+    listarPendientes: _listarPendientes,
   };
 })();
