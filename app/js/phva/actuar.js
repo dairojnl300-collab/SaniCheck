@@ -1562,6 +1562,7 @@ window.addEventListener('load', function() {
       }
       inspeccion.firmas[ft.key] = datos;
     });
+    inspeccion.firmas_actualizado_en = new Date().toISOString();
     Store.upsertInspeccion(inspeccion);
     if (typeof ScInformes !== 'undefined' && ScInformes.programarBorradorActual) ScInformes.programarBorradorActual();
     _forceCaptura = false;
