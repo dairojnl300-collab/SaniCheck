@@ -479,7 +479,7 @@ const ScInformes = (() => {
     if (!value || typeof value !== 'object') return value;
     const out = {};
     Object.keys(value).forEach(key => {
-      if (key === 'fotografias' || key === 'firmas') return;
+      if (key === 'fotografias') return;
       out[key] = _clonarSinFotos(value[key]);
     });
     return out;
@@ -517,6 +517,8 @@ const ScInformes = (() => {
       estado_general: inspeccion.estado_general,
       hallazgos_criticos: inspeccion.hallazgos_criticos,
       score: inspeccion.score,
+      firmas: inspeccion.firmas,
+      firmas_actualizado_en: inspeccion.firmas_actualizado_en,
       creado_en: inspeccion.creado_en,
       actualizado_en: inspeccion.actualizado_en,
       version_app: inspeccion.version_app,
@@ -713,7 +715,20 @@ const ScInformes = (() => {
     const actual = (typeof Store !== 'undefined' && Store.get) ? Store.get() : { inspecciones: [], ui: {} };
     const local = (actual.inspecciones || []).find(i => i.id === localId) || null;
     const restaurada = { ...(local || {}), ...remoto, id: localId };
-    if (local?.firmas && !restaurada.firmas) restaurada.firmas = local.firmas;
+
+    const remotoFirmasMs = Date.parse(remoto.firmas_actualizado_en || '') || 0;
+    const localFirmasMs = Date.parse(local?.firmas_actualizado_en || '') || 0;
+    const remotoTieneFirmas = !!remoto.firmas;
+    const localTieneFirmas = !!local?.firmas;
+
+    if (remotoTieneFirmas && (!localTieneFirmas || remotoFirmasMs >= localFirmasMs)) {
+      restaurada.firmas = remoto.firmas;
+      restaurada.firmas_actualizado_en = remoto.firmas_actualizado_en || null;
+    } else if (localTieneFirmas) {
+      restaurada.firmas = local.firmas;
+      restaurada.firmas_actualizado_en = local.firmas_actualizado_en || null;
+    }
+
     _conservarFotografias(local, restaurada);
     restaurada.actualizado_en = new Date().toISOString();
     const inspecciones = (actual.inspecciones || []).filter(i => i.id !== localId);
