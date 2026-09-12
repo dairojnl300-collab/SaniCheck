@@ -243,13 +243,27 @@ const Fotos = (() => {
   function hidratarMiniaturas(root) {
     const scope = root || document;
     const imgs = scope.querySelectorAll('img[data-foto-path]:not([src])');
-    imgs.forEach(img => {
+    const cargar = img => {
+      if (img.dataset.fotoHydrated === 'true') return;
       const p = img.getAttribute('data-foto-path');
       if (!p || typeof FotosStorage === 'undefined') return;
+      img.dataset.fotoHydrated = 'true';
       FotosStorage.descargarFotoBlob(p).then(blob => {
         img.src = URL.createObjectURL(blob);
       }).catch(() => {});
-    });
+    };
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          cargar(entry.target);
+          observer.unobserve(entry.target);
+        });
+      }, { rootMargin: '250px' });
+      imgs.forEach(img => observer.observe(img));
+    } else {
+      imgs.forEach(cargar);
+    }
   }
 
   return { capturar, eliminar, renderThumbnails, hidratarMiniaturas, esperarSubidas };
