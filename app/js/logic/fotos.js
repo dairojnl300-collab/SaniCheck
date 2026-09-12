@@ -11,8 +11,17 @@ const Fotos = (() => {
   const _previewCache = new Map();
   const _subidasPendientes = new Set();
 
-  function esperarSubidas() {
-    return Promise.allSettled([..._subidasPendientes]);
+  async function esperarSubidas() {
+    await Promise.allSettled([..._subidasPendientes]);
+
+    if (
+      typeof FotosStorage === 'undefined' ||
+      typeof FotosStorage.reintentarCola !== 'function'
+    ) {
+      return { pendientes: 0, rutasPendientes: [] };
+    }
+
+    return FotosStorage.reintentarCola(3);
   }
 
   function _ensureInput() {

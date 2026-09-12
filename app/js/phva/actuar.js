@@ -1059,7 +1059,20 @@ const Actuar = (() => {
     if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; btn.textContent = opciones.procesando; }
     try {
       if (typeof Fotos !== 'undefined' && Fotos.esperarSubidas) {
-        await Fotos.esperarSubidas();
+        const resultadoFotos = await Fotos.esperarSubidas();
+        const pendientes = Number(resultadoFotos?.pendientes || 0);
+
+        if (pendientes > 0) {
+          const continuar = window.confirm(
+            `${pendientes} fotos no se pudieron subir y no aparecerán en este informe.\n\n` +
+            '¿Deseas continuar de todas formas?'
+          );
+
+          if (!continuar) {
+            Router.toast('Generación cancelada: hay fotos pendientes de subida');
+            return;
+          }
+        }
       }
 
       if (typeof ScInformes.sincronizarHallazgosPortal === 'function') {
