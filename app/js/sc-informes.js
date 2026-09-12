@@ -472,14 +472,24 @@ const ScInformes = (() => {
     }
   }
 
-  // ── Borrador incremental: texto estructurado, nunca fotografías ─────────
+  // ── Borrador incremental: conserva referencias de fotografías, nunca blobs ─
 
   function _clonarSinFotos(value) {
     if (Array.isArray(value)) return value.map(_clonarSinFotos);
     if (!value || typeof value !== 'object') return value;
     const out = {};
     Object.keys(value).forEach(key => {
-      if (key === 'fotografias') return;
+      if (key === 'fotografias') {
+        out[key] = Array.isArray(value[key])
+          ? value[key].map(foto => {
+              const referencia = {};
+              ['id', 'path', 'foto_url', 'aspecto_id', 'origen', 'tomada_en', 'estado_portal']
+                .forEach(campo => { if (foto[campo] != null) referencia[campo] = foto[campo]; });
+              return referencia;
+            }).filter(foto => foto.path || foto.foto_url)
+          : [];
+        return;
+      }
       out[key] = _clonarSinFotos(value[key]);
     });
     return out;
@@ -679,6 +689,18 @@ const ScInformes = (() => {
 
   function _conservarFotografias(local, restaurada) {
     if (!local || !restaurada) return;
+    const combinar = (locales, remotas) => {
+      const resultado = Array.isArray(remotas) ? [...remotas] : [];
+      (Array.isArray(locales) ? locales : []).forEach(localFoto => {
+        const clave = localFoto.path || localFoto.foto_url || localFoto.id;
+        const indice = resultado.findIndex(remotaFoto =>
+          (remotaFoto.path || remotaFoto.foto_url || remotaFoto.id) === clave
+        );
+        if (indice < 0) resultado.push(localFoto);
+        else resultado[indice] = { ...resultado[indice], ...localFoto };
+      });
+      return resultado;
+    };
     const programas = restaurada.programas || [];
     (local.programas || []).forEach(localPrograma => {
       const programa = programas.find(p => p.id === localPrograma.id);
@@ -686,11 +708,16 @@ const ScInformes = (() => {
       (localPrograma.aspectos || []).forEach(localAspecto => {
         const aspecto = _buscarAspecto(programa, localAspecto);
         if (!aspecto || !Array.isArray(localAspecto.fotografias)) return;
-        aspecto.fotografias = localAspecto.fotografias;
+        aspecto.fotografias = combinar(localAspecto.fotografias, aspecto.fotografias);
         (localAspecto.criterios_extra || []).forEach((extra, index) => {
           if (!Array.isArray(extra.fotografias)) return;
           if (!Array.isArray(aspecto.criterios_extra)) aspecto.criterios_extra = [];
-          if (aspecto.criterios_extra[index]) aspecto.criterios_extra[index].fotografias = extra.fotografias;
+          if (aspecto.criterios_extra[index]) {
+            aspecto.criterios_extra[index].fotografias = combinar(
+              extra.fotografias,
+              aspecto.criterios_extra[index].fotografias
+            );
+          }
         });
       });
     });

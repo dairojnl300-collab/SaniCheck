@@ -729,7 +729,7 @@ const Actuar = (() => {
   // funcionando igual que antes.
   function _imgFoto(foto, alt, style) {
     return foto.path
-      ? `<img data-foto-path="${_esc(foto.path)}" alt="${_esc(alt)}" style="${style}">`
+      ? `<img loading="lazy" decoding="async" data-foto-path="${_esc(foto.path)}" alt="${_esc(alt)}" style="${style}">`
       : `<img src="${foto.data || ''}" alt="${_esc(alt)}" style="${style}">`;
   }
 
