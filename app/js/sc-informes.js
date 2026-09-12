@@ -886,7 +886,16 @@ const ScInformes = (() => {
           aspecto._verificadoPortal = true;
         }
         if (h.foto_url && !(aspecto.fotografias || []).some(f => f.path === h.foto_url)) {
-          aspecto.fotografias = [...(aspecto.fotografias || []), { id: 'portal-' + h.id, aspecto_id: h.aspecto_id, path: h.foto_url, tomada_en: h.actualizado_en || h.created_at || h.subido_en, origen: 'Cliente', estado_portal: estadoPortal }];
+          const fotosAnteriores = (aspecto.fotografias || []).map(f =>
+            f.origen === 'Cliente' &&
+            String(f.aspecto_id || '') === String(h.aspecto_id || '')
+              ? { ...f, superada: true }
+              : f
+          );
+          aspecto.fotografias = [
+            ...fotosAnteriores,
+            { id: 'portal-' + h.id, aspecto_id: h.aspecto_id, path: h.foto_url, tomada_en: h.actualizado_en || h.created_at || h.subido_en, origen: 'Cliente', estado_portal: estadoPortal, superada: false }
+          ];
           cambio = true;
         }
         const fotoPortal = (aspecto.fotografias || []).find(f => f.path === h.foto_url && f.origen === 'Cliente');
