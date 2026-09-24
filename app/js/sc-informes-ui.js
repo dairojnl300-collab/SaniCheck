@@ -249,6 +249,45 @@ const ScInformesUI = (() => {
     return { html: salida, urls };
   }
 
+  function _esperarImagenesParaImpresion(doc, timeoutMs = 7000) {
+    const imagenes = Array.from(doc?.images || []);
+    if (!imagenes.length) return Promise.resolve();
+
+    const esperarImagen = img => {
+      img.loading = 'eager';
+
+      if (img.complete) {
+        return typeof img.decode === 'function'
+          ? img.decode().catch(() => {})
+          : Promise.resolve();
+      }
+
+      return new Promise(resolve => {
+        let terminado = false;
+        const finalizar = () => {
+          if (terminado) return;
+          terminado = true;
+          img.removeEventListener('load', finalizar);
+          img.removeEventListener('error', finalizar);
+
+          if (typeof img.decode === 'function') {
+            img.decode().catch(() => {}).finally(resolve);
+          } else {
+            resolve();
+          }
+        };
+
+        img.addEventListener('load', finalizar, { once: true });
+        img.addEventListener('error', finalizar, { once: true });
+      });
+    };
+
+    return Promise.race([
+      Promise.all(imagenes.map(esperarImagen)),
+      new Promise(resolve => setTimeout(resolve, timeoutMs)),
+    ]);
+  }
+
   async function _insertarEvidenciaInline(iframe, items) {
     if (!iframe || !Array.isArray(items) || !items.length) return;
     await new Promise(resolve => {
@@ -379,9 +418,9 @@ const ScInformesUI = (() => {
           win.document.open();
           win.document.write(htmlSeguro);
           win.document.close();
-          setTimeout(() => {
+          _esperarImagenesParaImpresion(win.document, 7000).then(() => {
             try { win.focus(); win.print(); } catch (e) { Router.toast('No se pudo abrir la impresión'); }
-          }, 700);
+          });
         } catch (e) {
           try { win.close(); } catch (ignore) {}
           Router.toast('No se pudo preparar el PDF');
