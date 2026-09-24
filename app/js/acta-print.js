@@ -73,8 +73,8 @@ const ActaPrint = (() => {
 
       @media print {
         html, body { width: auto; min-height: 0; background: #fff; }
-        body { margin: 0; orphans: 4; widows: 4; }
-        ${mobile ? 'body.mobile-pdf .btn-save, body.mobile-pdf .phva-topbar, body.mobile-pdf .acta-actions, body.mobile-pdf #app-toast { display: none !important; }' : ''}
+        body { margin: 0; padding-top: 0 !important; orphans: 4; widows: 4; }
+        ${mobile ? 'body.mobile-pdf .btn-save, body.mobile-pdf .phva-topbar, body.mobile-pdf .acta-actions, body.mobile-pdf .no-print, body.mobile-pdf .pdf-return-controls, body.mobile-pdf #app-toast { display: none !important; }' : ''}
         .acta-wrap {
           box-sizing: border-box; width: 100%; max-width: 170mm; margin: 0 auto; padding: 0;
         }
@@ -124,6 +124,7 @@ const ActaPrint = (() => {
   function _limpiarCssHistorico(doc) {
     doc.querySelectorAll(`style#${STYLE_ID}, style[data-acta-print]`).forEach(style => style.remove());
     doc.querySelectorAll('style').forEach(style => {
+      if (style.hasAttribute('data-pdf-navigation')) return;
       try {
         const sheet = style.sheet;
         if (!sheet) return;

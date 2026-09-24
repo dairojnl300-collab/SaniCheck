@@ -1,7 +1,7 @@
 // Service Worker — SaniCheck — Offline-first completo
 
-const APP_VERSION = '4.17.9';
-const BUILD_HASH = 'c5f109869fc1';
+const APP_VERSION = '4.17.10';
+const BUILD_HASH = 'a0307472b06f';
 const CACHE = 'sanicheck-' + BUILD_HASH;
 
 const ASSETS = [
@@ -22,7 +22,7 @@ const ASSETS = [
   './js/sc-informes-config.secrets.js',
   './js/sc-informes-config.js',
   './js/sc-informes.js',
-  './js/acta-print.js',
+  './js/acta-print.js?v=4.17.10-print',
   './js/sc-informes-ui.js',
   './js/about.js',
   './js/phva-icons.js',
