@@ -435,17 +435,9 @@ const ScInformesUI = (() => {
           win.document.open();
           win.document.write(htmlSeguro);
           win.document.close();
-          if (esMovil && win.document.body) {
-            win.document.body.classList.add('mobile-pdf');
-            Array.from(
-              win.document.querySelectorAll('.acta-desktop-detail .acta-card')
-            ).forEach((tarjeta, indice) => {
-              if (indice > 0 && indice % 6 === 0) {
-                tarjeta.classList.add('mobile-pdf-page-break');
-              }
-            });
-          }
+          ActaPrint.aplicar(win.document);
           _esperarImagenesParaImpresion(win.document, 7000).then(() => {
+            if (esMovil) ActaPrint.paginarMovil(win.document);
             try { win.focus(); win.print(); } catch (e) { Router.toast('No se pudo abrir la impresión'); }
           });
         } catch (e) {
@@ -469,6 +461,7 @@ const ScInformesUI = (() => {
         printFrame.srcdoc = htmlSeguro;
         printFrame.onload = () => {
           try {
+            ActaPrint.aplicar(printFrame.contentDocument);
             printFrame.contentWindow.focus();
             printFrame.contentWindow.onafterprint = limpiarlo;
             printFrame.contentWindow.print();

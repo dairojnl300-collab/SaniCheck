@@ -8,6 +8,7 @@
     "generate-portal-config": "node scripts/generate-portal-config-secrets.js",
     "build": "node scripts/sync-version.js && node scripts/generate-portal-config-secrets.js && node build.js",
     "dev": "python -m http.server 8080 --directory app",
+    "test:acta-print": "node scripts/test-acta-print-pagination.mjs",
     "verify-sw": "node scripts/verify-sw-offline.mjs"
   },
   "devDependencies": {
