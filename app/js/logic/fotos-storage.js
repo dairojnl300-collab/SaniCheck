@@ -64,6 +64,10 @@ const FotosStorage = (() => {
     return `${tecnicoId}/${informeId}/${fotoId}.jpg`;
   }
 
+  function thumbnailPath(objectPath) {
+    return objectPath.replace(/\.[a-z0-9]+$/i, '_thumb.jpg');
+  }
+
   function _headers(extra) {
     const cfg = _cfg();
     return {
@@ -114,6 +118,32 @@ const FotosStorage = (() => {
       const salida = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', .8));
       return salida && salida.size < blob.size ? salida : blob;
     } catch (_) { return blob; }
+  }
+
+  async function generarMiniatura(blob) {
+    if (!blob || !/^image\/(jpeg|png|webp)$/i.test(blob.type || '')) {
+      throw new Error('La foto no tiene un formato compatible para miniatura');
+    }
+    let bitmap;
+    try {
+      bitmap = await createImageBitmap(blob);
+      const escala = Math.min(1, 400 / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(bitmap.width * escala));
+      canvas.height = Math.max(1, Math.round(bitmap.height * escala));
+      const ctx = canvas.getContext('2d', { alpha: false });
+      if (!ctx) throw new Error('No se pudo preparar el canvas de miniatura');
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const miniatura = await new Promise((resolve, reject) => {
+        canvas.toBlob(blobResult => {
+          if (blobResult) resolve(blobResult);
+          else reject(new Error('No se pudo codificar la miniatura'));
+        }, 'image/jpeg', 0.7);
+      });
+      return miniatura;
+    } finally {
+      if (bitmap && typeof bitmap.close === 'function') bitmap.close();
+    }
   }
 
   async function descargarFotoBlob(objectPath) {
@@ -189,17 +219,28 @@ const FotosStorage = (() => {
   async function subirFoto(blob, tecnicoId, informeId, fotoId) {
     blob = await optimizarFoto(blob);
     const objectPath = path(tecnicoId, informeId, fotoId);
+    const thumbPath = thumbnailPath(objectPath);
+    let thumbBlob;
+    try {
+      thumbBlob = await generarMiniatura(blob);
+    } catch (e) {
+      console.warn('[FotosStorage] no se pudo generar miniatura; se conserva la original', e);
+    }
     if (navigator.onLine) {
       try {
         await _conTurnoSubida(() => _subirAhora(blob, objectPath));
-        return { ok: true, path: objectPath, encolado: false };
+        if (thumbBlob) {
+          try { await _conTurnoSubida(() => _subirAhora(thumbBlob, thumbPath)); }
+          catch (e) { console.warn('[FotosStorage] miniatura pendiente', thumbPath, e); }
+        }
+        return { ok: true, path: objectPath, thumbPath, encolado: false };
       } catch (e) {
         console.warn('[FotosStorage] subida falló, se encola', e);
       }
     }
     try {
-      await _encolar({ id: fotoId, path: objectPath, blob, creadoEn: new Date().toISOString() });
-      return { ok: false, path: objectPath, encolado: true };
+      await _encolar({ id: fotoId, path: objectPath, blob, thumbPath, thumbBlob, creadoEn: new Date().toISOString() });
+      return { ok: false, path: objectPath, thumbPath, encolado: true };
     } catch (e) {
       console.warn('[FotosStorage] no se pudo encolar la foto', e);
       return { ok: false, path: objectPath, encolado: false, error: e.message };
@@ -216,6 +257,10 @@ const FotosStorage = (() => {
       for (let intento = 1; intento <= maxIntentos && navigator.onLine; intento++) {
         try {
           await _conTurnoSubida(() => _subirAhora(item.blob, item.path));
+          if (item.thumbBlob && item.thumbPath) {
+            try { await _conTurnoSubida(() => _subirAhora(item.thumbBlob, item.thumbPath)); }
+            catch (e) { console.warn('[FotosStorage] miniatura pendiente en reintento', item.thumbPath, e); }
+          }
           await _retirar(item.id);
           n++;
           subido = true;
