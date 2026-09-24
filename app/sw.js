@@ -22,6 +22,7 @@ const ASSETS = [
   './js/sc-informes-config.secrets.js',
   './js/sc-informes-config.js',
   './js/sc-informes.js',
+  './js/acta-print.js',
   './js/sc-informes-ui.js',
   './js/about.js',
   './js/phva-icons.js',

@@ -35,25 +35,7 @@ const Actuar = (() => {
       ps.id = 'acta-print-style';
       document.head.appendChild(ps);
     }
-    ps.textContent = `
-      @media print {
-        .phva-topbar, .acta-actions, #app-toast { display: none !important; }
-        #app { max-width: 100% !important; box-shadow: none !important; }
-        #screen-area { overflow: visible !important; }
-        body { background: #fff !important; orphans: 4; widows: 4; }
-        @page { margin: 1.5cm; }
-        .acta-seccion    { page-break-inside: avoid; break-inside: avoid; }
-        .acta-card       { page-break-inside: avoid; break-inside: avoid; }
-        .acta-hallazgo   { page-break-inside: avoid; break-inside: avoid; }
-        .acta-chart-wrap { page-break-inside: avoid; break-inside: avoid; }
-        .acta-firmas     { page-break-inside: avoid; break-inside: avoid; }
-        * { -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important; }
-      }
-      /* La variante móvil solo se usa dentro del documento PDF generado. */
-      .acta-desktop-detail { display:block !important; }
-      .acta-mobile-detail { display:none !important; }
-    `;
+    ps.textContent = ActaPrint.css();
 
     return `
       <div class="acta-actions" style="padding:var(--sp-md);display:flex;
@@ -1135,7 +1117,9 @@ const Actuar = (() => {
     const chartJsPromise = sorted.length
       ? fetch('assets/vendor/chart.umd.min.js').then(r => r.ok ? r.text() : '').catch(() => '')
       : Promise.resolve('');
-    return chartJsPromise.then(chartJs => _buildActaHTML(inspeccion, base, sorted, chartJs, options));
+    return chartJsPromise
+      .then(chartJs => _buildActaHTML(inspeccion, base, sorted, chartJs, options))
+      .then(html => ActaPrint.normalizarHtml(html));
   }
 
   /**
@@ -1339,81 +1323,8 @@ window.addEventListener('load', function() {
       font-size: 14px; font-weight: 700; cursor: pointer; font-family: Arial, sans-serif;
       letter-spacing: 0.02em; }
     .btn-save:hover { background: #2D6A4F; }
-    @media print {
-      html, body { width: auto; min-height: 0; background: #fff; }
-      body { margin: 0; }
-      .acta-wrap { width: 100%; max-width: 170mm; margin: 0 auto; padding: 0; }
-      .acta-seccion { margin-bottom: 14px; }
-      .acta-programa { break-inside: auto; page-break-inside: auto; }
-      /* El PDF usa flujo block/flex como ProyeCar.
-         No se usa Grid/display:contents para paginar tarjetas. */
-      .acta-desktop-detail .acta-criteria-grid,
-      .acta-desktop-detail .acta-criterion-group,
-      .acta-desktop-detail .acta-aspectos-stack {
-        display: block !important;
-        width: auto;
-        min-width: 0;
-      }
-      .acta-desktop-detail .acta-criterion-group {
-        margin: 0 0 12px;
-        break-inside: auto;
-        page-break-inside: auto;
-      }
-      .acta-criterion-title { break-after: avoid; page-break-after: avoid; }
-      .acta-desktop-detail .acta-card {
-        display: block;
-        width: 100%;
-        align-self: auto;
-        min-height: 0 !important;
-        height: auto !important;
-        margin: 0 0 12px;
-        overflow: visible;
-        break-inside: avoid; page-break-inside: avoid;
-      }
-      body.mobile-pdf .acta-desktop-detail .mobile-pdf-page-break {
-        break-before: page;
-        page-break-before: always;
-      }
-      .acta-desktop-detail .acta-card figure,
-      .acta-desktop-detail .acta-card img,
-      table tr {
-        break-inside: avoid; page-break-inside: avoid;
-      }
-      .acta-desktop-detail .acta-evidence-grid {
-        display: flex !important;
-        flex-wrap: wrap;
-        align-items: flex-start;
-        gap: 6px;
-        max-width: 100%;
-        break-inside: avoid;
-        page-break-inside: avoid;
-      }
-      .acta-desktop-detail .acta-evidence-grid > figure {
-        display: block;
-        flex: 1 1 calc(50% - 3px);
-        width: calc(50% - 3px);
-        max-width: calc(50% - 3px);
-        min-width: 0;
-        break-inside: avoid;
-        page-break-inside: avoid;
-      }
-      .acta-desktop-detail .acta-card figure img {
-        width: 100%;
-        max-width: 100%;
-        max-height: 96px !important;
-        object-fit: contain !important;
-      }
-      thead { display: table-header-group; }
-      h1, h2, h3, .acta-programa-title, .acta-seccion > .section-title {
-        break-after: avoid; page-break-after: avoid;
-      }
-      .acta-card, .acta-card > div, .acta-card figure, .acta-card img { max-width: 100%; }
-      .acta-card { overflow-wrap: anywhere; word-break: break-word; }
-      .btn-save { display: none !important; }
-      @page { size: A4; margin: 2.5cm 2cm; }
-      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    }
   </style>
+  ${ActaPrint.styleTag()}
   ${chartScript}
 </head>
 <body>
