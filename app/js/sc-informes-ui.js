@@ -435,7 +435,7 @@ const ScInformesUI = (() => {
           win.document.open();
           win.document.write(htmlSeguro);
           win.document.close();
-          ActaPrint.aplicar(win.document);
+          ActaPrint.aplicar(win.document, { mobile: true });
           _esperarImagenesParaImpresion(win.document, 7000).then(() => {
             if (esMovil) ActaPrint.paginarMovil(win.document);
             try { win.focus(); win.print(); } catch (e) { Router.toast('No se pudo abrir la impresión'); }
@@ -461,7 +461,6 @@ const ScInformesUI = (() => {
         printFrame.srcdoc = htmlSeguro;
         printFrame.onload = () => {
           try {
-            ActaPrint.aplicar(printFrame.contentDocument);
             printFrame.contentWindow.focus();
             printFrame.contentWindow.onafterprint = limpiarlo;
             printFrame.contentWindow.print();

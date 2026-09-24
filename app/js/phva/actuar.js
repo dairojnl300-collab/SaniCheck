@@ -35,7 +35,7 @@ const Actuar = (() => {
       ps.id = 'acta-print-style';
       document.head.appendChild(ps);
     }
-    ps.textContent = ActaPrint.css();
+    ps.textContent = ActaPrint.css({ mobile: false });
 
     return `
       <div class="acta-actions" style="padding:var(--sp-md);display:flex;
@@ -1324,7 +1324,7 @@ window.addEventListener('load', function() {
       letter-spacing: 0.02em; }
     .btn-save:hover { background: #2D6A4F; }
   </style>
-  ${ActaPrint.styleTag()}
+  ${ActaPrint.styleTag({ mobile: false })}
   ${chartScript}
 </head>
 <body>

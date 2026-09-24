@@ -9,11 +9,12 @@ const ActaPrint = (() => {
   const PAGE_HEIGHT_MM = 247;
   const MAX_CARDS = 6;
 
-  function css() {
+  function css({ mobile = true } = {}) {
     return `
       @page { size: A4; margin: 25mm 20mm; }
-      .acta-mobile-detail { display: none !important; }
-      .acta-desktop-detail { display: block !important; }
+      ${mobile ? `
+      body.mobile-pdf .acta-mobile-detail { display: none !important; }
+      body.mobile-pdf .acta-desktop-detail { display: block !important; }
 
       body.mobile-pdf { margin: 0; background: #fff; }
       body.mobile-pdf > .acta-wrap,
@@ -48,7 +49,12 @@ const ActaPrint = (() => {
       }
       body.mobile-pdf .acta-card.pdf-card-oversize figure img { max-height: 80px !important; }
       body.mobile-pdf > .pdf-page {
+        display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 12px !important; align-content: start;
         break-inside: avoid !important; page-break-inside: avoid !important;
+      }
+      body.mobile-pdf > .pdf-page > .acta-desktop-detail {
+        display: contents !important;
       }
       body.mobile-pdf > .pdf-page--first {
         break-before: page !important; page-break-before: always !important;
@@ -56,38 +62,40 @@ const ActaPrint = (() => {
       body.mobile-pdf > .pdf-page:not(.pdf-page--last) {
         break-after: page !important; page-break-after: always !important;
       }
+      ` : `
+      @media print {
+        .btn-save, .phva-topbar, .acta-actions, #app-toast { display: none !important; }
+      }
+      `}
 
       @media print {
         html, body { width: auto; min-height: 0; background: #fff; }
         body { margin: 0; orphans: 4; widows: 4; }
-        .btn-save, .phva-topbar, .acta-actions, #app-toast { display: none !important; }
+        ${mobile ? 'body.mobile-pdf .btn-save, body.mobile-pdf .phva-topbar, body.mobile-pdf .acta-actions, body.mobile-pdf #app-toast { display: none !important; }' : ''}
         .acta-wrap {
           box-sizing: border-box; width: 100%; max-width: 170mm; margin: 0 auto; padding: 0;
         }
         .acta-programa { break-inside: auto; page-break-inside: auto; }
-        .acta-desktop-detail .acta-criteria-grid,
-        .acta-desktop-detail .acta-criterion-group,
-        .acta-desktop-detail .acta-aspectos-stack {
+        ${mobile ? 'body.mobile-pdf .acta-desktop-detail .acta-criteria-grid, body.mobile-pdf .acta-desktop-detail .acta-criterion-group, body.mobile-pdf .acta-desktop-detail .acta-aspectos-stack {' : '.acta-desktop-detail .acta-criteria-grid, .acta-desktop-detail .acta-criterion-group, .acta-desktop-detail .acta-aspectos-stack {'}
           display: block !important; width: auto; min-width: 0;
         }
-        .acta-desktop-detail .acta-card {
+        ${mobile ? 'body.mobile-pdf .acta-desktop-detail .acta-card {' : '.acta-desktop-detail .acta-card {'}
           display: block; box-sizing: border-box; width: 100%; min-height: 0 !important;
           height: auto !important; margin: 0 0 12px; overflow: visible;
           break-inside: avoid; page-break-inside: avoid;
         }
-        .acta-desktop-detail .acta-evidence-grid {
+        ${mobile ? 'body.mobile-pdf .acta-desktop-detail .acta-evidence-grid {' : '.acta-desktop-detail .acta-evidence-grid {'}
           display: flex !important; flex-wrap: wrap; align-items: flex-start; gap: 6px;
           break-inside: avoid; page-break-inside: avoid;
         }
-        .acta-desktop-detail .acta-evidence-grid > figure {
+        ${mobile ? 'body.mobile-pdf .acta-desktop-detail .acta-evidence-grid > figure {' : '.acta-desktop-detail .acta-evidence-grid > figure {'}
           display: block; box-sizing: border-box; flex: 1 1 calc(50% - 3px);
           margin: 0;
           width: calc(50% - 3px); max-width: calc(50% - 3px); min-width: 0;
         }
-        .acta-desktop-detail .acta-card figure,
-        .acta-desktop-detail .acta-card img,
+        ${mobile ? 'body.mobile-pdf .acta-desktop-detail .acta-card figure, body.mobile-pdf .acta-desktop-detail .acta-card img,' : '.acta-desktop-detail .acta-card figure, .acta-desktop-detail .acta-card img,'}
         table tr { break-inside: avoid; page-break-inside: avoid; }
-        .acta-desktop-detail .acta-card figure img {
+        ${mobile ? 'body.mobile-pdf .acta-desktop-detail .acta-card figure img {' : '.acta-desktop-detail .acta-card figure img {'}
           width: 100%; max-width: 100%; max-height: 96px !important; object-fit: contain !important;
         }
         thead { display: table-header-group; }
@@ -130,26 +138,26 @@ const ActaPrint = (() => {
     });
   }
 
-  function aplicar(doc) {
+  function aplicar(doc, options = {}) {
     if (!doc?.head) return;
     _limpiarCssHistorico(doc);
     _normalizarEvidenciasHistoricas(doc);
     const style = doc.createElement('style');
     style.id = STYLE_ID;
     style.setAttribute('data-acta-print', 'shared');
-    style.textContent = css();
+    style.textContent = css(options);
     doc.head.appendChild(style);
   }
 
   function normalizarHtml(html) {
     if (!html || typeof DOMParser === 'undefined') return html;
     const doc = new DOMParser().parseFromString(html, 'text/html');
-    aplicar(doc);
+    aplicar(doc, { mobile: false });
     return `<!doctype html>${doc.documentElement.outerHTML}`;
   }
 
-  function styleTag() {
-    return `<style id="${STYLE_ID}" data-acta-print="shared">${css()}</style>`;
+  function styleTag(options = {}) {
+    return `<style id="${STYLE_ID}" data-acta-print="shared">${css(options)}</style>`;
   }
 
   function esMovil(view = window) {
@@ -174,7 +182,7 @@ const ActaPrint = (() => {
       return { pages: existentes.length, heights, maxHeight: Math.max(0, ...heights), limit: _alturaUtilPx(doc) };
     }
 
-    aplicar(doc);
+    aplicar(doc, { mobile: true });
     doc.body.classList.add('mobile-pdf');
 
     const wrap = doc.body.querySelector(':scope > .acta-wrap');
@@ -227,28 +235,36 @@ const ActaPrint = (() => {
       }
     };
 
-    entradas.forEach(entrada => {
-      if (!pagina || cantidad >= MAX_CARDS) nuevaPagina();
-      const necesitaTitulo = entrada.programa !== programaActual && entrada.titulo;
-      const tituloInsertado = necesitaTitulo ? entrada.titulo.cloneNode(true) : null;
-      if (tituloInsertado) contenido.appendChild(tituloInsertado);
-      contenido.appendChild(entrada.card);
-
-      if (pagina.offsetHeight > limite && cantidad > 0) {
-        entrada.card.remove();
-        if (tituloInsertado) tituloInsertado.remove();
-        nuevaPagina();
-        if (entrada.titulo) contenido.appendChild(entrada.titulo.cloneNode(true));
+    for (let i = 0; i < entradas.length; i += 2) {
+      const par = entradas.slice(i, i + 2);
+      if (!pagina || cantidad + par.length > MAX_CARDS) nuevaPagina();
+      const insertados = [];
+      for (const entrada of par) {
+        const necesitaTitulo = entrada.programa !== programaActual && entrada.titulo;
+        const tituloInsertado = necesitaTitulo ? entrada.titulo.cloneNode(true) : null;
+        if (tituloInsertado) contenido.appendChild(tituloInsertado);
         contenido.appendChild(entrada.card);
+        insertados.push({ entrada, tituloInsertado });
+        programaActual = entrada.programa;
       }
-
-      cantidad += 1;
-      programaActual = entrada.programa;
-      if (cantidad === 1 && pagina.offsetHeight > limite) {
-        entrada.card.classList.add('pdf-card-oversize');
+      if (pagina.offsetHeight > limite && cantidad > 0) {
+        insertados.forEach(({ entrada, tituloInsertado }) => {
+          entrada.card.remove();
+          if (tituloInsertado) tituloInsertado.remove();
+        });
+        nuevaPagina();
+        insertados.forEach(({ entrada }) => {
+          if (entrada.titulo) contenido.appendChild(entrada.titulo.cloneNode(true));
+          contenido.appendChild(entrada.card);
+          programaActual = entrada.programa;
+        });
+      }
+      cantidad += par.length;
+      if (cantidad === par.length && pagina.offsetHeight > limite) {
+        insertados.forEach(({ entrada }) => entrada.card.classList.add('pdf-card-oversize'));
         void pagina.offsetHeight;
       }
-    });
+    }
 
     if (paginas.length) paginas[paginas.length - 1].classList.add('pdf-page--last');
     if (despues.childNodes.length) doc.body.insertBefore(despues, wrap);
