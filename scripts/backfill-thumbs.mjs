@@ -68,16 +68,6 @@ function thumbPath(path) {
   return path.replace(/\.[a-z0-9]+$/i, '_thumb.jpg');
 }
 
-async function existe(path) {
-  const res = await fetch(`${base}/storage/v1/object/${BUCKET}/${path}`, {
-    method: 'HEAD',
-    headers,
-  });
-  if (res.status === 404) return false;
-  if (!res.ok) throw new Error(`Storage HEAD ${res.status} para ${path}`);
-  return true;
-}
-
 async function cargarSharp() {
   try {
     return (await import('sharp')).default;
@@ -114,7 +104,7 @@ async function main() {
 
   for (const foto of fotos) {
     const destino = thumbPath(foto.path);
-    if (existentes.has(destino) || await existe(destino)) continue;
+    if (existentes.has(destino)) continue;
     pendientes.push({ ...foto, destino });
   }
 
