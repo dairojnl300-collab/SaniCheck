@@ -109,6 +109,25 @@ const ScInformesUI = (() => {
       .replace(/javascript\s*:/gi, '');
   }
 
+  function _esMovil() {
+    return window.matchMedia?.('(max-width: 600px)').matches
+      || (navigator.maxTouchPoints > 1 && window.innerWidth < 900);
+  }
+
+  function _marcarActaMovil(html) {
+    const base = String(html || '');
+    const bodyMatch = base.match(/<body\b([^>]*)>/i);
+    if (!_esMovil() || !bodyMatch || /\bmobile-phone\b/i.test(bodyMatch[1])) return base;
+
+    return base.replace(/<body\b([^>]*)>/i, (match, attrs = '') => {
+      const classAttr = attrs.match(/\bclass\s*=\s*(['"])(.*?)\1/i);
+      if (!classAttr) return `<body${attrs} class="mobile-phone">`;
+
+      const clases = `${classAttr[2]} mobile-phone`;
+      return match.replace(classAttr[0], `class=${classAttr[1]}${clases}${classAttr[1]}`);
+    });
+  }
+
   function _cerrarSesion() {
     ScInformes.clearSesion();
     const bloque = document.getElementById('sc-registro-portada');
@@ -233,19 +252,32 @@ const ScInformesUI = (() => {
     // ponytail: sin caché entre aperturas — cada vez que se abre el acta se
     // vuelve a descargar cada foto desde Storage (una petición por path único,
     // sin reuso con las miniaturas ya descargadas en Hacer ni entre visores).
-    for (const p of Array.from(new Set(paths))) {
+    const resultados = await Promise.all(
+      Array.from(new Set(paths)).map(async p => {
       const marcador = `data-foto-path="${_esc(p)}"`;
-      if (salida.indexOf(marcador) === -1) continue;
+      if (salida.indexOf(marcador) === -1) return null;
+
       try {
         const res = await fetch(raiz + encodeURI(p), { headers });
-        if (!res.ok) { console.warn('[ScInformesUI] foto no disponible (' + res.status + '):', p); continue; }
+        if (!res.ok) {
+          console.warn('[ScInformesUI] foto no disponible (' + res.status + '):', p);
+          return null;
+        }
+
         const objectUrl = URL.createObjectURL(await res.blob());
-        urls.push(objectUrl);
-        salida = salida.split(marcador).join(`src="${objectUrl}" ${marcador}`);
+        return { marcador, objectUrl };
       } catch (e) {
         console.warn('[ScInformesUI] no se pudo descargar la foto', p, e && e.message);
+        return null;
       }
-    }
+      })
+    );
+
+    resultados.filter(Boolean).forEach(({ marcador, objectUrl }) => {
+      urls.push(objectUrl);
+      salida = salida.split(marcador).join(`src="${objectUrl}" ${marcador}`);
+    });
+
     return { html: salida, urls };
   }
 
@@ -402,12 +434,11 @@ const ScInformesUI = (() => {
     _fotosObjectUrls = fotos.urls;
     const iframe = overlay.querySelector('#sc-viewer');
     const print = overlay.querySelector('#sc-print-btn');
-    const htmlSeguro = fotos.html;
+    const htmlSeguro = _marcarActaMovil(fotos.html);
     if (iframe) iframe.srcdoc = htmlSeguro;
     if (inlineCapable) _insertarEvidenciaInline(iframe, itemsPortal);
     if (print) print.addEventListener('click', () => {
-      const esMovil = window.matchMedia?.('(max-width: 600px)').matches
-        || (navigator.maxTouchPoints > 1 && window.innerWidth < 900);
+      const esMovil = _esMovil();
       if (esMovil) {
         // En navegadores móviles, imprimir un iframe invisible de 1x1 produce
         // un PDF vacío. Abrir el documento visible permite que el motor móvil
