@@ -1433,3 +1433,172 @@ p, span, li, label,
 @media (max-width: 699px) {
   .acta-criteria-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
+
+/* Actuar: acciones compactas para móvil, aisladas de los botones PHVA vecinos. */
+@media (max-width: 600px) {
+  #screen-area > .acta-actions {
+    gap: 8px !important;
+    padding: 10px !important;
+  }
+
+  #screen-area > .acta-actions > .screen-fase-badge { margin-bottom: 0 !important; }
+  #screen-area > .acta-actions > div:nth-of-type(2) { margin-bottom: 0 !important; }
+  #screen-area > .acta-actions > div:nth-of-type(3) {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px !important;
+  }
+
+  #screen-area > .acta-actions > div:nth-of-type(3) > button {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 64px !important;
+    max-height: 70px;
+    padding: 8px 6px !important;
+    border-radius: var(--radius-md) !important;
+    flex-direction: column;
+    gap: 4px !important;
+    white-space: normal;
+    text-transform: none;
+    hyphens: none;
+    word-break: normal;
+  }
+
+  #screen-area > .acta-actions > div:nth-of-type(3) > button > span {
+    display: flex !important;
+    width: 100%;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px !important;
+  }
+
+  #screen-area > .acta-actions > div:nth-of-type(3) > button svg {
+    width: 20px !important;
+    height: 20px !important;
+    flex: 0 0 20px;
+  }
+
+  #screen-area > .acta-actions > div:nth-of-type(3) > button > span > span:last-child {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 0;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.2;
+    text-align: center;
+    text-transform: none;
+    white-space: normal;
+    hyphens: none;
+    word-break: normal;
+  }
+
+  #screen-area > .acta-actions > div:nth-of-type(3) > button > span > span:last-child::after {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    text-transform: none;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    hyphens: none;
+    word-break: normal;
+  }
+
+  #screen-area > .acta-actions [data-acta-guardar-pdf] {
+    background-color: var(--emerald) !important;
+    background-image: linear-gradient(rgba(0,0,0,.08), rgba(0,0,0,.08)) !important;
+    color: #fff !important;
+  }
+  #screen-area > .acta-actions [data-acta-guardar-pdf] > span > span:last-child::after { content: 'Guardar PDF'; }
+
+  #screen-area > .acta-actions [data-acta-actualizar-informe] {
+    background: var(--emerald-2) !important;
+    color: #fff !important;
+  }
+  #screen-area > .acta-actions [data-acta-actualizar-informe] > span > span:last-child::after { content: 'Actualizar informe'; }
+
+  #screen-area > .acta-actions > div:nth-of-type(3) > button:nth-child(3) {
+    background: var(--emerald-2) !important;
+    border: 1px solid var(--aqua) !important;
+    color: #fff !important;
+  }
+  #screen-area > .acta-actions > div:nth-of-type(3) > button:nth-child(3) > span > span:last-child::after { content: 'Compartir'; }
+
+  #screen-area > .acta-actions > button.btn-outline,
+  #screen-area > .acta-actions > div:nth-of-type(4) > button.btn-outline {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 44px !important;
+    padding: 8px 10px !important;
+    border-radius: var(--radius-md) !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+    hyphens: none !important;
+    word-break: normal !important;
+    margin-top: 0 !important;
+  }
+
+  #screen-area > .acta-actions > button.btn-outline > span,
+  #screen-area > .acta-actions > div:nth-of-type(4) > button.btn-outline > span {
+    min-width: 0;
+    gap: 6px !important;
+    white-space: normal;
+  }
+
+  #screen-area > .acta-actions > button.btn-outline svg,
+  #screen-area > .acta-actions > div:nth-of-type(4) > button.btn-outline svg {
+    width: 18px !important;
+    height: 18px !important;
+    flex: 0 0 18px;
+  }
+
+  #screen-area > .acta-actions > button.btn-outline > span > span:last-child,
+  #screen-area > .acta-actions > div:nth-of-type(4) > button.btn-outline > span > span:last-child {
+    font-size: 0;
+    text-transform: none;
+    hyphens: none;
+    word-break: normal;
+  }
+
+  #screen-area > .acta-actions > button.btn-outline:not(:last-child) > span > span:last-child::after {
+    content: 'Activar portal cliente';
+    font-size: 14px;
+    line-height: 1.2;
+    white-space: normal;
+    hyphens: none;
+    word-break: normal;
+  }
+  #screen-area > .acta-actions > div:nth-of-type(4) > button:first-child > span > span:last-child::after {
+    content: 'Verificar';
+    font-size: 14px;
+    white-space: normal;
+    hyphens: none;
+    word-break: normal;
+  }
+  #screen-area > .acta-actions > div:nth-of-type(4) > button:nth-child(2) > span > span:last-child::after {
+    content: 'Nueva';
+    font-size: 14px;
+    white-space: normal;
+    hyphens: none;
+    word-break: normal;
+  }
+
+  #screen-area > .acta-actions > button:last-child.btn-outline { font-size: 14px !important; }
+  #screen-area > .acta-actions > button:last-child.btn-outline > span > span:last-child { font-size: 14px; }
+
+  #screen-area > .acta-actions > button:last-child.btn-outline:active,
+  #screen-area > .acta-actions > div:nth-of-type(3) > button:active,
+  #screen-area > .acta-actions > div:nth-of-type(4) > button:active { transform: scale(0.97); }
+
+  #screen-area > .acta-actions button:focus-visible {
+    outline: 3px solid var(--azure);
+    outline-offset: 2px;
+  }
+}
