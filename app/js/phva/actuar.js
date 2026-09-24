@@ -1370,6 +1370,10 @@ window.addEventListener('load', function() {
         overflow: visible;
         break-inside: avoid; page-break-inside: avoid;
       }
+      body.mobile-pdf .acta-desktop-detail .mobile-pdf-page-break {
+        break-before: page;
+        page-break-before: always;
+      }
       .acta-desktop-detail .acta-card figure,
       .acta-desktop-detail .acta-card img,
       table tr {
