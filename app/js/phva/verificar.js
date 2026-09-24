@@ -76,7 +76,62 @@ const Verificar = (() => {
   }
   function filtrarCategoria(v) { categoria = v; _refresh(); } function filtrarCriterio(v) { criterio = v; _refresh(); }
   async function revisarCliente(fotoId, estado, aspectoIdTarjeta) { const inspeccion = Store.getCurrentInspeccion(); const estadoRevision = estado === 'cumple' ? 'cumple' : estado === 'ajustes_solicitados' ? 'ajustes_solicitados' : null; if (!estadoRevision) return Router.toast('Acción de revisión inválida'); const aspectos = inspeccion?.programas.flatMap(p => p.aspectos.flatMap(a => [a, ...(a.criterios_extra || []).map((x, i) => { Hallazgos.idExtra(a, x, i); return x; })])); const aspecto = aspectos?.find(a => a.id === aspectoIdTarjeta); const foto = aspecto?.fotografias?.find(f => f.id === fotoId); if (!foto || !aspecto) return Router.toast('No se encontró el aspecto de esta evidencia'); if (!inspeccion.portal_informe_id && ScInformes.sincronizarHallazgosPortal) { Router.toast('Vinculando informe…'); await ScInformes.sincronizarHallazgosPortal(inspeccion); } if (!inspeccion.portal_informe_id) return Router.toast('No se pudo vincular el informe. Intenta nuevamente.'); const aspectoId = aspecto.id; if (!aspectoId) return Router.toast('No se encontró el identificador del aspecto'); foto.aspecto_id = aspectoId; const observacion = estadoRevision === 'ajustes_solicitados' ? prompt('Indica qué debe corregirse:') : null; if (estadoRevision === 'ajustes_solicitados' && !observacion?.trim()) return; try { await ScInformes.revisarAdminHallazgo(inspeccion.portal_informe_id, aspectoId, estadoRevision, observacion); foto.estado_portal = estadoRevision === 'cumple' ? 'Verificado' : 'En corrección'; if (estadoRevision === 'cumple') { aspecto.evaluacion = 'A'; aspecto.criterio = 'A'; aspecto.estado = 'Cerrado'; } Scores.calcular(inspeccion); Hallazgos.actualizar(inspeccion); Store.upsertInspeccion(inspeccion); Router.toast(estadoRevision === 'cumple' ? 'Revisado y verificado' : 'Enviado'); _refresh(); } catch (e) { console.error('[Verificar] revisión de cliente falló', { fotoId, aspectoId, estado: estadoRevision, error: e }); Router.toast(e.message || 'No se pudo revisar la evidencia'); } }
-  function mostrarFoto(id) { const f = Store.getCurrentInspeccion()?.programas.flatMap(p => p.aspectos.flatMap(a => [a, ...(a.criterios_extra || [])])).flatMap(a => a.fotografias || []).find(x => x.id === id); if (!f) return; const d = document.createElement('div'); d.className = 'photo-lightbox'; d.tabIndex = -1; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true'); d.innerHTML = `<button aria-label="Cerrar foto" onclick="this.parentElement.remove()">${AppIcons.icon('x', 22)}</button><img src="${f.data}" alt="Foto ampliada">`; d.addEventListener('keydown', e => { if (e.key === 'Escape') d.remove(); }); document.body.appendChild(d); d.focus(); }
+  async function mostrarFoto(id) {
+    const f = Store.getCurrentInspeccion()?.programas
+      .flatMap(p => p.aspectos.flatMap(a => [a, ...(a.criterios_extra || [])]))
+      .flatMap(a => a.fotografias || []).find(x => x.id === id);
+    if (!f) return;
+
+    const d = document.createElement('div');
+    d.className = 'photo-lightbox';
+    d.tabIndex = -1;
+    d.setAttribute('role', 'dialog');
+    d.setAttribute('aria-modal', 'true');
+    const cerrar = document.createElement('button');
+    cerrar.setAttribute('aria-label', 'Cerrar foto');
+    cerrar.innerHTML = AppIcons.icon('x', 22);
+    const img = document.createElement('img');
+    img.alt = 'Foto ampliada';
+    let objectUrl = null;
+    const cerrarVisor = () => {
+      d.remove();
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+        objectUrl = null;
+      }
+    };
+    cerrar.addEventListener('click', cerrarVisor);
+    d.addEventListener('click', event => {
+      if (event.target === d) cerrarVisor();
+    });
+    d.addEventListener('keydown', event => {
+      if (event.key === 'Escape') cerrarVisor();
+    });
+    d.append(cerrar, img);
+    document.body.appendChild(d);
+    d.focus();
+
+    if (f.data) {
+      img.src = f.data;
+      return;
+    }
+    if (!f.path) {
+      console.error('[Verificar] La foto no tiene datos ni ruta original', { fotoId: id });
+      return;
+    }
+    if (typeof FotosStorage === 'undefined' || typeof FotosStorage.descargarFotoBlob !== 'function') {
+      console.error('[Verificar] FotosStorage no está disponible para cargar la foto original', { fotoId: id, path: f.path });
+      return;
+    }
+    try {
+      const blob = await FotosStorage.descargarFotoBlob(f.path);
+      if (!d.isConnected) return;
+      objectUrl = URL.createObjectURL(blob);
+      img.src = objectUrl;
+    } catch (error) {
+      console.error('[Verificar] No se pudo cargar la foto original', { fotoId: id, path: f.path, error });
+    }
+  }
   function _refresh() { const area = document.getElementById('screen-area'); if (area) { area.innerHTML = render(); if (typeof Fotos !== 'undefined' && Fotos.hidratarMiniaturas) Fotos.hidratarMiniaturas(area); } }
   function _vacio() { return `<div class="coming-soon"><div class="coming-soon-icon">${AppIcons.block('barChart', 40)}</div><div class="coming-soon-title">Sin inspección activa</div><button class="btn btn-primary mt-md" onclick="Router.go('planificar')">Ir a Planificar</button></div>`; }
   async function _syncAhora() {
