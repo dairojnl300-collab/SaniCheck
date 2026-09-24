@@ -1374,47 +1374,30 @@ window.addEventListener('load', function() {
       .acta-card figure, .acta-card img, table tr {
         break-inside: avoid; page-break-inside: avoid;
       }
+      /* El PDF conserva el layout desktop también en teléfonos.
+         Cada tarjeta y su evidencia deben permanecer juntas. */
+      .acta-desktop-detail .acta-card,
+      .acta-desktop-detail .acta-card figure,
+      .acta-desktop-detail .acta-card img {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      .acta-desktop-detail .acta-card figure img {
+        max-height: 116px !important;
+        object-fit: contain !important;
+      }
       thead { display: table-header-group; }
       h1, h2, h3, .acta-programa-title, .acta-seccion > .section-title {
         break-after: avoid; page-break-after: avoid;
       }
       .acta-card, .acta-card > div, .acta-card figure, .acta-card img { max-width: 100%; }
       .acta-card { overflow-wrap: anywhere; word-break: break-word; }
-      /* En teléfonos, cada página es un bloque independiente. Chrome móvil
-         no respeta de forma fiable los saltos aplicados a hijos de Grid. */
-      .mobile-phone .acta-desktop-detail { display:none !important; }
-      .mobile-phone .acta-mobile-detail { display:block !important; }
-      .mobile-phone .acta-mobile-page {
-        display:block;
-        break-after:page;
-        page-break-after:always;
-        break-inside:avoid;
-        page-break-inside:avoid;
-      }
-      .mobile-phone .acta-mobile-page:last-child {
-        break-after:auto;
-        page-break-after:auto;
-      }
-      .mobile-phone .acta-mobile-grid {
-        display:grid !important;
-        grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-        gap:12px;
-        align-items:stretch;
-      }
-      .mobile-phone .acta-mobile-grid .acta-card {
-        min-width:0;
-        height:auto !important;
-        min-height:0 !important;
-        break-inside:avoid;
-        page-break-inside:avoid;
-      }
       .btn-save { display: none !important; }
       @page { margin: 1.5cm 1.5cm 1.8cm; }
       /* En teléfonos no forzar A4: el navegador debe respetar Carta u otro
          tamaño elegido por el usuario, evitando PDFs blancos por overflow. */
       body.mobile-phone { width:auto !important; min-height:0 !important; }
       body.mobile-phone .acta-wrap { width:100% !important; max-width:100% !important; }
-      body.mobile-phone .acta-mobile-page { width:100% !important; max-width:100% !important; }
       @page { size: auto; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
