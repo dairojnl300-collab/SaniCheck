@@ -20,7 +20,7 @@ const Verificar = (() => {
     const path = f.path || f.foto_url || '';
     if (/\.pdf$/i.test(path)) {
       const nombre = _esc(path.split('/').pop() || 'documento.pdf');
-      return `<div style="display:inline-block;vertical-align:top;margin:6px 6px 0 0;padding:9px 11px;border:1px solid var(--line,#D8E8E1);border-radius:8px;background:var(--wash-a,#EFF9F5);"><strong aria-label="Documento PDF adjunto">📄 Documento adjunto: ${nombre}</strong>${f.origen === 'Cliente' ? `<small style="display:block;color:var(--ink-55);margin-top:4px;">Documento subido por el cliente${f.tomada_en ? ` · ${_esc(new Date(f.tomada_en).toLocaleString('es-CO'))}` : ''}</small>${f.superada === true ? '<small style="display:block;color:var(--ink-55);margin-top:4px;">Evidencia anterior</small>' : /^verificado$|^cumple$/i.test(String(f.estado_portal || '')) ? '<strong style="display:block;color:#2E7D32;margin-top:6px;">✓ Revisado y verificado</strong>' : `<div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;"><button type="button" style="${_btnStyle('#2E7D32','#fff')}" onclick="event.stopPropagation();Verificar.revisarCliente('${_esc(f.id)}','cumple','${_esc(aspecto.id)}')">Marcar como cumple</button><button type="button" style="${_btnStyle('#B45309','#fff')}" onclick="event.stopPropagation();Verificar.revisarCliente('${_esc(f.id)}','ajustes_solicitados','${_esc(aspecto.id)}')">Solicitar ajustes</button></div>`}` : ''}</div>`;
+      return `<div style="display:inline-block;vertical-align:top;margin:6px 6px 0 0;padding:9px 11px;border:1px solid var(--line,#D8E8E1);border-radius:8px;background:var(--wash-a,#EFF9F5);"><button type="button" style="${_btnStyle('#2E7D32','#fff')};min-height:44px;display:inline-flex;align-items:center;gap:7px;padding:9px 12px;" onclick="event.stopPropagation();Verificar.mostrarDocumento('${_esc(f.id)}',this)"><span aria-hidden="true">📄</span><span class="document-action-label">Ver documento</span><small style="font-weight:500;">${nombre}</small></button>${f.origen === 'Cliente' ? `<small style="display:block;color:var(--ink-55);margin-top:4px;">Documento subido por el cliente${f.tomada_en ? ` · ${_esc(new Date(f.tomada_en).toLocaleString('es-CO'))}` : ''}</small>${f.superada === true ? '<small style="display:block;color:var(--ink-55);margin-top:4px;">Evidencia anterior</small>' : /^verificado$|^cumple$/i.test(String(f.estado_portal || '')) ? '<strong style="display:block;color:#2E7D32;margin-top:6px;">✓ Revisado y verificado</strong>' : `<div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;"><button type="button" style="${_btnStyle('#2E7D32','#fff')}" onclick="event.stopPropagation();Verificar.revisarCliente('${_esc(f.id)}','cumple','${_esc(aspecto.id)}')">Marcar como cumple</button><button type="button" style="${_btnStyle('#B45309','#fff')}" onclick="event.stopPropagation();Verificar.revisarCliente('${_esc(f.id)}','ajustes_solicitados','${_esc(aspecto.id)}')">Solicitar ajustes</button></div>`}` : ''}</div>`;
     }
     return `<div style="display:inline-block;vertical-align:top;margin:6px 6px 0 0;"><button class="dash-photo" onclick="Verificar.mostrarFoto('${f.id}')"><img loading="lazy" decoding="async" ${f.data ? `src="${f.data}"` : ''}${f.path ? `data-foto-path="${_esc(f.path)}"` : ''} alt="Foto del aspecto"></button>${f.origen === 'Cliente' ? `<small style="display:block;color:var(--ink-55);margin-top:4px;">Foto subida por el cliente${f.tomada_en ? ` · ${_esc(new Date(f.tomada_en).toLocaleString('es-CO'))}` : ''}</small>${f.superada === true ? '<small style="display:block;color:var(--ink-55);margin-top:4px;">Evidencia anterior</small>' : /^verificado$|^cumple$/i.test(String(f.estado_portal || '')) ? '<strong style="display:block;color:#2E7D32;margin-top:6px;">✓ Revisado y verificado</strong>' : `<div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;"><button type="button" style="${_btnStyle('#2E7D32','#fff')}" onclick="event.stopPropagation();Verificar.revisarCliente('${_esc(f.id)}','cumple','${_esc(aspecto.id)}')">Marcar como cumple</button><button type="button" style="${_btnStyle('#B45309','#fff')}" onclick="event.stopPropagation();Verificar.revisarCliente('${_esc(f.id)}','ajustes_solicitados','${_esc(aspecto.id)}')">Solicitar ajustes</button></div>`}` : ''}</div>`;
   }
@@ -140,6 +140,44 @@ const Verificar = (() => {
       console.error('[Verificar] No se pudo cargar la foto original', { fotoId: id, path: f.path, error });
     }
   }
+  async function mostrarDocumento(id, boton) {
+    if (!boton || boton.disabled) return;
+    const ventana = window.open('', '_blank');
+    const etiqueta = boton.querySelector('.document-action-label');
+    const etiquetaOriginal = 'Ver documento';
+    const actualizarEtiqueta = texto => { if (etiqueta) etiqueta.textContent = texto; };
+    if (!ventana) {
+      const error = new Error('El navegador bloqueó la ventana del documento');
+      console.error('[Verificar] No se pudo abrir el documento', { fotoId: id, error });
+      actualizarEtiqueta('No se pudo abrir el documento');
+      return;
+    }
+    boton.disabled = true;
+    actualizarEtiqueta('Abriendo…');
+    try {
+      const f = Store.getCurrentInspeccion()?.programas
+        .flatMap(p => p.aspectos.flatMap(a => [a, ...(a.criterios_extra || [])]))
+        .flatMap(a => a.fotografias || []).find(x => x.id === id);
+      const path = f?.path || f?.foto_url;
+      if (!f || !path || !/\.pdf$/i.test(path)) throw new Error('No se encontró la ruta del PDF');
+      if (typeof FotosStorage === 'undefined' || typeof FotosStorage.descargarFotoBlob !== 'function') {
+        throw new Error('FotosStorage no está disponible para descargar el PDF');
+      }
+      const descargado = await FotosStorage.descargarFotoBlob(path);
+      if (!(descargado instanceof Blob) || descargado.size === 0) throw new Error('La descarga del PDF está vacía');
+      const pdf = new Blob([descargado], { type: 'application/pdf' });
+      const objectUrl = URL.createObjectURL(pdf);
+      ventana.location.href = objectUrl;
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 120000);
+      actualizarEtiqueta(etiquetaOriginal);
+    } catch (error) {
+      console.error('[Verificar] No se pudo abrir el documento', { fotoId: id, error });
+      if (!ventana.closed) ventana.close();
+      actualizarEtiqueta('No se pudo abrir el documento');
+    } finally {
+      boton.disabled = false;
+    }
+  }
   function _refresh() { const area = document.getElementById('screen-area'); if (area) { area.innerHTML = render(); if (typeof Fotos !== 'undefined' && Fotos.hidratarMiniaturas) Fotos.hidratarMiniaturas(area); } }
   function _vacio() { return `<div class="coming-soon"><div class="coming-soon-icon">${AppIcons.block('barChart', 40)}</div><div class="coming-soon-title">Sin inspección activa</div><button class="btn btn-primary mt-md" onclick="Router.go('planificar')">Ir a Planificar</button></div>`; }
   async function _syncAhora() {
@@ -169,5 +207,5 @@ const Verificar = (() => {
       _syncEventsBound = true;
     }
   }
-  return { render, attach, filtrarCategoria, filtrarCriterio, mostrarFoto, revisarCliente };
+  return { render, attach, filtrarCategoria, filtrarCriterio, mostrarFoto, mostrarDocumento, revisarCliente };
 })();
