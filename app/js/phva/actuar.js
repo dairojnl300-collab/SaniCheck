@@ -745,7 +745,7 @@ const Actuar = (() => {
 
     if (!fotosCliente.length) {
       return `
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px;">
+        <div class="acta-evidence-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px;">
           ${fotos.map((foto, idx) => `
             <figure style="margin:0;border:1px solid #E5E7EB;border-radius:5px;overflow:hidden;">
               ${_imgFoto(foto, `Evidencia ${idx + 1} del aspecto evaluado`,
@@ -757,7 +757,7 @@ const Actuar = (() => {
 
     const fotosTecnico = fotos.filter(f => f.origen !== 'Cliente');
     return `
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px;">
+      <div class="acta-evidence-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px;">
         ${fotosTecnico.map(foto => `
           <figure style="margin:0;border:1px solid #E5E7EB;border-radius:5px;overflow:hidden;">
             ${_imgFoto(foto, 'Evidencia original del profesional',
@@ -1340,50 +1340,63 @@ window.addEventListener('load', function() {
       letter-spacing: 0.02em; }
     .btn-save:hover { background: #2D6A4F; }
     @media print {
-      html, body { width: 210mm; min-height: 297mm; background: #fff; }
+      html, body { width: auto; min-height: 0; background: #fff; }
       body { margin: 0; }
-      .acta-wrap { width: 180mm; max-width: 180mm; margin: 0 auto; padding: 0; }
+      .acta-wrap { width: 100%; max-width: 170mm; margin: 0 auto; padding: 0; }
       .acta-seccion { margin-bottom: 14px; }
       .acta-programa { break-inside: auto; page-break-inside: auto; }
-      /* Chrome/iOS puede ignorar break-inside en hijos de CSS Grid al paginar.
-         El PDF usa flujo de bloques para que una tarjeta nunca se fragmente. */
-      .acta-criteria-grid {
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-        align-items: start;
-        grid-auto-flow: row;
-      }
-      .acta-aspectos-stack {
-        display: contents !important;
-      }
-      .acta-criterion-group {
-        display: contents !important;
+      /* El PDF usa flujo block/flex como ProyeCar.
+         No se usa Grid/display:contents para paginar tarjetas. */
+      .acta-desktop-detail .acta-criteria-grid,
+      .acta-desktop-detail .acta-criterion-group,
+      .acta-desktop-detail .acta-aspectos-stack {
+        display: block !important;
         width: auto;
         min-width: 0;
+      }
+      .acta-desktop-detail .acta-criterion-group {
         margin: 0 0 12px;
+        break-inside: auto;
+        page-break-inside: auto;
+      }
+      .acta-criterion-title { break-after: avoid; page-break-after: avoid; }
+      .acta-desktop-detail .acta-card {
+        display: block;
+        width: 100%;
+        align-self: auto;
+        min-height: 0 !important;
+        height: auto !important;
+        margin: 0 0 12px;
+        overflow: visible;
+        break-inside: avoid; page-break-inside: avoid;
+      }
+      .acta-desktop-detail .acta-card figure,
+      .acta-desktop-detail .acta-card img,
+      table tr {
+        break-inside: avoid; page-break-inside: avoid;
+      }
+      .acta-desktop-detail .acta-evidence-grid {
+        display: flex !important;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 6px;
+        max-width: 100%;
         break-inside: avoid;
         page-break-inside: avoid;
       }
-      .acta-criterion-title { break-after: avoid; page-break-after: avoid; }
-      .acta-card { height: auto !important; min-height: 0 !important; }
-      .acta-aspectos-stack .acta-card {
-        display: block; min-height: 0; height: auto; overflow: visible;
-        break-inside: avoid; page-break-inside: avoid;
-      }
-      .acta-card figure, .acta-card img, table tr {
-        break-inside: avoid; page-break-inside: avoid;
-      }
-      /* El PDF conserva el layout desktop también en teléfonos.
-         Cada tarjeta y su evidencia deben permanecer juntas. */
-      .acta-desktop-detail .acta-card,
-      .acta-desktop-detail .acta-card figure,
-      .acta-desktop-detail .acta-card img {
+      .acta-desktop-detail .acta-evidence-grid > figure {
+        display: block;
+        flex: 1 1 calc(50% - 3px);
+        width: calc(50% - 3px);
+        max-width: calc(50% - 3px);
+        min-width: 0;
         break-inside: avoid;
         page-break-inside: avoid;
       }
       .acta-desktop-detail .acta-card figure img {
-        max-height: 116px !important;
+        width: 100%;
+        max-width: 100%;
+        max-height: 96px !important;
         object-fit: contain !important;
       }
       thead { display: table-header-group; }
@@ -1393,12 +1406,7 @@ window.addEventListener('load', function() {
       .acta-card, .acta-card > div, .acta-card figure, .acta-card img { max-width: 100%; }
       .acta-card { overflow-wrap: anywhere; word-break: break-word; }
       .btn-save { display: none !important; }
-      @page { margin: 1.5cm 1.5cm 1.8cm; }
-      /* En teléfonos no forzar A4: el navegador debe respetar Carta u otro
-         tamaño elegido por el usuario, evitando PDFs blancos por overflow. */
-      body.mobile-phone { width:auto !important; min-height:0 !important; }
-      body.mobile-phone .acta-wrap { width:100% !important; max-width:100% !important; }
-      @page { size: auto; }
+      @page { size: A4; margin: 2.5cm 2cm; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
   </style>
@@ -1418,11 +1426,6 @@ window.addEventListener('load', function() {
   ${_renderFirmas(inspeccion)}
   ${_renderFooter()}
 </main>
-<script>
-  if (Math.min(window.innerWidth || 9999, window.screen?.width || 9999) <= 600) {
-    document.body.classList.add('mobile-phone');
-  }
-</script>
 </body>
 </html>`;
   }
