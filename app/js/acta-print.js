@@ -56,6 +56,9 @@ const ActaPrint = (() => {
       body.mobile-pdf > .pdf-page > .acta-desktop-detail {
         display: contents !important;
       }
+      body.mobile-pdf > .pdf-page .acta-programa-title {
+        grid-column: 1 / -1 !important;
+      }
       body.mobile-pdf > .pdf-page--first {
         break-before: page !important; page-break-before: always !important;
       }
@@ -235,36 +238,28 @@ const ActaPrint = (() => {
       }
     };
 
-    for (let i = 0; i < entradas.length; i += 2) {
-      const par = entradas.slice(i, i + 2);
-      if (!pagina || cantidad + par.length > MAX_CARDS) nuevaPagina();
-      const insertados = [];
-      for (const entrada of par) {
-        const necesitaTitulo = entrada.programa !== programaActual && entrada.titulo;
-        const tituloInsertado = necesitaTitulo ? entrada.titulo.cloneNode(true) : null;
-        if (tituloInsertado) contenido.appendChild(tituloInsertado);
-        contenido.appendChild(entrada.card);
-        insertados.push({ entrada, tituloInsertado });
-        programaActual = entrada.programa;
-      }
+    entradas.forEach(entrada => {
+      if (!pagina || cantidad >= MAX_CARDS) nuevaPagina();
+      const necesitaTitulo = entrada.programa !== programaActual && entrada.titulo;
+      const tituloInsertado = necesitaTitulo ? entrada.titulo.cloneNode(true) : null;
+      if (tituloInsertado) contenido.appendChild(tituloInsertado);
+      contenido.appendChild(entrada.card);
+
       if (pagina.offsetHeight > limite && cantidad > 0) {
-        insertados.forEach(({ entrada, tituloInsertado }) => {
-          entrada.card.remove();
-          if (tituloInsertado) tituloInsertado.remove();
-        });
+        entrada.card.remove();
+        if (tituloInsertado) tituloInsertado.remove();
         nuevaPagina();
-        insertados.forEach(({ entrada }) => {
-          if (entrada.titulo) contenido.appendChild(entrada.titulo.cloneNode(true));
-          contenido.appendChild(entrada.card);
-          programaActual = entrada.programa;
-        });
+        if (entrada.titulo) contenido.appendChild(entrada.titulo.cloneNode(true));
+        contenido.appendChild(entrada.card);
       }
-      cantidad += par.length;
-      if (cantidad === par.length && pagina.offsetHeight > limite) {
-        insertados.forEach(({ entrada }) => entrada.card.classList.add('pdf-card-oversize'));
+
+      cantidad += 1;
+      programaActual = entrada.programa;
+      if (cantidad === 1 && pagina.offsetHeight > limite) {
+        entrada.card.classList.add('pdf-card-oversize');
         void pagina.offsetHeight;
       }
-    }
+    });
 
     if (paginas.length) paginas[paginas.length - 1].classList.add('pdf-page--last');
     if (despues.childNodes.length) doc.body.insertBefore(despues, wrap);
