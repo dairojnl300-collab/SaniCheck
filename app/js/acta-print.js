@@ -215,7 +215,7 @@ const ActaPrint = (() => {
     while (seccion.nextSibling) despues.appendChild(seccion.nextSibling);
     if (antes.childNodes.length) doc.body.insertBefore(antes, wrap);
 
-    const limite = _alturaUtilPx(doc);
+    const limite = _alturaUtilPx(doc) * 0.94;
     const paginas = [];
     let pagina = null;
     let contenido = null;
