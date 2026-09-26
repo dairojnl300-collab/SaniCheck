@@ -26,7 +26,10 @@ const ScInformesUI = (() => {
     _revocarFotosVisor();
     document.removeEventListener('keydown', _onKeydown);
     if (_lastFocus && _lastFocus.focus) { try { _lastFocus.focus(); } catch (e) {} }
-    if (onCerrarDetalleAdmin) onCerrarDetalleAdmin();
+    if (onCerrarDetalleAdmin) Promise.resolve().then(onCerrarDetalleAdmin).catch(e => {
+      console.error('[Informes] recarga de lista falló', e);
+      if (typeof Router !== 'undefined' && Router.toast) Router.toast('No se pudo actualizar la lista. Cierra y abre el panel de nuevo.');
+    });
   }
 
   function _onKeydown(ev) {
