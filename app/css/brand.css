@@ -421,7 +421,7 @@ button:active, a:active, [role="button"]:active, [class^="btn"]:active, [class*=
   box-shadow: var(--shadow-sticker-active);
 }
 .phva-tile-icon svg { width: 20px; height: 20px; stroke: currentColor; fill: none; }
-.phva-tile-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; align-items: center; }
+.phva-tile-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; width: 100%; align-items: center; text-align: center; }
 .phva-tile-fase { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.8; }
 .phva-tile-label { font-size: var(--text-sm); font-weight: 700; color: var(--color-ink); }
 .phva-tile-P .phva-tile-icon { background: rgba(59,130,246,0.14); color: var(--color-planificar); }
@@ -759,6 +759,7 @@ body [style*="font-size: 11px"] {
 .coming-soon-icon { font-size: 48px; }
 .coming-soon-title { font-size: var(--text-lg); font-weight: 700; }
 .coming-soon-desc { font-size: var(--text-sm); color: var(--color-ink3); line-height: 1.6; max-width: 280px; text-align: justify; hyphens: auto; }
+.coming-soon > .btn { width: min(100%, 280px) !important; box-sizing: border-box; }
 .coming-soon-badge {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
