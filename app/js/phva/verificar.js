@@ -178,7 +178,29 @@ const Verificar = (() => {
       boton.disabled = false;
     }
   }
-  function _refresh() { const area = document.getElementById('screen-area'); if (area) { area.innerHTML = render(); if (typeof Fotos !== 'undefined' && Fotos.hidratarMiniaturas) Fotos.hidratarMiniaturas(area); } }
+  function _refresh() {
+    const area = document.getElementById('screen-area');
+    if (!area) return;
+    const scrollTop = area.scrollTop;
+    const fuentesCargadas = new Map();
+    area.querySelectorAll('img[data-foto-path][src]').forEach(img => {
+      if (img.complete && img.naturalWidth > 0) {
+        const path = img.getAttribute('data-foto-path');
+        const src = img.currentSrc || img.getAttribute('src');
+        if (path && src) fuentesCargadas.set(path, src);
+      }
+    });
+    area.innerHTML = render();
+    area.querySelectorAll('img[data-foto-path]').forEach(img => {
+      const src = fuentesCargadas.get(img.getAttribute('data-foto-path'));
+      if (!src) return;
+      img.src = src;
+      img.dataset.fotoHydrated = 'true';
+    });
+    if (typeof Fotos !== 'undefined' && Fotos.hidratarMiniaturas) Fotos.hidratarMiniaturas(area);
+    area.scrollTop = scrollTop;
+    requestAnimationFrame(() => { if (area.isConnected) area.scrollTop = scrollTop; });
+  }
   function _vacio() { return `<div class="coming-soon"><div class="coming-soon-icon">${AppIcons.block('barChart', 40)}</div><div class="coming-soon-title">Sin inspección activa</div><button class="btn btn-primary mt-md" onclick="Router.go('planificar')">Ir a Planificar</button></div>`; }
   async function _syncAhora() {
     if (document.hidden || typeof ScInformes === 'undefined' || !ScInformes.sincronizarHallazgosPortal) return;

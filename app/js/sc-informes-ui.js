@@ -11,6 +11,7 @@ const ScInformesUI = (() => {
   let _overlayEl = null;
   let _lastFocus = null;
   let _fotosObjectUrls = [];
+  let _onCerrarDetalleAdmin = null;
 
   function _revocarFotosVisor() {
     _fotosObjectUrls.forEach(url => { try { URL.revokeObjectURL(url); } catch (e) {} });
@@ -18,11 +19,14 @@ const ScInformesUI = (() => {
   }
 
   function _cerrar() {
+    const onCerrarDetalleAdmin = _onCerrarDetalleAdmin;
+    _onCerrarDetalleAdmin = null;
     if (_overlayEl && _overlayEl.parentNode) _overlayEl.parentNode.removeChild(_overlayEl);
     _overlayEl = null;
     _revocarFotosVisor();
     document.removeEventListener('keydown', _onKeydown);
     if (_lastFocus && _lastFocus.focus) { try { _lastFocus.focus(); } catch (e) {} }
+    if (onCerrarDetalleAdmin) onCerrarDetalleAdmin();
   }
 
   function _onKeydown(ev) {
@@ -482,10 +486,11 @@ const ScInformesUI = (() => {
     return ({ en_correccion: 'En corrección', cumple: 'Cumple', ajustes_solicitados: 'Ajustes solicitados' })[estado] || '';
   }
 
-  async function _verDetalleAdmin(row) {
+  async function _verDetalleAdmin(row, alCerrar = null) {
     const items = (row.estado_estructurado?.inspeccion?.hallazgos_criticos || []).filter(h => h && h.aspecto_id && (h.foto_url || h.foto_path || h.foto));
-    const acciones = items.length ? `<section aria-label="Revisión administrativa" style="margin-top:12px;padding:12px;border:1px solid #DDE7E2;border-radius:8px;background:#F8FAF9;"><strong style="display:block;color:#1B4332;font-size:.84rem;margin-bottom:8px;">Revisar correcciones del cliente</strong>${items.map(h => `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #E5E7EB;"><span style="font-size:.78rem;color:#374151;flex:1;"><strong>${_esc(h.numero || h.aspecto_id)}</strong> · ${_esc(h.texto || h.hallazgo || 'Hallazgo')}</span><button type="button" data-sc-revision="cumple" data-sc-aspecto-id="${_esc(h.aspecto_id)}" style="${_btnStyle('#2E7D32','#fff')}">Marcar como cumple</button><button type="button" data-sc-revision="ajustes_solicitados" data-sc-aspecto-id="${_esc(h.aspecto_id)}" style="${_btnStyle('#B45309','#fff')}">Solicitar ajustes</button></div>`).join('')}</section>` : '';
+    const acciones = items.length ? `<section aria-label="Revisión administrativa" style="margin-top:12px;padding:12px;border:1px solid #DDE7E2;border-radius:8px;background:#F8FAF9;"><strong style="display:block;color:#1B4332;font-size:.84rem;margin-bottom:8px;">Revisar correcciones del cliente</strong>${items.map(h => `<div data-sc-review-aspect="${_esc(h.aspecto_id)}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #E5E7EB;"><span style="font-size:.78rem;color:#374151;flex:1;"><strong>${_esc(h.numero || h.aspecto_id)}</strong> · ${_esc(h.texto || h.hallazgo || 'Hallazgo')}</span><button type="button" data-sc-revision="cumple" data-sc-aspecto-id="${_esc(h.aspecto_id)}" style="${_btnStyle('#2E7D32','#fff')}">Marcar como cumple</button><button type="button" data-sc-revision="ajustes_solicitados" data-sc-aspecto-id="${_esc(h.aspecto_id)}" style="${_btnStyle('#B45309','#fff')}">Solicitar ajustes</button></div>`).join('')}</section>` : '';
     const overlay = _abrirOverlay('Detalle administrativo', `<p style="margin:0;color:#52635d;font-size:.82rem;">${_esc(row.establecimiento?.nombre || 'Informe')} · Acta ${_esc(row.numero_acta || '—')}</p>${acciones}<div data-sc-admin-viewer style="margin-top:12px;"></div>`);
+    _onCerrarDetalleAdmin = alCerrar;
     const viewer = overlay.querySelector('[data-sc-admin-viewer]');
     const inlineCapable = String(row.informe_html || '').includes('data-aspecto-id=');
     const evidencia = inlineCapable ? '' : _evidenciaPortalHtml(row.estado_estructurado);
@@ -503,9 +508,22 @@ const ScInformesUI = (() => {
       const observacion = nuevo === 'ajustes_solicitados' ? prompt('Indica qué debe corregirse:') : null;
       if (nuevo === 'ajustes_solicitados' && !observacion?.trim()) return;
       if (!confirm(nuevo === 'cumple' ? '¿Marcar este hallazgo como cumple?' : '¿Solicitar ajustes para este hallazgo?')) return;
-      btn.disabled = true;
-      try { await ScInformes.revisarAdminHallazgo(row.id, aspectoId, nuevo, observacion); Router.toast('Revisión actualizada'); _cerrar(); await _renderAdmin(); }
-      catch (e) { btn.disabled = false; Router.toast(e.message || 'No se pudo actualizar la revisión'); }
+      const filaRevision = btn.closest('[data-sc-review-aspect]');
+      filaRevision?.querySelectorAll('button[data-sc-revision]').forEach(control => { control.disabled = true; });
+      try {
+        await ScInformes.revisarAdminHallazgo(row.id, aspectoId, nuevo, observacion);
+        const fila = filaRevision || [...overlay.querySelectorAll('[data-sc-review-aspect]')].find(el => el.dataset.scReviewAspect === aspectoId);
+        if (fila) {
+          fila.querySelectorAll('button[data-sc-revision]').forEach(control => { control.disabled = true; });
+          const etiqueta = document.createElement('strong');
+          etiqueta.setAttribute('role', 'status');
+          etiqueta.textContent = nuevo === 'cumple' ? 'Verificado' : 'En corrección';
+          etiqueta.style.cssText = `color:${nuevo === 'cumple' ? '#2E7D32' : '#B45309'};font-size:.8rem;`;
+          fila.appendChild(etiqueta);
+        }
+        Router.toast('Revisión actualizada');
+      }
+      catch (e) { filaRevision?.querySelectorAll('button[data-sc-revision]').forEach(control => { control.disabled = false; }); Router.toast(e.message || 'No se pudo actualizar la revisión'); }
     }));
   }
 
@@ -617,7 +635,19 @@ const ScInformesUI = (() => {
       btn.addEventListener('click', async ev => {
         ev.stopPropagation();
         const id = btn.closest('[data-sc-id]').getAttribute('data-sc-id');
-        try { await _verDetalleAdmin(await get(id)); }
+        const tarjeta = btn.closest('[data-sc-id]');
+        const lista = opts.portada ? document.getElementById('screen-area') : tarjeta?.parentElement;
+        const scrollGuardado = lista?.scrollTop || 0;
+        const alCerrar = async () => {
+          if (opts.portada) await mostrarEnPortada(ScInformes.getSesionCache());
+          else await _renderAdmin();
+          const listaNueva = opts.portada ? document.getElementById('screen-area') : _overlayEl?.querySelector('[data-sc-id]')?.parentElement;
+          if (listaNueva) {
+            listaNueva.scrollTop = scrollGuardado;
+            requestAnimationFrame(() => { if (listaNueva.isConnected) listaNueva.scrollTop = scrollGuardado; });
+          }
+        };
+        try { await _verDetalleAdmin(await get(id), alCerrar); }
         catch (e) { Router.toast(e.message || 'No se pudo abrir la revisión'); }
       });
     });
