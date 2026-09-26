@@ -1,8 +1,8 @@
 /* motion.css — Transiciones premium SaniCheck (aislado, sin dependencias) */
 
 :root {
-  --motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --motion-dur: 380ms;
+  --motion-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --motion-dur: 220ms;
 }
 
 /* ── Navegación entre pantallas PHVA ───────────────────────── */
@@ -47,8 +47,8 @@
 .sw-update-btn,
 .eval-btn {
   transition:
-    transform 280ms var(--motion-ease),
-    box-shadow 280ms var(--motion-ease),
+    transform 200ms var(--motion-ease),
+    box-shadow 200ms var(--motion-ease),
     background 200ms ease,
     border-color 200ms ease,
     opacity 200ms ease;
@@ -68,14 +68,14 @@
 }
 
 .eval-btn.selected {
-  transition: transform 320ms var(--motion-ease), box-shadow 280ms var(--motion-ease), background 200ms ease;
+  transition: transform 200ms var(--motion-ease), box-shadow 200ms var(--motion-ease), background-color 200ms var(--motion-ease);
 }
 
 /* ── Acordeones (Control de Vencimientos, etc.) ────────────── */
 .acc-body-wrap {
   transition:
     max-height var(--motion-dur) var(--motion-ease),
-    opacity 300ms var(--motion-ease) !important;
+    opacity 180ms var(--motion-ease) !important;
 }
 
 .acc-header {
@@ -94,21 +94,44 @@
 }
 
 .sw-update-banner.sw-banner-enter {
-  animation: swBannerEnter 420ms var(--motion-ease) forwards;
+  animation: swBannerEnter 200ms var(--motion-ease) forwards;
 }
 
 /* ── Accesibilidad ─────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   #screen-area.is-exiting,
   #screen-area.is-entering,
-  .sw-update-banner.sw-banner-enter {
+  .sw-update-banner.sw-banner-enter,
+  .update-banner,
+  .update-banner.slideUp,
+  .card,
+  .inspeccion-card,
+  .sticker-3d,
+  .estado-chip,
+  .screen-fase-badge,
+  .kicker-pill,
+  .acc-icon-wrap,
+  .estado-chip::before,
+  .skeleton::after {
     animation: none !important;
   }
   .progress-fill,
   .acc-body-wrap,
   .btn-primary,
   .btn-accent,
-  .phva-step {
+  .phva-step,
+  .phva-tile,
+  .card,
+  .inspeccion-card,
+  .sticker-3d,
+  .estado-chip,
+  .screen-fase-badge,
+  .kicker-pill,
+  .acc-icon-wrap,
+  .kpi,
+  .sw-update-btn,
+  .btn-update-now,
+  .btn-update-later {
     transition: none !important;
   }
   .card,
