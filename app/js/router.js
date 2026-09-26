@@ -40,6 +40,24 @@ const Router = (() => {
 
   function _updateTopbar() {
     const fase = SCREEN_FASE[currentScreen];
+    const fases = ['P', 'H', 'V', 'A'];
+    const index = fases.indexOf(fase);
+    const steps = document.querySelector('.phva-steps');
+    if (steps) {
+      if (index >= 0) {
+        const colors = [
+          'rgba(59, 130, 246, 0.14)',
+          'rgba(16, 185, 129, 0.14)',
+          'rgba(249, 115, 22, 0.14)',
+          'rgba(239, 68, 68, 0.14)',
+        ];
+        steps.style.setProperty('--tab-pill-transform', `translateX(calc(${index * 100}% + ${index * 8}px))`);
+        steps.style.setProperty('--tab-pill-color', colors[index]);
+        steps.style.setProperty('--tab-pill-opacity', '1');
+      } else {
+        steps.style.setProperty('--tab-pill-opacity', '0');
+      }
+    }
     const insp = Store.getCurrentInspeccion();
     const completed = [];
     if (insp) {
@@ -49,8 +67,12 @@ const Router = (() => {
     document.querySelectorAll('.phva-step').forEach(btn => {
       const f = btn.dataset.fase;
       btn.classList.remove('active', 'completed');
-      if (f === fase) btn.classList.add('active');
+      if (f === fase) {
+        btn.classList.add('active');
+        btn.setAttribute('aria-current', 'page');
+      }
       else if (completed.includes(f)) btn.classList.add('completed');
+      if (f !== fase) btn.removeAttribute('aria-current');
     });
   }
 

@@ -275,12 +275,95 @@ button:active, a:active, [role="button"]:active, [class^="btn"]:active, [class*=
   border-radius: var(--radius-full);
   background: currentColor;
 }
+.phva-steps::before {
+  content: '';
+  display: none;
+  position: absolute;
+  z-index: 0;
+  left: 4px;
+  top: 4px;
+  bottom: 4px;
+  width: calc(25% - 8px);
+  border-radius: var(--radius-full);
+  background: var(--tab-pill-color, rgba(59, 130, 246, 0.14));
+  opacity: var(--tab-pill-opacity, 0);
+  transform: var(--tab-pill-transform, translateX(0));
+  transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1), opacity 140ms ease-out;
+  pointer-events: none;
+}
 
 .step-icon { width: 22px; height: 22px; stroke: currentColor; fill: none; }
 .step-name { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
 
 /* Screen area */
 #screen-area { flex: 1; overflow-y: auto; overflow-x: hidden; }
+
+/* Barra PHVA flotante: el contenido sigue desplazándose por detrás del vidrio. */
+@media (max-width: 699px) {
+  .tab-bar {
+    position: fixed;
+    z-index: 100;
+    left: 12px;
+    right: 12px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    max-width: 456px;
+    height: 64px;
+    margin-inline: auto;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 8px 30px rgba(10, 46, 35, 0.14),
+      0 2px 8px rgba(10, 46, 35, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  .phva-steps {
+    position: relative;
+    height: 64px;
+    border-radius: inherit;
+  }
+
+  .phva-steps::before { display: block; }
+  .phva-step.active::before { display: none; }
+
+  .phva-step {
+    z-index: 1;
+    min-width: 0;
+    min-height: 44px;
+    border-radius: 999px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: color 160ms cubic-bezier(0.23, 1, 0.32, 1), transform 120ms ease-out;
+  }
+
+  .phva-step:active { transform: scale(0.97); }
+  .step-name { min-height: 14px; font-size: 12px; }
+  #screen-area {
+    padding-bottom: calc(64px + 24px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  @media (max-width: 699px) {
+    .tab-bar { background: #FFFFFF; }
+  }
+}
+
+@media (max-width: 699px) and (prefers-reduced-transparency: reduce) {
+  .tab-bar {
+    background: #FFFFFF;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phva-steps::before { transition: none; }
+}
 
 /* Screen header */
 .screen-header {
