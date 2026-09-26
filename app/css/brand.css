@@ -988,6 +988,7 @@ body [style*="font-size: 11px"] {
   min-height: 2.6em;
   max-height: 2.6em;
   width: 100%;
+  text-align: center;
 }
 
 /* Inspecciones Home */
