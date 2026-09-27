@@ -1,8 +1,19 @@
 // Service Worker — SaniCheck — Offline-first completo
 
-const APP_VERSION = '4.17.22';
-const BUILD_HASH = '043aa52d505b';
+const APP_VERSION = '4.17.23';
+const BUILD_HASH = '28e9202d31b0';
 const CACHE = 'sanicheck-' + BUILD_HASH;
+
+async function _badgeSW(n) {
+  const nav = self.navigator;
+  if (n > 0) {
+    if (nav && typeof nav.setAppBadge === 'function') return nav.setAppBadge(n);
+    if (typeof self.registration.setAppBadge === 'function') return self.registration.setAppBadge(n);
+  } else {
+    if (nav && typeof nav.clearAppBadge === 'function') return nav.clearAppBadge();
+    if (typeof self.registration.clearAppBadge === 'function') return self.registration.clearAppBadge();
+  }
+}
 
 const ASSETS = [
   './index.html',
@@ -358,7 +369,8 @@ self.addEventListener('push', event => {
     } catch (error) {
       console.error('[SW Push] No se pudo preparar el enlace al informe', error);
     }
-    const total = Math.max(0, Number(data.total_pendientes) || 0);
+    const totalValido = typeof data.total_pendientes === 'number' && Number.isFinite(data.total_pendientes);
+    const total = totalValido ? Math.max(0, data.total_pendientes) : null;
     const options = {
       body: aspecto,
       icon: './assets/icons/icon-192.png',
@@ -370,8 +382,15 @@ self.addEventListener('push', event => {
     };
 
     // iOS muestra un aviso genérico si el evento push no completa showNotification.
-    // Primero se intenta siempre el contenido contextual y se usa respaldo si falla.
+    // Actualizar el badge primero, sin dejar que un API ausente/fallido bloquee el aviso.
     try {
+      if (totalValido) {
+        try {
+          await _badgeSW(total);
+        } catch (error) {
+          console.error('[SW Push] No se pudo actualizar el badge desde el SW', error);
+        }
+      }
       await self.registration.showNotification(`${establecimiento} subió evidencia`, options);
     } catch (error) {
       console.error('[SW Push] No se pudo mostrar la notificación contextual', error);
@@ -387,24 +406,15 @@ self.addEventListener('push', event => {
     }
 
     try {
-      if (total > 0 && typeof self.registration.setAppBadge === 'function') {
-        await self.registration.setAppBadge(total);
-      } else if (total === 0 && typeof self.registration.clearAppBadge === 'function') {
-        await self.registration.clearAppBadge();
-      }
-    } catch (error) {
-      console.error('[SW Push] No se pudo actualizar el badge desde el SW', error);
-    }
-
-    try {
       const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-      clients.forEach(client => client.postMessage({
+      const mensaje = {
         type: 'SANICHECK_PUSH_RECEIVED',
         informe_id: informeId,
         aspecto_id: aspectoId,
-        total_pendientes: total,
         received_at: receivedAt,
-      }));
+      };
+      if (totalValido) mensaje.total_pendientes = total;
+      clients.forEach(client => client.postMessage(mensaje));
     } catch (error) {
       console.error('[SW Push] No se pudo avisar a las ventanas abiertas', error);
     }
