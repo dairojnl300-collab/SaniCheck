@@ -26,7 +26,19 @@ const Verificar = (() => {
       const nombre = _esc(path.split('/').pop() || 'documento.pdf');
       return `<div style="display:inline-block;vertical-align:top;margin:6px 6px 0 0;padding:9px 11px;border:1px solid var(--line,#D8E8E1);border-radius:8px;background:var(--wash-a,#EFF9F5);">${etiquetaNueva}<button type="button" style="${_btnStyle('#2E7D32','#fff')};min-height:44px;display:inline-flex;align-items:center;gap:7px;padding:9px 12px;" onclick="event.stopPropagation();Verificar.mostrarDocumento('${_esc(f.id)}',this)"><span aria-hidden="true">📄</span><span class="document-action-label">Ver documento</span><small style="font-weight:500;">${nombre}</small></button>${f.origen === 'Cliente' ? `<small style="display:block;color:var(--ink-55);margin-top:4px;">Documento subido por el cliente${f.tomada_en ? ` · ${_esc(new Date(f.tomada_en).toLocaleString('es-CO'))}` : ''}</small>${f.superada === true ? '<small style="display:block;color:var(--ink-55);margin-top:4px;">Evidencia anterior</small>' : /^verificado$|^cumple$/i.test(String(f.estado_portal || '')) ? '<strong style="display:block;color:#2E7D32;margin-top:6px;">✓ Revisado y verificado</strong>' : `<div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;"><button type="button" style="${_btnStyle('#2E7D32','#fff')}" onclick="event.stopPropagation();Verificar.revisarCliente('${_esc(f.id)}','cumple','${_esc(aspecto.id)}')">Marcar como cumple</button><button type="button" style="${_btnStyle('#B45309','#fff')}" onclick="event.stopPropagation();Verificar.revisarCliente('${_esc(f.id)}','ajustes_solicitados','${_esc(aspecto.id)}')">Solicitar ajustes</button></div>`}` : ''}</div>`;
     }
-    return `<div style="display:inline-block;vertical-align:top;margin:6px 6px 0 0;">${etiquetaNueva}<button class="dash-photo" onclick="Verificar.mostrarFoto('${f.id}')"><img loading="lazy" decoding="async" ${f.data ? `src="${f.data}"` : ''}${f.path ? `data-foto-path="${_esc(f.path)}"` : ''} alt="Foto del aspecto"></button>${f.origen === 'Cliente' ? `<small style="display:block;color:var(--ink-55);margin-top:4px;">Foto subida por el cliente${f.tomada_en ? ` · ${_esc(new Date(f.tomada_en).toLocaleString('es-CO'))}` : ''}</small>${f.superada === true ? '<small style="display:block;color:var(--ink-55);margin-top:4px;">Evidencia anterior</small>' : /^verificado$|^cumple$/i.test(String(f.estado_portal || '')) ? '<strong style="display:block;color:#2E7D32;margin-top:6px;">✓ Revisado y verificado</strong>' : `<div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;"><button type="button" style="${_btnStyle('#2E7D32','#fff')}" onclick="event.stopPropagation();Verificar.revisarCliente('${_esc(f.id)}','cumple','${_esc(aspecto.id)}')">Marcar como cumple</button><button type="button" style="${_btnStyle('#B45309','#fff')}" onclick="event.stopPropagation();Verificar.revisarCliente('${_esc(f.id)}','ajustes_solicitados','${_esc(aspecto.id)}')">Solicitar ajustes</button></div>`}` : ''}</div>`;
+    const miniatura = f.data || path
+      ? `<img loading="lazy" decoding="async" ${f.data ? `src="${f.data}"` : ''}${path ? `data-foto-path="${_esc(path)}"` : ''} onerror="Verificar.errorMiniatura(this)" alt="Foto del aspecto">`
+      : '<span role="img" aria-label="No se pudo cargar la foto" style="display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 10px;border:1px solid #FDA29B;border-radius:7px;background:#FEF3F2;color:#B42318;font-size:12px;font-weight:600;">No se pudo cargar la foto</span>';
+    return `<div style="display:inline-block;vertical-align:top;margin:6px 6px 0 0;">${etiquetaNueva}<button class="dash-photo" onclick="Verificar.mostrarFoto('${f.id}')">${miniatura}</button>${f.origen === 'Cliente' ? `<small style="display:block;color:var(--ink-55);margin-top:4px;">Foto subida por el cliente${f.tomada_en ? ` · ${_esc(new Date(f.tomada_en).toLocaleString('es-CO'))}` : ''}</small>${f.superada === true ? '<small style="display:block;color:var(--ink-55);margin-top:4px;">Evidencia anterior</small>' : /^verificado$|^cumple$/i.test(String(f.estado_portal || '')) ? '<strong style="display:block;color:#2E7D32;margin-top:6px;">✓ Revisado y verificado</strong>' : `<div style="display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;"><button type="button" style="${_btnStyle('#2E7D32','#fff')}" onclick="event.stopPropagation();Verificar.revisarCliente('${_esc(f.id)}','cumple','${_esc(aspecto.id)}')">Marcar como cumple</button><button type="button" style="${_btnStyle('#B45309','#fff')}" onclick="event.stopPropagation();Verificar.revisarCliente('${_esc(f.id)}','ajustes_solicitados','${_esc(aspecto.id)}')">Solicitar ajustes</button></div>`}` : ''}</div>`;
+  }
+  function errorMiniatura(img) {
+    if (!img?.isConnected) return;
+    const aviso = document.createElement('span');
+    aviso.setAttribute('role', 'img');
+    aviso.setAttribute('aria-label', 'No se pudo cargar la foto');
+    aviso.textContent = 'No se pudo cargar la foto';
+    aviso.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 10px;border:1px solid #FDA29B;border-radius:7px;background:#FEF3F2;color:#B42318;font-size:12px;font-weight:600;';
+    img.replaceWith(aviso);
   }
   function render() {
     const inspeccion = Store.getCurrentInspeccion(); if (!inspeccion) return _vacio();
@@ -114,6 +126,14 @@ const Verificar = (() => {
     cerrar.innerHTML = AppIcons.icon('x', 22);
     const img = document.createElement('img');
     img.alt = 'Foto ampliada';
+    const avisoError = document.createElement('p');
+    avisoError.textContent = 'No se pudo cargar la foto';
+    avisoError.style.cssText = 'display:none;margin:16px;padding:14px 18px;border:1px solid #FDA29B;border-radius:10px;background:#FEF3F2;color:#B42318;font-size:16px;font-weight:600;text-align:center;';
+    const mostrarError = () => { img.hidden = true; avisoError.style.display = 'block'; };
+    img.addEventListener('error', () => {
+      console.error('[Verificar] Falló la visualización de la foto', { fotoId: id, path: f.path || null });
+      mostrarError();
+    });
     let objectUrl = null;
     const cerrarVisor = () => {
       d.remove();
@@ -129,7 +149,7 @@ const Verificar = (() => {
     d.addEventListener('keydown', event => {
       if (event.key === 'Escape') cerrarVisor();
     });
-    d.append(cerrar, img);
+    d.append(cerrar, img, avisoError);
     document.body.appendChild(d);
     d.focus();
 
@@ -139,10 +159,12 @@ const Verificar = (() => {
     }
     if (!f.path) {
       console.error('[Verificar] La foto no tiene datos ni ruta original', { fotoId: id });
+      mostrarError();
       return;
     }
     if (typeof FotosStorage === 'undefined' || typeof FotosStorage.descargarFotoBlob !== 'function') {
       console.error('[Verificar] FotosStorage no está disponible para cargar la foto original', { fotoId: id, path: f.path });
+      mostrarError();
       return;
     }
     try {
@@ -152,6 +174,7 @@ const Verificar = (() => {
       img.src = objectUrl;
     } catch (error) {
       console.error('[Verificar] No se pudo cargar la foto original', { fotoId: id, path: f.path, error });
+      if (d.isConnected) mostrarError();
     }
   }
   async function mostrarDocumento(id, boton) {
@@ -243,5 +266,5 @@ const Verificar = (() => {
       _syncEventsBound = true;
     }
   }
-  return { render, attach, filtrarCategoria, filtrarCriterio, mostrarFoto, mostrarDocumento, revisarCliente, refrescarPendientes, irAAspecto };
+  return { render, attach, filtrarCategoria, filtrarCriterio, mostrarFoto, mostrarDocumento, revisarCliente, refrescarPendientes, irAAspecto, errorMiniatura };
 })();

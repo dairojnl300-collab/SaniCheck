@@ -873,6 +873,13 @@ const ScInformes = (() => {
         const estadoPortal = h.seguimiento || h.estado_accion || h.estado || '';
         const aspecto = buscarAspecto(h.aspecto_id);
         if (!aspecto) return;
+        const fotosAntesDeLimpiar = aspecto.fotografias || [];
+        const fotosLimpias = fotosAntesDeLimpiar.filter(f => !(f.origen === 'Cliente' && f.superada === true));
+        if (fotosLimpias.length !== fotosAntesDeLimpiar.length) {
+          aspecto.fotografias = fotosLimpias;
+          cambio = true;
+        }
+        const fechaSubidaCliente = h.cliente_subio_en || h.actualizado_en || h.created_at;
         if (!h.foto_url) {
           const fotosAntes = aspecto.fotografias || [];
           const fotosDespues = fotosAntes.map(f =>
@@ -899,22 +906,17 @@ const ScInformes = (() => {
           aspecto._verificadoPortal = true;
         }
         if (h.foto_url && !(aspecto.fotografias || []).some(f => f.path === h.foto_url)) {
-          const fotosAnteriores = (aspecto.fotografias || []).map(f =>
-            f.origen === 'Cliente' &&
-            String(f.aspecto_id || '') === String(h.aspecto_id || '')
-              ? { ...f, superada: true }
-              : f
-          );
+          const fotosAnteriores = (aspecto.fotografias || []).filter(f => f.origen !== 'Cliente');
           aspecto.fotografias = [
             ...fotosAnteriores,
-            { id: 'portal-' + h.id, aspecto_id: h.aspecto_id, path: h.foto_url, tomada_en: h.actualizado_en || h.created_at || h.subido_en, origen: 'Cliente', estado_portal: estadoPortal, superada: false }
+            { id: 'portal-' + h.id, aspecto_id: h.aspecto_id, path: h.foto_url, tomada_en: fechaSubidaCliente, origen: 'Cliente', estado_portal: estadoPortal, superada: false }
           ];
           cambio = true;
         }
         const fotoPortal = (aspecto.fotografias || []).find(f => f.path === h.foto_url && f.origen === 'Cliente');
-        if (fotoPortal && (fotoPortal.estado_portal !== estadoPortal || fotoPortal.tomada_en !== (h.actualizado_en || h.created_at || h.subido_en))) {
+        if (fotoPortal && (fotoPortal.estado_portal !== estadoPortal || fotoPortal.tomada_en !== fechaSubidaCliente)) {
           fotoPortal.estado_portal = estadoPortal;
-          fotoPortal.tomada_en = h.actualizado_en || h.created_at || h.subido_en || fotoPortal.tomada_en;
+          fotoPortal.tomada_en = fechaSubidaCliente;
           cambio = true;
         }
       });
