@@ -279,15 +279,21 @@
     const objetivo = (standalone && esIOS) ? Math.max(window.innerHeight, altoPantalla) : window.innerHeight;
     if (!Number.isFinite(objetivo) || objetivo <= 0) return;
 
-    if (Math.round(app.getBoundingClientRect().height) < objetivo) {
+    if (app.dataset.alturaRespaldo === 'true') {
+      app.style.removeProperty('height');
+      app.style.removeProperty('bottom');
+      void app.offsetHeight;
+      if (Math.round(app.getBoundingClientRect().height) < objetivo) {
+        app.style.bottom = 'auto';
+        app.style.height = `${objetivo}px`;
+        void app.offsetHeight;
+      } else {
+        delete app.dataset.alturaRespaldo;
+      }
+    } else if (Math.round(app.getBoundingClientRect().height) < objetivo) {
       app.style.bottom = 'auto';
       app.style.height = `${objetivo}px`;
       app.dataset.alturaRespaldo = 'true';
-      void app.offsetHeight;
-    } else if (app.dataset.alturaRespaldo === 'true') {
-      app.style.removeProperty('height');
-      app.style.removeProperty('bottom');
-      delete app.dataset.alturaRespaldo;
       void app.offsetHeight;
     }
   }
