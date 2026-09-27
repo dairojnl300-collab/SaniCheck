@@ -268,8 +268,38 @@
     update();
   }
 
+  function _sincronizarAlturaApp() {
+    const app = document.getElementById('app');
+    const altoViewport = window.innerHeight;
+    if (!app || !Number.isFinite(altoViewport) || altoViewport <= 0) return;
+
+    if (app.getBoundingClientRect().bottom < altoViewport) {
+      app.style.bottom = 'auto';
+      app.style.height = `${altoViewport}px`;
+      app.dataset.alturaRespaldo = 'true';
+      void app.offsetHeight;
+    } else if (app.dataset.alturaRespaldo === 'true') {
+      app.style.removeProperty('height');
+      app.style.removeProperty('bottom');
+      delete app.dataset.alturaRespaldo;
+      void app.offsetHeight;
+    }
+  }
+
+  function _bindAlturaApp() {
+    const sincronizar = () => _sincronizarAlturaApp();
+    window.addEventListener('load', sincronizar);
+    window.addEventListener('resize', sincronizar);
+    window.addEventListener('orientationchange', sincronizar);
+    window.addEventListener('pageshow', sincronizar);
+    document.addEventListener('visibilitychange', sincronizar);
+    sincronizar();
+    requestAnimationFrame(() => requestAnimationFrame(sincronizar));
+  }
+
 
   async function init() {
+    _bindAlturaApp();
     if (typeof window.SaniCheckVersionInit === 'function') {
       await window.SaniCheckVersionInit();
     }
