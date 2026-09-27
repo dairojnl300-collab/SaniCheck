@@ -35,6 +35,15 @@ const About = (() => {
         <div class="card" style="padding:var(--sp-md);margin-bottom:var(--sp-md);">
           <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);
             text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--sp-sm);">
+            Notificaciones de evidencia</div>
+          <div id="push-settings-control" style="font-size:var(--text-sm);color:var(--color-ink2);">
+            Consultando compatibilidad…
+          </div>
+        </div>
+
+        <div class="card" style="padding:var(--sp-md);margin-bottom:var(--sp-md);">
+          <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-ink3);
+            text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--sp-sm);">
             Actualizaciones</div>
           <div id="about-update-info" style="font-size:var(--text-sm);color:var(--color-ink2);margin-bottom:var(--sp-md);">
             Verificando estado…
@@ -82,6 +91,9 @@ const About = (() => {
     if (!cacheEl) return;
 
     _renderScSession();
+    if (typeof PushNotifications !== 'undefined') {
+      PushNotifications.actualizarAjustes().catch(error => console.error('[Ajustes] no se pudo mostrar el estado de push', error));
+    }
 
     const info    = await SwUpdate.getActiveInfo();
     const pending = SwUpdate.getPendingVersion();

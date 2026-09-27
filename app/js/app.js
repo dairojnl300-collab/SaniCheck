@@ -298,10 +298,26 @@
     if (SKIP_LICENCIA_GATE || Licencias.esValida()) {
       const ui = Store.get().ui || {};
       const screens = ['home', 'about', 'planificar', 'personalizar', 'hacer', 'verificar', 'dashboard', 'actuar'];
-      const screen  = screens.includes(ui.screen) ? ui.screen : 'home';
+      const query = new URLSearchParams(window.location.search);
+      const informePushId = query.get('informe_id');
+      const aspectoPushId = query.get('aspecto_id');
+      let screen = screens.includes(ui.screen) ? ui.screen : 'home';
+      if (query.get('screen') === 'verificar' && informePushId && typeof ScInformes !== 'undefined') {
+        try {
+          await ScInformes.abrirInformeParaPush(informePushId);
+          screen = 'verificar';
+        } catch (error) {
+          console.error('[Push] No se pudo abrir el informe de la notificación', error);
+          if (typeof Router !== 'undefined' && Router.toast) Router.toast(error.message || 'No se pudo abrir el informe notificado.');
+        }
+      }
       Router.go(screen);
+      if (typeof PushNotifications !== 'undefined') PushNotifications.iniciar();
+      if (screen === 'verificar' && aspectoPushId) setTimeout(() => Verificar.irAAspecto(aspectoPushId), 180);
       if (typeof ScInformesUI !== 'undefined' && ScInformesUI.iniciarSesionAutomatica) {
-        setTimeout(() => ScInformesUI.iniciarSesionAutomatica().catch(() => {}), 0);
+        setTimeout(() => ScInformesUI.iniciarSesionAutomatica().then(() => {
+          if (typeof PushNotifications !== 'undefined') PushNotifications.refrescar().catch(error => console.error('[Push] Falló la primera actualización tras iniciar sesión', error));
+        }).catch(error => console.error('[Registro] No se pudo iniciar la sesión guardada', error)), 0);
       }
     } else {
       Router.go('licencia');

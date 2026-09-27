@@ -579,6 +579,7 @@ const ScInformesUI = (() => {
     }
     const cuerpo = _tablaInformes(filas || [], { admin: false });
     _abrirOverlay('Mis informes · ' + sesion.nombre, cuerpo);
+    if (typeof PushNotifications !== 'undefined') PushNotifications.pintarConteos();
     _wireAccionesTabla({ admin: false }, null, filas);
   }
 
@@ -597,7 +598,7 @@ const ScInformesUI = (() => {
         const botonVer = enCurso ? '' : `<button type="button" data-sc-ver style="${_btnStyle('#1B4332','#fff')}">Ver / PDF</button>`;
         const botonRevision = opts.admin ? `<button type="button" data-sc-revision-open style="${_btnStyle('#E8F5EE','#1B4332')}">Revisar correcciones</button>` : '';
         return `<article data-sc-id="${_esc(f.id)}" data-sc-editar-tarjeta="true" title="Toca la tarjeta para editar este informe" style="border:1px solid #DDE7E2;border-left:3px solid #0C8A5F;border-radius:12px;padding:13px;background:#fff;box-shadow:0 3px 12px rgba(10,46,35,.07);cursor:pointer;">
-        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;"><strong style="font-size:.95rem;color:var(--color-ink);">${_esc((f.establecimiento && f.establecimiento.nombre) || '—')}</strong><span style="font-size:.75rem;color:var(--color-ink3);white-space:nowrap;">${_esc(_fmtFecha(f.fecha))}</span></div>
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;"><strong style="font-size:.95rem;color:var(--color-ink);">${_esc((f.establecimiento && f.establecimiento.nombre) || '—')}</strong><span style="display:flex;align-items:center;gap:7px;">${typeof PushNotifications !== 'undefined' ? PushNotifications.badgeHtml(f.id) : ''}<span style="font-size:.75rem;color:var(--color-ink3);white-space:nowrap;">${_esc(_fmtFecha(f.fecha))}</span></span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:.78rem;color:var(--color-ink2);"><span>${aspectos} aspectos evaluados</span><span style="display:inline-flex;gap:6px;align-items:center;">${badgeEnCurso}${badgeEstado}</span></div>
         <div style="margin-top:7px;display:grid;gap:3px;font-size:.78rem;color:#6B7280;">
           <span><strong style="color:#52635d;">Fecha:</strong> ${_esc(_fmtFecha(f.fecha))} · <strong style="color:#52635d;">Hora:</strong> ${_esc(_fmtHora(f.actualizado_en || f.estado_parcial_actualizado_en || f.creado_en))}</span>
@@ -802,6 +803,7 @@ const ScInformesUI = (() => {
       ${contenidoInformes}
       ${sesion.rol === 'admin' ? '<button type="button" data-sc-usuarios style="margin-top:12px;width:100%;' + _btnStyle('#0C8A5F','#fff') + '">Gestionar usuarios y códigos</button>' : ''}`;
     contenido.appendChild(bloque);
+    if (typeof PushNotifications !== 'undefined') PushNotifications.pintarConteos();
     if (sesion.rol === 'admin') {
       const misAdmin = bloque.querySelector('[data-sc-mis-admin]');
       if (misAdmin) _wireAccionesTabla({admin: true, portada: true}, misAdmin, propiosAdmin);

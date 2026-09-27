@@ -29,6 +29,7 @@ const ASSET_PATHS = [
   'js/sc-informes-config.secrets.js',
   'js/sc-informes.js',
   'js/sc-informes-ui.js',
+  'js/push-notifications.js',
   'js/app.js',
   'js/logic/psb-data.js',
   'js/logic/checklist-config.js',

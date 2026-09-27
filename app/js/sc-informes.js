@@ -956,7 +956,44 @@ const ScInformes = (() => {
     const estadoRpc = estado === 'cumple' ? 'cumple' : estado === 'ajustes_solicitados' ? 'ajustes_solicitados' : null;
     if (!estadoRpc) return Promise.reject(new Error('Estado de revisión inválido: ' + String(estado)));
     return _rpc('sc_admin_revisar_hallazgo', { p_informe_id: informeId, p_aspecto_id: aspectoId, p_codigo: getCodigo(), p_estado: estadoRpc, p_observacion: observacion || null })
-      .then(resultado => { _portalSyncBlockedUntil = Date.now() + 3000; return resultado; });
+      .then(resultado => {
+        _portalSyncBlockedUntil = Date.now() + 3000;
+        if (typeof PushNotifications !== 'undefined') {
+          PushNotifications.refrescar().catch(error => console.error('[ScInformes] no se actualizaron los pendientes tras revisar', error));
+        }
+        return resultado;
+      });
+  }
+
+  function pushRegistrar({ endpoint, p256dh, auth }) {
+    return _rpc('sc_push_registrar_suscripcion', {
+      p_codigo: getCodigo(), p_endpoint: endpoint, p_p256dh: p256dh, p_auth: auth,
+    });
+  }
+
+  function pushBaja(endpoint) {
+    return _rpc('sc_push_baja_suscripcion', { p_codigo: getCodigo(), p_endpoint: endpoint });
+  }
+
+  function pushPendientes() {
+    return _rpc('sc_push_pendientes', { p_codigo: getCodigo() });
+  }
+
+  async function abrirInformeParaPush(informeId) {
+    const estado = (typeof Store !== 'undefined' && Store.get) ? Store.get() : { inspecciones: [] };
+    const local = (estado.inspecciones || []).find(item =>
+      String(item.portal_informe_id || '').toLowerCase() === String(informeId || '').toLowerCase()
+      || String(_remoteIdAjeno(item.id) || '').toLowerCase() === String(informeId || '').toLowerCase()
+    );
+    if (local) {
+      Store.set({ currentId: local.id });
+      return local;
+    }
+    if (!getCodigo()) throw new Error('Inicia sesión en Registro de Informes para abrir este informe.');
+    const remoto = await getInforme(informeId);
+    const restaurada = _restaurarEstadoRemoto(remoto?.estado_estructurado, informeId);
+    if (!restaurada) throw new Error('El informe no tiene estado estructurado disponible en este dispositivo.');
+    return restaurada;
   }
   function activarPortalInforme(informeId) {
     return _rpc('sc_activar_portal_establecimiento', { p_informe_id: informeId, p_codigo_acceso: getCodigo() });
@@ -1017,6 +1054,7 @@ const ScInformes = (() => {
     revisarBorradoresRemotos, listBorradores, getBorrador,
     listMisInformes, getInforme, getHallazgosEstado, updateInforme, deleteInforme,
     listAdminInformes, getAdminInforme, updateAdminInforme, revisarAdminHallazgo, activarPortalInforme, deleteAdminInforme,
+    pushRegistrar, pushBaja, pushPendientes, abrirInformeParaPush,
     listUsuarios, crearUsuario,
     restaurarEstadoRemoto: _restaurarEstadoRemoto,
     marcarAjeno: _marcarAjeno,

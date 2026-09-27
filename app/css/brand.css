@@ -243,6 +243,42 @@ button:active, a:active, [role="button"]:active, [class^="btn"]:active, [class*=
   box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
 }
 
+.push-count-badge {
+  display: inline-flex;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #D92D20;
+  color: #fff;
+  font: 700 12px/18px 'Instrument Sans', Arial, sans-serif;
+  white-space: nowrap;
+}
+.push-count-badge[hidden] { display: none !important; }
+.push-new-evidence {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  margin: 0 6px 5px 0;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #D92D20;
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.push-tab-count {
+  position: absolute;
+  top: 2px;
+  right: 7px;
+}
+.phva-step[data-fase="V"] { position: relative; }
+
 .phva-steps {
   display: flex;
   align-items: stretch;

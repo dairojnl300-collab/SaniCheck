@@ -1,7 +1,7 @@
 // Service Worker — SaniCheck — Offline-first completo
 
-const APP_VERSION = '4.17.18';
-const BUILD_HASH = '7db4ef3eb9fb';
+const APP_VERSION = '4.17.19';
+const BUILD_HASH = 'fd0c6ac6e784';
 const CACHE = 'sanicheck-' + BUILD_HASH;
 
 const ASSETS = [
@@ -24,6 +24,7 @@ const ASSETS = [
   './js/sc-informes.js',
   './js/acta-print.js?v=4.17.10-print',
   './js/sc-informes-ui.js',
+  './js/push-notifications.js',
   './js/about.js',
   './js/phva-icons.js',
   './js/app.js',
@@ -318,4 +319,62 @@ self.addEventListener('fetch', e => {
       return res;
     });
   }));
+});
+
+self.addEventListener('push', event => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (error) {
+    console.error('[SW Push] Payload inválido', error);
+  }
+  const establecimiento = String(data.establecimiento || 'Un establecimiento').slice(0, 120);
+  const aspecto = String(data.aspecto || 'Hay nueva evidencia por revisar').slice(0, 240);
+  const titulo = `${establecimiento} subió evidencia`;
+  const informeId = String(data.informe_id || '');
+  const aspectoId = String(data.aspecto_id || '');
+  const destino = new URL('./', self.location.href);
+  destino.searchParams.set('screen', 'verificar');
+  if (informeId) destino.searchParams.set('informe_id', informeId);
+  if (aspectoId) destino.searchParams.set('aspecto_id', aspectoId);
+  const total = Math.max(0, Number(data.total_pendientes) || 0);
+
+  event.waitUntil((async () => {
+    const tareas = [self.registration.showNotification(titulo, {
+      body: aspecto,
+      icon: './assets/icons/icon-192.png',
+      badge: './assets/icons/icon-192.png',
+      tag: informeId ? `evidencia-${informeId}-${aspectoId}` : undefined,
+      renotify: true,
+      data: { url: destino.href, informe_id: informeId, aspecto_id: aspectoId },
+      lang: 'es',
+    })];
+    if (total > 0 && typeof self.registration.setAppBadge === 'function') {
+      tareas.push(self.registration.setAppBadge(total));
+    } else if (total === 0 && typeof self.registration.clearAppBadge === 'function') {
+      tareas.push(self.registration.clearAppBadge());
+    }
+    const clientes = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    clientes.forEach(cliente => cliente.postMessage({ type: 'SANICHECK_PUSH_RECEIVED' }));
+    const resultados = await Promise.allSettled(tareas);
+    resultados.filter(item => item.status === 'rejected').forEach(item => console.error('[SW Push] No se pudo completar una acción del push', item.reason));
+  })());
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const raw = event.notification.data?.url || new URL('./', self.location.href).href;
+  const destino = new URL(raw, self.location.href);
+  if (destino.origin !== self.location.origin || !destino.pathname.startsWith(new URL('./', self.location.href).pathname)) return;
+
+  event.waitUntil((async () => {
+    const clientes = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const cliente = clientes.find(item => new URL(item.url).origin === destino.origin);
+    if (cliente) {
+      if (typeof cliente.navigate === 'function') await cliente.navigate(destino.href);
+      if (typeof cliente.focus === 'function') await cliente.focus();
+      return;
+    }
+    if (typeof self.clients.openWindow === 'function') await self.clients.openWindow(destino.href);
+  })());
 });
