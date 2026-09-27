@@ -958,6 +958,21 @@ const ScInformes = (() => {
     return _rpc('sc_admin_revisar_hallazgo', { p_informe_id: informeId, p_aspecto_id: aspectoId, p_codigo: getCodigo(), p_estado: estadoRpc, p_observacion: observacion || null })
       .then(resultado => {
         _portalSyncBlockedUntil = Date.now() + 3000;
+        void fetch('https://sanicheck-portal.pages.dev/api/portal/notificar-revision', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            informe_id: informeId,
+            aspecto_id: aspectoId,
+            estado: estadoRpc,
+            observacion: String(observacion || '').slice(0, 160),
+            codigo_tecnico: getCodigo(),
+          }),
+        }).then(async response => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const payload = await response.json();
+          if (payload?.ok !== true) throw new Error(payload?.error || 'el Portal rechazó la notificación');
+        }).catch(error => console.warn('[ScInformes] No se pudo notificar al cliente; la revisión sí quedó guardada', error?.message || error));
         if (typeof PushNotifications !== 'undefined') {
           PushNotifications.refrescar().catch(error => console.error('[ScInformes] no se actualizaron los pendientes tras revisar', error));
         }
