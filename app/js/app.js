@@ -270,12 +270,18 @@
 
   function _sincronizarAlturaApp() {
     const app = document.getElementById('app');
-    const altoViewport = window.innerHeight;
-    if (!app || !Number.isFinite(altoViewport) || altoViewport <= 0) return;
+    if (!app) return;
 
-    if (app.getBoundingClientRect().bottom < altoViewport) {
+    const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+    const esIOS = /iP(hone|od|ad)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const vertical = matchMedia('(orientation: portrait)').matches;
+    const altoPantalla = vertical ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+    const objetivo = (standalone && esIOS) ? Math.max(window.innerHeight, altoPantalla) : window.innerHeight;
+    if (!Number.isFinite(objetivo) || objetivo <= 0) return;
+
+    if (Math.round(app.getBoundingClientRect().height) < objetivo) {
       app.style.bottom = 'auto';
-      app.style.height = `${altoViewport}px`;
+      app.style.height = `${objetivo}px`;
       app.dataset.alturaRespaldo = 'true';
       void app.offsetHeight;
     } else if (app.dataset.alturaRespaldo === 'true') {
@@ -293,8 +299,11 @@
     window.addEventListener('orientationchange', sincronizar);
     window.addEventListener('pageshow', sincronizar);
     document.addEventListener('visibilitychange', sincronizar);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', sincronizar);
     sincronizar();
     requestAnimationFrame(() => requestAnimationFrame(sincronizar));
+    setTimeout(sincronizar, 300);
+    setTimeout(sincronizar, 1000);
   }
 
 
