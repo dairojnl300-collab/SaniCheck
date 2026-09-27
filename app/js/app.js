@@ -268,48 +268,65 @@
     update();
   }
 
-  function _sincronizarAlturaApp() {
-    const app = document.getElementById('app');
-    if (!app) return;
+  let maxVH = window.innerHeight;
 
+  function _esIOSStandalone() {
     const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
     const esIOS = /iP(hone|od|ad)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const vertical = matchMedia('(orientation: portrait)').matches;
-    const altoPantalla = vertical ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
-    const objetivo = (standalone && esIOS) ? Math.max(window.innerHeight, altoPantalla) : window.innerHeight;
-    if (!Number.isFinite(objetivo) || objetivo <= 0) return;
+    return standalone && esIOS;
+  }
 
-    if (app.dataset.alturaRespaldo === 'true') {
-      app.style.removeProperty('height');
-      app.style.removeProperty('bottom');
-      void app.offsetHeight;
-      if (Math.round(app.getBoundingClientRect().height) < objetivo) {
-        app.style.bottom = 'auto';
-        app.style.height = `${objetivo}px`;
-        void app.offsetHeight;
-      } else {
-        delete app.dataset.alturaRespaldo;
+  function sanarViewport() {
+    if (!_esIOSStandalone()) return;
+
+    let intentos = 0;
+    const intentarSanar = () => {
+      const vertical = matchMedia('(orientation: portrait)').matches;
+      const altoPantalla = vertical ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+      const altoReferencia = Math.max(altoPantalla, maxVH);
+      if (altoReferencia - window.innerHeight > 4) {
+        const area = document.getElementById('screen-area');
+        const scrollTop = area ? area.scrollTop : 0;
+        document.documentElement.style.display = 'none';
+        void document.documentElement.offsetHeight;
+        document.documentElement.style.display = '';
+        if (area) area.scrollTop = scrollTop;
       }
-    } else if (Math.round(app.getBoundingClientRect().height) < objetivo) {
-      app.style.bottom = 'auto';
-      app.style.height = `${objetivo}px`;
-      app.dataset.alturaRespaldo = 'true';
-      void app.offsetHeight;
-    }
+
+      intentos += 1;
+      if (intentos < 3 && altoReferencia - window.innerHeight > 4) {
+        setTimeout(intentarSanar, 150);
+      }
+    };
+
+    intentarSanar();
   }
 
   function _bindAlturaApp() {
-    const sincronizar = () => _sincronizarAlturaApp();
-    window.addEventListener('load', sincronizar);
-    window.addEventListener('resize', sincronizar);
-    window.addEventListener('orientationchange', sincronizar);
-    window.addEventListener('pageshow', sincronizar);
-    document.addEventListener('visibilitychange', sincronizar);
-    if (window.visualViewport) window.visualViewport.addEventListener('resize', sincronizar);
-    sincronizar();
-    requestAnimationFrame(() => requestAnimationFrame(sincronizar));
-    setTimeout(sincronizar, 300);
-    setTimeout(sincronizar, 1000);
+    maxVH = window.innerHeight;
+    if (!_esIOSStandalone()) return;
+
+    const alRedimensionar = () => {
+      maxVH = Math.max(maxVH, window.innerHeight);
+      sanarViewport();
+    };
+    window.addEventListener('load', sanarViewport);
+    window.addEventListener('resize', alRedimensionar);
+    window.addEventListener('orientationchange', () => {
+      maxVH = window.innerHeight;
+      sanarViewport();
+    });
+    window.addEventListener('pageshow', sanarViewport);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') sanarViewport();
+    });
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', alRedimensionar);
+    document.addEventListener('focusout', event => {
+      if (event.target?.matches?.('input, textarea, select')) setTimeout(sanarViewport, 140);
+    });
+    sanarViewport();
+    setTimeout(sanarViewport, 300);
+    setTimeout(sanarViewport, 1000);
   }
 
 
