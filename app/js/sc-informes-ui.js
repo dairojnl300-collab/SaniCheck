@@ -580,6 +580,7 @@ const ScInformesUI = (() => {
     const cuerpo = _tablaInformes(filas || [], { admin: false });
     _abrirOverlay('Mis informes · ' + sesion.nombre, cuerpo);
     if (typeof PushNotifications !== 'undefined') PushNotifications.pintarConteos();
+    if (typeof PushNotifications !== 'undefined') PushNotifications.refrescar().catch(e => console.error('[Push] No se pudieron actualizar los globos de Mis informes', e));
     _wireAccionesTabla({ admin: false }, null, filas);
   }
 
@@ -804,6 +805,7 @@ const ScInformesUI = (() => {
       ${sesion.rol === 'admin' ? '<button type="button" data-sc-usuarios style="margin-top:12px;width:100%;' + _btnStyle('#0C8A5F','#fff') + '">Gestionar usuarios y códigos</button>' : ''}`;
     contenido.appendChild(bloque);
     if (typeof PushNotifications !== 'undefined') PushNotifications.pintarConteos();
+    if (typeof PushNotifications !== 'undefined') PushNotifications.refrescar().catch(e => console.error('[Push] No se pudieron actualizar los globos de la portada', e));
     if (sesion.rol === 'admin') {
       const misAdmin = bloque.querySelector('[data-sc-mis-admin]');
       if (misAdmin) _wireAccionesTabla({admin: true, portada: true}, misAdmin, propiosAdmin);

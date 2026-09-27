@@ -68,12 +68,21 @@ const SwUpdate = (() => {
         swActive: false,
       };
     }
-    const info = await _msgWorker(navigator.serviceWorker.controller);
+    let activeWorker = navigator.serviceWorker.controller;
+    if (!activeWorker) {
+      try {
+        const registration = _registration || await navigator.serviceWorker.getRegistration();
+        activeWorker = registration?.active || null;
+      } catch (error) {
+        console.error('[SwUpdate] No se pudo localizar el Service Worker activo', error);
+      }
+    }
+    const info = await _msgWorker(activeWorker);
     return {
       version:  info.version  || _manifest.version,
       build:    info.build    || _manifest.build,
       cache:    info.cache    || ('sanicheck-' + (info.build || _manifest.build || _manifest.version)),
-      swActive: !!navigator.serviceWorker.controller,
+      swActive: !!activeWorker,
     };
   }
 

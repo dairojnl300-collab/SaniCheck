@@ -301,11 +301,22 @@
       const query = new URLSearchParams(window.location.search);
       const informePushId = query.get('informe_id');
       const aspectoPushId = query.get('aspecto_id');
+      const pushReceivedAt = query.get('push_received_at');
+      if (pushReceivedAt) {
+        try { localStorage.setItem('sanicheck_push_last_received_at', pushReceivedAt); }
+        catch (error) { console.error('[Push] No se pudo guardar la hora de recepción', error); }
+      }
       let screen = screens.includes(ui.screen) ? ui.screen : 'home';
+      let deepLinkAbierto = false;
       if (query.get('screen') === 'verificar' && informePushId && typeof ScInformes !== 'undefined') {
         try {
+          const sesionGuardada = ScInformes.getSesionCache?.();
+          if (sesionGuardada?.usuario && ScInformes.getCodigo?.() && typeof ScInformesUI !== 'undefined') {
+            await ScInformesUI.iniciarSesionAutomatica();
+          }
           await ScInformes.abrirInformeParaPush(informePushId);
           screen = 'verificar';
+          deepLinkAbierto = true;
         } catch (error) {
           console.error('[Push] No se pudo abrir el informe de la notificación', error);
           if (typeof Router !== 'undefined' && Router.toast) Router.toast(error.message || 'No se pudo abrir el informe notificado.');
@@ -313,8 +324,8 @@
       }
       Router.go(screen);
       if (typeof PushNotifications !== 'undefined') PushNotifications.iniciar();
-      if (screen === 'verificar' && aspectoPushId) setTimeout(() => Verificar.irAAspecto(aspectoPushId), 180);
-      if (typeof ScInformesUI !== 'undefined' && ScInformesUI.iniciarSesionAutomatica) {
+      if (screen === 'verificar' && aspectoPushId) requestAnimationFrame(() => requestAnimationFrame(() => Verificar.irAAspecto(aspectoPushId)));
+      if (!deepLinkAbierto && typeof ScInformesUI !== 'undefined' && ScInformesUI.iniciarSesionAutomatica) {
         setTimeout(() => ScInformesUI.iniciarSesionAutomatica().then(() => {
           if (typeof PushNotifications !== 'undefined') PushNotifications.refrescar().catch(error => console.error('[Push] Falló la primera actualización tras iniciar sesión', error));
         }).catch(error => console.error('[Registro] No se pudo iniciar la sesión guardada', error)), 0);

@@ -1,7 +1,7 @@
 // Service Worker — SaniCheck — Offline-first completo
 
-const APP_VERSION = '4.17.19';
-const BUILD_HASH = '28735c4dbacd';
+const APP_VERSION = '4.17.20';
+const BUILD_HASH = 'f40055ac185c';
 const CACHE = 'sanicheck-' + BUILD_HASH;
 
 const ASSETS = [
@@ -240,15 +240,23 @@ self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE)
       .then(cache => Promise.allSettled(ASSETS.map(u => _cacheOne(cache, u))))
-      .then(() => {
+      .then(async () => {
         if (self.registration && self.registration.active) {
-          return _notifyClients({
-            type: 'UPDATE_AVAILABLE',
-            version: APP_VERSION,
-            build: BUILD_HASH,
-          });
+          try {
+            await _notifyClients({
+              type: 'UPDATE_AVAILABLE',
+              version: APP_VERSION,
+              build: BUILD_HASH,
+            });
+          } catch (error) {
+            console.error('[SW] No se pudo notificar la actualización', error);
+          }
         }
       })
+      .catch(error => {
+        console.error('[SW] No se pudo completar el precache antes de activar', error);
+      })
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -322,59 +330,120 @@ self.addEventListener('fetch', e => {
 });
 
 self.addEventListener('push', event => {
-  let data = {};
-  try {
-    data = event.data ? event.data.json() : {};
-  } catch (error) {
-    console.error('[SW Push] Payload inválido', error);
-  }
-  const establecimiento = String(data.establecimiento || 'Un establecimiento').slice(0, 120);
-  const aspecto = String(data.aspecto || 'Hay nueva evidencia por revisar').slice(0, 240);
-  const titulo = `${establecimiento} subió evidencia`;
-  const informeId = String(data.informe_id || '');
-  const aspectoId = String(data.aspecto_id || '');
-  const destino = new URL('./', self.location.href);
-  destino.searchParams.set('screen', 'verificar');
-  if (informeId) destino.searchParams.set('informe_id', informeId);
-  if (aspectoId) destino.searchParams.set('aspecto_id', aspectoId);
-  const total = Math.max(0, Number(data.total_pendientes) || 0);
+  const work = (async () => {
+    let data = {};
+    try {
+      if (event.data) data = event.data.json();
+    } catch (error) {
+      console.error('[SW Push] Payload inválido; se usará la notificación de respaldo', error);
+    }
 
-  event.waitUntil((async () => {
-    const tareas = [self.registration.showNotification(titulo, {
+    let establecimiento = 'Un establecimiento';
+    let aspecto = 'Hay nueva evidencia por revisar';
+    let informeId = '';
+    let aspectoId = '';
+    const receivedAt = new Date().toISOString();
+    let destinoHref = self.registration.scope;
+    try {
+      establecimiento = String(data.establecimiento || establecimiento).slice(0, 120);
+      aspecto = String(data.aspecto || aspecto).slice(0, 240);
+      informeId = String(data.informe_id || '');
+      aspectoId = String(data.aspecto_id || '');
+      const destino = new URL('./', self.registration.scope);
+      destino.searchParams.set('screen', 'verificar');
+      if (informeId) destino.searchParams.set('informe_id', informeId);
+      if (aspectoId) destino.searchParams.set('aspecto_id', aspectoId);
+      destino.searchParams.set('push_received_at', receivedAt);
+      destinoHref = destino.href;
+    } catch (error) {
+      console.error('[SW Push] No se pudo preparar el enlace al informe', error);
+    }
+    const total = Math.max(0, Number(data.total_pendientes) || 0);
+    const options = {
       body: aspecto,
       icon: './assets/icons/icon-192.png',
       badge: './assets/icons/icon-192.png',
-      tag: informeId ? `evidencia-${informeId}-${aspectoId}` : undefined,
+      tag: informeId ? `evidencia-${informeId}-${aspectoId}` : 'sanicheck-evidencia',
       renotify: true,
-      data: { url: destino.href, informe_id: informeId, aspecto_id: aspectoId },
+      data: { url: destinoHref, informe_id: informeId, aspecto_id: aspectoId, received_at: receivedAt },
       lang: 'es',
-    })];
-    if (total > 0 && typeof self.registration.setAppBadge === 'function') {
-      tareas.push(self.registration.setAppBadge(total));
-    } else if (total === 0 && typeof self.registration.clearAppBadge === 'function') {
-      tareas.push(self.registration.clearAppBadge());
+    };
+
+    // iOS muestra un aviso genérico si el evento push no completa showNotification.
+    // Primero se intenta siempre el contenido contextual y se usa respaldo si falla.
+    try {
+      await self.registration.showNotification(`${establecimiento} subió evidencia`, options);
+    } catch (error) {
+      console.error('[SW Push] No se pudo mostrar la notificación contextual', error);
+      try {
+        await self.registration.showNotification('SaniCheck', {
+          ...options,
+          body: 'Hay evidencia nueva para revisar.',
+          tag: 'sanicheck-evidencia-respaldo',
+        });
+      } catch (fallbackError) {
+        console.error('[SW Push] También falló la notificación de respaldo', fallbackError);
+      }
     }
-    const clientes = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    clientes.forEach(cliente => cliente.postMessage({ type: 'SANICHECK_PUSH_RECEIVED' }));
-    const resultados = await Promise.allSettled(tareas);
-    resultados.filter(item => item.status === 'rejected').forEach(item => console.error('[SW Push] No se pudo completar una acción del push', item.reason));
-  })());
+
+    try {
+      if (total > 0 && typeof self.registration.setAppBadge === 'function') {
+        await self.registration.setAppBadge(total);
+      } else if (total === 0 && typeof self.registration.clearAppBadge === 'function') {
+        await self.registration.clearAppBadge();
+      }
+    } catch (error) {
+      console.error('[SW Push] No se pudo actualizar el badge desde el SW', error);
+    }
+
+    try {
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      clients.forEach(client => client.postMessage({
+        type: 'SANICHECK_PUSH_RECEIVED',
+        informe_id: informeId,
+        aspecto_id: aspectoId,
+        total_pendientes: total,
+        received_at: receivedAt,
+      }));
+    } catch (error) {
+      console.error('[SW Push] No se pudo avisar a las ventanas abiertas', error);
+    }
+  })().catch(error => {
+    console.error('[SW Push] Falló el procesamiento del evento', error);
+  });
+
+  event.waitUntil(work);
 });
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  const raw = event.notification.data?.url || new URL('./', self.location.href).href;
-  const destino = new URL(raw, self.location.href);
-  if (destino.origin !== self.location.origin || !destino.pathname.startsWith(new URL('./', self.location.href).pathname)) return;
+  const raw = event.notification.data?.url || new URL('./', self.registration.scope).href;
+  const destino = new URL(raw, self.registration.scope);
+  const scopePath = new URL(self.registration.scope).pathname;
+  if (destino.origin !== new URL(self.registration.scope).origin || !destino.pathname.startsWith(scopePath)) {
+    console.error('[SW Push] Destino de notificación fuera del scope; se ignora');
+    return;
+  }
 
   event.waitUntil((async () => {
-    const clientes = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    const cliente = clientes.find(item => new URL(item.url).origin === destino.origin);
-    if (cliente) {
-      if (typeof cliente.navigate === 'function') await cliente.navigate(destino.href);
-      if (typeof cliente.focus === 'function') await cliente.focus();
-      return;
+    try {
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const client = clients.find(item => {
+        try { return new URL(item.url).origin === destino.origin && new URL(item.url).pathname.startsWith(scopePath); }
+        catch (error) { console.error('[SW Push] URL de ventana inválida', error); return false; }
+      });
+      if (client) {
+        try {
+          if (typeof client.navigate === 'function') await client.navigate(destino.href);
+          if (typeof client.focus === 'function') await client.focus();
+          return;
+        } catch (error) {
+          console.error('[SW Push] No se pudo navegar la ventana abierta; se abrirá otra', error);
+        }
+      }
+      if (typeof self.clients.openWindow === 'function') await self.clients.openWindow(destino.href);
+    } catch (error) {
+      console.error('[SW Push] No se pudo abrir Verificar desde la notificación', error);
     }
-    if (typeof self.clients.openWindow === 'function') await self.clients.openWindow(destino.href);
   })());
 });

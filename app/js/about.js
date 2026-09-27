@@ -39,6 +39,9 @@ const About = (() => {
           <div id="push-settings-control" style="font-size:var(--text-sm);color:var(--color-ink2);">
             Consultando compatibilidad…
           </div>
+          <div id="push-diagnostic-control" role="status" aria-live="polite" style="font-size:12px;color:var(--color-ink2);margin-top:10px;">
+            Consultando diagnóstico…
+          </div>
         </div>
 
         <div class="card" style="padding:var(--sp-md);margin-bottom:var(--sp-md);">
