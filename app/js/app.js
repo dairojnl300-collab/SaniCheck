@@ -268,70 +268,7 @@
     update();
   }
 
-  let maxVH = window.innerHeight;
-
-  function _esIOSStandalone() {
-    const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
-    const esIOS = /iP(hone|od|ad)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    return standalone && esIOS;
-  }
-
-  function sanarViewport() {
-    if (!_esIOSStandalone()) return;
-
-    let intentos = 0;
-    const intentarSanar = () => {
-      const vertical = matchMedia('(orientation: portrait)').matches;
-      const altoPantalla = vertical ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
-      const altoReferencia = Math.max(altoPantalla, maxVH);
-      if (altoReferencia - window.innerHeight > 4) {
-        const area = document.getElementById('screen-area');
-        const scrollTop = area ? area.scrollTop : 0;
-        document.documentElement.style.display = 'none';
-        void document.documentElement.offsetHeight;
-        document.documentElement.style.display = '';
-        if (area) area.scrollTop = scrollTop;
-      }
-
-      intentos += 1;
-      if (intentos < 3 && altoReferencia - window.innerHeight > 4) {
-        setTimeout(intentarSanar, 150);
-      }
-    };
-
-    intentarSanar();
-  }
-
-  function _bindAlturaApp() {
-    maxVH = window.innerHeight;
-    if (!_esIOSStandalone()) return;
-
-    const alRedimensionar = () => {
-      maxVH = Math.max(maxVH, window.innerHeight);
-      sanarViewport();
-    };
-    window.addEventListener('load', sanarViewport);
-    window.addEventListener('resize', alRedimensionar);
-    window.addEventListener('orientationchange', () => {
-      maxVH = window.innerHeight;
-      sanarViewport();
-    });
-    window.addEventListener('pageshow', sanarViewport);
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') sanarViewport();
-    });
-    if (window.visualViewport) window.visualViewport.addEventListener('resize', alRedimensionar);
-    document.addEventListener('focusout', event => {
-      if (event.target?.matches?.('input, textarea, select')) setTimeout(sanarViewport, 140);
-    });
-    sanarViewport();
-    setTimeout(sanarViewport, 300);
-    setTimeout(sanarViewport, 1000);
-  }
-
-
   async function init() {
-    _bindAlturaApp();
     if (typeof window.SaniCheckVersionInit === 'function') {
       await window.SaniCheckVersionInit();
     }
