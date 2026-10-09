@@ -142,10 +142,15 @@ const ActaPrint = (() => {
     });
   }
 
+  function normalizarEvidencias(doc) {
+    if (!doc?.querySelectorAll) return;
+    _normalizarEvidenciasHistoricas(doc);
+  }
+
   function aplicar(doc, options = {}) {
     if (!doc?.head) return;
     _limpiarCssHistorico(doc);
-    _normalizarEvidenciasHistoricas(doc);
+    normalizarEvidencias(doc);
     const style = doc.createElement('style');
     style.id = STYLE_ID;
     style.setAttribute('data-acta-print', 'shared');
@@ -278,5 +283,5 @@ const ActaPrint = (() => {
     };
   }
 
-  return { aplicar, css, esMovil, normalizarHtml, paginarMovil, styleTag };
+  return { aplicar, css, esMovil, normalizarEvidencias, normalizarHtml, paginarMovil, styleTag };
 })();
