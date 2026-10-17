@@ -1854,7 +1854,7 @@ body { -webkit-font-smoothing: antialiased; }
 .tab-bar .phva-step.active, .tab-bar .phva-step.active * { color: #fff !important; stroke: #fff !important; }
 .tab-bar .phva-step.active { background: rgba(53,201,172,.16) !important; border-radius: 20px; }
 .tab-bar .phva-step.active, .tab-bar .phva-step.active * { color: var(--pro-mint) !important; stroke: var(--pro-mint) !important; }
-.tab-bar .phva-step.active .step-icon { background: transparent; transform: translateY(-1px) scale(1.08); }
+.tab-bar .phva-step.active .step-icon { background-color: transparent; transform: translateY(-1px) scale(1.08); }
 .tab-bar .phva-step.active::before { display: none !important; }
 
 /* ── Profundidad y movimiento ─────────────────────────────── */
@@ -2003,3 +2003,27 @@ body { -webkit-font-smoothing: antialiased; }
 }
 .phva-topbar .phva-logo-mark { width: 44px; height: 44px; }
 .phva-topbar .phva-logo-img { width: 40px; height: 40px; }
+
+/* ── Pro: ilustraciones 3D en barra inferior y estados vacíos ── */
+.tab-bar .phva-step .step-icon {
+  width: 30px !important; height: 30px !important; padding: 0 !important; background-color: transparent !important;
+  background-repeat: no-repeat; background-position: center; background-size: contain;
+  filter: saturate(.85) brightness(.95); opacity: .85;
+}
+.tab-bar .phva-step .step-icon * { display: none !important; }
+.tab-bar .phva-step[data-fase="P"] .step-icon { background-image: url(../assets/illustrations/planificar.svg); }
+.tab-bar .phva-step[data-fase="H"] .step-icon { background-image: url(../assets/illustrations/hacer.svg); }
+.tab-bar .phva-step[data-fase="V"] .step-icon { background-image: url(../assets/illustrations/verificar.svg); }
+.tab-bar .phva-step[data-fase="A"] .step-icon { background-image: url(../assets/illustrations/actuar.svg); }
+.tab-bar .phva-step.active .step-icon { opacity: 1; filter: none; transform: translateY(-2px) !important; width: 34px !important; height: 34px !important; }
+
+.coming-soon .coming-soon-icon { display: none !important; }
+.coming-soon::before {
+  content: ""; display: block; width: 112px; height: 112px; margin: 0 auto 8px;
+  background: center / contain no-repeat url(../assets/illustrations/general.svg);
+}
+#app:has(.phva-step.active[data-fase="H"]) .coming-soon::before { background-image: url(../assets/illustrations/hacer.svg); }
+#app:has(.phva-step.active[data-fase="V"]) .coming-soon::before { background-image: url(../assets/illustrations/verificar.svg); }
+#app:has(.phva-step.active[data-fase="A"]) .coming-soon::before { background-image: url(../assets/illustrations/actuar.svg); }
+#app:has(.phva-step.active[data-fase="P"]) .coming-soon::before { background-image: url(../assets/illustrations/planificar.svg); }
+@media (prefers-reduced-motion: no-preference) { .coming-soon::before { animation: proFloat 4.5s ease-in-out infinite alternate; } }
