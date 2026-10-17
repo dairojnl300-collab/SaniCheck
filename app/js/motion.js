@@ -113,3 +113,66 @@ const AppMotion = (() => {
 
   return { init };
 })();
+
+
+// ── AppDepth — profundidad táctil y parallax (capa visual, sin lógica de negocio) ──
+const AppDepth = (() => {
+  'use strict';
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TILT = 5; // grados máximos
+  let ticking = false;
+
+  function _scroll(e) {
+    if (ticking) return;
+    ticking = true;
+    const t = e.target;
+    requestAnimationFrame(() => {
+      ticking = false;
+      const y = (t && t.scrollTop !== undefined && t !== document) ? t.scrollTop : (window.scrollY || 0);
+      const area = document.getElementById('screen-area');
+      if (area && !reduce) area.style.setProperty('--sy', String(Math.min(y, 400)));
+      const bar = document.querySelector('.phva-topbar');
+      if (bar) bar.classList.toggle('is-scrolled', y > 4);
+    });
+  }
+
+  function _tile(e) {
+    return e.target && e.target.closest ? e.target.closest('.phva-tile') : null;
+  }
+
+  function _down(e) {
+    const el = _tile(e);
+    if (!el) return;
+    el.classList.add('is-pressed');
+    if (!reduce) _move(e, el);
+  }
+
+  function _move(e, el) {
+    el = el || _tile(e);
+    if (!el || !el.classList.contains('is-pressed') || reduce) return;
+    const r = el.getBoundingClientRect();
+    const px = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    const py = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+    el.style.setProperty('--ry', ((px - 0.5) * 2 * TILT).toFixed(2) + 'deg');
+    el.style.setProperty('--rx', ((0.5 - py) * 2 * TILT).toFixed(2) + 'deg');
+  }
+
+  function _up() {
+    document.querySelectorAll('.phva-tile.is-pressed').forEach(el => {
+      el.classList.remove('is-pressed');
+      el.style.removeProperty('--rx');
+      el.style.removeProperty('--ry');
+    });
+  }
+
+  function init() {
+    document.addEventListener('scroll', _scroll, { passive: true, capture: true });
+    document.addEventListener('pointerdown', _down, { passive: true });
+    document.addEventListener('pointermove', _move, { passive: true });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => document.addEventListener(ev, _up, { passive: true }));
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+  return { init };
+})();
