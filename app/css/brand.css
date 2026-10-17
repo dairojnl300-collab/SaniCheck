@@ -1973,3 +1973,23 @@ body { -webkit-font-smoothing: antialiased; }
   .home-hero-logo img { animation: proBreatheImg 3.6s ease-in-out infinite; }
   .phva-topbar .phva-logo-img { animation: proBreatheImg 3.6s ease-in-out infinite; }
 }
+
+/* ── Pro: proporciones — hero compacto y botones alineados con las tarjetas ── */
+.home-hero { padding: 6px 16px 38px !important; border-radius: 0 0 28px 28px; }
+.home-hero-logo { width: 64px !important; height: 64px !important; margin: 0 0 6px -4px !important; }
+.home-hero-logo::before { inset: -12px; }
+.home-hero-logo img { width: 54px !important; height: 54px !important; }
+.home-hero-title { font-size: 28px !important; margin-bottom: 6px !important; }
+.home-hero-sub { font-size: 13px !important; line-height: 1.45 !important; }
+.home-nueva-btn {
+  width: 100% !important; margin: -24px 0 6px !important; box-sizing: border-box;
+  min-height: 56px; padding: 0 20px !important; border-radius: 20px !important; font-size: 16px !important;
+  display: flex !important; align-items: center; justify-content: center; gap: 8px;
+}
+.home-content .btn-outline[onclick*="abrirRegistroInformes"] {
+  width: 100% !important; box-sizing: border-box; min-height: 56px !important; border-radius: 20px !important;
+  background: #fff !important; border: 1px solid rgba(10,46,35,.1) !important; color: var(--emerald-2) !important;
+  font-size: 15px !important; font-weight: 700; box-shadow: 0 10px 22px -16px rgba(10,46,35,.45);
+}
+.phva-grid { gap: 12px; }
+.phva-tile { min-height: 96px; border-radius: 22px; }
