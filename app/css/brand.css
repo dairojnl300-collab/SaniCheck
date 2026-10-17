@@ -1993,3 +1993,13 @@ body { -webkit-font-smoothing: antialiased; }
 }
 .phva-grid { gap: 12px; }
 .phva-tile { min-height: 96px; border-radius: 22px; }
+
+/* ── Pro: un solo logotipo (barra superior) y menú de tres puntos ── */
+.home-hero-logo { display: none !important; }
+.home-hero { padding-top: 18px !important; }
+#btn-ajustes-top {
+  width: 40px; height: 40px; min-width: 40px; padding: 0 !important; border-radius: 50% !important;
+  display: grid; place-items: center;
+}
+.phva-topbar .phva-logo-mark { width: 44px; height: 44px; }
+.phva-topbar .phva-logo-img { width: 40px; height: 40px; }
