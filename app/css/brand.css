@@ -1923,3 +1923,28 @@ body { -webkit-font-smoothing: antialiased; }
   width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: #EEF3F1;
 }
 .acc-header:active .acc-icon-wrap { transform: none; box-shadow: none; }
+
+/* ── Pro: ilustraciones 3D (SVG locales) en lugar de iconos de línea ── */
+.phva-tile .phva-tile-icon, .acc-icon-wrap {
+  background-color: transparent !important; background-repeat: no-repeat !important;
+  background-position: center !important; background-size: contain !important;
+  box-shadow: none !important; border: 0 !important; overflow: visible;
+}
+.phva-tile .phva-tile-icon::before, .acc-icon-wrap::before { content: none !important; }
+.phva-tile .phva-tile-icon svg, .acc-icon-wrap svg { opacity: 0 !important; }
+.phva-tile .phva-tile-icon { width: 50px !important; height: 50px !important; border-radius: 0 !important; margin-left: -6px; }
+.phva-tile { gap: 8px !important; }
+.phva-tile-label { white-space: nowrap; }
+.phva-tile-P .phva-tile-icon { background-image: url(../assets/illustrations/planificar.svg) !important; }
+.phva-tile-H .phva-tile-icon { background-image: url(../assets/illustrations/hacer.svg) !important; }
+.phva-tile-V .phva-tile-icon { background-image: url(../assets/illustrations/verificar.svg) !important; }
+.phva-tile-A .phva-tile-icon { background-image: url(../assets/illustrations/actuar.svg) !important; }
+.acc-icon-wrap { width: 64px !important; height: 64px !important; border-radius: 0 !important; }
+#acc-header-general .acc-icon-wrap { background-image: url(../assets/illustrations/general.svg) !important; }
+#acc-header-marco .acc-icon-wrap { background-image: url(../assets/illustrations/marco.svg) !important; }
+#acc-header-vencimientos .acc-icon-wrap { background-image: url(../assets/illustrations/vencimientos.svg) !important; }
+.acc-header { grid-template-columns: 64px 1fr !important; }
+@media (prefers-reduced-motion: no-preference) {
+  .phva-tile .phva-tile-icon, .acc-icon-wrap { animation: proFloat 5s ease-in-out infinite; }
+  .phva-tile-H .phva-tile-icon { animation-delay: -1.2s; } .phva-tile-V .phva-tile-icon { animation-delay: -2.4s; } .phva-tile-A .phva-tile-icon { animation-delay: -3.6s; }
+}
