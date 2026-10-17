@@ -577,11 +577,86 @@ const ScInformesUI = (() => {
       _abrirOverlay('Mis informes', `<p role="alert" style="color:#b91c1c;">No se pudo cargar: ${_esc(e.message)}</p>`);
       return;
     }
-    const cuerpo = _tablaInformes(filas || [], { admin: false });
+    const cuerpo = _dashboardHtml(filas || [], { admin: false }) + _tablaInformes(filas || [], { admin: false });
     _abrirOverlay('Mis informes · ' + sesion.nombre, cuerpo);
     if (typeof PushNotifications !== 'undefined') PushNotifications.pintarConteos();
     if (typeof PushNotifications !== 'undefined') PushNotifications.refrescar().catch(e => console.error('[Push] No se pudieron actualizar los globos de Mis informes', e));
     _wireAccionesTabla({ admin: false }, null, filas);
+  }
+
+  // ── Dashboard con gráficos (solo lectura; SVG/CSS, sin dependencias) ──────
+  const _MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+  function _dashboardHtml(filas, opts) {
+    const lista = (filas || []).filter(f => f && !f._enCurso);
+    const enCurso = (filas || []).filter(f => f && f._enCurso).length;
+    if (!lista.length && !enCurso) return '';
+    const datos = lista.map(f => {
+      const m = _metaInforme(f);
+      return { f, estado: m.estado, pct: m.porcentaje, mes: String(f.fecha || '').slice(0, 7) };
+    });
+    const conPct = datos.filter(d => Number.isFinite(d.pct));
+    const prom = conPct.length ? Math.round(conPct.reduce((t, d) => t + d.pct, 0) / conPct.length) : null;
+    const cuenta = { BUENO: 0, REGULAR: 0, DEFICIENTE: 0 };
+    datos.forEach(d => { if (d.estado in cuenta) cuenta[d.estado] += 1; });
+    const clasificados = cuenta.BUENO + cuenta.REGULAR + cuenta.DEFICIENTE;
+    const estabs = new Set(lista.map(f => (f.establecimiento && f.establecimiento.nombre) || '').filter(Boolean)).size;
+
+    // Últimos 6 meses (promedio de cumplimiento por mes)
+    const hoy = new Date();
+    const meses = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+      const clave = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      const delMes = conPct.filter(x => x.mes === clave);
+      meses.push({ etiqueta: _MESES_CORTOS[d.getMonth()], n: delMes.length, pct: delMes.length ? Math.round(delMes.reduce((t, x) => t + x.pct, 0) / delMes.length) : null });
+    }
+    const hayTendencia = meses.some(m => m.pct !== null);
+    const ultimos = meses.filter(m => m.pct !== null);
+    let delta = '';
+    if (ultimos.length >= 2) {
+      const dif = ultimos[ultimos.length - 1].pct - ultimos[ultimos.length - 2].pct;
+      delta = `<span class="sci-delta ${dif >= 0 ? 'up' : 'down'}">${dif >= 0 ? '▲' : '▼'} ${Math.abs(dif)}%</span>`;
+    }
+    const barras = meses.map((m, i) => `<div class="sci-bar-col"><div class="sci-bar${i === meses.length - 1 ? ' on' : ''}" style="--h:${m.pct === null ? 4 : Math.max(8, m.pct)}%" title="${m.pct === null ? 'Sin informes' : m.pct + '% · ' + m.n + ' informe(s)'}">${m.pct === null ? '' : `<em>${m.pct}</em>`}</div><span>${m.etiqueta}</span></div>`).join('');
+
+    // Distribución por estado (barra apilada)
+    const seg = (clave, cls) => cuenta[clave] ? `<i class="${cls}" style="flex:${cuenta[clave]}"></i>` : '';
+
+    // Ranking por profesional (solo admin)
+    let ranking = '';
+    if (opts && opts.admin) {
+      const por = new Map();
+      conPct.forEach(d => {
+        const k = d.f.tecnico_nombre || '—';
+        const a = por.get(k) || { n: 0, t: 0 };
+        a.n += 1; a.t += d.pct; por.set(k, a);
+      });
+      const filasRank = [...por.entries()].map(([nombre, a]) => ({ nombre, n: a.n, pct: Math.round(a.t / a.n) })).sort((x, y) => y.pct - x.pct).slice(0, 5);
+      if (filasRank.length > 1) {
+        ranking = `<div class="sci-card"><h4>Cumplimiento por Profesional</h4>${filasRank.map(r => `<div class="sci-rank"><span>${_esc(r.nombre)}</span><div><i style="width:${r.pct}%" class="${r.pct >= 80 ? 'ok' : r.pct >= 50 ? 'mid' : 'bad'}"></i></div><b>${r.pct}%</b></div>`).join('')}</div>`;
+      }
+    }
+
+    return `<div class="sci-dash" aria-label="Resumen de informes">
+      <div class="sci-hero">
+        <div class="sci-ring" style="--p:${prom === null ? 0 : prom}" role="img" aria-label="Cumplimiento promedio ${prom === null ? 'sin datos' : prom + '%'}"><div><b>${prom === null ? '—' : prom + '%'}</b><small>PROMEDIO</small></div></div>
+        <ul class="sci-leg">
+          <li><i class="ok"></i>Bueno<b>${cuenta.BUENO}</b></li>
+          <li><i class="mid"></i>Regular<b>${cuenta.REGULAR}</b></li>
+          <li><i class="bad"></i>Deficiente<b>${cuenta.DEFICIENTE}</b></li>
+          <li><i class="wip"></i>En curso<b>${enCurso}</b></li>
+        </ul>
+      </div>
+      <div class="sci-kpis">
+        <div><b>${lista.length}</b><span>Informes</span></div>
+        <div><b>${estabs}</b><span>Establecimientos</span></div>
+        <div><b>${clasificados ? Math.round(cuenta.BUENO * 100 / clasificados) + '%' : '—'}</b><span>En nivel bueno</span></div>
+      </div>
+      ${clasificados ? `<div class="sci-card"><h4>Distribución por estado</h4><div class="sci-stack">${seg('BUENO', 'ok')}${seg('REGULAR', 'mid')}${seg('DEFICIENTE', 'bad')}</div></div>` : ''}
+      ${hayTendencia ? `<div class="sci-card"><div class="sci-card-head"><h4>Tendencia de cumplimiento</h4>${delta}</div><p class="sci-sub">Promedio mensual · últimos 6 meses</p><div class="sci-bars">${barras}</div></div>` : ''}
+      ${ranking}
+    </div>`;
   }
 
   function _tablaInformes(filas, opts) {
@@ -800,6 +875,7 @@ const ScInformesUI = (() => {
         <span style="font-size:.82rem;">Sesión: <strong>${_esc(sesion.nombre)}</strong> · ${rolTexto}</span>
         <span style="font-size:.78rem;white-space:nowrap;">Sesión activa</span>
       </div>
+      ${_dashboardHtml(filas, { admin: sesion.rol === 'admin' })}
       <div class="home-section-title">${sesion.rol === 'admin' ? 'Panel administrador' : 'Mis informes'}</div>
       ${contenidoInformes}
       ${sesion.rol === 'admin' ? '<button type="button" data-sc-usuarios style="margin-top:12px;width:100%;' + _btnStyle('#0C8A5F','#fff') + '">Gestionar usuarios y códigos</button>' : ''}`;
@@ -853,7 +929,7 @@ const ScInformesUI = (() => {
       _abrirOverlay('Panel de informes (todos)', `<p role="alert" style="color:#b91c1c;">No se pudo cargar: ${_esc(e.message)}</p>`);
       return;
     }
-    const cuerpo = _tablaInformes(filas || [], { admin: true }) + `
+    const cuerpo = _dashboardHtml(filas || [], { admin: true }) + _tablaInformes(filas || [], { admin: true }) + `
       <button type="button" data-sc-usuarios style="${_btnStyle('#0C8A5F','#fff')};margin-top:10px;width:100%;">Gestionar usuarios y códigos</button>`;
     _abrirOverlay('Panel de informes (todos)', cuerpo);
     _wireAccionesTabla({ admin: true }, null, filas);
