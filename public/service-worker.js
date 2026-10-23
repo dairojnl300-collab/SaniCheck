@@ -48,6 +48,13 @@ const ASSETS = [
   './assets/icons/icon.svg',
   './assets/icons/logotipo-sanicheck.png',
   './assets/icons/isotipo-transparente.png',
+  './assets/illustrations/planificar.svg',
+  './assets/illustrations/hacer.svg',
+  './assets/illustrations/verificar.svg',
+  './assets/illustrations/actuar.svg',
+  './assets/illustrations/general.svg',
+  './assets/illustrations/marco.svg',
+  './assets/illustrations/vencimientos.svg',
 ];
 
 const OFFLINE_HTML = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
