@@ -16,6 +16,14 @@
     steps.style.setProperty('--drag-x', (c - 4 - g.w / 2) + 'px');
   }
   function peek(i) { btns.forEach(function (b, k) { b.classList.toggle('peek', k === i); }); }
+  function snap(i) {
+    steps.style.setProperty('--tab-pill-transform', 'translateX(calc(' + (i * 100) + '% + ' + (i * 8) + 'px))');
+    steps.style.setProperty('--tab-pill-opacity', '1');
+  }
+  function syncActive() {
+    var a = btns.findIndex(function (b) { return b.classList.contains('active'); });
+    if (a >= 0) snap(a);
+  }
   function end() { down = false; steps.classList.remove('is-pressing'); peek(-1); }
 
   steps.addEventListener('pointerdown', function (e) {
@@ -33,10 +41,11 @@
   steps.addEventListener('pointerup', function (e) {
     if (!down) return;
     var i = idxAt(e.clientX);
-    end(); handled = true; setTimeout(function () { handled = false; }, 400);
+    snap(i); end(); handled = true; setTimeout(function () { handled = false; }, 400);
     synth = true; btns[i].click(); synth = false;
+    setTimeout(syncActive, 700);
   });
-  steps.addEventListener('pointercancel', end);
+  steps.addEventListener('pointercancel', function () { end(); syncActive(); });
   steps.addEventListener('click', function (e) {
     if (synth) return;
     if (handled) { handled = false; e.stopImmediatePropagation(); e.preventDefault(); }
