@@ -18,6 +18,7 @@ const ASSET_PATHS = [
   'js/store.js',
   'js/router.js',
   'js/motion.js',
+  'js/tabbar-glass.js',
   'js/licencias.js',
   'js/app-version.js',
   'js/sw-update.js',

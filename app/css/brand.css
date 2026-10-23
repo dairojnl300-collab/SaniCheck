@@ -2113,9 +2113,8 @@ body { -webkit-font-smoothing: antialiased; }
       inset -3px -4px 7px -2px rgba(255, 130, 200, 0.45),
       inset 0 -6px 10px -4px rgba(255, 220, 120, 0.30),
       0 8px 18px -10px rgba(10, 46, 35, 0.35);
-    transform: var(--tab-pill-transform, translateX(0));
-    scale: 1.1 1;
-    transition: transform 520ms cubic-bezier(0.34, 1.45, 0.52, 1), scale 220ms cubic-bezier(0.34, 1.45, 0.52, 1), opacity 160ms ease-out;
+    transform: var(--tab-pill-transform, translateX(0)) scale(1.1, 1);
+    transition: transform 520ms cubic-bezier(0.34, 1.2, 0.52, 1), opacity 160ms ease-out;
   }
   /* Aro de cristal: dispersión de color y reflejos en el borde de la lente */
   .phva-steps::after {
@@ -2135,12 +2134,19 @@ body { -webkit-font-smoothing: antialiased; }
     -webkit-mask-composite: xor;
     mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
     opacity: var(--tab-pill-opacity, 0);
-    transform: var(--tab-pill-transform, translateX(0));
-    scale: 1.1 1;
+    transform: var(--tab-pill-transform, translateX(0)) scale(1.1, 1);
     pointer-events: none;
-    transition: transform 520ms cubic-bezier(0.34, 1.45, 0.52, 1), scale 220ms cubic-bezier(0.34, 1.45, 0.52, 1), opacity 160ms ease-out;
+    transition: transform 520ms cubic-bezier(0.34, 1.2, 0.52, 1), opacity 160ms ease-out;
   }
-  .phva-steps:has(.phva-step:active)::before, .phva-steps:has(.phva-step:active)::after { scale: 1.2 1.12; }
+  .phva-steps { touch-action: none; -webkit-user-select: none; user-select: none; }
+  .phva-steps.is-pressing::before, .phva-steps.is-pressing::after {
+    transform: translateX(var(--drag-x, 0px)) scale(1.2, 1.14);
+    transition: transform 80ms ease-out, opacity 160ms ease-out;
+  }
+  .phva-steps.is-pressing .phva-step.active:not(.peek), .phva-steps.is-pressing .phva-step.active:not(.peek) * { color: rgba(10, 46, 35, 0.72) !important; stroke: rgba(10, 46, 35, 0.72) !important; }
+  .phva-steps.is-pressing .phva-step.active:not(.peek) .step-icon { transform: none !important; }
+  .tab-bar .phva-step.peek, .tab-bar .phva-step.peek * { color: #0A7350 !important; stroke: #0A7350 !important; }
+  .tab-bar .phva-step.peek .step-icon { transform: translateY(-3px) scale(1.28) !important; }
   .phva-step { z-index: 3; }
   .tab-bar .phva-step.active { background: transparent !important; }
   .tab-bar .phva-step.active .step-icon { transform: translateY(-3px) scale(1.28) !important; }
