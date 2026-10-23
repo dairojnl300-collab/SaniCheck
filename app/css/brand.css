@@ -2141,7 +2141,12 @@ body { -webkit-font-smoothing: antialiased; }
   .phva-steps { touch-action: none; -webkit-user-select: none; user-select: none; }
   .phva-steps.is-pressing::before, .phva-steps.is-pressing::after {
     transform: translateX(var(--drag-x, 0px)) scale(1.2, 1.14);
-    transition: transform 80ms ease-out, opacity 160ms ease-out;
+    transition: transform 140ms ease-out, opacity 160ms ease-out;
+    backface-visibility: hidden;
+  }
+  /* Arrastrando: sigue el dedo sin transición (relleno y aro siempre en la misma posición) */
+  .phva-steps.is-pressing.is-dragging::before, .phva-steps.is-pressing.is-dragging::after {
+    transition: opacity 160ms ease-out;
   }
   .phva-steps.is-pressing .phva-step.active:not(.peek), .phva-steps.is-pressing .phva-step.active:not(.peek) * { color: rgba(10, 46, 35, 0.72) !important; stroke: rgba(10, 46, 35, 0.72) !important; }
   .phva-steps.is-pressing .phva-step.active:not(.peek) .step-icon { transform: none !important; }
