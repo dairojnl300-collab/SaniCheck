@@ -2080,12 +2080,13 @@ body { -webkit-font-smoothing: antialiased; }
 /* ── Barra inferior "vidrio líquido": cápsula translúcida + lente que se desliza bajo la fase activa ── */
 @media (max-width: 699px) {
   .tab-bar {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.16)) !important;
-    -webkit-backdrop-filter: blur(26px) saturate(2.1) brightness(1.04);
-    backdrop-filter: blur(26px) saturate(2.1) brightness(1.04);
-    border: 1px solid rgba(255, 255, 255, 0.55) !important;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03)) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(1.7);
+    backdrop-filter: blur(12px) saturate(1.7);
+    border: 1px solid rgba(255, 255, 255, 0.7) !important;
     border-radius: 999px !important;
     box-shadow: 0 14px 32px -14px rgba(10, 46, 35, 0.35),
+      inset 0 0 0 1px rgba(10, 46, 35, 0.05),
       inset 0 1px 0 rgba(255, 255, 255, 0.85),
       inset 0 -1px 0 rgba(255, 255, 255, 0.25) !important;
   }
