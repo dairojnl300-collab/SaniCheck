@@ -4,9 +4,9 @@
   var steps = document.querySelector('.phva-steps');
   if (!steps || !window.PointerEvent) return;
   var btns = Array.prototype.slice.call(steps.querySelectorAll('.phva-step'));
-  var down = false, curIdx = -1, handled = false, synth = false;
+  var down = false, curIdx = -1, handled = false, synth = false, G = null, raf = 0, lastX = 0;
 
-  function geo() { var r = steps.getBoundingClientRect(); return { r: r, w: r.width / btns.length - 8 }; }
+  function geo() { return G || (G = (function () { var r = steps.getBoundingClientRect(); return { r: r, w: r.width / btns.length - 8 }; })()); }
   function idxAt(x) {
     var g = geo(), i = Math.floor((x - g.r.left) / (g.r.width / btns.length));
     return Math.max(0, Math.min(btns.length - 1, i));
@@ -24,23 +24,29 @@
     var a = btns.findIndex(function (b) { return b.classList.contains('active'); });
     if (a >= 0) snap(a);
   }
-  function end() { down = false; steps.classList.remove('is-pressing'); peek(-1); }
+  function end() { down = false; G = null; cancelAnimationFrame(raf); steps.classList.remove('is-pressing', 'is-dragging'); peek(-1); }
 
   steps.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    down = true; curIdx = idxAt(e.clientX);
+    G = null; down = true; curIdx = idxAt(e.clientX);
     try { steps.setPointerCapture(e.pointerId); } catch (err) {}
     place(e.clientX); steps.classList.add('is-pressing'); peek(curIdx);
   });
   steps.addEventListener('pointermove', function (e) {
     if (!down) return;
-    place(e.clientX);
-    var i = idxAt(e.clientX);
-    if (i !== curIdx) { curIdx = i; peek(i); }
+    lastX = e.clientX; steps.classList.add('is-dragging');
+    if (raf) return;
+    raf = requestAnimationFrame(function () {
+      raf = 0; if (!down) return;
+      place(lastX);
+      var i = idxAt(lastX), g = geo(), pitch = g.r.width / btns.length;
+      // histéresis: solo cambia de opción al pasar el límite por unos píxeles (evita el temblor en el borde)
+      if (i !== curIdx && Math.abs(lastX - (g.r.left + pitch * (curIdx + 0.5))) > pitch / 2 + 8) { curIdx = i; peek(i); }
+    });
   });
   steps.addEventListener('pointerup', function (e) {
     if (!down) return;
-    var i = idxAt(e.clientX);
+    var i = curIdx >= 0 ? curIdx : idxAt(e.clientX);
     snap(i); end(); handled = true; setTimeout(function () { handled = false; }, 400);
     synth = true; btns[i].click(); synth = false;
     setTimeout(syncActive, 700);
